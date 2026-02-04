@@ -1,0 +1,44 @@
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 20px;
+}
+
+.filter-bar-item {
+  flex: 0 0 auto;
+  min-width: 140px;
+}
+
+.filter-bar-item.filter-bar-more {
+  min-width: auto;
+  margin-left: 4px;
+}
+
+.filter-bar-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.filter-bar-label-invisible {
+  visibility: hidden;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.filter-bar-select {
+  width: 160px !important;
+  min-width: 140px;
+}
+
+.filter-bar-more-btn {
+  color: #0ea5e9 !important;
+  border-color: #bae6fd !important;
+  background: #f0f9ff !important;
+  font-size: 13px;
+}

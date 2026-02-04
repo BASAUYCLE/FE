@@ -1,0 +1,171 @@
+/* Header Component - Similar to Payment page */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.app-header-inner {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.app-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.app-header-logo-icon {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.app-header-logo-text {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.app-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-left: 24px;
+  font-size: 14px;
+}
+
+.app-header-nav a {
+  color: #4b5563;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.app-header-nav a:hover,
+.app-header-nav a.active {
+  color: #020617;
+}
+
+.app-header-search-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.app-header-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  border-radius: 999px;
+  padding: 8px 14px;
+  max-width: 360px;
+  width: 100%;
+}
+
+.app-header-search-icon {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 2px solid #9ca3af;
+  position: relative;
+}
+
+.app-header-search-icon::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background: #9ca3af;
+  transform: rotate(45deg);
+  bottom: -4px;
+  right: -6px;
+}
+
+.app-header-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  flex: 1;
+  font-size: 13px;
+  color: #111827;
+}
+
+.app-header-search input::placeholder {
+  color: #9ca3af;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.app-header-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  cursor: pointer;
+}
+
+.app-header-sell-button {
+  background: #1ABC9C;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.app-header-sell-button:hover {
+  background: #16A085;
+}
+
+.app-header-login-button {
+  background: white;
+  color: #1a1a1a;
+  border: 1px solid #e5e7eb;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-header-login-button:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-header-nav {
+    display: none;
+  }
+
+  .app-header-search-wrapper {
+    display: none;
+  }
+}

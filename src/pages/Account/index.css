@@ -1,0 +1,74 @@
+/* Trang quản lý tài khoản (gộp UserDetail + SetProfile) */
+.account-profile-card,
+.account-section-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.account-profile-card {
+  margin-top: 24px;
+}
+
+.account-avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #00ccad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.account-avatar-edit:hover {
+  background: #00b89a;
+}
+
+.account-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-badge-teal {
+  background: rgba(0, 204, 173, 0.15);
+  color: #008f7a;
+}
+
+.account-badge-orange {
+  background: rgba(249, 115, 22, 0.15);
+  color: #ea580c;
+}
+
+.account-edit-btn,
+.account-save-btn {
+  background-color: #00ccad !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+  text-transform: none !important;
+}
+
+.account-edit-btn:hover,
+.account-save-btn:hover {
+  background-color: #00b89a !important;
+}
+
+.account-section-card a {
+  text-decoration: none;
+}
+
+.account-section-card a:hover {
+  text-decoration: underline;
+}

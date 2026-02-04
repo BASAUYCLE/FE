@@ -1,0 +1,187 @@
+/* Bike Card Component - match reference layout */
+.bike-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: visible;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.bike-card:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.bike-card .ant-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  min-height: 0;
+  overflow: visible;
+}
+
+.bike-card-image-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f3f4f6;
+  border-radius: 16px 16px 0 0;
+}
+
+.bike-card-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  transition: transform 0.35s ease;
+  display: block;
+}
+
+.bike-card:hover .bike-card-image {
+  transform: scale(1.05);
+}
+
+/* Badge - pill shape, top-left over image */
+.bike-card .ant-tag,
+.bike-card-badge-tag {
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  border: none;
+}
+
+.bike-card-favorite {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  color: #9ca3af;
+  z-index: 1;
+}
+
+.bike-card-favorite:hover {
+  background: #fff;
+  color: #ef4444;
+}
+
+.bike-card-favorite.in-wishlist {
+  color: #ef4444;
+}
+
+.bike-card-favorite.in-wishlist:hover {
+  color: #dc2626;
+}
+
+.bike-card-favorite .anticon {
+  font-size: 18px;
+}
+
+/* Category - teal, small uppercase */
+.bike-card-category {
+  font-size: 11px;
+  font-weight: 500;
+  color: #00a99d;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+  display: block;
+}
+
+/* Price - most prominent */
+.bike-card-price {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 8px;
+  display: block;
+  line-height: 1.2;
+}
+
+/* Product name - medium bold */
+.bike-card-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 16px;
+  display: block;
+  line-height: 1.35;
+}
+
+.bike-card:hover .bike-card-name {
+  color: #00a99d;
+}
+
+/* Specs row - grey icons + text */
+.bike-card-specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: auto;
+}
+
+.bike-card-spec {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bike-card-spec .anticon {
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+.bike-card-specs .ant-typography {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+/* Actions: Buy Now (top), View Details (bottom) - same style */
+.bike-card-actions {
+  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin-top: auto !important;
+  padding-top: 16px !important;
+}
+
+.bike-card-actions-link {
+  width: 100% !important;
+  text-decoration: none !important;
+}
+
+.bike-card-actions .bike-card-btn {
+  width: 100% !important;
+  height: 44px !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  border: none !important;
+  border-radius: 8px !important;
+  background-color: #00ccad !important;
+  color: #0f172a !important;
+}
+
+.bike-card-actions .bike-card-btn:hover {
+  background-color: #00b89a !important;
+  color: #0f172a !important;
+}

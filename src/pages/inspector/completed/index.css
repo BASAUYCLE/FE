@@ -1,0 +1,101 @@
+@import "../common/shared.css";
+
+.completed-orders-content {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.completed-orders-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.completed-orders-header {
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  justify-content: flex-end;
+}
+
+.completed-orders-header .inspector-queue-toolbar {
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.completed-orders-header .inspector-search {
+  min-width: 200px;
+  max-width: 280px;
+}
+
+.completed-table-row {
+  display: grid;
+  grid-template-columns: 140px 1.2fr 1fr 1.2fr 90px 1fr;
+  gap: 16px;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.completed-table-header {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+  font-weight: 700;
+  background: #f8fafc;
+}
+
+.completed-table-row:not(.completed-table-header):hover {
+  background: #f8fafc;
+}
+
+.completed-report-id {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 12px;
+}
+
+.completed-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #dcfce7;
+  color: #166534;
+}
+
+.completed-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.completed-btn-download {
+  margin-top: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .completed-table-row {
+    grid-template-columns: 120px 1fr 1fr 1fr 80px 1fr;
+    gap: 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .completed-orders-card {
+    overflow-x: auto;
+  }
+
+  .completed-table-row {
+    grid-template-columns: 110px 140px 100px 120px 80px 100px;
+    min-width: 650px;
+  }
+}

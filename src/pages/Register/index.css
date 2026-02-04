@@ -1,0 +1,154 @@
+/* Register page - extends auth styles from Login/login.css */
+
+.auth-card--register {
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 32px;
+}
+
+.auth-card--register .auth-card__title {
+  margin-bottom: 8px;
+}
+
+.auth-card__subtitle {
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 24px;
+}
+
+.auth-card__link-inline {
+  color: #00ccad;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.auth-card__link-inline:hover {
+  text-decoration: underline;
+}
+
+.auth-card__links-text {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.auth-card--register .auth-form .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.auth-card--register .auth-form__submit {
+  margin-bottom: 16px;
+}
+
+/* National ID Card Verification Upload Section */
+.cccd-upload-section {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.cccd-upload-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.cccd-upload-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 16px;
+}
+
+.cccd-upload-section .ant-form-item {
+  margin-bottom: 12px;
+}
+
+.cccd-upload-section .ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.cccd-upload-section .ant-upload-list-picture-card-container {
+  width: 100%;
+  height: auto;
+}
+
+.cccd-upload-section .ant-upload.ant-upload-select-picture-card {
+  width: 100%;
+  height: 140px;
+  background: white;
+  border: 2px dashed #cbd5e1;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.cccd-upload-section .ant-upload.ant-upload-select-picture-card:hover {
+  border-color: #00ccad;
+}
+
+.cccd-upload-section .ant-upload-list-picture-card .ant-upload-list-item {
+  width: 100%;
+  height: 140px;
+  border-radius: 8px;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.upload-content .anticon {
+  font-size: 28px;
+  color: #00ccad;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-card--register {
+    padding: 24px 20px;
+    max-width: 100%;
+  }
+
+  .cccd-upload-section {
+    padding: 16px;
+  }
+
+  .cccd-upload-section .ant-upload.ant-upload-select-picture-card {
+    height: 120px;
+  }
+
+  .cccd-upload-section .ant-upload-list-picture-card .ant-upload-list-item {
+    height: 120px;
+  }
+}
+
+/* Scrollbar styling */
+.auth-card--register::-webkit-scrollbar {
+  width: 6px;
+}
+
+.auth-card--register::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.auth-card--register::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.auth-card--register::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

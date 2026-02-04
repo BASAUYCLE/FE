@@ -1,0 +1,59 @@
+.admin-revenue-page .admin-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.admin-revenue-page .admin-page-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.admin-revenue-topbar {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.admin-period-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-period-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.admin-period-tab:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.admin-period-tab.active {
+  background: #00ccad;
+  border-color: #00ccad;
+  color: #fff;
+}
+
+.admin-revenue-stats {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 768px) {
+  .admin-revenue-stats {
+    grid-template-columns: 1fr;
+  }
+}

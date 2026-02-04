@@ -1,0 +1,120 @@
+/* Hero Section */
+.hero-section {
+    position: relative;
+    min-height: 600px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.hero-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-image-overlay {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    background: linear-gradient(135deg, rgba(26, 188, 156, 0.1) 0%, rgba(15, 23, 42, 0.9) 100%);
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600"><path d="M0,0 L400,0 L400,400 Q300,500 200,550 Q100,600 0,550 Z" fill="rgba(26,188,156,0.1)"/></svg>');
+    background-size: cover;
+    background-position: right center;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 10;
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 80px 24px 200px;
+    width: 100%;
+}
+
+.hero-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(26, 188, 156, 0.2);
+    border: 1px solid rgba(26, 188, 156, 0.3);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    border-radius: 4px;
+}
+
+.hero-title {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1.1;
+    color: white;
+    margin-bottom: 20px;
+    max-width: 700px;
+}
+
+.hero-title-highlight {
+    color: #1ABC9C;
+}
+
+.hero-description {
+    font-size: 18px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 32px;
+    max-width: 600px;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.hero-btn-primary {
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.hero-btn-secondary {
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.hero-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.hero-search-wrapper {
+    position: relative;
+    z-index: 20;
+    max-width: 1160px;
+    margin: -80px auto 0;
+    padding: 0 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 36px;
+    }
+
+    .hero-description {
+        font-size: 16px;
+    }
+
+    .hero-content {
+        padding: 60px 24px 180px;
+    }
+}

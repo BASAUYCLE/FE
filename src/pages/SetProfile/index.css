@@ -1,0 +1,39 @@
+/* Set Profile page */
+.set-profile-card {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.set-profile-avatar-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #00ccad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.set-profile-avatar-edit:hover {
+  background: #00b89a;
+}
+
+.set-profile-save-btn {
+  background-color: #00ccad !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  padding: 10px 20px !important;
+}
+
+.set-profile-save-btn:hover {
+  background-color: #00b89a !important;
+}

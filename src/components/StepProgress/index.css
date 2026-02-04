@@ -1,0 +1,132 @@
+/* Step Progress - Image 2 style */
+
+.step-progress-tabs {
+    display: flex;
+    align-items: flex-start;
+    gap: 28px;
+    /* spacing between steps */
+    background: transparent;
+    /* no frame */
+    border: none;
+    /* no outer border */
+    border-radius: 0;
+    padding: 0;
+    margin: 2rem auto;
+    max-width: 900px;
+    /* Align with form container */
+    width: 100%;
+}
+
+/* each step is one column */
+.step-tab {
+    flex: 1;
+    min-width: 0;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    /* no border-right */
+    padding: 0;
+}
+
+/* thin bar on top */
+.step-tab-bar {
+    width: 100%;
+    height: 4px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    /* light gray */
+    margin-bottom: 14px;
+}
+
+/* row: icon + text */
+.step-tab-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    /* left align */
+    gap: 10px;
+}
+
+.step-tab-icon {
+    font-size: 18px;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+}
+
+.step-tab-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+    white-space: nowrap;
+    /* no wrap */
+}
+
+/* Active - removed, only show color when completed */
+/* .step-tab-active .step-tab-bar {
+    background: #1ABC9C;
+}
+
+.step-tab-active .step-tab-icon,
+.step-tab-active .step-tab-title {
+    color: #1ABC9C;
+}
+
+.step-tab-active .step-tab-title {
+    font-weight: 600;
+} */
+
+/* Completed - show green */
+.step-tab-completed .step-tab-bar {
+    background: #1ABC9C;
+}
+
+.step-tab-completed .step-tab-icon,
+.step-tab-completed .step-tab-title {
+    color: #1ABC9C;
+    font-weight: 600;
+}
+
+/* Hover */
+.step-tab:hover .step-tab-bar {
+    background: #1ABC9C;
+}
+
+.step-tab:hover .step-tab-title,
+.step-tab:hover .step-tab-icon {
+    color: #1ABC9C;
+}
+
+/* Responsive: horizontal scroll like header */
+@media (max-width: 768px) {
+    .step-progress-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 20px;
+        padding-bottom: 6px;
+    }
+
+    .step-tab {
+        flex: 0 0 auto;
+        min-width: 190px;
+    }
+}
+
+@media (max-width: 480px) {
+    .step-tab {
+        min-width: 170px;
+    }
+
+    .step-tab-bar {
+        height: 3px;
+        margin-bottom: 12px;
+    }
+
+    .step-tab-icon {
+        font-size: 16px;
+    }
+
+    .step-tab-title {
+        font-size: 13px;
+    }
+}

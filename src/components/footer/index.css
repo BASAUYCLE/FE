@@ -1,0 +1,238 @@
+/* Footer Component - Black text, white border */
+.app-footer {
+    background: #ffffff;
+    padding: 40px 0 20px;
+}
+
+.app-footer-light {
+    background: #ffffff;
+    border: 2px solid #ffffff;
+    border-top: 4px solid #ffffff;
+    padding: 60px 0 24px;
+    color: #000000;
+}
+
+.app-footer-light .app-footer-logo-text {
+    color: #000000;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.app-footer-light .app-footer-description {
+    color: #374151;
+}
+
+.app-footer-light .app-footer-title {
+    color: #000000;
+}
+
+.app-footer-light .app-footer-links a {
+    color: #374151;
+}
+
+.app-footer-light .app-footer-links a:hover {
+    color: #000000;
+}
+
+.app-footer-light .app-footer-social-icon {
+    background: rgba(0, 0, 0, 0.08);
+    color: #374151;
+}
+
+.app-footer-light .app-footer-social-icon:hover {
+    background: rgba(0, 0, 0, 0.12);
+    color: #000000;
+}
+
+.app-footer-light .app-footer-bottom {
+    border-top-color: rgba(0, 0, 0, 0.1);
+    color: #374151;
+}
+
+.app-footer-light .app-footer-bottom-links a {
+    color: #374151;
+}
+
+.app-footer-light .app-footer-bottom-links a:hover {
+    color: #000000;
+}
+
+.app-footer-inner {
+    max-width: 1160px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.app-footer-top {
+    display: grid;
+    grid-template-columns: minmax(0, 2.1fr) repeat(3, minmax(0, 1.2fr));
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.app-footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.app-footer-logo-icon {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.app-footer-logo-text {
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #020617;
+}
+
+.app-footer-description {
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-top: 12px;
+}
+
+.app-footer-social {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.app-footer-social-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.app-footer-social-icon:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.app-footer-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: #020617;
+}
+
+.app-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.app-footer-links a {
+    color: #6b7280;
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.2s;
+}
+
+.app-footer-links a:hover {
+    color: #111827;
+}
+
+.app-footer-subscribe {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.app-footer-subscribe-text {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.app-footer-subscribe-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.app-footer-subscribe-input-row input {
+    flex: 1;
+    border-radius: 999px;
+    border: 1px solid #e5e7eb;
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+}
+
+.app-footer-subscribe-input-row input:focus {
+    border-color: #1ABC9C;
+}
+
+.app-footer-subscribe-input-row button {
+    border-radius: 999px;
+    border: none;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #1ABC9C;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.app-footer-subscribe-input-row button:hover {
+    background: #16A085;
+}
+
+.app-footer-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid rgba(15, 23, 42, 0.04);
+    padding-top: 14px;
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.app-footer-bottom-links {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.app-footer-bottom-links a {
+    color: #6b7280;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.app-footer-bottom-links a:hover {
+    color: #111827;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .app-footer-top {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .app-footer-bottom {
+        flex-direction: column;
+        text-align: center;
+    }
+}
