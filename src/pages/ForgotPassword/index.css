@@ -1,0 +1,12 @@
+/* Forgot Password - extends auth styles */
+
+.auth-page--forgot .auth-card__subtitle {
+  font-size: 14px;
+  color: #64748b;
+  text-align: center;
+  margin: 0 0 24px;
+}
+
+.auth-page--forgot .auth-form .ant-form-item {
+  margin-bottom: 24px;
+}
