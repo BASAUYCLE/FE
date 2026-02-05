@@ -10,6 +10,14 @@ import { STORAGE_KEYS } from "../constants/storageKeys";
 
 const AuthContext = createContext();
 
+/** Chuẩn hóa user.role từ backend (có thể gửi user_role hoặc userRole) */
+function normalizeUser(u) {
+  if (!u || typeof u !== "object") return u;
+  const role = u.role ?? u.userRole ?? u.user_role ?? "MEMBER";
+  if (u.role === role) return u;
+  return { ...u, role: String(role).toUpperCase() };
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within an AuthProvider");
@@ -20,7 +28,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.USER);
-      return saved ? JSON.parse(saved) : null;
+      const u = saved ? JSON.parse(saved) : null;
+      return normalizeUser(u);
     } catch {
       return null;
     }
@@ -32,6 +41,28 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => setLoading(false), []);
 
+  // Khi đã có token + user nhưng user chưa có role, gọi getProfile một lần để lấy role (ADMIN/INSPECTOR)
+  useEffect(() => {
+    if (!token || !user?.email) return;
+    if (user.role ?? user.userRole ?? user.user_role) return; // đã có role, bỏ qua
+    let cancelled = false;
+    userService
+      .getProfile()
+      .then((profileRes) => {
+        if (cancelled) return;
+        const data = profileRes?.data ?? profileRes?.result ?? profileRes;
+        const profileUser =
+          data?.user ?? data?.userInfo ?? (typeof data?.id === "number" || data?.email ? data : null);
+        if (profileUser && typeof profileUser === "object") {
+          const normalized = normalizeUser(profileUser);
+          setUser(normalized);
+          localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [token, user?.email, user?.role, user?.userRole, user?.user_role]);
+
   const login = async (credentials) => {
     try {
       setLoading(true);
@@ -40,9 +71,22 @@ export const AuthProvider = ({ children }) => {
 
       // authService already stores token and user in localStorage
       if (response.user && response.token) {
-        setUser(response.user);
         setToken(response.token);
-        return { success: true, data: response };
+        let finalUser = normalizeUser(response.user);
+        setUser(finalUser);
+        // Đợi lấy profile để có role (ADMIN/INSPECTOR) trước khi return — dùng cho redirect đúng trang
+        try {
+          const profileRes = await userService.getProfile();
+          const data = profileRes?.data ?? profileRes?.result ?? profileRes;
+          const profileUser =
+            data?.user ?? data?.userInfo ?? (typeof data?.id === "number" || data?.email ? data : null);
+          if (profileUser && typeof profileUser === "object") {
+            finalUser = normalizeUser(profileUser);
+            setUser(finalUser);
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(finalUser));
+          }
+        } catch (_) {}
+        return { success: true, data: response, user: finalUser };
       }
       return {
         success: false,
@@ -70,10 +114,11 @@ export const AuthProvider = ({ children }) => {
 
   // New method for direct login with user and token
   const loginWithSession = (userData, userToken) => {
-    setUser(userData);
+    const normalized = normalizeUser(userData);
+    setUser(normalized);
     setToken(userToken);
     localStorage.setItem(STORAGE_KEYS.TOKEN, userToken);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
   };
 
   const register = async (userData) => {
@@ -84,10 +129,11 @@ export const AuthProvider = ({ children }) => {
 
       // If registration includes auto-login (returns token)
       if (response.token && response.user) {
-        setUser(response.user);
+        const normalized = normalizeUser(response.user);
+        setUser(normalized);
         setToken(response.token);
         localStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
+        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
       }
 
       return { success: true, data: response };
@@ -106,8 +152,9 @@ export const AuthProvider = ({ children }) => {
 
       // userService already updates localStorage
       if (response.user) {
-        setUser(response.user);
-        return { success: true, data: response.user };
+        const normalized = normalizeUser(response.user);
+        setUser(normalized);
+        return { success: true, data: normalized };
       } else {
         return { success: false, message: "Cập nhật thất bại" };
       }
@@ -138,11 +185,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Call backend logout endpoint
       await authService.logout();
     } catch (error) {
-      console.error("Logout error:", error);
-      // Continue with local logout even if API call fails
+      // Only log if it's not a missing logout endpoint (404)
+      if (error?.response?.status !== 404) {
+        console.error("Logout error:", error);
+      }
     } finally {
       setUser(null);
       setToken(null);

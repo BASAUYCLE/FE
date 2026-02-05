@@ -18,7 +18,7 @@ const MOCK_VERIFIED_LISTINGS = [
   {
     id: "BK-9021",
     title: "Specialized Tarmac SL7",
-    seller: "Nguyễn Văn A",
+    seller: "John Smith",
     category: "Road Bike",
     price: "125.000.000 ₫",
     inspectedAt: "28/01/2025",
@@ -27,7 +27,7 @@ const MOCK_VERIFIED_LISTINGS = [
   {
     id: "BK-9022",
     title: "Canyon Grizl CF SL",
-    seller: "Trần Thị B",
+    seller: "Jane Doe",
     category: "Gravel",
     price: "89.000.000 ₫",
     inspectedAt: "27/01/2025",
@@ -36,7 +36,7 @@ const MOCK_VERIFIED_LISTINGS = [
   {
     id: "BK-9023",
     title: "Trek Domane SL 6",
-    seller: "Lê Văn C",
+    seller: "Bob Wilson",
     category: "Road Bike",
     price: "95.000.000 ₫",
     inspectedAt: "26/01/2025",
@@ -45,7 +45,7 @@ const MOCK_VERIFIED_LISTINGS = [
   {
     id: "BK-9024",
     title: "Giant TCR Advanced",
-    seller: "Phạm Thị D",
+    seller: "Alice Brown",
     category: "Road Bike",
     price: "72.000.000 ₫",
     inspectedAt: "25/01/2025",
@@ -54,7 +54,7 @@ const MOCK_VERIFIED_LISTINGS = [
   {
     id: "BK-9025",
     title: "Santa Cruz Bronson",
-    seller: "Hoàng Văn E",
+    seller: "Chris Lee",
     category: "Mountain",
     price: "185.000.000 ₫",
     inspectedAt: "24/01/2025",
@@ -102,9 +102,9 @@ export default function AdminApprovedListings() {
       <div className="admin-dashboard">
         <div className="admin-content">
           <header className="admin-topbar">
-            <h1 className="admin-page-title">Tin đăng đã qua kiểm duyệt</h1>
+            <h1 className="admin-page-title">Approved listings</h1>
             <p className="admin-page-subtitle">
-              Quản lý các tin đăng đã được kiểm định và duyệt hiển thị.
+              Manage listings that have been inspected and approved for display.
             </p>
           </header>
 
@@ -115,7 +115,7 @@ export default function AdminApprovedListings() {
                   <Search className="admin-search-icon" size={18} />
                   <input
                     type="text"
-                    placeholder="Tìm theo tiêu đề, người đăng, mã tin..."
+                    placeholder="Search by title, seller, post ID..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="admin-search-input"
@@ -130,7 +130,7 @@ export default function AdminApprovedListings() {
                   >
                     {categories.map((c) => (
                       <option key={c} value={c}>
-                        {c === "all" ? "Tất cả danh mục" : c}
+                        {c === "all" ? "All categories" : c}
                       </option>
                     ))}
                   </select>
@@ -138,22 +138,22 @@ export default function AdminApprovedListings() {
               </div>
               <div className="admin-table-actions">
                 <span className="admin-count-badge">
-                  {filtered.length} tin đăng
+                  {filtered.length} listing(s)
                 </span>
               </div>
             </div>
             <div className="admin-table admin-approved-table">
               <div className="admin-table-row admin-table-header">
-                <div>Mã / Tin đăng</div>
-                <div>Người đăng</div>
-                <div>Danh mục</div>
-                <div>Giá</div>
-                <div>Ngày kiểm định</div>
-                <div>Trạng thái</div>
-                <div>Thao tác</div>
+                <div>ID / Listing</div>
+                <div>Seller</div>
+                <div>Category</div>
+                <div>Price</div>
+                <div>Inspection date</div>
+                <div>Status</div>
+                <div>Actions</div>
               </div>
               {filtered.length === 0 ? (
-                <div className="admin-table-empty">Không có tin đăng nào.</div>
+                <div className="admin-table-empty">No listings.</div>
               ) : (
                 filtered.map((row) => (
                   <div className="admin-table-row" key={row.id}>
@@ -175,7 +175,7 @@ export default function AdminApprovedListings() {
                       <button
                         type="button"
                         className="admin-actions-button"
-                        title="Xem chi tiết"
+                        title="View details"
                         aria-label="Xem"
                       >
                         <Eye size={16} />
@@ -183,8 +183,8 @@ export default function AdminApprovedListings() {
                       <button
                         type="button"
                         className="admin-actions-button"
-                        title="Thêm"
-                        aria-label="Thêm"
+                        title="Add"
+                        aria-label="Add"
                       >
                         <MoreHorizontal size={16} />
                       </button>

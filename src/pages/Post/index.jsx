@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Breadcrumb, Input, Select, Button, Upload, message } from "antd";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Breadcrumb, Input, Select, Button, Upload, App } from "antd";
 import {
   InfoCircleOutlined,
   SettingOutlined,
@@ -20,9 +20,12 @@ import { STORAGE_KEYS } from "../../constants/storageKeys";
 import "./index.css";
 
 export default function PostBike() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit") || null;
   const { user } = useAuth();
-  const { addPosting } = usePostings();
+  const { addPosting, getPostingById, updatePosting } = usePostings();
   const { addNotification } = useNotifications();
   const [sellerId, setSellerId] = useState(user?.userId ?? null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -138,11 +141,17 @@ export default function PostBike() {
   const [requiredPhotos, setRequiredPhotos] = useState(() =>
     REQUIRED_PHOTO_KEYS.reduce((acc, { key }) => ({ ...acc, [key]: [] }), {}),
   );
+  /** Lưu File gốc theo slot để khi bấm Post luôn có file (tránh mất originFileObj từ Ant Design) */
+  const [requiredPhotoFiles, setRequiredPhotoFiles] = useState(() =>
+    REQUIRED_PHOTO_KEYS.reduce((acc, { key }) => ({ ...acc, [key]: null }), {}),
+  );
   const [requiredPhotoDataUrls, setRequiredPhotoDataUrls] = useState(() =>
     REQUIRED_PHOTO_KEYS.reduce((acc, { key }) => ({ ...acc, [key]: null }), {}),
   );
   const [defectFiles, setDefectFiles] = useState([]);
   const [defectImageDataUrls, setDefectImageDataUrls] = useState([]);
+
+  const filledEditIdRef = useRef(null);
 
   // Section IDs for scroll detection
   const sectionIds = [
@@ -228,6 +237,119 @@ export default function PostBike() {
       cancelled = true;
     };
   }, [sellerId]);
+
+  // Chế độ chỉnh sửa: đọc ?edit=id, tải bài đăng và điền form
+  useEffect(() => {
+    if (!editId || filledEditIdRef.current === editId) return;
+
+    const applyPosting = (posting) => {
+      if (!posting) return;
+      filledEditIdRef.current = editId;
+
+      setBikeName(posting.bikeName ?? "");
+      setFrameSize(posting.frameSize ?? "");
+      setFrameMaterial(posting.frameMaterial ?? undefined);
+      setGroupset(posting.groupset ?? undefined);
+      setBrakeType(posting.brakeType ?? undefined);
+      setColor(posting.color ?? "");
+      setDescription(posting.description ?? "");
+      setPrice(
+        typeof posting.price === "number"
+          ? String(posting.price)
+          : posting.priceDisplay?.replace(/\D/g, "") ?? posting.price ?? "",
+      );
+      if (posting.modelYear != null) setModelYear(posting.modelYear);
+
+      // Ưu tiên set trực tiếp từ id (không phụ thuộc options đã load)
+      if (posting.brandId != null && posting.brandId !== undefined) {
+        setBrandId(posting.brandId);
+      } else {
+        const brandOpt = brandOptions.find(
+          (o) =>
+            String(o.label).toLowerCase() === String(posting.brand || "").toLowerCase() ||
+            o.value === posting.brandId,
+        );
+        if (brandOpt) setBrandId(brandOpt.value);
+      }
+
+      if (posting.categoryId != null && posting.categoryId !== undefined) {
+        setCategoryId(posting.categoryId);
+      } else {
+        const categoryOpt = categoryOptions.find(
+          (o) =>
+            String(o.label).toLowerCase() === String(posting.category || "").toLowerCase() ||
+            o.value === posting.categoryId,
+        );
+        if (categoryOpt) setCategoryId(categoryOpt.value);
+      }
+
+      const urls = posting.imageUrls?.length
+        ? posting.imageUrls
+        : posting.imageUrl
+          ? [posting.imageUrl]
+          : [];
+      const photoDataUrls = REQUIRED_PHOTO_KEYS.reduce((acc, { key }, i) => {
+        acc[key] = urls[i] ?? null;
+        return acc;
+      }, {});
+      setRequiredPhotoDataUrls(photoDataUrls);
+      const fileListBySlot = REQUIRED_PHOTO_KEYS.reduce((acc, { key }, i) => {
+        acc[key] = urls[i]
+          ? [{ uid: `edit-${key}-${i}`, url: urls[i], status: "done", name: `Ảnh ${key}` }]
+          : [];
+        return acc;
+      }, {});
+      setRequiredPhotos(fileListBySlot);
+    };
+
+    // editId từ URL là string ("6"), id trong context có thể là number (6) → thử cả hai
+    let posting = getPostingById(Number(editId)) ?? getPostingById(editId);
+    if (posting) {
+      applyPosting(posting);
+      return;
+    }
+
+    let cancelled = false;
+    postService
+      .getPostById(editId)
+      .then((res) => {
+        if (cancelled) return;
+        const raw = res?.result ?? res;
+        if (!raw) return;
+        const images = raw.images ?? [];
+        const imageUrls = images.map((i) => i?.imageUrl ?? i?.image_url).filter(Boolean);
+        applyPosting({
+          bikeName: raw.bicycleName ?? raw.bicycle_name,
+          brand: raw.brandName ?? raw.brand_name,
+          brandId: raw.brandId ?? raw.brand_id,
+          category: raw.categoryName ?? raw.category_name,
+          categoryId: raw.categoryId ?? raw.category_id,
+          frameSize: raw.size ?? raw.frameSize ?? "",
+          frameMaterial: raw.frameMaterial ?? raw.frame_material,
+          groupset: raw.groupset ?? undefined,
+          brakeType: raw.brakeType ?? raw.brake_type ?? undefined,
+          modelYear: raw.modelYear ?? raw.model_year ?? undefined,
+          color: raw.bicycleColor ?? raw.bicycle_color ?? raw.color ?? "",
+          description: raw.bicycleDescription ?? raw.bicycle_description ?? raw.description ?? "",
+          price: raw.price,
+          imageUrl: imageUrls[0] ?? null,
+          imageUrls,
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) message.error(err?.message ?? "Không tải được thông tin bài đăng.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    editId,
+    getPostingById,
+    brandOptions,
+    categoryOptions,
+    message,
+  ]);
 
   // Check section completion and update completedSections
   const allRequiredPhotosFilled = REQUIRED_PHOTO_KEYS.every(
@@ -333,37 +455,45 @@ export default function PostBike() {
     reader.readAsDataURL(file.originFileObj);
   };
 
+  /* Cách làm giống Register: beforeUpload return false, set fileList thủ công (không customRequest) */
+  const beforeUploadRequired = (slotKey, file) => {
+    if (!file?.type?.startsWith("image/")) {
+      message.error("Chỉ chấp nhận file ảnh.");
+      return Upload.LIST_IGNORE;
+    }
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error("Ảnh phải nhỏ hơn 5MB.");
+      return Upload.LIST_IGNORE;
+    }
+    setRequiredPhotos((prev) => ({
+      ...prev,
+      [slotKey]: [
+        { uid: file.uid ?? `${slotKey}-${Date.now()}`, name: file.name, status: "done", url: URL.createObjectURL(file) },
+      ],
+    }));
+    setRequiredPhotoFiles((prev) => ({ ...prev, [slotKey]: file }));
+    readFileAsDataUrl({ originFileObj: file }, (dataUrl) => {
+      setRequiredPhotoDataUrls((prev) => ({ ...prev, [slotKey]: dataUrl }));
+    });
+    return false;
+  };
+
+  const handleRemoveRequired = (slotKey) => {
+    setRequiredPhotos((prev) => ({ ...prev, [slotKey]: [] }));
+    setRequiredPhotoFiles((prev) => ({ ...prev, [slotKey]: null }));
+    setRequiredPhotoDataUrls((prev) => ({ ...prev, [slotKey]: null }));
+  };
+
   const createRequiredUploadProps = (slotKey) => ({
     name: "file",
     maxCount: 1,
     listType: "picture-card",
     fileList: requiredPhotos[slotKey] || [],
     accept: "image/*",
-    customRequest({ onSuccess }) {
-      setTimeout(() => onSuccess({ url: "" }), 0);
-    },
-    onChange(info) {
-      const { status } = info.file;
-      if (status === "done" || status === "uploading") {
-        setRequiredPhotos((prev) => ({ ...prev, [slotKey]: info.fileList }));
-        const file = info.fileList[0];
-        if (file) {
-          readFileAsDataUrl(file, (dataUrl) => {
-            setRequiredPhotoDataUrls((prev) => ({
-              ...prev,
-              [slotKey]: dataUrl,
-            }));
-          });
-        } else {
-          setRequiredPhotoDataUrls((prev) => ({ ...prev, [slotKey]: null }));
-        }
-      } else if (status === "removed") {
-        setRequiredPhotos((prev) => ({ ...prev, [slotKey]: [] }));
-        setRequiredPhotoDataUrls((prev) => ({ ...prev, [slotKey]: null }));
-      } else if (status === "error") {
-        message.error(`${info.file.name} upload failed.`);
-      }
-    },
+    beforeUpload: (file) => beforeUploadRequired(slotKey, file),
+    onRemove: () => handleRemoveRequired(slotKey),
+    showUploadList: { showPreviewIcon: true, showRemoveIcon: true },
   });
 
   const readDefectFilesAsDataUrls = (fileList) => {
@@ -512,12 +642,19 @@ export default function PostBike() {
       return Number.isFinite(n) ? n : null;
     };
 
-    const getFileFromAntdList = (fileList) =>
-      fileList?.[0]?.originFileObj ?? null;
+    const getFileFromAntdList = (fileList) => {
+      const first = fileList?.[0];
+      if (!first) return null;
+      return first.originFileObj ?? (first instanceof File ? first : null);
+    };
 
     const run = async () => {
       const key = "post-bike";
-      message.loading({ content: "Đang đăng tin...", key, duration: 0 });
+      message.loading({
+        content: editId ? "Đang cập nhật tin..." : "Đang đăng tin...",
+        key,
+        duration: 0,
+      });
 
       try {
         const vnd = sanitizeVnd(price);
@@ -529,7 +666,7 @@ export default function PostBike() {
           return;
         }
 
-        const createReq = {
+        const updatePayload = {
           sellerId: Number(sellerId),
           brandId: Number(brandId),
           categoryId: Number(categoryId),
@@ -544,43 +681,70 @@ export default function PostBike() {
           modelYear: Number(modelYear),
         };
 
-        const created = await postService.createPost(createReq);
-        const postId = created?.result?.postId ?? created?.postId;
-        if (!postId) {
-          throw new Error("Tạo bài đăng thất bại (không nhận được postId).");
+        let postId = editId ? Number(editId) : null;
+        if (!editId) {
+          const created = await postService.createPost(updatePayload);
+          postId =
+            created?.result?.postId ??
+            created?.result?.id ??
+            created?.postId ??
+            created?.data?.postId ??
+            created?.data?.id ??
+            created?.data?.post?.id ??
+            created?.id ??
+            null;
+          if (postId == null) {
+            throw new Error("Tạo bài đăng thất bại (không nhận được postId).");
+          }
+          postId = Number(postId) || postId;
+        } else {
+          await postService.updatePost(editId, updatePayload);
         }
 
-        // Upload required images
-        await Promise.all(
-          REQUIRED_PHOTO_KEYS.map(({ key: slotKey }) => {
-            const imageFile = getFileFromAntdList(requiredPhotos[slotKey]);
-            if (!imageFile) {
-              throw new Error(`Thiếu ảnh bắt buộc: ${slotKey}`);
-            }
-            return postService.uploadPostImage({
-              postId,
-              imageFile,
-              imageType: IMAGE_TYPE_BY_SLOT[slotKey],
-              isThumbnail: slotKey === "driveSide",
-            });
-          }),
-        );
-
-        // Upload defect images (optional)
-        if (defectFiles?.length > 0) {
-          await Promise.all(
-            defectFiles
-              .map((f) => f?.originFileObj)
-              .filter(Boolean)
-              .map((imageFile) =>
-                postService.uploadPostImage({
+        // Upload ảnh (chỉ khi có file mới; chỉnh sửa có thể giữ ảnh cũ)
+        let imageUploadFailed = false;
+        try {
+          const hasNewFiles = REQUIRED_PHOTO_KEYS.some(
+            ({ key: slotKey }) =>
+              requiredPhotoFiles[slotKey] instanceof File ||
+              getFileFromAntdList(requiredPhotos[slotKey]),
+          );
+          if (hasNewFiles) {
+            await Promise.all(
+              REQUIRED_PHOTO_KEYS.map(({ key: slotKey }) => {
+                const imageFile =
+                  requiredPhotoFiles[slotKey] instanceof File
+                    ? requiredPhotoFiles[slotKey]
+                    : getFileFromAntdList(requiredPhotos[slotKey]);
+                if (!imageFile) return Promise.resolve();
+                return postService.uploadPostImage({
                   postId,
                   imageFile,
-                  imageType: "DEFECT_POINT",
-                  isThumbnail: false,
-                }),
-              ),
-          );
+                  imageType: IMAGE_TYPE_BY_SLOT[slotKey],
+                  isThumbnail: slotKey === "driveSide",
+                });
+              }),
+            );
+          }
+
+          if (defectFiles?.length > 0) {
+            await Promise.all(
+              defectFiles
+                .map((f) => f?.originFileObj)
+                .filter(Boolean)
+                .map((imageFile) =>
+                  postService.uploadPostImage({
+                    postId,
+                    imageFile,
+                    imageType: "DEFECT_POINT",
+                    isThumbnail: false,
+                  }),
+                ),
+            );
+          }
+        } catch (imgErr) {
+          console.warn("[Post] Image upload failed:", imgErr);
+          imageUploadFailed = true;
         }
 
         const fullRes = await postService.getPostById(postId);
@@ -593,30 +757,57 @@ export default function PostBike() {
           imageUrls[0] ??
           null;
 
-        addPosting(
-          {
+        if (editId) {
+          updatePosting(Number(editId), {
             ...buildPayload(),
             imageUrl: thumbnail,
             imageUrls,
             priceDisplay: `${vnd.toLocaleString("vi-VN")} ₫`,
             backendPostId: postId,
             postStatus: full?.postStatus ?? POSTING_STATUS.PENDING,
-          },
-          POSTING_STATUS.PENDING_REVIEW,
-          sellerId,
-        );
+          });
+        } else {
+          addPosting(
+            {
+              ...buildPayload(),
+              imageUrl: thumbnail,
+              imageUrls,
+              priceDisplay: `${vnd.toLocaleString("vi-VN")} ₫`,
+              backendPostId: postId,
+              postStatus: full?.postStatus ?? POSTING_STATUS.PENDING,
+            },
+            POSTING_STATUS.PENDING_REVIEW,
+            sellerId,
+          );
+        }
 
         addNotification({
-          title: "Tin đăng đã gửi",
-          message: "Tin đang chờ duyệt. Sẽ hiển thị khi được phê duyệt.",
+          title: editId ? "Đã cập nhật tin đăng" : "Tin đăng đã gửi",
+          message: editId
+            ? "Tin đăng đã được cập nhật."
+            : "Tin đang chờ duyệt. Sẽ hiển thị khi được phê duyệt.",
           type: "success",
-          status: "Chờ duyệt",
+          status: editId ? "Đã cập nhật" : "Chờ duyệt",
         });
 
-        message.success({ content: "Đăng tin thành công.", key, duration: 2 });
+        if (imageUploadFailed) {
+          message.warning({
+            content:
+              (editId ? "Tin đăng đã cập nhật (ID: " + postId + ") nhưng " : "Bài đăng đã tạo (ID: " + postId + ") nhưng ") +
+              "ảnh chưa tải lên được. Bạn có thể chỉnh sửa tin để thêm ảnh sau.",
+            key,
+            duration: 5,
+          });
+        } else {
+          message.success({
+            content: editId ? "Cập nhật tin đăng thành công." : "Đăng tin thành công.",
+            key,
+            duration: 2,
+          });
+        }
         navigate("/manage-listings");
       } catch (err) {
-        const msg = err?.message || "Đăng tin thất bại. Vui lòng thử lại.";
+        const msg = err?.message || (editId ? "Cập nhật tin thất bại." : "Đăng tin thất bại. Vui lòng thử lại.");
         message.error({ content: msg, key, duration: 3 });
       }
     };
@@ -831,20 +1022,15 @@ export default function PostBike() {
             <div className="required-photos-grid">
               {REQUIRED_PHOTO_KEYS.map(({ key, label, labelVi }) => (
                 <div key={key} className="required-photo-slot">
+                  <div className="required-photo-label">{label} ({labelVi})</div>
                   <Upload
                     {...createRequiredUploadProps(key)}
-                    className="required-photo-upload"
-                    showUploadList={{
-                      showPreviewIcon: true,
-                      showRemoveIcon: true,
-                    }}
+                    className="required-photo-upload register-style-upload"
                   >
                     {(requiredPhotos[key]?.length || 0) < 1 && (
                       <div className="upload-content">
                         <UploadOutlined />
-                        <div className="upload-text">
-                          {label} ({labelVi})
-                        </div>
+                        <div className="upload-text">{label}</div>
                       </div>
                     )}
                   </Upload>

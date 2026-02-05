@@ -24,11 +24,15 @@ export default function BikeCard({ bike }) {
   const isOwnListing =
     bike.sellerId != null &&
     user &&
-    (bike.sellerId === user.id || bike.sellerId === user.email);
+    (bike.sellerId == user.id ||
+      bike.sellerId == user.userId ||
+      bike.sellerId == user.user_id ||
+      bike.sellerId === user.email);
 
   const handleFavoriteClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (isOwnListing) return;
     if (!isLoggedIn) {
       message.info("Please sign in to use wishlist");
       navigate("/login");
@@ -84,6 +88,7 @@ export default function BikeCard({ bike }) {
             src={bike.image}
             alt={bike.name}
             className="bike-card-image"
+            referrerPolicy="no-referrer"
             style={{
               width: "100%",
               height: "100%",
@@ -106,28 +111,30 @@ export default function BikeCard({ bike }) {
               {bike.badge}
             </Tag>
           )}
-          <Button
-            type="text"
-            icon={inWishlist ? <HeartFilled /> : <HeartOutlined />}
-            className={`bike-card-favorite ${inWishlist ? "in-wishlist" : ""}`}
-            aria-label={
-              inWishlist ? "Remove from favorites" : "Add to favorites"
-            }
-            onClick={handleFavoriteClick}
-            style={{
-              position: "absolute",
-              top: 16,
-              right: 16,
-              width: 36,
-              height: 36,
-              backgroundColor: "rgba(255, 255, 255, 0.9)",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 1,
-            }}
-          />
+          {!isOwnListing && (
+            <Button
+              type="text"
+              icon={inWishlist ? <HeartFilled /> : <HeartOutlined />}
+              className={`bike-card-favorite ${inWishlist ? "in-wishlist" : ""}`}
+              aria-label={
+                inWishlist ? "Remove from favorites" : "Add to favorites"
+              }
+              onClick={handleFavoriteClick}
+              style={{
+                position: "absolute",
+                top: 16,
+                right: 16,
+                width: 36,
+                height: 36,
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 1,
+              }}
+            />
+          )}
         </div>
       }
       styles={{

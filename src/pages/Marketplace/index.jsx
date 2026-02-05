@@ -12,6 +12,7 @@ import {
   TOTAL_MARKETPLACE_COUNT,
 } from "../../data/marketplaceBikes";
 import { usePostings } from "../../contexts/PostingContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
 import "./index.css";
@@ -32,7 +33,7 @@ function postingToBike(p) {
     category: p.category || "BIKE",
     biketype: p.biketype ?? null,
     image: p.imageUrl || defaultBikeImage,
-    badge: p.status === POSTING_STATUS.ACTIVE ? "VERIFIED" : "PENDING",
+    badge: p.status === POSTING_STATUS.AVAILABLE ? "VERIFIED" : "PENDING",
     specs: {},
     sellerId: p.sellerId ?? null,
   };
@@ -48,8 +49,18 @@ const PRICE_MAX = 10000;
 const PRICE_RANGE_DEFAULT = [PRICE_MIN, PRICE_MAX];
 
 export default function Marketplace() {
-  const { postings } = usePostings();
+  const { user } = useAuth();
+  const { postings, publicPostings, loadPublicPostings, loadPostingsBySeller } = usePostings();
   const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    loadPublicPostings();
+  }, [loadPublicPostings]);
+
+  useEffect(() => {
+    const sellerId = user?.id ?? user?.userId ?? user?.user_id;
+    if (sellerId) loadPostingsBySeller(sellerId);
+  }, [user?.id, user?.userId, user?.user_id, loadPostingsBySeller]);
   const typeFromUrl = searchParams.get("type");
   const [bikeType, setBikeType] = useState("all");
   const [priceRange, setPriceRange] = useState(PRICE_RANGE_DEFAULT);
@@ -66,16 +77,18 @@ export default function Marketplace() {
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
 
+  // Luồng nghiệp vụ: chỉ hiển thị bài đã duyệt (ADMIN_APPROVED) hoặc đang hiển thị (AVAILABLE). Gộp publicPostings (API) + postings (tin của seller) rồi bỏ trùng theo id.
   const allBikes = useMemo(() => {
-    const fromPostings = postings
-      .filter(
-        (p) =>
-          p.status === POSTING_STATUS.ACTIVE ||
-          p.status === POSTING_STATUS.PENDING_REVIEW,
-      )
-      .map(postingToBike);
+    const allowed = (p) =>
+      p.status === POSTING_STATUS.AVAILABLE ||
+      p.status === POSTING_STATUS.ADMIN_APPROVED;
+    const byId = new Map();
+    [...publicPostings, ...postings].filter(allowed).forEach((p) => {
+      if (p?.id != null) byId.set(p.id, p);
+    });
+    const fromPostings = [...byId.values()].map(postingToBike);
     return [...fromPostings, ...marketplaceBikes];
-  }, [postings]);
+  }, [postings, publicPostings]);
 
   const displayedBikes =
     bikeType === "all"

@@ -26,13 +26,15 @@ import {
   UserOutlined,
   CloseOutlined,
   LogoutOutlined,
+  DashboardOutlined,
+  AuditOutlined,
 } from "@ant-design/icons";
 import { Receipt, FileText } from "lucide-react";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { useNotifications } from "../../contexts/useNotifications";
-import { NAV_LINKS, getActiveLink } from "../../config/headerConfig";
+import { getNavLinksForRole, getActiveLink } from "../../config/headerConfig";
 import "./index.css";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
@@ -204,36 +206,39 @@ const NotificationsMenu = styled(Menu)(({ theme }) => ({
   },
 }));
 
-const userMenuItems = [
-  {
-    label: "Wishlist",
-    path: "/wishlist",
-    icon: <HeartOutlined style={{ fontSize: 18 }} />,
-  },
-  {
-    label: "Wallet",
-    path: "/wallet",
-    icon: <WalletOutlined style={{ fontSize: 18 }} />,
-  },
-  {
-    label: "Pending Payments",
-    path: "/orders",
-    icon: <Receipt size={18} />,
-  },
-  {
-    label: "Quản lý tin đăng",
-    path: "/manage-listings",
-    icon: <FileText size={18} />,
-  },
-  {
-    label: "Tài khoản",
-    path: "/account",
-    icon: <UserOutlined style={{ fontSize: 18 }} />,
-  },
-];
+/** Menu dropdown by role: MEMBER (Wishlist, Wallet, Orders, Manage Listings, Account); ADMIN (Admin Dashboard, Account); INSPECTOR (Inspection, Account) */
+function getMenuItemsForRole(role) {
+  const r = (role ?? "MEMBER").toUpperCase();
+  if (r === "ADMIN") {
+    return [
+      { label: "Admin Dashboard", path: "/admin-dashboard", icon: <DashboardOutlined style={{ fontSize: 18 }} /> },
+      { label: "Account", path: "/account", icon: <UserOutlined style={{ fontSize: 18 }} /> },
+    ];
+  }
+  if (r === "INSPECTOR") {
+    return [
+      { label: "Inspection", path: "/inspector", icon: <AuditOutlined style={{ fontSize: 18 }} /> },
+      { label: "Account", path: "/account", icon: <UserOutlined style={{ fontSize: 18 }} /> },
+    ];
+  }
+  return [
+    { label: "Wishlist", path: "/wishlist", icon: <HeartOutlined style={{ fontSize: 18 }} /> },
+    { label: "Wallet", path: "/wallet", icon: <WalletOutlined style={{ fontSize: 18 }} /> },
+    { label: "Pending Payments", path: "/orders", icon: <Receipt size={18} /> },
+    { label: "Manage Listings", path: "/manage-listings", icon: <FileText size={18} /> },
+    { label: "Account", path: "/account", icon: <UserOutlined style={{ fontSize: 18 }} /> },
+  ];
+}
+
+/** Lấy role từ user (backend có thể trả user_role hoặc userRole) */
+function getUserRole(user) {
+  if (!user) return "MEMBER";
+  const r = user.role ?? user.userRole ?? user.user_role ?? "MEMBER";
+  return String(r).toUpperCase();
+}
 
 export default function Header({
-  navLinks = NAV_LINKS,
+  navLinks: navLinksProp,
   activeLink: activeLinkProp,
   navVariant = "default",
   showSearch = true,
@@ -247,11 +252,17 @@ export default function Header({
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated?.() ?? !!user;
+  const role = getUserRole(user);
 
   const activeLink = activeLinkProp ?? getActiveLink(pathname);
   const showAvatar = showAvatarProp ?? isLoggedIn;
   const showLogin = showLoginProp ?? !isLoggedIn;
-  const showSellButtonResolved = showSellButton ?? pathname !== "/post";
+  const navLinks = navLinksProp ?? getNavLinksForRole(role);
+  const userMenuItems = getMenuItemsForRole(role);
+  const showSellButtonResolved =
+    (showSellButton ?? pathname !== "/post") &&
+    role !== "ADMIN" &&
+    role !== "INSPECTOR";
 
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const [wishlistAnchor, setWishlistAnchor] = useState(null);
@@ -388,7 +399,7 @@ export default function Header({
               </Badge>
             </IconButton>
           )}
-          {showNotificationIcon && (
+          {showNotificationIcon && role === "MEMBER" && (
             <IconButton
               onClick={handleNotifOpen}
               aria-label="Notifications"

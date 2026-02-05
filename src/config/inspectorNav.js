@@ -1,4 +1,4 @@
-/** Cấu hình nav cho trang Inspector (kiểm định xe) */
+/** Inspector nav (bicycle inspection) */
 
 export const INSPECTOR_NAV_LINKS = [
   { label: "Dashboard", href: "/inspector" },

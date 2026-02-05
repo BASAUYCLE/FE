@@ -211,6 +211,9 @@ const authService = {
     } catch (error) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER);
+      // Backend may not implement /auth/logout (404) – still clear local session
+      const status = error?.response?.status;
+      if (status === 404 || status === 401) return null;
       throw error;
     }
   },

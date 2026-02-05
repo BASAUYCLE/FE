@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { message, Modal, Input } from "antd";
 import {
   FileCheck2,
   CheckCircle2,
@@ -63,6 +63,10 @@ export default function ListingApproval() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectPostId, setRejectPostId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -73,7 +77,7 @@ export default function ListingApproval() {
       const list = Array.isArray(res?.result) ? res.result : [];
       setListings(list);
     } catch (err) {
-      message.error(err?.message ?? "Không tải được danh sách chờ duyệt.");
+      message.error(err?.message ?? "Failed to load pending list.");
       setListings([]);
     } finally {
       setLoading(false);
@@ -88,12 +92,40 @@ export default function ListingApproval() {
     try {
       setApprovingId(postId);
       await adminPostService.approvePost(postId);
-      message.success("Đã duyệt bài đăng.");
+      message.success("Content approved. Post is now pending Inspector verification.");
       await fetchPending();
     } catch (err) {
-      message.error(err?.message ?? "Duyệt bài thất bại.");
+      message.error(err?.message ?? "Approval failed.");
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const openRejectModal = (postId) => {
+    setRejectPostId(postId);
+    setRejectReason("");
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectSubmit = async () => {
+    const reason = rejectReason.trim();
+    if (!reason) {
+      message.warning("Please enter the rejection reason.");
+      return;
+    }
+    if (!rejectPostId) return;
+    try {
+      setRejectingId(rejectPostId);
+      await adminPostService.rejectPost(rejectPostId, { rejectionReason: reason });
+      message.success("Post rejected. Members will see the reason in Manage Listings.");
+      setRejectModalOpen(false);
+      setRejectPostId(null);
+      setRejectReason("");
+      await fetchPending();
+    } catch (err) {
+      message.error(err?.message ?? "Rejection failed.");
+    } finally {
+      setRejectingId(null);
     }
   };
 
@@ -120,7 +152,7 @@ export default function ListingApproval() {
               <span className="stat-icon green"><ClipboardList /></span>
             </div>
             <div className="stat-value">{loading ? "…" : String(pendingCount)}</div>
-            <div className="stat-note green">Từ API /admin/posts/pending</div>
+            <div className="stat-note green">From API /admin/posts/pending</div>
           </div>
           <div className="admin-listings-stat">
             <div className="stat-header">
@@ -128,7 +160,7 @@ export default function ListingApproval() {
               <span className="stat-icon green"><CheckCircle2 /></span>
             </div>
             <div className="stat-value">—</div>
-            <div className="stat-note green">Có thể bổ sung API thống kê</div>
+            <div className="stat-note green">Stats API can be added</div>
           </div>
           <div className="admin-listings-stat">
             <div className="stat-header">
@@ -136,7 +168,7 @@ export default function ListingApproval() {
               <span className="stat-icon red"><AlertTriangle /></span>
             </div>
             <div className="stat-value">—</div>
-            <div className="stat-note red">Có thể bổ sung API thống kê</div>
+            <div className="stat-note red">Stats API can be added</div>
           </div>
         </div>
 
@@ -175,7 +207,7 @@ export default function ListingApproval() {
             {loading ? (
               <div className="queue-row">
                 <div style={{ padding: "24px", gridColumn: "1 / -1", textAlign: "center" }}>
-                  Đang tải...
+                  Loading...
                 </div>
               </div>
             ) : (
@@ -212,7 +244,7 @@ export default function ListingApproval() {
                         type="button"
                         className="queue-icon"
                         onClick={() => navigate(`/product/${row.postId}`)}
-                        title="Xem chi tiết"
+                        title="View details"
                       >
                         <Eye />
                       </button>
@@ -222,10 +254,15 @@ export default function ListingApproval() {
                         onClick={() => handleApprove(row.postId)}
                         disabled={approvingId === row.postId}
                       >
-                        {approvingId === row.postId ? "Đang duyệt…" : "Approve"}
+                        {approvingId === row.postId ? "Approving…" : "Approve"}
                       </button>
-                      <button type="button" className="queue-reject">
-                        Reject
+                      <button
+                        type="button"
+                        className="queue-reject"
+                        onClick={() => openRejectModal(row.postId)}
+                        disabled={rejectingId === row.postId}
+                      >
+                        {rejectingId === row.postId ? "Rejecting…" : "Reject"}
                       </button>
                     </div>
                   </div>
@@ -299,6 +336,34 @@ export default function ListingApproval() {
           </div>
         </div>
       </div>
+
+      <Modal
+        title="Reject post"
+        open={rejectModalOpen}
+        onCancel={() => {
+          setRejectModalOpen(false);
+          setRejectPostId(null);
+          setRejectReason("");
+        }}
+        onOk={handleRejectSubmit}
+        okText="Reject"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true, loading: rejectingId != null }}
+        destroyOnHidden
+        width={520}
+      >
+        <p style={{ marginBottom: 8, color: "#64748b" }}>
+          Enter the rejection reason (title, price, description...). Members will see this in Manage Listings.
+        </p>
+        <Input.TextArea
+          placeholder="e.g. Price too far from market; Description missing required information..."
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          rows={4}
+          maxLength={500}
+          showCount
+        />
+      </Modal>
 
       <Footer />
     </div>

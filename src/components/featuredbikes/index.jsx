@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Box,
@@ -15,6 +15,7 @@ import santaCruzNomadCC from "../../assets/SantaCruzNomaCC.png";
 import canyonGrizlCFSL from "../../assets/CanyonGrizlCFSL.jpg";
 import specializedTurboLevo from "../../assets/SpecializedTurboLevo.png";
 import { usePostings } from "../../contexts/PostingContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 // Add image to src/assets/bike-tarmac-sl7-new.png then enable the 2 lines below and set image to bikeTarmacSL7New
 // import bikeTarmacSL7New from "../../assets/bike-tarmac-sl7-new.png";
@@ -27,7 +28,7 @@ function postingToBike(p) {
     price: p.priceDisplay || (p.price ? `$${p.price}` : "$0"),
     category: p.category || "BIKE",
     image: p.imageUrl || bikeTarmac,
-    badge: p.status === POSTING_STATUS.ACTIVE ? "VERIFIED" : "PENDING",
+    badge: p.status === POSTING_STATUS.AVAILABLE ? "VERIFIED" : "PENDING",
     specs: {},
     sellerId: p.sellerId ?? null,
   };
@@ -216,18 +217,30 @@ const ArrowButton = styled(IconButton)(({ theme }) => ({
 
 export default function FeaturedBikes() {
   const scrollRef = useRef(null);
-  const { postings } = usePostings();
+  const { user } = useAuth();
+  const { postings, publicPostings, loadPublicPostings, loadPostingsBySeller } = usePostings();
 
+  useEffect(() => {
+    loadPublicPostings();
+  }, [loadPublicPostings]);
+
+  useEffect(() => {
+    const sellerId = user?.id ?? user?.userId ?? user?.user_id;
+    if (sellerId) loadPostingsBySeller(sellerId);
+  }, [user?.id, user?.userId, user?.user_id, loadPostingsBySeller]);
+
+  // Luồng nghiệp vụ: chỉ hiển thị bài đã duyệt (ADMIN_APPROVED) hoặc đang hiển thị (AVAILABLE). Gộp publicPostings + postings rồi bỏ trùng theo id.
   const allFeaturedBikes = useMemo(() => {
-    const fromPostings = postings
-      .filter(
-        (p) =>
-          p.status === POSTING_STATUS.ACTIVE ||
-          p.status === POSTING_STATUS.PENDING_REVIEW,
-      )
-      .map(postingToBike);
+    const allowed = (p) =>
+      p.status === POSTING_STATUS.AVAILABLE ||
+      p.status === POSTING_STATUS.ADMIN_APPROVED;
+    const byId = new Map();
+    [...publicPostings, ...postings].filter(allowed).forEach((p) => {
+      if (p?.id != null) byId.set(p.id, p);
+    });
+    const fromPostings = [...byId.values()].map(postingToBike);
     return [...fromPostings, ...featuredBikes];
-  }, [postings]);
+  }, [postings, publicPostings]);
 
   const scroll = (direction) => {
     if (!scrollRef.current) return;
@@ -269,7 +282,10 @@ export default function FeaturedBikes() {
 
           <CarouselScroll ref={scrollRef}>
             {allFeaturedBikes.map((bike) => (
-              <CarouselCardSlot key={bike.id} className="bike-card-wrapper">
+              <CarouselCardSlot
+                key={bike.sellerId != null ? `post-${bike.id}` : `mock-${bike.id}`}
+                className="bike-card-wrapper"
+              >
                 <BikeCard bike={bike} />
               </CarouselCardSlot>
             ))}

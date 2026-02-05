@@ -61,13 +61,21 @@ export function WishlistProvider({ children }) {
     return Array.isArray(raw) ? raw : [];
   }, []);
 
-  // Fetch wishlist from backend when authenticated; restore from localStorage first so reload doesn't lose data
+  // Fetch wishlist from backend when authenticated (chỉ gọi khi BE đã có GET /api/users/wishlist)
+  // Set VITE_USE_WISHLIST_API=true trong .env khi backend đã implement wishlist API
+  const useWishlistApi = import.meta.env.VITE_USE_WISHLIST_API === "true";
+
   useEffect(() => {
     if (!authenticated) return;
 
     let cancelled = false;
     const cached = loadWishlistFromStorage(userId);
     if (cached.length > 0) setWishlist(cached);
+
+    if (!useWishlistApi) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     userService
@@ -92,7 +100,7 @@ export function WishlistProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [authenticated, userId, normalizeWishlist]);
+  }, [authenticated, userId, normalizeWishlist, useWishlistApi]);
 
   const addToWishlist = useCallback(
     async (product) => {
@@ -102,6 +110,18 @@ export function WishlistProvider({ children }) {
         typeof product === "object" && product !== null
           ? product
           : { id: itemId };
+      if (!useWishlistApi) {
+        setWishlist((prev) => {
+          if (
+            prev.some((p) => p.id === itemId || String(p.id) === String(itemId))
+          )
+            return prev;
+          const next = [...prev, { ...productObj, addedAt: Date.now() }];
+          saveWishlistToStorage(userId, next);
+          return next;
+        });
+        return;
+      }
       try {
         await userService.addToWishlist(itemId);
         const response = await userService.getWishlist();
@@ -120,12 +140,22 @@ export function WishlistProvider({ children }) {
         });
       }
     },
-    [authenticated, userId, normalizeWishlist],
+    [authenticated, userId, normalizeWishlist, useWishlistApi],
   );
 
   const removeFromWishlist = useCallback(
     async (productId) => {
       if (!authenticated) return;
+      if (!useWishlistApi) {
+        setWishlist((prev) => {
+          const next = prev.filter(
+            (p) => p.id !== productId && String(p.id) !== String(productId),
+          );
+          saveWishlistToStorage(userId, next);
+          return next;
+        });
+        return;
+      }
       try {
         await userService.removeFromWishlist(productId);
         const response = await userService.getWishlist();
@@ -142,7 +172,7 @@ export function WishlistProvider({ children }) {
         });
       }
     },
-    [authenticated, userId, normalizeWishlist],
+    [authenticated, userId, normalizeWishlist, useWishlistApi],
   );
 
   const isInWishlist = useCallback(

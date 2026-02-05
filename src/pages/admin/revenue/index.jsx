@@ -8,9 +8,9 @@ import "../dashboard/index.css";
 import "./index.css";
 
 const PERIODS = [
-  { value: "week", label: "Tuần này" },
-  { value: "month", label: "Tháng này" },
-  { value: "quarter", label: "Quý này" },
+  { value: "week", label: "This week" },
+  { value: "month", label: "This month" },
+  { value: "quarter", label: "This quarter" },
 ];
 
 const MOCK_REVENUE_BY_PERIOD = {
@@ -49,23 +49,23 @@ export default function AdminRevenue() {
   const stats = useMemo(
     () => [
       {
-        label: "Doanh thu hàng kỳ",
+        label: "Period revenue",
         value: `${data.total} ₫`,
         note: data.trend,
         tone: "green",
         icon: <DollarSign />,
       },
       {
-        label: "Phí nền tảng (6%)",
+        label: "Platform fee (6%)",
         value: `${data.fee} ₫`,
-        note: "ước tính",
+        note: "estimated",
         tone: "blue",
         icon: <CreditCard />,
       },
       {
-        label: "Số đơn hàng",
+        label: "Orders",
         value: data.orders,
-        note: "giao dịch",
+        note: "transactions",
         tone: "indigo",
         icon: <TrendingUp />,
       },
@@ -89,10 +89,10 @@ export default function AdminRevenue() {
         <div className="admin-content">
           <header className="admin-topbar admin-revenue-topbar">
             <div>
-              <h1 className="admin-page-title">Doanh thu hàng kỳ</h1>
-              <p className="admin-page-subtitle">
-                Theo dõi doanh thu và phí nền tảng theo tuần, tháng, quý.
-              </p>
+              <h1 className="admin-page-title">Period revenue</h1>
+            <p className="admin-page-subtitle">
+                Track revenue and platform fees by week, month, and quarter.
+            </p>
             </div>
             <div className="admin-period-tabs">
               {PERIODS.map((p) => (
@@ -131,7 +131,7 @@ export default function AdminRevenue() {
           <section className="admin-card">
             <div className="admin-card-header">
               <div>
-                <div className="admin-card-title">Biểu đồ doanh thu</div>
+                <div className="admin-card-title">Revenue chart</div>
                 <div className="admin-card-subtitle">
                   {PERIODS.find((p) => p.value === period)?.label}
                 </div>

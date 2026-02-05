@@ -41,15 +41,17 @@ function postingToProduct(p) {
   return {
     id: p.id,
     name: p.bikeName || "Untitled",
-    price: p.priceDisplay || (p.price ? `$${p.price}` : "$0"),
+    price: p.priceDisplay || (p.price ? `$${Number(p.price)}` : "$0"),
     image: images[0],
     images,
     category: p.category || "BIKE",
-    badge: p.status === "ACTIVE" ? "VERIFIED LISTING" : "PENDING",
+    badge:
+      p.status === "AVAILABLE" ? "VERIFIED LISTING" : p.status === "ADMIN_APPROVED" ? "PENDING" : "LISTED",
     specs: {
       frame: p.frameMaterial || "—",
-      groupset: "—",
+      groupset: p.groupset || "—",
       weight: p.frameSize ? `Size ${p.frameSize}` : undefined,
+      size: p.frameSize || undefined,
     },
     seller: {
       name: "Seller",
@@ -59,7 +61,7 @@ function postingToProduct(p) {
       shippingEst: "—",
     },
     sellerId: p.sellerId ?? null,
-    description: "Listed on BASAUYCLE.",
+    description: p.description && p.description.trim() ? p.description : "Listed on BASAUYCLE.",
   };
 }
 
@@ -72,11 +74,12 @@ export default function ProductDetail() {
   const { addOrder } = useOrders();
   const isLoggedIn = isAuthenticated?.() ?? !!user;
 
-  let product = getProductById(Number(id));
-  if (!product && typeof id === "string" && id.startsWith("post-")) {
-    const posting = getPostingById(id);
-    product = posting ? postingToProduct(posting) : null;
-  }
+  // Ưu tiên tin đăng (posting) từ context; id từ URL có thể là số hoặc chuỗi (backend post_id).
+  const posting =
+    getPostingById(id) ?? (id != null && !isNaN(Number(id)) ? getPostingById(Number(id)) : null);
+  let product = posting
+    ? postingToProduct(posting)
+    : getProductById(Number(id));
 
   const images =
     product?.images || (product ? Array(6).fill(product.image) : []);
@@ -85,7 +88,10 @@ export default function ProductDetail() {
   const isOwnListing =
     product?.sellerId != null &&
     user &&
-    (product.sellerId === user.id || product.sellerId === user.email);
+    (product.sellerId == user.id ||
+      product.sellerId == user.userId ||
+      product.sellerId == user.user_id ||
+      product.sellerId === user.email);
 
   if (!product) {
     return (
@@ -115,6 +121,7 @@ export default function ProductDetail() {
 
   const inWishlist = isInWishlist(product.id);
   const handleWishlistClick = () => {
+    if (isOwnListing) return;
     if (!isLoggedIn) {
       message.info("Please sign in to use wishlist");
       navigate("/login");
@@ -184,6 +191,7 @@ export default function ProductDetail() {
               <img
                 src={images[selectedImageIndex] || product.image}
                 alt={`${product.name} - image ${selectedImageIndex + 1}`}
+                referrerPolicy="no-referrer"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
               <IconButton
@@ -221,6 +229,7 @@ export default function ProductDetail() {
                   <img
                     src={img}
                     alt={`Detail ${i + 1}`}
+                    referrerPolicy="no-referrer"
                     style={{
                       width: "100%",
                       height: "100%",
@@ -238,17 +247,19 @@ export default function ProductDetail() {
               <span className="product-detail-badge">
                 {product.badge || "LISTED"}
               </span>
-              <Button
-                size="small"
-                onClick={handleWishlistClick}
-                sx={{ minWidth: 0, p: 0.5 }}
-              >
-                {inWishlist ? (
-                  <HeartFilled style={{ fontSize: 20, color: "#ef4444" }} />
-                ) : (
-                  <HeartOutlined style={{ fontSize: 20 }} />
-                )}
-              </Button>
+              {!isOwnListing && (
+                <Button
+                  size="small"
+                  onClick={handleWishlistClick}
+                  sx={{ minWidth: 0, p: 0.5 }}
+                >
+                  {inWishlist ? (
+                    <HeartFilled style={{ fontSize: 20, color: "#ef4444" }} />
+                  ) : (
+                    <HeartOutlined style={{ fontSize: 20 }} />
+                  )}
+                </Button>
+              )}
             </Box>
             <Typography
               variant="h4"

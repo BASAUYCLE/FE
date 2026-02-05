@@ -9,6 +9,7 @@ import { ConfigProvider, App as AntApp } from "antd";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PostingStatusNotificationSync from "./components/PostingStatusNotificationSync";
 import { fontFamily, antdToken } from "./config/theme";
 
 const Login = lazy(() => import("./pages/Login"));
@@ -71,6 +72,7 @@ function App() {
                 <PostingProvider>
                   <OrderProvider>
                     <NotificationProvider>
+                      <PostingStatusNotificationSync />
                       <Suspense fallback={<PageFallback />}>
                         <Routes>
                           <Route path="/" element={<Home />} />

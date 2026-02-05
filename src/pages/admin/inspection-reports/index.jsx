@@ -20,7 +20,7 @@ const MOCK_REPORTS = [
   {
     id: "RPT-2025-001",
     listingTitle: "Specialized Tarmac SL7",
-    inspector: "Nguyễn Văn Kiểm",
+    inspector: "John Inspector",
     inspectedAt: "28/01/2025 14:30",
     result: "PASS",
     status: "APPROVED",
@@ -28,7 +28,7 @@ const MOCK_REPORTS = [
   {
     id: "RPT-2025-002",
     listingTitle: "Canyon Grizl CF SL",
-    inspector: "Trần Thị Hà",
+    inspector: "Jane Smith",
     inspectedAt: "28/01/2025 11:20",
     result: "PASS",
     status: "APPROVED",
@@ -36,7 +36,7 @@ const MOCK_REPORTS = [
   {
     id: "RPT-2025-003",
     listingTitle: "Trek Domane SL 6",
-    inspector: "Lê Văn Minh",
+    inspector: "Bob Wilson",
     inspectedAt: "27/01/2025 16:45",
     result: "PENDING",
     status: "PENDING",
@@ -44,7 +44,7 @@ const MOCK_REPORTS = [
   {
     id: "RPT-2025-004",
     listingTitle: "Giant TCR Advanced",
-    inspector: "Phạm Thị Lan",
+    inspector: "Alice Brown",
     inspectedAt: "27/01/2025 09:15",
     result: "FAIL",
     status: "REJECTED",
@@ -52,7 +52,7 @@ const MOCK_REPORTS = [
   {
     id: "RPT-2025-005",
     listingTitle: "Santa Cruz Bronson",
-    inspector: "Hoàng Văn Đức",
+    inspector: "Chris Lee",
     inspectedAt: "26/01/2025 13:00",
     result: "PASS",
     status: "APPROVED",
@@ -60,9 +60,9 @@ const MOCK_REPORTS = [
 ];
 
 const STATUS_CONFIG = {
-  APPROVED: { label: "Đã duyệt", icon: CheckCircle2, className: "approved" },
-  REJECTED: { label: "Từ chối", icon: XCircle, className: "rejected" },
-  PENDING: { label: "Chờ duyệt", icon: Clock, className: "pending" },
+  APPROVED: { label: "Approved", icon: CheckCircle2, className: "approved" },
+  REJECTED: { label: "Rejected", icon: XCircle, className: "rejected" },
+  PENDING: { label: "Pending", icon: Clock, className: "pending" },
 };
 
 export default function AdminInspectionReports() {
@@ -99,10 +99,10 @@ export default function AdminInspectionReports() {
         <div className="admin-content">
           <header className="admin-topbar">
             <div>
-              <h1 className="admin-page-title">Quản lý báo cáo kiểm duyệt</h1>
-              <p className="admin-page-subtitle">
-                Xem và xử lý các bản báo cáo kiểm định xe từ inspector.
-              </p>
+              <h1 className="admin-page-title">Inspection reports</h1>
+            <p className="admin-page-subtitle">
+                View and process bicycle inspection reports from inspectors.
+            </p>
             </div>
           </header>
 
@@ -113,7 +113,7 @@ export default function AdminInspectionReports() {
                   <Search className="admin-search-icon" size={18} />
                   <input
                     type="text"
-                    placeholder="Tìm theo mã báo cáo, tin đăng, inspector..."
+                    placeholder="Search by report ID, listing, inspector..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="admin-search-input"
@@ -126,7 +126,7 @@ export default function AdminInspectionReports() {
                     onChange={(e) => setStatusFilter(e.target.value)}
                     className="admin-pill"
                   >
-                    <option value="all">Tất cả trạng thái</option>
+                    <option value="all">All statuses</option>
                     {Object.entries(STATUS_CONFIG).map(([value, { label }]) => (
                       <option key={value} value={value}>
                         {label}
@@ -137,22 +137,22 @@ export default function AdminInspectionReports() {
               </div>
               <div className="admin-table-actions">
                 <button type="button" className="admin-outline-button">
-                  <Download size={14} /> Xuất Excel
+                  <Download size={14} /> Export Excel
                 </button>
               </div>
             </div>
             <div className="admin-table admin-reports-table">
               <div className="admin-table-row admin-table-header">
-                <div>Mã báo cáo</div>
-                <div>Tin đăng</div>
+                <div>Report ID</div>
+                <div>Listing</div>
                 <div>Inspector</div>
-                <div>Thời gian kiểm</div>
-                <div>Kết quả</div>
-                <div>Trạng thái</div>
-                <div>Thao tác</div>
+                <div>Inspection time</div>
+                <div>Result</div>
+                <div>Status</div>
+                <div>Actions</div>
               </div>
               {filtered.length === 0 ? (
-                <div className="admin-table-empty">Không có báo cáo nào.</div>
+                <div className="admin-table-empty">No reports.</div>
               ) : (
                 filtered.map((row) => {
                   const config =
@@ -171,10 +171,10 @@ export default function AdminInspectionReports() {
                           className={`admin-report-result ${row.result?.toLowerCase()}`}
                         >
                           {row.result === "PASS"
-                            ? "Đạt"
+                            ? "Pass"
                             : row.result === "FAIL"
-                              ? "Không đạt"
-                              : "Chờ xử lý"}
+                              ? "Fail"
+                              : "Pending"}
                         </span>
                       </div>
                       <div>
@@ -188,16 +188,16 @@ export default function AdminInspectionReports() {
                         <button
                           type="button"
                           className="admin-actions-button"
-                          title="Xem báo cáo"
-                          aria-label="Xem"
+                          title="View report"
+                          aria-label="View"
                         >
                           <Eye size={16} />
                         </button>
                         <button
                           type="button"
                           className="admin-actions-button"
-                          title="Tải PDF"
-                          aria-label="Tải"
+                          title="Download PDF"
+                          aria-label="Download"
                         >
                           <Download size={16} />
                         </button>

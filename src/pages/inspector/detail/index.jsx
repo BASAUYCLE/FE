@@ -72,6 +72,10 @@ export default function InspectorDetail() {
         owner: postFromApi.sellerFullName ?? postFromApi.sellerName,
         updatedAt: postFromApi.updatedAt ?? new Date().toISOString().slice(0, 10),
         reportStatus: "DRAFT",
+        categoryName: postFromApi.categoryName ?? "—",
+        modelYear: postFromApi.modelYear ?? "—",
+        size: postFromApi.size ?? "—",
+        frameNumber: postFromApi.frameNumber ?? "—",
       }
     : reportFromMock;
 
@@ -168,12 +172,12 @@ export default function InspectorDetail() {
           overallCondition: "POOR",
           notes: reason,
         });
-        message.success("Đã nộp kết quả không đạt. Bài đăng chuyển sang REJECTED.");
+        message.success("Fail result submitted. Post status set to REJECTED.");
         setRejectModalOpen(false);
         setRejectReason("");
         navigate("/inspector");
       } catch (err) {
-        message.error(err?.message ?? "Nộp kết quả thất bại.");
+        message.error(err?.message ?? "Submit result failed.");
       } finally {
         setSubmitLoading(false);
       }
@@ -208,7 +212,7 @@ export default function InspectorDetail() {
   const handleSubmitResultOk = async () => {
     const notes = submitNotes.trim();
     if (!notes) {
-      message.warning("Vui lòng nhập ghi chú kiểm định.");
+      message.warning("Please enter inspection notes.");
       return;
     }
     try {
@@ -218,11 +222,11 @@ export default function InspectorDetail() {
         overallCondition: submitOverallCondition,
         notes,
       });
-      message.success("Đã nộp kết quả kiểm định. Bài đăng chuyển sang AVAILABLE.");
+      message.success("Inspection result submitted. Post status set to AVAILABLE.");
       setSubmitResultModalOpen(false);
       navigate("/inspector");
     } catch (err) {
-      message.error(err?.message ?? "Nộp kết quả thất bại.");
+      message.error(err?.message ?? "Submit result failed.");
     } finally {
       setSubmitLoading(false);
     }
@@ -258,7 +262,7 @@ export default function InspectorDetail() {
           showLogin={false}
         />
         <div className="inspector-detail-page">
-          <p>Đang tải bài đăng...</p>
+          <p>Loading post...</p>
         </div>
         <Footer />
       </div>
@@ -352,7 +356,7 @@ export default function InspectorDetail() {
                 />
                 <h2 className="inspection-report-bike-name">{report.bicycleName}</h2>
                 <p className="inspection-report-bike-meta">
-                  {report.bicycleType} · {report.modelYear} · Size {report.size}
+                  {report.categoryName ?? report.bicycleType} · {report.modelYear} · {report.size ? `Size ${report.size}` : ""}
                 </p>
                 <div className="inspection-report-detail-row">
                   <span className="inspection-report-detail-label">Owner:</span>
@@ -517,7 +521,7 @@ export default function InspectorDetail() {
         okButtonProps={{
           className: confirmAction === "reject" ? "inspector-confirm-modal-ok-reject" : "inspector-confirm-modal-ok-complete",
         }}
-        destroyOnClose
+        destroyOnHidden
         width={480}
       >
         <p className="inspection-confirm-modal-text">
@@ -535,7 +539,7 @@ export default function InspectorDetail() {
         okText="Submit & Notify Member"
         cancelText="Cancel"
         okButtonProps={{ className: "inspector-reject-modal-ok", loading: submitLoading }}
-        destroyOnClose
+        destroyOnHidden
       >
         <p style={{ marginBottom: 8, color: "#64748b" }}>
           Enter the reason for rejection. This will be sent to the member&apos;s notifications.
@@ -550,17 +554,17 @@ export default function InspectorDetail() {
       </Modal>
 
       <Modal
-        title="Nộp kết quả kiểm định (PASS)"
+        title="Submit inspection result (PASS)"
         open={submitResultModalOpen}
         onCancel={() => setSubmitResultModalOpen(false)}
         onOk={handleSubmitResultOk}
-        okText="Nộp kết quả"
-        cancelText="Hủy"
+        okText="Submit result"
+        cancelText="Cancel"
         okButtonProps={{ loading: submitLoading }}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Tình trạng tổng thể</label>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Overall condition</label>
           <Select
             style={{ width: "100%" }}
             value={submitOverallCondition}
@@ -574,9 +578,9 @@ export default function InspectorDetail() {
           />
         </div>
         <div>
-          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Ghi chú (bắt buộc)</label>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Notes (required)</label>
           <Input.TextArea
-            placeholder="e.g. Xe đạp trong tình trạng rất tốt, khung carbon không nứt, phanh hoạt động tốt"
+            placeholder="e.g. Bike in very good condition, carbon frame intact, brakes working well"
             value={submitNotes}
             onChange={(e) => setSubmitNotes(e.target.value)}
             rows={4}

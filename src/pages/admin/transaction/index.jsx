@@ -7,10 +7,10 @@ import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
 import "./index.css";
 
 const STATS = [
-  { label: "Doanh thu kỳ", value: "142.480.000 ₫", note: "↑12% so kỳ trước", tone: "green" },
-  { label: "Phí nền tảng", value: "8.548.800 ₫", note: "6% trung bình", tone: "green" },
-  { label: "Chờ thanh toán", value: "3.240.500 ₫", note: "12 đơn hàng", tone: "orange" },
-  { label: "Tỷ lệ thành công", value: "99,2%", note: "Giao dịch hoàn tất", tone: "green" },
+  { label: "Period revenue", value: "142.480.000 ₫", note: "↑12% vs last period", tone: "green" },
+  { label: "Platform fee", value: "8.548.800 ₫", note: "6% average", tone: "green" },
+  { label: "Pending payment", value: "3.240.500 ₫", note: "12 orders", tone: "orange" },
+  { label: "Success rate", value: "99.2%", note: "Completed transactions", tone: "green" },
 ];
 
 const TRANSACTIONS = [

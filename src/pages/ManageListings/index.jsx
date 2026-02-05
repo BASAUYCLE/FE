@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -11,6 +11,7 @@ import {
   Dropdown,
   Modal,
   message,
+  Tooltip,
 } from "antd";
 import {
   Search,
@@ -25,6 +26,7 @@ import Header from "../../components/header";
 import Footer from "../../components/footer";
 import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { usePostings } from "../../contexts/PostingContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import {
   POSTING_STATUS,
@@ -39,20 +41,23 @@ const BREADCRUMB_ITEMS = [
   { label: "Quản lý tin đăng" },
 ];
 
+/* Tab theo luồng 2 bước: PENDING → ADMIN_APPROVED → AVAILABLE | REJECTED (+ DRAFTED) */
 const TAB_KEYS = {
   ALL: "all",
-  ACTIVE: POSTING_STATUS.ACTIVE,
-  VERIFIED: POSTING_STATUS.VERIFIED,
+  PENDING: POSTING_STATUS.PENDING,
+  ADMIN_APPROVED: POSTING_STATUS.ADMIN_APPROVED,
+  AVAILABLE: POSTING_STATUS.AVAILABLE,
   REJECTED: POSTING_STATUS.REJECTED,
-  DRAFT: POSTING_STATUS.DRAFT,
+  DRAFTED: POSTING_STATUS.DRAFTED,
 };
 
 const TAB_ITEMS = [
   { key: TAB_KEYS.ALL, label: "Tất cả" },
-  { key: TAB_KEYS.ACTIVE, label: "Đang hiển thị" },
-  { key: TAB_KEYS.VERIFIED, label: "Đã qua kiểm định" },
+  { key: TAB_KEYS.PENDING, label: "Chờ duyệt" },
+  { key: TAB_KEYS.ADMIN_APPROVED, label: "Chờ kiểm định" },
+  { key: TAB_KEYS.AVAILABLE, label: "Đang hiển thị" },
   { key: TAB_KEYS.REJECTED, label: "Bị từ chối" },
-  { key: TAB_KEYS.DRAFT, label: "Bản nháp" },
+  { key: TAB_KEYS.DRAFTED, label: "Bản nháp" },
 ];
 
 function formatDate(isoString) {
@@ -73,17 +78,96 @@ function getStatusLabel(status) {
 
 export default function ManageListings() {
   const navigate = useNavigate();
-  const { postings, updatePostingStatus, deletePosting } = usePostings();
+  const { user } = useAuth();
+  const { postings, updatePostingStatus, deletePosting, loadPostingsBySeller } = usePostings();
   const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState(TAB_KEYS.ALL);
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
+  const [loading, setLoading] = useState(true);
   const [deleteModal, setDeleteModal] = useState({
     open: false,
     id: null,
     name: "",
   });
+
+  const sellerId = user?.userId ?? user?.user_id ?? user?.id ?? null;
+
+  const fetchMyPostings = useCallback(async () => {
+    let effectiveSellerId = sellerId;
+    if (!effectiveSellerId && user) {
+      try {
+        const { userService } = await import("../../services");
+        const profile = await userService.getProfile();
+        effectiveSellerId = profile?.userId ?? profile?.user_id ?? profile?.id ?? null;
+      } catch {
+        // ignore
+      }
+    }
+    if (!effectiveSellerId || !loadPostingsBySeller) {
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      await loadPostingsBySeller(effectiveSellerId);
+    } catch (err) {
+      const msg = err?.response?.data?.message ?? err?.message ?? "";
+      const isNoPosts = /user has no posts|no posts|chưa có tin/i.test(String(msg));
+      if (!isNoPosts) {
+        console.error("[ManageListings] fetchMyPostings:", err);
+        message.error(msg || "Không tải được danh sách tin đăng. Vui lòng thử lại.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [sellerId, user, loadPostingsBySeller]);
+
+  useEffect(() => {
+    fetchMyPostings();
+  }, [fetchMyPostings]);
+
+  // Thông báo cho member khi bài đăng chuyển sang đã duyệt (ADMIN_APPROVED), hiển thị (AVAILABLE) hoặc bị từ chối (REJECTED). Dùng localStorage để nhớ trạng thái trước, nhận thông báo dù mở Home hay Quản lý tin đăng.
+  useEffect(() => {
+    if (!postings.length || !addNotification) return;
+    let prev = {};
+    try {
+      const raw = localStorage.getItem(POSTING_STATUS_STORAGE_KEY);
+      if (raw) prev = JSON.parse(raw);
+    } catch (_) {}
+    for (const p of postings) {
+      const id = p.id;
+      const status = p.status;
+      const prevStatus = prev[id];
+      const name = p.bikeName || "Tin đăng";
+      if (status === POSTING_STATUS.ADMIN_APPROVED && prevStatus === POSTING_STATUS.PENDING) {
+        addNotification({
+          title: "Tin đăng đã được duyệt",
+          message: `"${name}" đã được admin duyệt và đang chờ kiểm định.`,
+          type: "success",
+        });
+      } else if (status === POSTING_STATUS.AVAILABLE && (prevStatus === POSTING_STATUS.PENDING || prevStatus === POSTING_STATUS.ADMIN_APPROVED)) {
+        addNotification({
+          title: "Tin đăng đã hiển thị",
+          message: `"${name}" đã qua kiểm định và đang hiển thị trên Marketplace.`,
+          type: "success",
+        });
+      } else if (status === POSTING_STATUS.REJECTED && prevStatus && prevStatus !== POSTING_STATUS.REJECTED) {
+        addNotification({
+          title: "Tin đăng bị từ chối",
+          message: p.rejectionReason ? `"${name}" bị từ chối: ${p.rejectionReason}` : `"${name}" đã bị từ chối.`,
+          type: "warning",
+        });
+      }
+    }
+    try {
+      localStorage.setItem(
+        POSTING_STATUS_STORAGE_KEY,
+        JSON.stringify(Object.fromEntries(postings.map((p) => [p.id, p.status]))),
+      );
+    } catch (_) {}
+  }, [postings, addNotification]);
 
   const filteredByTab = useMemo(() => {
     if (activeTab === TAB_KEYS.ALL) return postings;
@@ -197,12 +281,22 @@ export default function ManageListings() {
       title: "TRẠNG THÁI",
       dataIndex: "status",
       key: "status",
-      width: 140,
-      render: (status) => (
-        <Tag color={POSTING_STATUS_TAG_COLOR[status] ?? "default"}>
-          {getStatusLabel(status)}
-        </Tag>
-      ),
+      width: 180,
+      render: (status, record) => {
+        const tag = (
+          <Tag color={POSTING_STATUS_TAG_COLOR[status] ?? "default"}>
+            {getStatusLabel(status)}
+          </Tag>
+        );
+        if (status === POSTING_STATUS.REJECTED && record.rejectionReason) {
+          return (
+            <Tooltip title={record.rejectionReason} placement="topLeft">
+              <span>{tag}</span>
+            </Tooltip>
+          );
+        }
+        return tag;
+      },
     },
     {
       title: "THAO TÁC",
@@ -217,8 +311,7 @@ export default function ManageListings() {
             label: "Chỉnh sửa",
             onClick: () => navigate(`/post?edit=${record.id}`),
           },
-          ...(record.status === POSTING_STATUS.ACTIVE ||
-          record.status === POSTING_STATUS.VERIFIED
+          ...(record.status === POSTING_STATUS.AVAILABLE
             ? [
                 {
                   key: "promote",
@@ -257,8 +350,7 @@ export default function ManageListings() {
               onClick={() => navigate(`/post?edit=${record.id}`)}
               title="Chỉnh sửa"
             />
-            {(record.status === POSTING_STATUS.ACTIVE ||
-              record.status === POSTING_STATUS.VERIFIED) && (
+            {(record.status === POSTING_STATUS.AVAILABLE) && (
               <Button
                 type="text"
                 size="small"
@@ -378,7 +470,8 @@ export default function ManageListings() {
               columns={columns}
               rowKey="id"
               pagination={false}
-              locale={{ emptyText: "Chưa có tin đăng nào trong mục này." }}
+              loading={loading}
+              locale={{ emptyText: loading ? "Đang tải..." : "Chưa có tin đăng nào trong mục này." }}
             />
             {filteredBySearch.length > 0 && (
               <div className="manage-listings-pagination">

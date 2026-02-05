@@ -27,9 +27,16 @@ export default function Login() {
       if (result.success) {
         message.success("Login successful!");
 
-        // Redirect to the page user was trying to access, or home
-        const from = location.state?.from?.pathname || "/";
-        navigate(from, { replace: true });
+        // Chuyển theo role: ADMIN → trang quản trị, INSPECTOR → trang kiểm định, còn lại → from hoặc home
+        const role = (result.user?.role ?? result.user?.userRole ?? result.user?.user_role ?? "MEMBER").toUpperCase();
+        const from = location.state?.from?.pathname;
+        if (role === "ADMIN") {
+          navigate("/admin-dashboard", { replace: true });
+        } else if (role === "INSPECTOR") {
+          navigate("/inspector", { replace: true });
+        } else {
+          navigate(from || "/", { replace: true });
+        }
       } else {
         message.error(result.message || "Login failed!");
       }

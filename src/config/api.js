@@ -57,16 +57,19 @@ export const API_ENDPOINTS = {
 
   IMAGES: {
     CREATE: "/images",
+    /** Một số backend dùng POST /posts/:postId/images thay vì POST /images (tránh 400) */
+    CREATE_BY_POST: (postId) => `/posts/${postId}/images`,
     BY_POST: (postId) => `/images/post/${postId}`,
     BY_ID: (imageId) => `/images/${imageId}`,
     UPDATE: (imageId) => `/images/${imageId}`,
     DELETE: (imageId) => `/images/${imageId}`,
   },
 
-  /** Admin: bài đăng chờ duyệt & duyệt bài */
+  /** Admin: bài đăng chờ duyệt & duyệt/từ chối (luồng 2 bước) */
   ADMIN_POSTS: {
     PENDING: "/admin/posts/pending",
     APPROVE: (postId) => `/admin/posts/${postId}/approve`,
+    REJECT: (postId) => `/admin/posts/${postId}/reject`,
   },
 
   /** Inspector: danh sách chờ kiểm định & nộp kết quả */
