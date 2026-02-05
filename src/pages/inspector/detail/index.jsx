@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { message, Modal } from "antd";
+import { message, Modal, Select, Input } from "antd";
 import Header from "../../../components/header";
 import { useNotifications } from "../../../contexts/useNotifications";
 import Footer from "../../../components/footer";
@@ -10,6 +10,11 @@ import {
   getInspectorActiveLink,
 } from "../../../config/inspectorNav";
 import { getInspectionReport } from "../../../data/inspections";
+import { postService, inspectionService } from "../../../services";
+import {
+  OVERALL_CONDITION,
+  OVERALL_CONDITION_LABEL,
+} from "../../../constants/postingStatus";
 import {
   Download,
   Printer,
@@ -43,12 +48,56 @@ export default function InspectorDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const report = getInspectionReport(id);
+  const postIdNum = useMemo(() => {
+    const n = Number(id);
+    return Number.isInteger(n) && n > 0 ? n : null;
+  }, [id]);
+
+  const [postFromApi, setPostFromApi] = useState(null);
+  const [postLoading, setPostLoading] = useState(!!postIdNum);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitResultModalOpen, setSubmitResultModalOpen] = useState(false);
+  const [submitResult, setSubmitResult] = useState("PASS");
+  const [submitOverallCondition, setSubmitOverallCondition] = useState(OVERALL_CONDITION.GOOD);
+  const [submitNotes, setSubmitNotes] = useState("");
+
+  const reportFromMock = postIdNum ? null : getInspectionReport(id);
+  const report = postFromApi
+    ? {
+        id: postFromApi.postId,
+        reportId: `POST-${postFromApi.postId}`,
+        bicycleName: postFromApi.bicycleName,
+        bicycleImage: (postFromApi.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ?? postFromApi.images?.[0]?.imageUrl,
+        inspectionImages: (postFromApi.images ?? []).map((i) => i?.imageUrl).filter(Boolean),
+        owner: postFromApi.sellerFullName ?? postFromApi.sellerName,
+        updatedAt: postFromApi.updatedAt ?? new Date().toISOString().slice(0, 10),
+        reportStatus: "DRAFT",
+      }
+    : reportFromMock;
+
+  useEffect(() => {
+    if (!postIdNum) return;
+    let cancelled = false;
+    postService
+      .getPostById(postIdNum)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res?.result ?? res;
+        setPostFromApi(data ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setPostFromApi(null);
+      })
+      .finally(() => {
+        if (!cancelled) setPostLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [postIdNum]);
 
   const { addNotification } = useNotifications();
-  const [checklist, setChecklist] = useState(() => deepCloneChecklist(report?.checklist));
-  const [inspectorNotes, setInspectorNotes] = useState(report?.inspectorNotes ?? "");
-  const [completionPercent, setCompletionPercent] = useState(report?.completionPercent ?? 0);
+  const [checklist, setChecklist] = useState(() => deepCloneChecklist(reportFromMock?.checklist));
+  const [inspectorNotes, setInspectorNotes] = useState(reportFromMock?.inspectorNotes ?? "");
+  const [completionPercent, setCompletionPercent] = useState(reportFromMock?.completionPercent ?? 0);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -105,10 +154,29 @@ export default function InspectorDetail() {
     }
   };
 
-  const handleRejectSubmit = () => {
+  const handleRejectSubmit = async () => {
     const reason = rejectReason.trim();
     if (!reason) {
       message.warning("Please enter a reason for rejection.");
+      return;
+    }
+    if (postIdNum) {
+      try {
+        setSubmitLoading(true);
+        await inspectionService.submitInspection(postIdNum, {
+          result: "FAIL",
+          overallCondition: "POOR",
+          notes: reason,
+        });
+        message.success("Đã nộp kết quả không đạt. Bài đăng chuyển sang REJECTED.");
+        setRejectModalOpen(false);
+        setRejectReason("");
+        navigate("/inspector");
+      } catch (err) {
+        message.error(err?.message ?? "Nộp kết quả thất bại.");
+      } finally {
+        setSubmitLoading(false);
+      }
       return;
     }
     addNotification({
@@ -126,8 +194,38 @@ export default function InspectorDetail() {
   };
 
   const handleDone = () => {
+    if (postIdNum) {
+      setSubmitResult("PASS");
+      setSubmitOverallCondition(OVERALL_CONDITION.GOOD);
+      setSubmitNotes("");
+      setSubmitResultModalOpen(true);
+      return;
+    }
     message.success("Inspection marked as completed. (API can be wired later.)");
     navigate("/inspector");
+  };
+
+  const handleSubmitResultOk = async () => {
+    const notes = submitNotes.trim();
+    if (!notes) {
+      message.warning("Vui lòng nhập ghi chú kiểm định.");
+      return;
+    }
+    try {
+      setSubmitLoading(true);
+      await inspectionService.submitInspection(postIdNum, {
+        result: submitResult,
+        overallCondition: submitOverallCondition,
+        notes,
+      });
+      message.success("Đã nộp kết quả kiểm định. Bài đăng chuyển sang AVAILABLE.");
+      setSubmitResultModalOpen(false);
+      navigate("/inspector");
+    } catch (err) {
+      message.error(err?.message ?? "Nộp kết quả thất bại.");
+    } finally {
+      setSubmitLoading(false);
+    }
   };
 
   const handleExit = () => {
@@ -145,6 +243,27 @@ export default function InspectorDetail() {
   const handleSendApproval = () => {
     message.success("Sent for approval. (API can be wired later.)");
   };
+
+  if (postIdNum && postLoading) {
+    return (
+      <div className="inspector-page">
+        <Header
+          navLinks={INSPECTOR_NAV_LINKS}
+          activeLink={getInspectorActiveLink(pathname)}
+          navVariant="pill"
+          showSearch={false}
+          showWishlistIcon={false}
+          showAvatar
+          showSellButton={false}
+          showLogin={false}
+        />
+        <div className="inspector-detail-page">
+          <p>Đang tải bài đăng...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   if (!report) {
     return (
@@ -415,7 +534,7 @@ export default function InspectorDetail() {
         onOk={handleRejectSubmit}
         okText="Submit & Notify Member"
         cancelText="Cancel"
-        okButtonProps={{ className: "inspector-reject-modal-ok" }}
+        okButtonProps={{ className: "inspector-reject-modal-ok", loading: submitLoading }}
         destroyOnClose
       >
         <p style={{ marginBottom: 8, color: "#64748b" }}>
@@ -428,6 +547,41 @@ export default function InspectorDetail() {
           onChange={(e) => setRejectReason(e.target.value)}
           rows={4}
         />
+      </Modal>
+
+      <Modal
+        title="Nộp kết quả kiểm định (PASS)"
+        open={submitResultModalOpen}
+        onCancel={() => setSubmitResultModalOpen(false)}
+        onOk={handleSubmitResultOk}
+        okText="Nộp kết quả"
+        cancelText="Hủy"
+        okButtonProps={{ loading: submitLoading }}
+        destroyOnClose
+      >
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Tình trạng tổng thể</label>
+          <Select
+            style={{ width: "100%" }}
+            value={submitOverallCondition}
+            onChange={setSubmitOverallCondition}
+            options={[
+              { value: OVERALL_CONDITION.EXCELLENT, label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.EXCELLENT] },
+              { value: OVERALL_CONDITION.GOOD, label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.GOOD] },
+              { value: OVERALL_CONDITION.FAIR, label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.FAIR] },
+              { value: OVERALL_CONDITION.POOR, label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.POOR] },
+            ]}
+          />
+        </div>
+        <div>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Ghi chú (bắt buộc)</label>
+          <Input.TextArea
+            placeholder="e.g. Xe đạp trong tình trạng rất tốt, khung carbon không nứt, phanh hoạt động tốt"
+            value={submitNotes}
+            onChange={(e) => setSubmitNotes(e.target.value)}
+            rows={4}
+          />
+        </div>
       </Modal>
 
       <Modal

@@ -19,7 +19,7 @@ function formatRequestedDate(iso) {
 /**
  * Reusable inspection queue table. Used by Dashboard and Inspection Details page.
  */
-export default function InspectionQueueTable({ inspections = [] }) {
+export default function InspectionQueueTable({ inspections = [], loading = false }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -69,7 +69,14 @@ export default function InspectionQueueTable({ inspections = [] }) {
           <div>STATUS</div>
           <div>ACTIONS</div>
         </div>
-        {pageItems.map((item) => (
+        {loading ? (
+          <div className="admin-table-row inspector-table-row">
+            <div style={{ padding: "24px", gridColumn: "1 / -1", textAlign: "center" }}>
+              Đang tải...
+            </div>
+          </div>
+        ) : (
+          pageItems.map((item) => (
           <div key={item.id} className="admin-table-row inspector-table-row">
             <div>
               <div className="inspector-bike-cell">
@@ -122,7 +129,8 @@ export default function InspectionQueueTable({ inspections = [] }) {
               )}
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
       <div className="inspector-pagination">
         <span>
