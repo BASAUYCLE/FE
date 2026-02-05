@@ -1,9 +1,7 @@
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { message } from "antd";
 import {
-  Search,
-  Bell,
-  Settings,
   FileCheck2,
   CheckCircle2,
   AlertTriangle,
@@ -11,7 +9,6 @@ import {
   RefreshCcw,
   Eye,
   Check,
-  X,
   ClipboardList,
   MessageSquare,
   FileText,
@@ -19,67 +16,29 @@ import {
 import Header from "../../../components/header";
 import Footer from "../../../components/footer";
 import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
-import bikeTarmac from "../../../assets/bike-tarmac-sl7.png";
-import canyonGrizl from "../../../assets/CanyonGrizlCFSL.jpg";
-import santaCruz from "../../../assets/SantaCruzNomaCC.png";
+import { adminPostService } from "../../../services";
+import { POSTING_STATUS_LABEL, POSTING_STATUS_TAG_COLOR } from "../../../constants/postingStatus";
+import { formatCurrency } from "../../../utils/formatCurrency";
 import "./index.css";
 
-const stats = [
-  {
-    label: "PENDING REVIEW",
-    value: "128",
-    note: "+5% from yesterday",
-    tone: "green",
-    icon: <ClipboardList />,
-  },
-  {
-    label: "APPROVED TODAY",
-    value: "45",
-    note: "+10% target",
-    tone: "green",
-    icon: <CheckCircle2 />,
-  },
-  {
-    label: "REJECTION RATE",
-    value: "12%",
-    note: "-2% improvement",
-    tone: "red",
-    icon: <AlertTriangle />,
-  },
-];
+function getThumbnailUrl(item) {
+  const list = item?.images ?? [];
+  const thumb = list.find((i) => i?.isThumbnail);
+  return thumb?.imageUrl ?? list[0]?.imageUrl ?? null;
+}
 
-const listings = [
-  {
-    id: "#BK-9021",
-    title: "Specialized Tarmac SL7",
-    seller: "John Doe",
-    category: "ROAD BIKE",
-    price: "$4,200",
-    submission: "Oct 24, 2023",
-    inspection: "Verified",
-    image: bikeTarmac,
-  },
-  {
-    id: "#BK-7742",
-    title: "Canyon Grizl CF SL",
-    seller: "Jane Smith",
-    category: "GRAVEL BIKE",
-    price: "$3,100",
-    submission: "Oct 24, 2023",
-    inspection: "Unverified",
-    image: canyonGrizl,
-  },
-  {
-    id: "#BK-8831",
-    title: "Trek Madone SLR 9",
-    seller: "Mike Ross",
-    category: "ROAD BIKE",
-    price: "$8,500",
-    submission: "Oct 23, 2023",
-    inspection: "Verified",
-    image: santaCruz,
-  },
-];
+function formatDate(iso) {
+  if (!iso) return "—";
+  try {
+    return new Date(iso).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
 
 const flaggedItems = [
   { title: "Santa Cruz Bronson V4", issue: "Issue: Blurry main photo" },
@@ -87,24 +46,9 @@ const flaggedItems = [
 ];
 
 const moderationHistory = [
-  {
-    name: "Admin Mike",
-    action: "approved",
-    item: "S-Works Epic",
-    time: "2 mins ago",
-  },
-  {
-    name: "Sarah J.",
-    action: "rejected",
-    item: "Generic BMX",
-    time: "15 mins ago",
-  },
-  {
-    name: "Admin Mike",
-    action: "approved",
-    item: "Bianchi Oltre",
-    time: "42 mins ago",
-  },
+  { name: "Admin Mike", action: "approved", item: "S-Works Epic", time: "2 mins ago" },
+  { name: "Sarah J.", action: "rejected", item: "Generic BMX", time: "15 mins ago" },
+  { name: "Admin Mike", action: "approved", item: "Bianchi Oltre", time: "42 mins ago" },
 ];
 
 const guidelines = [
@@ -116,7 +60,44 @@ const guidelines = [
 
 export default function ListingApproval() {
   const [search, setSearch] = useState("");
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [approvingId, setApprovingId] = useState(null);
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const fetchPending = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await adminPostService.getPendingPosts();
+      const list = Array.isArray(res?.result) ? res.result : [];
+      setListings(list);
+    } catch (err) {
+      message.error(err?.message ?? "Không tải được danh sách chờ duyệt.");
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPending();
+  }, [fetchPending]);
+
+  const handleApprove = async (postId) => {
+    try {
+      setApprovingId(postId);
+      await adminPostService.approvePost(postId);
+      message.success("Đã duyệt bài đăng.");
+      await fetchPending();
+    } catch (err) {
+      message.error(err?.message ?? "Duyệt bài thất bại.");
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const pendingCount = listings.length;
 
   return (
     <div className="admin-listings-page">
@@ -133,16 +114,30 @@ export default function ListingApproval() {
 
       <div className="admin-listings-shell">
         <div className="admin-listings-stats">
-          {stats.map((stat) => (
-            <div className="admin-listings-stat" key={stat.label}>
-              <div className="stat-header">
-                <span className="stat-label">{stat.label}</span>
-                <span className={`stat-icon ${stat.tone}`}>{stat.icon}</span>
-              </div>
-              <div className="stat-value">{stat.value}</div>
-              <div className={`stat-note ${stat.tone}`}>{stat.note}</div>
+          <div className="admin-listings-stat">
+            <div className="stat-header">
+              <span className="stat-label">PENDING REVIEW</span>
+              <span className="stat-icon green"><ClipboardList /></span>
             </div>
-          ))}
+            <div className="stat-value">{loading ? "…" : String(pendingCount)}</div>
+            <div className="stat-note green">Từ API /admin/posts/pending</div>
+          </div>
+          <div className="admin-listings-stat">
+            <div className="stat-header">
+              <span className="stat-label">APPROVED TODAY</span>
+              <span className="stat-icon green"><CheckCircle2 /></span>
+            </div>
+            <div className="stat-value">—</div>
+            <div className="stat-note green">Có thể bổ sung API thống kê</div>
+          </div>
+          <div className="admin-listings-stat">
+            <div className="stat-header">
+              <span className="stat-label">REJECTION RATE</span>
+              <span className="stat-icon red"><AlertTriangle /></span>
+            </div>
+            <div className="stat-value">—</div>
+            <div className="stat-note red">Có thể bổ sung API thống kê</div>
+          </div>
         </div>
 
         <div className="admin-listings-queue">
@@ -155,7 +150,12 @@ export default function ListingApproval() {
                 <Filter />
                 Filter
               </button>
-              <button type="button" className="queue-refresh">
+              <button
+                type="button"
+                className="queue-refresh"
+                onClick={fetchPending}
+                disabled={loading}
+              >
                 <RefreshCcw />
                 Refresh Queue
               </button>
@@ -169,58 +169,73 @@ export default function ListingApproval() {
               <div>CATEGORY</div>
               <div>PRICE</div>
               <div>SUBMISSION</div>
-              <div>INSPECTION</div>
+              <div>STATUS</div>
               <div>ACTIONS</div>
             </div>
-            {listings.map((row) => (
-              <div className="queue-row" key={row.id}>
-                <div className="queue-bike">
-                  <img src={row.image} alt={row.title} />
-                  <div>
-                    <div className="queue-bike-title">{row.title}</div>
-                    <div className="queue-bike-id">ID: {row.id}</div>
-                  </div>
-                </div>
-                <div>{row.seller}</div>
-                <div>
-                  <span className="queue-category">{row.category}</span>
-                </div>
-                <div className="queue-price">{row.price}</div>
-                <div>{row.submission}</div>
-                <div>
-                  <span
-                    className={`queue-inspection ${row.inspection.toLowerCase()}`}
-                  >
-                    <FileCheck2 />
-                    {row.inspection}
-                  </span>
-                </div>
-                <div className="queue-actions-cell">
-                  <button type="button" className="queue-icon">
-                    <Eye />
-                  </button>
-                  <button type="button" className="queue-approve">
-                    Approve
-                  </button>
-                  <button type="button" className="queue-reject">
-                    Reject
-                  </button>
+            {loading ? (
+              <div className="queue-row">
+                <div style={{ padding: "24px", gridColumn: "1 / -1", textAlign: "center" }}>
+                  Đang tải...
                 </div>
               </div>
-            ))}
+            ) : (
+              listings.map((row) => {
+                const thumb = getThumbnailUrl(row);
+                const status = row.postStatus ?? "PENDING";
+                return (
+                  <div className="queue-row" key={row.postId}>
+                    <div className="queue-bike">
+                      {thumb ? (
+                        <img src={thumb} alt={row.bicycleName} />
+                      ) : (
+                        <div className="queue-bike-placeholder">No image</div>
+                      )}
+                      <div>
+                        <div className="queue-bike-title">{row.bicycleName ?? "—"}</div>
+                        <div className="queue-bike-id">ID: #{row.postId}</div>
+                      </div>
+                    </div>
+                    <div>{row.sellerFullName ?? row.sellerName ?? "—"}</div>
+                    <div>
+                      <span className="queue-category">{row.categoryName ?? "—"}</span>
+                    </div>
+                    <div className="queue-price">{formatCurrency(row.price)}</div>
+                    <div>{formatDate(row.createdAt)}</div>
+                    <div>
+                      <span className={`queue-inspection ${(POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()}`}>
+                        <FileCheck2 />
+                        {POSTING_STATUS_LABEL[status] ?? status}
+                      </span>
+                    </div>
+                    <div className="queue-actions-cell">
+                      <button
+                        type="button"
+                        className="queue-icon"
+                        onClick={() => navigate(`/product/${row.postId}`)}
+                        title="Xem chi tiết"
+                      >
+                        <Eye />
+                      </button>
+                      <button
+                        type="button"
+                        className="queue-approve"
+                        onClick={() => handleApprove(row.postId)}
+                        disabled={approvingId === row.postId}
+                      >
+                        {approvingId === row.postId ? "Đang duyệt…" : "Approve"}
+                      </button>
+                      <button type="button" className="queue-reject">
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           <div className="queue-footer">
-            <span>Showing 1-3 of 128 results</span>
-            <div className="queue-pagination">
-              <button type="button">Previous</button>
-              <button type="button" className="active">
-                1
-              </button>
-              <button type="button">2</button>
-              <button type="button">3</button>
-              <button type="button">Next</button>
-            </div>
+            <span>Showing {listings.length} pending result(s)</span>
           </div>
         </div>
 

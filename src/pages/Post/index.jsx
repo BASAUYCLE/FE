@@ -545,7 +545,7 @@ export default function PostBike() {
         };
 
         const created = await postService.createPost(createReq);
-        const postId = created?.postId;
+        const postId = created?.result?.postId ?? created?.postId;
         if (!postId) {
           throw new Error("Tạo bài đăng thất bại (không nhận được postId).");
         }
@@ -583,7 +583,8 @@ export default function PostBike() {
           );
         }
 
-        const full = await postService.getPostById(postId);
+        const fullRes = await postService.getPostById(postId);
+        const full = fullRes?.result ?? fullRes;
         const imageUrls = (full?.images ?? [])
           .map((i) => i?.imageUrl)
           .filter(Boolean);
@@ -599,7 +600,7 @@ export default function PostBike() {
             imageUrls,
             priceDisplay: `${vnd.toLocaleString("vi-VN")} ₫`,
             backendPostId: postId,
-            postStatus: full?.postStatus ?? "PENDING",
+            postStatus: full?.postStatus ?? POSTING_STATUS.PENDING,
           },
           POSTING_STATUS.PENDING_REVIEW,
           sellerId,

@@ -13,11 +13,11 @@ const postService = {
   createPost: (payload) => axiosInstance.post(E.POSTS.CREATE, payload),
   getPostById: (postId) => axiosInstance.get(E.POSTS.BY_ID(postId)),
 
-  // Images (BE tự upload Cloudinary và gắn vào post)
+  // Images: POST /images (multipart: postId, imageFile, imageType, isThumbnail)
   uploadPostImage: ({ postId, imageFile, imageType, isThumbnail = false }) => {
     const formData = new FormData();
     formData.append("postId", String(postId));
-    formData.append("image", imageFile);
+    formData.append("imageFile", imageFile);
     formData.append("imageType", String(imageType));
     formData.append("isThumbnail", String(!!isThumbnail));
     return axiosInstance.post(E.IMAGES.CREATE, formData, formDataOptions(formData));

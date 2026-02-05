@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "../../../components/header";
 import Footer from "../../../components/footer";
@@ -8,7 +8,8 @@ import {
   INSPECTOR_NAV_LINKS,
   getInspectorActiveLink,
 } from "../../../config/inspectorNav";
-import { mockInspections, mockDisputes } from "../../../data/inspections";
+import { inspectionService } from "../../../services";
+import { mockDisputes } from "../../../data/inspections";
 import {
   FileCheck,
   CheckCircle2,
@@ -16,13 +17,44 @@ import {
 } from "lucide-react";
 import "./index.css";
 
+/** Map API /inspection/pending item to table row shape */
+function mapPendingToInspection(item) {
+  return {
+    id: String(item.postId),
+    postId: item.postId,
+    bicycleName: item.bicycleName ?? "—",
+    bicycleImage: item.thumbnailUrl ?? "",
+    bicycleType: item.categoryName ?? "—",
+    sellerName: item.sellerFullName ?? "—",
+    sellerLocation: "",
+    requestedDate: item.createdAt ?? "",
+    status: "PENDING",
+  };
+}
+
 export default function InspectorDashboard() {
   const { pathname } = useLocation();
+  const [pendingList, setPendingList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const pendingCount = useMemo(
-    () => mockInspections.filter((i) => i.status === "PENDING" || i.status === "OVERDUE").length,
-    []
-  );
+  const fetchPending = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await inspectionService.getPendingInspections();
+      const list = Array.isArray(res?.result) ? res.result : [];
+      setPendingList(list.map(mapPendingToInspection));
+    } catch {
+      setPendingList([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPending();
+  }, [fetchPending]);
+
+  const pendingCount = useMemo(() => pendingList.length, [pendingList]);
   const completedTodayCount = 8;
   const disputesCount = mockDisputes.length;
 
@@ -77,7 +109,10 @@ export default function InspectorDashboard() {
             ))}
           </section>
 
-          <InspectionQueueTable inspections={mockInspections} />
+          <InspectionQueueTable
+            inspections={pendingList}
+            loading={loading}
+          />
         </div>
       </div>
       <Footer />

@@ -63,6 +63,18 @@ export const API_ENDPOINTS = {
     DELETE: (imageId) => `/images/${imageId}`,
   },
 
+  /** Admin: bài đăng chờ duyệt & duyệt bài */
+  ADMIN_POSTS: {
+    PENDING: "/admin/posts/pending",
+    APPROVE: (postId) => `/admin/posts/${postId}/approve`,
+  },
+
+  /** Inspector: danh sách chờ kiểm định & nộp kết quả */
+  INSPECTION: {
+    PENDING: "/inspection/pending",
+    SUBMIT: (postId) => `/inspection/${postId}/submit`,
+  },
+
   BRANDS: {
     LIST: "/brands",
     BY_ID: (brandId) => `/brands/${brandId}`,
@@ -108,7 +120,7 @@ export const API_ENDPOINTS = {
     METHODS: '/api/payments/methods',
   },
   
-  // Admin (to be implemented by backend)
+  // Admin
   ADMIN: {
     USERS: '/admin/users',
     BOOKINGS: '/admin/bookings',
