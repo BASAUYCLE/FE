@@ -156,7 +156,7 @@ const SearchWrapper = styled(Box)(({ theme }) => ({
     paddingBottom: 0,
     marginBottom: -32,
     width: "100%",
-    maxWidth: 1160,
+    maxWidth: 1200,
     marginLeft: "auto",
     marginRight: "auto",
     paddingLeft: theme.spacing(3),
@@ -177,7 +177,7 @@ const SearchWrapper = styled(Box)(({ theme }) => ({
 
 const SearchCard = styled(Box)(({ theme }) => ({
     width: "100%",
-    maxWidth: 1160,
+    maxWidth: 1200,
     borderRadius: 20,
     boxShadow: "0 10px 40px rgba(0, 0, 0, 0.15), 0 4px 20px rgba(0, 0, 0, 0.08)",
     overflow: "hidden",
@@ -189,7 +189,7 @@ const SearchCard = styled(Box)(({ theme }) => ({
 
 const HeroOuter = styled(Box)(({ theme }) => ({
     padding: theme.spacing(6, 3),
-    maxWidth: 1280,
+    maxWidth: 1200,
     margin: "0 auto",
     width: "100%",
     [theme.breakpoints.up("lg")]: {

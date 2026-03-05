@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { message, Modal, Input } from "antd";
+import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import {
   FileCheck2,
   CheckCircle2,
@@ -8,17 +9,16 @@ import {
   Filter,
   RefreshCcw,
   Eye,
-  Check,
   ClipboardList,
-  MessageSquare,
-  FileText,
 } from "lucide-react";
-import Header from "../../../components/header";
-import Footer from "../../../components/footer";
-import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
+import AdminLayout from "../../../components/layout/AdminLayout";
 import { adminPostService } from "../../../services";
-import { POSTING_STATUS_LABEL, POSTING_STATUS_TAG_COLOR } from "../../../constants/postingStatus";
+import {
+  POSTING_STATUS_LABEL,
+  POSTING_STATUS_TAG_COLOR,
+} from "../../../constants/postingStatus";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { formatDate } from "../../../utils/date";
 import "./index.css";
 
 function getThumbnailUrl(item) {
@@ -27,42 +27,15 @@ function getThumbnailUrl(item) {
   return thumb?.imageUrl ?? list[0]?.imageUrl ?? null;
 }
 
-function formatDate(iso) {
-  if (!iso) return "—";
-  try {
-    return new Date(iso).toLocaleDateString("vi-VN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  } catch {
-    return iso;
-  }
-}
-
-const flaggedItems = [
-  { title: "Santa Cruz Bronson V4", issue: "Issue: Blurry main photo" },
-  { title: "Giant TCR Advanced", issue: "Issue: Missing frame size" },
-];
-
-const moderationHistory = [
-  { name: "Admin Mike", action: "approved", item: "S-Works Epic", time: "2 mins ago" },
-  { name: "Sarah J.", action: "rejected", item: "Generic BMX", time: "15 mins ago" },
-  { name: "Admin Mike", action: "approved", item: "Bianchi Oltre", time: "42 mins ago" },
-];
-
-const guidelines = [
-  "Min. 5 high-res photos required (Side, Drivetrain, Cockpit, Serial, Flaws).",
-  "Verify frame serial number against global theft databases.",
-  "Price must be within +/- 20% of Bluebook estimated market value.",
-  "Description must include: Model Year, Component Group, & Tire Condition.",
-];
-
 export default function ListingApproval() {
-  const [search, setSearch] = useState("");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState(null);
+  const [previewId, setPreviewId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectModalOpen, setRejectModalOpen] = useState(false);
+  const [rejectPostId, setRejectPostId] = useState(null);
+  const [rejectReason, setRejectReason] = useState("");
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -73,7 +46,7 @@ export default function ListingApproval() {
       const list = Array.isArray(res?.result) ? res.result : [];
       setListings(list);
     } catch (err) {
-      message.error(err?.message ?? "Không tải được danh sách chờ duyệt.");
+      message.error(err?.message ?? "Failed to load pending list.");
       setListings([]);
     } finally {
       setLoading(false);
@@ -88,55 +61,87 @@ export default function ListingApproval() {
     try {
       setApprovingId(postId);
       await adminPostService.approvePost(postId);
-      message.success("Đã duyệt bài đăng.");
+      message.success(
+        "Content approved. Post is now pending Inspector verification.",
+      );
       await fetchPending();
     } catch (err) {
-      message.error(err?.message ?? "Duyệt bài thất bại.");
+      message.error(err?.message ?? "Approval failed.");
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const openRejectModal = (postId) => {
+    setRejectPostId(postId);
+    setRejectReason("");
+    setRejectModalOpen(true);
+  };
+
+  const handleRejectSubmit = async () => {
+    const reason = rejectReason.trim();
+    if (!reason) {
+      message.warning("Please enter the rejection reason.");
+      return;
+    }
+    if (!rejectPostId) return;
+    try {
+      setRejectingId(rejectPostId);
+      await adminPostService.rejectPost(rejectPostId, {
+        rejectionReason: reason,
+      });
+      message.success(
+        "Post rejected. Members will see the reason in Manage Listings.",
+      );
+      setRejectModalOpen(false);
+      setRejectPostId(null);
+      setRejectReason("");
+      await fetchPending();
+    } catch (err) {
+      message.error(err?.message ?? "Rejection failed.");
+    } finally {
+      setRejectingId(null);
     }
   };
 
   const pendingCount = listings.length;
 
   return (
-    <div className="admin-listings-page">
-      <Header
-        navLinks={ADMIN_NAV_LINKS}
-        activeLink={getAdminActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
-
-      <div className="admin-listings-shell">
+    <AdminLayout>
+      <div className="admin-listings-page">
+        <div className="admin-listings-shell">
         <div className="admin-listings-stats">
           <div className="admin-listings-stat">
             <div className="stat-header">
               <span className="stat-label">PENDING REVIEW</span>
-              <span className="stat-icon green"><ClipboardList /></span>
+              <span className="stat-icon green">
+                <ClipboardList />
+              </span>
             </div>
-            <div className="stat-value">{loading ? "…" : String(pendingCount)}</div>
-            <div className="stat-note green">Từ API /admin/posts/pending</div>
+            <div className="stat-value">
+              {loading ? "…" : String(pendingCount)}
+            </div>
+            <div className="stat-note green">From API /admin/posts/pending</div>
           </div>
           <div className="admin-listings-stat">
             <div className="stat-header">
               <span className="stat-label">APPROVED TODAY</span>
-              <span className="stat-icon green"><CheckCircle2 /></span>
+              <span className="stat-icon green">
+                <CheckCircle2 />
+              </span>
             </div>
             <div className="stat-value">—</div>
-            <div className="stat-note green">Có thể bổ sung API thống kê</div>
+            <div className="stat-note green">N/A</div>
           </div>
           <div className="admin-listings-stat">
             <div className="stat-header">
               <span className="stat-label">REJECTION RATE</span>
-              <span className="stat-icon red"><AlertTriangle /></span>
+              <span className="stat-icon red">
+                <AlertTriangle />
+              </span>
             </div>
             <div className="stat-value">—</div>
-            <div className="stat-note red">Có thể bổ sung API thống kê</div>
+            <div className="stat-note red">N/A</div>
           </div>
         </div>
 
@@ -174,35 +179,52 @@ export default function ListingApproval() {
             </div>
             {loading ? (
               <div className="queue-row">
-                <div style={{ padding: "24px", gridColumn: "1 / -1", textAlign: "center" }}>
-                  Đang tải...
+                <div
+                  style={{
+                    padding: "24px",
+                    gridColumn: "1 / -1",
+                    textAlign: "center",
+                  }}
+                >
+                  Loading...
                 </div>
               </div>
             ) : (
-              listings.map((row) => {
+              listings.map((row, idx) => {
                 const thumb = getThumbnailUrl(row);
                 const status = row.postStatus ?? "PENDING";
                 return (
-                  <div className="queue-row" key={row.postId}>
-                    <div className="queue-bike">
+                  <div className="queue-row" key={row?.postId ?? row?.id ?? `row-${idx}`}>
+                    <div
+                      className="queue-bike admin-row-link"
+                      onClick={() => row.postId && setPreviewId(row.postId)}
+                      title="View listing"
+                    >
                       {thumb ? (
                         <img src={thumb} alt={row.bicycleName} />
                       ) : (
                         <div className="queue-bike-placeholder">No image</div>
                       )}
                       <div>
-                        <div className="queue-bike-title">{row.bicycleName ?? "—"}</div>
-                        <div className="queue-bike-id">ID: #{row.postId}</div>
+                        <div className="queue-bike-title">
+                          {row.bicycleName ?? "—"}
+                        </div>
                       </div>
                     </div>
                     <div>{row.sellerFullName ?? row.sellerName ?? "—"}</div>
                     <div>
-                      <span className="queue-category">{row.categoryName ?? "—"}</span>
+                      <span className="queue-category">
+                        {row.categoryName ?? "—"}
+                      </span>
                     </div>
-                    <div className="queue-price">{formatCurrency(row.price)}</div>
-                    <div>{formatDate(row.createdAt)}</div>
+                    <div className="queue-price">
+                      {formatCurrency(row.price)}
+                    </div>
+                    <div>{formatDate(row.createdAt) || "—"}</div>
                     <div>
-                      <span className={`queue-inspection ${(POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()}`}>
+                      <span
+                        className={`queue-inspection ${(POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()}`}
+                      >
                         <FileCheck2 />
                         {POSTING_STATUS_LABEL[status] ?? status}
                       </span>
@@ -211,8 +233,8 @@ export default function ListingApproval() {
                       <button
                         type="button"
                         className="queue-icon"
-                        onClick={() => navigate(`/product/${row.postId}`)}
-                        title="Xem chi tiết"
+                        onClick={() => row.postId && setPreviewId(row.postId)}
+                        title="View details"
                       >
                         <Eye />
                       </button>
@@ -222,10 +244,15 @@ export default function ListingApproval() {
                         onClick={() => handleApprove(row.postId)}
                         disabled={approvingId === row.postId}
                       >
-                        {approvingId === row.postId ? "Đang duyệt…" : "Approve"}
+                        {approvingId === row.postId ? "Approving…" : "Approve"}
                       </button>
-                      <button type="button" className="queue-reject">
-                        Reject
+                      <button
+                        type="button"
+                        className="queue-reject"
+                        onClick={() => openRejectModal(row.postId)}
+                        disabled={rejectingId === row.postId}
+                      >
+                        {rejectingId === row.postId ? "Rejecting…" : "Reject"}
                       </button>
                     </div>
                   </div>
@@ -238,69 +265,42 @@ export default function ListingApproval() {
             <span>Showing {listings.length} pending result(s)</span>
           </div>
         </div>
-
-        <div className="admin-listings-bottom">
-          <div className="bottom-card">
-            <div className="bottom-card-title">
-              <FileText />
-              Flagged for Quality
-            </div>
-            {flaggedItems.map((item) => (
-              <div key={item.title} className="flagged-item">
-                <div className="flagged-icon" />
-                <div>
-                  <div className="flagged-title">{item.title}</div>
-                  <div className="flagged-issue">{item.issue}</div>
-                </div>
-              </div>
-            ))}
-            <button type="button" className="bottom-link">
-              View all flagged items (14)
-            </button>
-          </div>
-
-          <div className="bottom-card">
-            <div className="bottom-card-title">
-              <MessageSquare />
-              Moderation History
-            </div>
-            {moderationHistory.map((item) => (
-              <div key={`${item.name}-${item.item}`} className="history-item">
-                <div className="history-avatar">
-                  {item.name.split(" ")[0][0]}
-                </div>
-                <div>
-                  <div className="history-title">
-                    <strong>{item.name}</strong> {item.action}{" "}
-                    <em>{item.item}</em>
-                  </div>
-                  <div className="history-time">{item.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="bottom-card">
-            <div className="bottom-card-title">
-              <Check />
-              Admin Guidelines
-            </div>
-            <ul className="guidelines-list">
-              {guidelines.map((rule) => (
-                <li key={rule}>
-                  <Check />
-                  {rule}
-                </li>
-              ))}
-            </ul>
-            <button type="button" className="bottom-primary">
-              Download Full Handbook (PDF)
-            </button>
-          </div>
-        </div>
+      </div>
       </div>
 
-      <Footer />
-    </div>
+      <Modal
+        title="Reject post"
+        open={rejectModalOpen}
+        onCancel={() => {
+          setRejectModalOpen(false);
+          setRejectPostId(null);
+          setRejectReason("");
+        }}
+        onOk={handleRejectSubmit}
+        okText="Reject"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true, loading: rejectingId != null }}
+        destroyOnHidden
+        width={520}
+      >
+        <p style={{ marginBottom: 8, color: "#64748b" }}>
+          Enter the rejection reason (title, price, description...). Members
+          will see this in Manage Listings.
+        </p>
+        <Input.TextArea
+          placeholder="e.g. Price too far from market; Description missing required information..."
+          value={rejectReason}
+          onChange={(e) => setRejectReason(e.target.value)}
+          rows={4}
+          maxLength={500}
+          showCount
+        />
+      </Modal>
+      <ProductPreviewModal
+        postId={previewId}
+        open={!!previewId}
+        onClose={() => setPreviewId(null)}
+      />
+    </AdminLayout>
   );
 }

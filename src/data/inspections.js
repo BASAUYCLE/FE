@@ -178,7 +178,7 @@ export function getInspectionReport(inspectionId) {
       ? "APPROVED"
       : inspection.status === "IN_PROGRESS"
         ? "PENDING_APPROVAL"
-        : "DRAFT";
+        : "DRAFTED";
   const inspectionImages = [inspection.bicycleImage, inspection.bicycleImage, inspection.bicycleImage, inspection.bicycleImage];
   return {
     ...inspection,

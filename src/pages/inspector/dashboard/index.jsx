@@ -1,15 +1,8 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
-import Header from "../../../components/header";
-import Footer from "../../../components/footer";
+import InspectorLayout from "../../../components/layout/InspectorLayout";
 import StatCard from "../../../components/inspector/shared";
 import InspectionQueueTable from "../../../components/inspector/InspectionQueueTable";
-import {
-  INSPECTOR_NAV_LINKS,
-  getInspectorActiveLink,
-} from "../../../config/inspectorNav";
 import { inspectionService } from "../../../services";
-import { mockDisputes } from "../../../data/inspections";
 import {
   FileCheck,
   CheckCircle2,
@@ -33,8 +26,8 @@ function mapPendingToInspection(item) {
 }
 
 export default function InspectorDashboard() {
-  const { pathname } = useLocation();
   const [pendingList, setPendingList] = useState([]);
+  const [disputesCount, setDisputesCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchPending = useCallback(async () => {
@@ -50,13 +43,23 @@ export default function InspectorDashboard() {
     }
   }, []);
 
+  const fetchDisputes = useCallback(async () => {
+    try {
+      const res = await inspectionService.getDisputes();
+      const list = Array.isArray(res?.result) ? res.result : [];
+      setDisputesCount(list.length);
+    } catch {
+      setDisputesCount(0);
+    }
+  }, []);
+
   useEffect(() => {
     fetchPending();
-  }, [fetchPending]);
+    fetchDisputes();
+  }, [fetchPending, fetchDisputes]);
 
   const pendingCount = useMemo(() => pendingList.length, [pendingList]);
   const completedTodayCount = 8;
-  const disputesCount = mockDisputes.length;
 
   const stats = [
     {
@@ -86,36 +89,27 @@ export default function InspectorDashboard() {
   ];
 
   return (
-    <div className="inspector-page">
-      <Header
-        navLinks={INSPECTOR_NAV_LINKS}
-        activeLink={getInspectorActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
-      <div className="inspector-dashboard">
-        <div className="inspector-content">
-          <header className="inspector-welcome">
-            <p>Welcome back! You have {pendingCount} new inspections scheduled for today.</p>
-          </header>
+    <InspectorLayout>
+      <div className="inspector-page">
+        <div className="inspector-dashboard">
+          <div className="inspector-content">
+            <header className="inspector-welcome">
+              <p>Welcome back! You have {pendingCount} new inspections scheduled for today.</p>
+            </header>
 
-          <section className="admin-stats">
-            {stats.map((card) => (
-              <StatCard key={card.label} {...card} />
-            ))}
-          </section>
+            <section className="admin-stats">
+              {stats.map((card) => (
+                <StatCard key={card.label} {...card} />
+              ))}
+            </section>
 
-          <InspectionQueueTable
-            inspections={pendingList}
-            loading={loading}
-          />
+            <InspectionQueueTable
+              inspections={pendingList}
+              loading={loading}
+            />
+          </div>
         </div>
       </div>
-      <Footer />
-    </div>
+    </InspectorLayout>
   );
 }

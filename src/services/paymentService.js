@@ -1,15 +1,17 @@
 import axiosInstance from "./axiosConfig";
-import { API_ENDPOINTS } from "../config/api";
-
-const E = API_ENDPOINTS.PAYMENTS;
 
 const paymentService = {
-  createPayment: (paymentData) => axiosInstance.post(E.CREATE, paymentData),
-  getPaymentById: (paymentId) => axiosInstance.get(E.BY_ID(paymentId)),
-  verifyPayment: (verificationData) => axiosInstance.post(E.VERIFY, verificationData),
-  getPaymentHistory: (params = {}) => axiosInstance.get(E.HISTORY, { params }),
-  requestRefund: (paymentId, reason = "") => axiosInstance.post(E.REFUND(paymentId), { reason }),
-  getPaymentMethods: () => axiosInstance.get(E.METHODS),
+  // GET /payment/vnpay/callback - VNPay redirect
+  // Params: vnp_Amount, vnp_TransactionNo, vnp_ResponseCode, etc.
+  // BE will process and redirect to frontend with result
+  handleVNPayCallback: (params) => {
+    // This is typically handled by backend redirect
+    // FE just needs to parse the query params from callback URL
+    return Promise.resolve(params);
+  },
+
+  // Verify payment status by checking transaction
+  // This is done through transactionService.getById() instead
 };
 
 export default paymentService;

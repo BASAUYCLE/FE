@@ -1,15 +1,9 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { message, Modal, Select, Input } from "antd";
-import Header from "../../../components/header";
+import InspectorLayout from "../../../components/layout/InspectorLayout";
 import { useNotifications } from "../../../contexts/useNotifications";
-import Footer from "../../../components/footer";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
-import {
-  INSPECTOR_NAV_LINKS,
-  getInspectorActiveLink,
-} from "../../../config/inspectorNav";
-import { getInspectionReport } from "../../../data/inspections";
 import { postService, inspectionService } from "../../../services";
 import {
   OVERALL_CONDITION,
@@ -47,7 +41,6 @@ function deepCloneChecklist(checklist) {
 export default function InspectorDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { pathname } = useLocation();
   const postIdNum = useMemo(() => {
     const n = Number(id);
     return Number.isInteger(n) && n > 0 ? n : null;
@@ -61,7 +54,6 @@ export default function InspectorDetail() {
   const [submitOverallCondition, setSubmitOverallCondition] = useState(OVERALL_CONDITION.GOOD);
   const [submitNotes, setSubmitNotes] = useState("");
 
-  const reportFromMock = postIdNum ? null : getInspectionReport(id);
   const report = postFromApi
     ? {
         id: postFromApi.postId,
@@ -72,8 +64,15 @@ export default function InspectorDetail() {
         owner: postFromApi.sellerFullName ?? postFromApi.sellerName,
         updatedAt: postFromApi.updatedAt ?? new Date().toISOString().slice(0, 10),
         reportStatus: "DRAFT",
+        categoryName: postFromApi.categoryName ?? "—",
+        modelYear: postFromApi.modelYear ?? "—",
+        size: postFromApi.size ?? "—",
+        frameNumber: postFromApi.frameNumber ?? "—",
+        checklist: postFromApi.checklist ?? [],
+        inspectorNotes: postFromApi.inspectorNotes ?? "",
+        completionPercent: postFromApi.completionPercent ?? 0,
       }
-    : reportFromMock;
+    : null;
 
   useEffect(() => {
     if (!postIdNum) return;
@@ -95,9 +94,9 @@ export default function InspectorDetail() {
   }, [postIdNum]);
 
   const { addNotification } = useNotifications();
-  const [checklist, setChecklist] = useState(() => deepCloneChecklist(reportFromMock?.checklist));
-  const [inspectorNotes, setInspectorNotes] = useState(reportFromMock?.inspectorNotes ?? "");
-  const [completionPercent, setCompletionPercent] = useState(reportFromMock?.completionPercent ?? 0);
+  const [checklist, setChecklist] = useState([]);
+  const [inspectorNotes, setInspectorNotes] = useState("");
+  const [completionPercent, setCompletionPercent] = useState(0);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -168,12 +167,12 @@ export default function InspectorDetail() {
           overallCondition: "POOR",
           notes: reason,
         });
-        message.success("Đã nộp kết quả không đạt. Bài đăng chuyển sang REJECTED.");
+        message.success("Fail result submitted. Post status set to REJECTED.");
         setRejectModalOpen(false);
         setRejectReason("");
         navigate("/inspector");
       } catch (err) {
-        message.error(err?.message ?? "Nộp kết quả thất bại.");
+        message.error(err?.message ?? "Submit result failed.");
       } finally {
         setSubmitLoading(false);
       }
@@ -208,7 +207,7 @@ export default function InspectorDetail() {
   const handleSubmitResultOk = async () => {
     const notes = submitNotes.trim();
     if (!notes) {
-      message.warning("Vui lòng nhập ghi chú kiểm định.");
+      message.warning("Please enter inspection notes.");
       return;
     }
     try {
@@ -218,11 +217,11 @@ export default function InspectorDetail() {
         overallCondition: submitOverallCondition,
         notes,
       });
-      message.success("Đã nộp kết quả kiểm định. Bài đăng chuyển sang AVAILABLE.");
+      message.success("Inspection result submitted. Post status set to AVAILABLE.");
       setSubmitResultModalOpen(false);
       navigate("/inspector");
     } catch (err) {
-      message.error(err?.message ?? "Nộp kết quả thất bại.");
+      message.error(err?.message ?? "Submit result failed.");
     } finally {
       setSubmitLoading(false);
     }
@@ -246,65 +245,34 @@ export default function InspectorDetail() {
 
   if (postIdNum && postLoading) {
     return (
-      <div className="inspector-page">
-        <Header
-          navLinks={INSPECTOR_NAV_LINKS}
-          activeLink={getInspectorActiveLink(pathname)}
-          navVariant="pill"
-          showSearch={false}
-          showWishlistIcon={false}
-          showAvatar
-          showSellButton={false}
-          showLogin={false}
-        />
+      <InspectorLayout>
         <div className="inspector-detail-page">
-          <p>Đang tải bài đăng...</p>
+          <p>Loading post...</p>
         </div>
-        <Footer />
-      </div>
+      </InspectorLayout>
     );
   }
 
   if (!report) {
     return (
-      <div className="inspector-page">
-        <Header
-          navLinks={INSPECTOR_NAV_LINKS}
-          activeLink={getInspectorActiveLink(pathname)}
-          navVariant="pill"
-          showSearch={false}
-          showWishlistIcon={false}
-          showAvatar
-          showSellButton={false}
-          showLogin={false}
-        />
+      <InspectorLayout>
         <div className="inspector-detail-page">
           <p>Inspection request not found.</p>
           <button type="button" className="admin-outline-button" onClick={() => navigate("/inspector")}>
             Back to Dashboard
           </button>
         </div>
-        <Footer />
-      </div>
+      </InspectorLayout>
     );
   }
 
   const statusLabel = report.reportStatus === "APPROVED" ? "Approved" : report.reportStatus === "PENDING_APPROVAL" ? "Pending approval" : report.reportStatus;
 
   return (
-    <div className="inspector-page">
-      <Header
-        navLinks={INSPECTOR_NAV_LINKS}
-        activeLink={getInspectorActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
-      <div className="inspector-dashboard">
-        <div className="inspection-report-page">
+    <InspectorLayout>
+      <div className="inspector-page">
+        <div className="inspector-dashboard">
+          <div className="inspection-report-page">
           <PageBreadcrumb
             items={[
               { label: "Dashboard", path: "/inspector" },
@@ -345,14 +313,16 @@ export default function InspectorDetail() {
               </div>
 
               <div className="admin-card inspection-report-card">
-                <img
-                  src={report.bicycleImage}
-                  alt={report.bicycleName}
-                  className="inspection-report-bike-image"
-                />
+                {report.bicycleImage && (
+                  <img
+                    src={report.bicycleImage}
+                    alt={report.bicycleName}
+                    className="inspection-report-bike-image"
+                  />
+                )}
                 <h2 className="inspection-report-bike-name">{report.bicycleName}</h2>
                 <p className="inspection-report-bike-meta">
-                  {report.bicycleType} · {report.modelYear} · Size {report.size}
+                  {report.categoryName ?? report.bicycleType} · {report.modelYear} · {report.size ? `Size ${report.size}` : ""}
                 </p>
                 <div className="inspection-report-detail-row">
                   <span className="inspection-report-detail-label">Owner:</span>
@@ -367,7 +337,7 @@ export default function InspectorDetail() {
               <div className="admin-card inspection-report-card">
                 <h3 className="inspection-report-card-title">Inspection images</h3>
                 <div className="inspection-report-thumbnails">
-                  {report.inspectionImages?.slice(0, 4).map((img, idx) => (
+                  {report.inspectionImages?.filter(Boolean).slice(0, 4).map((img, idx) => (
                     <button
                       key={idx}
                       type="button"
@@ -550,17 +520,17 @@ export default function InspectorDetail() {
       </Modal>
 
       <Modal
-        title="Nộp kết quả kiểm định (PASS)"
+        title="Submit inspection result (PASS)"
         open={submitResultModalOpen}
         onCancel={() => setSubmitResultModalOpen(false)}
         onOk={handleSubmitResultOk}
-        okText="Nộp kết quả"
-        cancelText="Hủy"
+        okText="Submit result"
+        cancelText="Cancel"
         okButtonProps={{ loading: submitLoading }}
         destroyOnClose
       >
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Tình trạng tổng thể</label>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Overall condition</label>
           <Select
             style={{ width: "100%" }}
             value={submitOverallCondition}
@@ -574,9 +544,9 @@ export default function InspectorDetail() {
           />
         </div>
         <div>
-          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Ghi chú (bắt buộc)</label>
+          <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Notes (required)</label>
           <Input.TextArea
-            placeholder="e.g. Xe đạp trong tình trạng rất tốt, khung carbon không nứt, phanh hoạt động tốt"
+            placeholder="e.g. Bike in very good condition, carbon frame intact, brakes working well"
             value={submitNotes}
             onChange={(e) => setSubmitNotes(e.target.value)}
             rows={4}
@@ -625,7 +595,7 @@ export default function InspectorDetail() {
         )}
       </Modal>
 
-      <Footer />
-    </div>
+      </div>
+    </InspectorLayout>
   );
 }

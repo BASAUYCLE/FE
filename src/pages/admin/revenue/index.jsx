@@ -1,167 +1,378 @@
-import { useState, useMemo } from "react";
-import { useLocation } from "react-router-dom";
-import Header from "../../../components/header";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import AdminLayout from "../../../components/layout/AdminLayout";
 import Footer from "../../../components/footer";
-import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
-import { DollarSign, TrendingUp, Calendar, CreditCard } from "lucide-react";
+import { DollarSign, TrendingUp, FileText, RefreshCw } from "lucide-react";
+import adminPostService from "../../../services/adminPostService";
+import systemConfigService from "../../../services/systemConfigService";
+import { formatCurrency } from "../../../utils/formatCurrency";
 import "../dashboard/index.css";
 import "./index.css";
 
 const PERIODS = [
-  { value: "week", label: "Tuần này" },
-  { value: "month", label: "Tháng này" },
-  { value: "quarter", label: "Quý này" },
+  { value: "week",    label: "This week",    days: 7  },
+  { value: "month",   label: "This month",   days: 30 },
+  { value: "quarter", label: "This quarter", days: 90 },
 ];
 
-const MOCK_REVENUE_BY_PERIOD = {
-  week: { total: "142.480.000", fee: "8.548.800", orders: 48, trend: "+12%" },
-  month: {
-    total: "518.200.000",
-    fee: "31.092.000",
-    orders: 186,
-    trend: "+8.5%",
-  },
-  quarter: {
-    total: "1.524.000.000",
-    fee: "91.440.000",
-    orders: 542,
-    trend: "+15.2%",
-  },
+const POSTING_FEE_FALLBACK = 50_000;
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function startOfPeriod(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days + 1);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/** Nhóm posts theo ngày trong khoảng `days` gần nhất */
+function buildDailyBuckets(posts, days) {
+  const buckets = {};
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    buckets[key] = [];
+  }
+  posts.forEach((p) => {
+    const key = (p.createdAt ?? "").slice(0, 10);
+    if (key && buckets[key] !== undefined) buckets[key].push(p);
+  });
+  return buckets;
+}
+
+/** Nhóm posts theo tuần trong khoảng `days` */
+function buildWeeklyBuckets(posts, days) {
+  const buckets = {};
+  const today = new Date();
+  // Tạo bucket cho mỗi tuần
+  for (let i = Math.ceil(days / 7) - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i * 7);
+    const week = `W${String(getISOWeek(d)).padStart(2, "0")}`;
+    buckets[week] = [];
+  }
+  posts.forEach((p) => {
+    const d = new Date(p.createdAt ?? "");
+    if (isNaN(d)) return;
+    const key = `W${String(getISOWeek(d)).padStart(2, "0")}`;
+    if (buckets[key] !== undefined) buckets[key].push(p);
+  });
+  return buckets;
+}
+
+function getISOWeek(d) {
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+}
+
+function buildChartData(posts, period, postingFee) {
+  const periodDef = PERIODS.find((p) => p.value === period) ?? PERIODS[0];
+  const days = periodDef.days;
+
+  if (period === "quarter") {
+    // Nhóm theo tuần
+    const buckets = buildWeeklyBuckets(posts, days);
+    const entries = Object.entries(buckets);
+    const maxCount = Math.max(...entries.map(([, arr]) => arr.length), 1);
+    return entries.map(([key, arr]) => ({
+      label:  key,
+      value:  Math.round((arr.length / maxCount) * 100),
+      count:  arr.length,
+      amount: arr.length > 0 ? formatCurrency(arr.length * postingFee) : "—",
+    }));
+  }
+
+  // Nhóm theo ngày
+  const buckets = buildDailyBuckets(posts, days);
+  const entries = Object.entries(buckets); // [dateKey, posts[]]
+  const maxCount = Math.max(...entries.map(([, arr]) => arr.length), 1);
+
+  // Label: ngày/tháng hoặc T2…CN
+  const dayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  return entries.map(([key, arr]) => {
+    const d = new Date(key);
+    const label =
+      period === "week"
+        ? dayLabels[d.getDay()]
+        : `${d.getDate()}/${d.getMonth() + 1}`;
+    return {
+      label,
+      value:  Math.round((arr.length / maxCount) * 100),
+      count:  arr.length,
+      amount: arr.length > 0 ? formatCurrency(arr.length * postingFee) : "—",
+    };
+  });
+}
+
+/** Status badge color */
+const STATUS_COLOR = {
+  AVAILABLE:      "#10b981",
+  DEPOSITED:      "#d97706",
+  SOLD:           "#7c3aed",
+  PENDING:        "#f59e0b",
+  ADMIN_APPROVED: "#3b82f6",
+  REJECTED:       "#ef4444",
+  HIDDEN:         "#94a3b8",
+  DRAFTED:        "#94a3b8",
+};
+const STATUS_LABEL = {
+  AVAILABLE:      "Available",
+  DEPOSITED:      "Deposited",
+  SOLD:           "Sold",
+  PENDING:        "Pending",
+  ADMIN_APPROVED: "Approved",
+  REJECTED:       "Rejected",
+  HIDDEN:         "Hidden",
+  DRAFTED:        "Draft",
 };
 
-const MOCK_CHART_WEEK = [
-  { label: "T2", value: 18, amount: "22.100k" },
-  { label: "T3", value: 42, amount: "18.500k" },
-  { label: "T4", value: 35, amount: "20.200k" },
-  { label: "T5", value: 65, amount: "25.800k" },
-  { label: "T6", value: 55, amount: "28.400k" },
-  { label: "T7", value: 80, amount: "27.480k" },
-  { label: "CN", value: 95, amount: "—" },
-];
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminRevenue() {
-  const { pathname } = useLocation();
-  const [period, setPeriod] = useState("week");
+  const [period, setPeriod]       = useState("week");
+  const [allPosts, setAllPosts]   = useState([]);
+  const [postingFee, setPostingFee] = useState(POSTING_FEE_FALLBACK);
+  const [loading, setLoading]     = useState(true);
 
-  const data = MOCK_REVENUE_BY_PERIOD[period] || MOCK_REVENUE_BY_PERIOD.week;
-  const chartData = period === "week" ? MOCK_CHART_WEEK : MOCK_CHART_WEEK;
+  // Fetch all posts + posting fee once
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [postsRes, feeRes] = await Promise.allSettled([
+        adminPostService.getAllPosts(),
+        systemConfigService.getByKey("POSTING_FEE"),
+      ]);
 
-  const stats = useMemo(
-    () => [
-      {
-        label: "Doanh thu hàng kỳ",
-        value: `${data.total} ₫`,
-        note: data.trend,
-        tone: "green",
-        icon: <DollarSign />,
-      },
-      {
-        label: "Phí nền tảng (6%)",
-        value: `${data.fee} ₫`,
-        note: "ước tính",
-        tone: "blue",
-        icon: <CreditCard />,
-      },
-      {
-        label: "Số đơn hàng",
-        value: data.orders,
-        note: "giao dịch",
-        tone: "indigo",
-        icon: <TrendingUp />,
-      },
-    ],
-    [data],
+      if (postsRes.status === "fulfilled") {
+        const raw = postsRes.value?.result ?? postsRes.value?.data ?? postsRes.value;
+        const list = Array.isArray(raw) ? raw : (raw?.content ?? raw?.posts ?? raw?.data ?? []);
+        setAllPosts(list);
+      }
+
+      if (feeRes.status === "fulfilled") {
+        const raw = feeRes.value?.result ?? feeRes.value?.data ?? feeRes.value;
+        const strVal =
+          typeof raw === "string" ? raw
+          : raw?.configValue ?? raw?.config_value ?? raw?.value ?? String(raw ?? "");
+        const num = parseFloat(strVal);
+        if (!isNaN(num) && num > 0) setPostingFee(num);
+      }
+    } catch (err) {
+      console.warn("AdminRevenue: fetch failed", err?.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Posts trong kỳ đã chọn (chỉ tính các bài đã được submit = không phải DRAFTED)
+  const periodPosts = useMemo(() => {
+    const days = PERIODS.find((p) => p.value === period)?.days ?? 7;
+    const cutoff = startOfPeriod(days);
+    return allPosts.filter((p) => {
+      const created = new Date(p.createdAt ?? p.created_at ?? "");
+      return !isNaN(created) && created >= cutoff && p.postStatus !== "DRAFTED";
+    });
+  }, [allPosts, period]);
+
+  const totalRevenue  = periodPosts.length * postingFee;
+  const totalAllPosts = allPosts.filter((p) => p.postStatus !== "DRAFTED").length;
+  const chartData     = useMemo(
+    () => buildChartData(periodPosts, period, postingFee),
+    [periodPosts, period, postingFee],
   );
 
+  // Bảng lịch sử: 20 bài gần nhất trong kỳ, sắp xếp mới nhất trước
+  const recentPosts = useMemo(() => {
+    return [...periodPosts]
+      .sort((a, b) => new Date(b.createdAt ?? "") - new Date(a.createdAt ?? ""))
+      .slice(0, 20)
+      .map((p) => ({
+        id:       p.postId ?? p.id,
+        title:    p.bicycleName ?? p.title ?? "—",
+        seller:   p.sellerFullName ?? p.sellerName ?? p.seller?.fullName ?? "—",
+        status:   p.postStatus ?? p.status ?? "—",
+        date:     p.createdAt ?? p.created_at ?? null,
+        fee:      postingFee,
+      }));
+  }, [periodPosts, postingFee]);
+
+  const periodLabel = PERIODS.find((p) => p.value === period)?.label ?? "";
+
   return (
-    <div className="admin-dashboard-page admin-revenue-page">
-      <Header
-        navLinks={ADMIN_NAV_LINKS}
-        activeLink={getAdminActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
-      <div className="admin-dashboard">
-        <div className="admin-content">
-          <header className="admin-topbar admin-revenue-topbar">
-            <div>
-              <h1 className="admin-page-title">Doanh thu hàng kỳ</h1>
-              <p className="admin-page-subtitle">
-                Theo dõi doanh thu và phí nền tảng theo tuần, tháng, quý.
-              </p>
-            </div>
-            <div className="admin-period-tabs">
-              {PERIODS.map((p) => (
-                <button
-                  key={p.value}
-                  type="button"
-                  className={`admin-period-tab ${period === p.value ? "active" : ""}`}
-                  onClick={() => setPeriod(p.value)}
-                >
-                  <Calendar size={14} />
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </header>
+    <AdminLayout>
+      <div className="admin-dashboard-page admin-revenue-page">
+        <div className="admin-dashboard">
+          <div className="admin-content">
 
-          <section className="admin-stats admin-revenue-stats">
-            {stats.map((card) => (
-              <div className="admin-card admin-stat-card" key={card.label}>
-                <div className="admin-stat-top">
-                  <div className={`admin-stat-icon ${card.tone}`}>
-                    {card.icon}
-                  </div>
-                  <span className={`admin-stat-trend up`}>{card.note}</span>
-                </div>
-                <div className="admin-stat-title">{card.label}</div>
-                <div className="admin-stat-value">
-                  {typeof card.value === "number"
-                    ? card.value.toLocaleString()
-                    : card.value}
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <section className="admin-card">
-            <div className="admin-card-header">
+            {/* Header */}
+            <header className="admin-topbar admin-revenue-topbar">
               <div>
-                <div className="admin-card-title">Biểu đồ doanh thu</div>
-                <div className="admin-card-subtitle">
-                  {PERIODS.find((p) => p.value === period)?.label}
+                <h1 className="admin-page-title">Doanh thu đăng bài</h1>
+                <p className="admin-page-subtitle">
+                  Phí đăng tin: {formatCurrency(postingFee)} / bài · Tổng bài đã đăng: {totalAllPosts}
+                </p>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  type="button"
+                  className="admin-period-tab"
+                  onClick={fetchData}
+                  disabled={loading}
+                  style={{ padding: "8px 12px" }}
+                >
+                  <RefreshCw size={14} />
+                </button>
+                <div className="admin-period-tabs">
+                  {PERIODS.map((p) => (
+                    <button
+                      key={p.value}
+                      type="button"
+                      className={`admin-period-tab ${period === p.value ? "active" : ""}`}
+                      onClick={() => setPeriod(p.value)}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-            </div>
-            <div className="admin-chart">
-              {chartData.map((day, index) => (
-                <div className="admin-chart-bar" key={day.label}>
-                  <div
-                    className={`admin-chart-fill ${index === chartData.length - 1 ? "highlight" : ""}`}
-                    style={{ height: `${day.value}%` }}
-                  >
-                    <span
-                      className={`admin-chart-tooltip ${index === chartData.length - 1 ? "show" : ""}`}
+            </header>
+
+            {/* Stats */}
+            <section className="admin-stats admin-revenue-stats">
+              {/* Tổng doanh thu kỳ */}
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon green"><DollarSign /></div>
+                  <span className="admin-stat-trend up">{periodLabel}</span>
+                </div>
+                <div className="admin-stat-title">Doanh thu kỳ</div>
+                <div className="admin-stat-value">
+                  {loading ? "…" : formatCurrency(totalRevenue)}
+                </div>
+              </div>
+
+              {/* Số bài đăng trong kỳ */}
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon indigo"><FileText /></div>
+                  <span className="admin-stat-trend up">bài đăng</span>
+                </div>
+                <div className="admin-stat-title">Bài đăng trong kỳ</div>
+                <div className="admin-stat-value">
+                  {loading ? "…" : periodPosts.length.toLocaleString()}
+                </div>
+              </div>
+
+              {/* Phí đăng bài đơn vị */}
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon blue"><TrendingUp /></div>
+                  <span className="admin-stat-trend up">SystemConfig</span>
+                </div>
+                <div className="admin-stat-title">Phí / bài đăng</div>
+                <div className="admin-stat-value">{formatCurrency(postingFee)}</div>
+              </div>
+            </section>
+
+            {/* Bar chart */}
+            <section className="admin-card">
+              <div className="admin-card-header">
+                <div>
+                  <div className="admin-card-title">Biểu đồ bài đăng</div>
+                  <div className="admin-card-subtitle">{periodLabel}</div>
+                </div>
+              </div>
+              <div className="admin-chart">
+                {chartData.map((bar, i) => (
+                  <div className="admin-chart-bar" key={`${bar.label}-${i}`}>
+                    <div
+                      className={`admin-chart-fill ${i === chartData.length - 1 ? "highlight" : ""}`}
+                      style={{ height: `${Math.max(bar.value, bar.count > 0 ? 4 : 0)}%` }}
                     >
-                      {day.amount}
-                    </span>
+                      {bar.count > 0 && (
+                        <span className={`admin-chart-tooltip ${i === chartData.length - 1 ? "show" : ""}`}>
+                          {bar.count} bài · {bar.amount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="admin-chart-labels">
+                {chartData.map((bar, i) => (
+                  <span key={`label-${i}`}>{bar.label}</span>
+                ))}
+              </div>
+            </section>
+
+            {/* Bảng lịch sử đăng bài */}
+            <section className="admin-card admin-table-card">
+              <div className="admin-card-header">
+                <div>
+                  <div className="admin-card-title">Lịch sử đăng bài trong kỳ</div>
+                  <div className="admin-card-subtitle">
+                    {recentPosts.length} bài gần nhất · Phí mỗi bài: {formatCurrency(postingFee)}
                   </div>
                 </div>
-              ))}
-            </div>
-            <div className="admin-chart-labels">
-              {chartData.map((day) => (
-                <span key={day.label}>{day.label}</span>
-              ))}
-            </div>
-          </section>
+              </div>
+
+              <div className="admin-table admin-revenue-table">
+                <div className="admin-table-row admin-table-header">
+                  <div>Tiêu đề bài đăng</div>
+                  <div>Người bán</div>
+                  <div>Ngày đăng</div>
+                  <div>Trạng thái</div>
+                  <div>Phí đăng bài</div>
+                </div>
+
+                {loading ? (
+                  <div className="admin-table-empty">Đang tải...</div>
+                ) : recentPosts.length === 0 ? (
+                  <div className="admin-table-empty">Chưa có bài đăng nào trong kỳ này.</div>
+                ) : (
+                  recentPosts.map((row, idx) => (
+                    <div className="admin-table-row" key={row.id ?? idx}>
+                      <div className="admin-rev-title">{row.title}</div>
+                      <div>{row.seller}</div>
+                      <div className="admin-rev-date">
+                        {row.date
+                          ? new Date(row.date).toLocaleString("vi-VN", {
+                              day: "2-digit", month: "2-digit", year: "numeric",
+                              hour: "2-digit", minute: "2-digit",
+                            })
+                          : "—"}
+                      </div>
+                      <div>
+                        <span
+                          className="admin-rev-status-badge"
+                          style={{
+                            background: `${STATUS_COLOR[row.status] ?? "#94a3b8"}18`,
+                            color: STATUS_COLOR[row.status] ?? "#94a3b8",
+                          }}
+                        >
+                          {STATUS_LABEL[row.status] ?? row.status}
+                        </span>
+                      </div>
+                      <div className="admin-rev-fee">
+                        +{formatCurrency(row.fee)}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+            </section>
+
+          </div>
         </div>
+        <Footer />
       </div>
-      <Footer />
-    </div>
+    </AdminLayout>
   );
 }

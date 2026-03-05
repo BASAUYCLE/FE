@@ -1,15 +1,14 @@
-// API Configuration
+// Cấu hình API
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080",
   AUTH_SERVER: import.meta.env.VITE_AUTH_SERVER || 'http://localhost:8080',
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID || '',
-  USE_MOCK_API: import.meta.env.VITE_USE_MOCK_API === 'true' || false,
-  TIMEOUT: 15000, // 15 seconds
+  TIMEOUT: 15000, // 15 giây
 };
 
-// API Endpoints based on actual backend
+// Endpoint API theo backend thực tế
 export const API_ENDPOINTS = {
-  // Authentication
+  // Xác thực
   AUTH: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
@@ -21,12 +20,13 @@ export const API_ENDPOINTS = {
     CHANGE_PASSWORD: '/auth/change-password',
   },
   
-  // User
+  // User – BE: /users/myinfo, /users, /users/{userId}, /users/email/{email}
   USER: {
     MY_INFO: '/users/myinfo',
     UPDATE_MY_INFO: '/users/myinfo',
     LIST: '/users',
     BY_ID: (id) => `/users/${id}`,
+    BY_EMAIL: (email) => `/users/email/${encodeURIComponent(email)}`,
     UPDATE: (id) => `/users/${id}`,
     DELETE: (id) => `/users/${id}`,
     BOOKINGS: '/api/users/bookings',
@@ -40,10 +40,14 @@ export const API_ENDPOINTS = {
     IMAGE: '/api/upload/image',          // POST - Upload hình ảnh
   },
 
-  // Marketplace (Bicycle Posts)
+  // Marketplace (Bài đăng) – BE: /posts, /posts/{postId}, /posts/seller/{id}, /posts/category/{id}, /posts/size/{size}, /posts/search
   POSTS: {
     LIST: "/posts",
     CREATE: "/posts",
+    DRAFT: "/posts/draft",
+    MY_POSTS: "/posts/my-posts",
+    DRAFTS: "/posts/drafts",
+    DRAFT_SUBMIT: (postId) => `/posts/draft/${postId}/submit`,
     BY_ID: (postId) => `/posts/${postId}`,
     UPDATE: (postId) => `/posts/${postId}`,
     DELETE: (postId) => `/posts/${postId}`,
@@ -57,22 +61,33 @@ export const API_ENDPOINTS = {
 
   IMAGES: {
     CREATE: "/images",
+    /** BE có thể dùng POST /posts/{postId}/images (postId trong URL, tránh 404 NOT FOUND) */
+    CREATE_BY_POST: (postId) => `/posts/${postId}/images`,
+    /** Fallback khi BE dùng context-path /api */
+    CREATE_API: "/api/images",
     BY_POST: (postId) => `/images/post/${postId}`,
     BY_ID: (imageId) => `/images/${imageId}`,
     UPDATE: (imageId) => `/images/${imageId}`,
     DELETE: (imageId) => `/images/${imageId}`,
   },
 
-  /** Admin: bài đăng chờ duyệt & duyệt bài */
+  /** Admin posts – BE: GET /admin/posts/pending, PUT /admin/posts/{id}/approve, PUT /admin/posts/{id}/reject */
   ADMIN_POSTS: {
+    LIST: "/admin/posts",
+    BY_STATUS: (status) => `/admin/posts/status/${status}`,
     PENDING: "/admin/posts/pending",
     APPROVE: (postId) => `/admin/posts/${postId}/approve`,
+    REJECT: (postId) => `/admin/posts/${postId}/reject`,
+    HIDE: (postId) => `/admin/posts/${postId}/hide`,
   },
 
-  /** Inspector: danh sách chờ kiểm định & nộp kết quả */
+  /** Inspector – BE: GET /inspection/pending, POST /inspection/{postId}/submit */
   INSPECTION: {
     PENDING: "/inspection/pending",
     SUBMIT: (postId) => `/inspection/${postId}/submit`,
+    DISPUTES: "/inspection/disputes",
+    COMPLETED: "/inspection/completed",
+    REPORT: (postId) => `/inspection/${postId}/report`,
   },
 
   BRANDS: {
@@ -84,8 +99,68 @@ export const API_ENDPOINTS = {
     LIST: "/categories",
     BY_ID: (categoryId) => `/categories/${categoryId}`,
   },
+
+  // Wallet & Payment
+  WALLET: {
+    GET: "/wallet",
+    TOP_UP: "/wallet/top-up",
+  },
+
+  TRANSACTIONS: {
+    LIST: "/transactions",
+    BY_ID: (transactionId) => `/transactions/${transactionId}`,
+  },
+
+  // System Configuration
+  SYSTEM_CONFIG: {
+    LIST: "/system-config",
+    BY_KEY: (key) => `/system-config/${key}`,
+  },
+
+  // Orders (escrow between buyer/seller)
+  ORDERS: {
+    CREATE: "/orders",
+    BY_ID: (orderId) => `/orders/${orderId}`,
+    MY_ORDERS: "/orders/my-orders",
+    MY_SALES: "/orders/my-sales",
+    PAY_REMAINING: (orderId) => `/orders/${orderId}/pay`,
+    CONFIRM_SHIPPING: (orderId) => `/orders/${orderId}/shipping`,
+    CONFIRM_DELIVERY: (orderId) => `/orders/${orderId}/confirm-delivery`,
+    CANCEL: (orderId) => `/orders/${orderId}/cancel`,
+  },
+
+  // Addresses
+  ADDRESSES: {
+    BY_USER: (userId) => `/users/${userId}/addresses`,
+    CREATE: (userId) => `/users/${userId}/addresses`,
+    UPDATE: (userId, addressId) => `/users/${userId}/addresses/${addressId}`,
+    DELETE: (userId, addressId) => `/users/${userId}/addresses/${addressId}`,
+  },
+
+  // Locations (Tỉnh/Thành phố, Xã/Phường)
+  LOCATIONS: {
+    PROVINCES: "/locations/provinces",
+    COMMUNES: (provinceCode) => `/locations/provinces/${provinceCode}/communes`,
+  },
+
+  // Wishlist
+  WISHLIST: {
+    LIST: "/wishlist",
+    ADD: (postId) => `/wishlist/${postId}`,
+    REMOVE: (postId) => `/wishlist/${postId}`,
+    CHECK: (postId) => `/wishlist/check/${postId}`,
+  },
+
+  /** Metadata cho form đăng tin: size, loại ảnh, groupset, brake type (BE trả về) */
+  METADATA: {
+    POST_FORM: "/metadata/post-form",
+    FRAME_SIZES: "/metadata/frame-sizes",
+    PHOTO_CATEGORIES: "/metadata/photo-categories",
+    GROUPSETS: "/metadata/groupsets",
+    BRAKE_TYPES: "/metadata/brake-types",
+  },
   
-  // Bikes/Vehicles (to be implemented by backend)
+  // Xe đạp (backend sẽ implement)
   BIKES: {
     LIST: '/api/bikes',
     BY_ID: (id) => `/api/bikes/${id}`,
@@ -98,7 +173,7 @@ export const API_ENDPOINTS = {
     AVAILABILITY: (id) => `/api/bikes/${id}/availability`,
   },
   
-  // Bookings (to be implemented by backend)
+  // Đặt chỗ (backend sẽ implement)
   BOOKINGS: {
     CREATE: '/api/bookings',
     LIST: '/api/bookings',
@@ -110,7 +185,7 @@ export const API_ENDPOINTS = {
     RATE: (id) => `/api/bookings/${id}/rate`,
   },
 
-  // Payments (to be implemented by backend)
+  // Thanh toán (backend sẽ implement)
   PAYMENTS: {
     CREATE: '/api/payments',
     BY_ID: (id) => `/api/payments/${id}`,
@@ -120,12 +195,19 @@ export const API_ENDPOINTS = {
     METHODS: '/api/payments/methods',
   },
   
-  // Admin
+  /** Admin users – BE: GET /admin/users, GET /admin/users/pending, POST /admin/users/verify */
   ADMIN: {
     USERS: '/admin/users',
+    USERS_PENDING: '/admin/users/pending',
+    USER_BY_ID: (userId) => `/admin/users/${userId}`,
+    VERIFY_USER: '/admin/users/verify',
+    HIDE_USER: '/admin/users/hide',
     BOOKINGS: '/admin/bookings',
     REPORTS: '/admin/reports',
     STATS: '/admin/stats',
+    REVENUE_STATS: (period) => `/admin/stats/revenue?period=${period}`,
+    INSPECTION_REPORTS: '/admin/inspection/reports',
+    TRANSACTIONS: '/admin/transactions',
   },
 };
 

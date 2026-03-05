@@ -1,182 +1,494 @@
-import { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
-import { Search, Eye } from "lucide-react";
-import Header from "../../../components/header";
-import Footer from "../../../components/footer";
-import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import AdminLayout from "../../../components/layout/AdminLayout";
+import { Search, ArrowDownCircle, ArrowUpCircle, TrendingUp, Users } from "lucide-react";
+import axiosInstance from "../../../services/axiosConfig";
+import { formatCurrency } from "../../../utils/formatCurrency";
+import "../dashboard/index.css";
 import "./index.css";
 
-const STATS = [
-  { label: "Doanh thu kỳ", value: "142.480.000 ₫", note: "↑12% so kỳ trước", tone: "green" },
-  { label: "Phí nền tảng", value: "8.548.800 ₫", note: "6% trung bình", tone: "green" },
-  { label: "Chờ thanh toán", value: "3.240.500 ₫", note: "12 đơn hàng", tone: "orange" },
-  { label: "Tỷ lệ thành công", value: "99,2%", note: "Giao dịch hoàn tất", tone: "green" },
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const TX_TYPE_LABEL = {
+  TOP_UP:   "Top up",
+  DEPOSIT:  "Deposit",
+  PURCHASE: "Purchase",
+  REFUND:   "Refund",
+  POSTING_FEE: "Posting fee",
+};
+
+const TX_TYPE_COLOR = {
+  TOP_UP:      "#10b981",
+  REFUND:      "#3b82f6",
+  DEPOSIT:     "#d97706",
+  PURCHASE:    "#7c3aed",
+  POSTING_FEE: "#f43f5e",
+};
+
+const TX_STATUS_CONFIG = {
+  SUCCESS:   { label: "Success", bg: "#dcfce7", color: "#16a34a" },
+  COMPLETED: { label: "Success", bg: "#dcfce7", color: "#16a34a" },
+  PENDING:   { label: "Processing", bg: "#fef9c3", color: "#b45309" },
+  FAILED:    { label: "Failed",   bg: "#fee2e2", color: "#dc2626" },
+};
+
+const TYPE_FILTERS = [
+  { value: "ALL",         label: "All" },
+  { value: "TOP_UP",      label: "Top up" },
+  { value: "DEPOSIT",     label: "Deposit" },
+  { value: "PURCHASE",    label: "Purchase" },
+  { value: "REFUND",      label: "Refund" },
+  { value: "POSTING_FEE", label: "Posting fee" },
 ];
 
-const TRANSACTIONS = [
-  {
-    id: "#TXN-88219",
-    datetime: "Oct 24, 2023 · 14:22",
-    buyer: "John Doe (B)",
-    seller: "Mike Smith (S)",
-    amount: "$1,250.00",
-    fee: "$75.00",
-    status: "Completed",
-  },
-  {
-    id: "#TXN-88218",
-    datetime: "Oct 24, 2023 · 12:05",
-    buyer: "Sarah Wilson (B)",
-    seller: "ProBike Shop (S)",
-    amount: "$3,400.00",
-    fee: "$204.00",
-    status: "Pending",
-  },
-  {
-    id: "#TXN-88217",
-    datetime: "Oct 23, 2023 · 18:45",
-    buyer: "Alice Johnson (B)",
-    seller: "David G. (S)",
-    amount: "$850.00",
-    fee: "$51.00",
-    status: "Completed",
-  },
+const STATUS_FILTERS = [
+  { value: "ALL",      label: "All" },
+  { value: "SUCCESS",  label: "Success" },
+  { value: "PENDING",  label: "Processing" },
+  { value: "FAILED",   label: "Failed" },
 ];
+
+const PAGE_SIZE = 15;
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const getTxType = (tx) =>
+  tx.transactionType ?? tx.transaction_type ?? tx.type ?? null;
+
+const getTxStatus = (tx) =>
+  tx.status ?? tx.transactionStatus ?? null;
+
+const isMoneyIn = (type) => type === "TOP_UP" || type === "REFUND";
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function TransactionManagement() {
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("all");
-  const [range, setRange] = useState("30");
-  const { pathname } = useLocation();
+  const [allTx, setAllTx]     = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState("");
+  const [typeFilter, setTypeFilter]     = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage]       = useState(1);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return TRANSACTIONS.filter((row) => {
-      const matchesQuery =
-        !q ||
-        row.id.toLowerCase().includes(q) ||
-        row.buyer.toLowerCase().includes(q) ||
-        row.seller.toLowerCase().includes(q);
-      const matchesStatus =
-        status === "all" || row.status.toLowerCase() === status;
-      return matchesQuery && matchesStatus;
+  /** Parse bất kỳ dạng response nào về array */
+  const parseList = (res) => {
+    const raw = res?.result ?? res?.data ?? res;
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.content))      return raw.content;
+    if (Array.isArray(raw?.transactions)) return raw.transactions;
+    if (Array.isArray(raw?.data))         return raw.data;
+    return null;
+  };
+
+  /** Bước 1: thử các admin endpoint tổng hợp */
+  const tryAdminEndpoints = useCallback(async () => {
+    const ADMIN_URLS = [
+      "/admin/transactions",
+      "/admin/wallets/transactions",
+      "/transactions/all",
+      "/admin/wallet/all-transactions",
+    ];
+    for (const url of ADMIN_URLS) {
+      try {
+        const res = await axiosInstance.get(url);
+        const list = parseList(res);
+        if (list && list.length > 0) {
+          console.info(`AdminTx: ✓ ${url} → ${list.length} records`);
+          return list;
+        }
+      } catch (err) {
+        const s = err?.status ?? 0;
+        if (s !== 404 && s !== 403 && s !== 405) {
+          console.warn(`AdminTx: ${url} →`, err?.message);
+        }
+      }
+    }
+    return null; // không tìm được → dùng chiến lược per-user
+  }, []);
+
+  /** Bước 2: fetch danh sách users rồi lấy transaction từng người song song */
+  const fetchPerUser = useCallback(async () => {
+    // Lấy danh sách tất cả users
+    let users = [];
+    try {
+      const res = await axiosInstance.get("/admin/users");
+      const raw = res?.result ?? res?.data ?? res;
+      users = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.content) ? raw.content
+        : Array.isArray(raw?.users)   ? raw.users
+        : [];
+    } catch {
+      return [];
+    }
+    if (!users.length) return [];
+
+    // Với mỗi user, thử lấy transaction của họ
+    // BE Spring Boot thường dùng /transactions?userId= hoặc /transactions/{userId}
+    const TX_USER_URLS = (uid) => [
+      `/admin/transactions?userId=${uid}`,
+      `/admin/users/${uid}/transactions`,
+      `/transactions?userId=${uid}`,
+      `/transactions/${uid}`,
+    ];
+
+    const results = await Promise.allSettled(
+      users.map(async (u) => {
+        const uid = u.userId ?? u.id ?? u.accountId;
+        if (!uid) return [];
+        const displayName = u.fullName ?? u.name ?? u.email ?? String(uid);
+
+        for (const url of TX_USER_URLS(uid)) {
+          try {
+            const res = await axiosInstance.get(url);
+            const list = parseList(res);
+            if (list && list.length > 0) {
+              // gán thông tin user vào từng transaction
+              return list.map((tx) => ({
+                ...tx,
+                userName:   tx.userName   ?? tx.userFullName ?? displayName,
+                userEmail:  tx.userEmail  ?? u.email ?? "",
+                _userId:    uid,
+              }));
+            }
+          } catch {
+            // thử URL tiếp theo
+          }
+        }
+        return [];
+      }),
+    );
+
+    const merged = results
+      .filter((r) => r.status === "fulfilled")
+      .flatMap((r) => r.value);
+
+    // Loại bỏ trùng lặp theo transactionId
+    const seen = new Set();
+    return merged.filter((tx) => {
+      const key = tx.transactionId ?? tx.id ?? JSON.stringify(tx);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
     });
-  }, [search, status]);
+  }, []);
+
+  const fetchAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      // Chiến lược 1: admin endpoint tổng hợp
+      let list = await tryAdminEndpoints();
+
+      // Chiến lược 2: per-user aggregation (fallback)
+      if (!list || list.length === 0) {
+        console.info("AdminTx: falling back to per-user aggregation…");
+        list = await fetchPerUser();
+      }
+
+      // Sắp xếp mới nhất trước
+      list.sort(
+        (a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0),
+      );
+      console.info(`AdminTx: total ${list.length} transactions`);
+      setAllTx(list);
+    } catch (err) {
+      console.warn("AdminTransactions: fetch failed", err?.message);
+      setAllTx([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [tryAdminEndpoints, fetchPerUser]);
+
+  useEffect(() => { fetchAll(); }, [fetchAll]);
+
+  // ─── Filter & search ───────────────────────────────────────────────────────
+  const filtered = useMemo(() => {
+    return allTx.filter((tx) => {
+      const type   = getTxType(tx) ?? "";
+      const status = getTxStatus(tx) ?? "";
+      const member = (
+        tx.userName ?? tx.userFullName ?? tx.fullName ??
+        tx.email ?? tx.userEmail ?? ""
+      ).toLowerCase();
+      const desc = (tx.description ?? "").toLowerCase();
+      const q = search.trim().toLowerCase();
+
+      if (typeFilter   !== "ALL" && type   !== typeFilter)   return false;
+      if (statusFilter !== "ALL" && status !== statusFilter) return false;
+      if (q && !member.includes(q) && !desc.includes(q))    return false;
+      return true;
+    });
+  }, [allTx, typeFilter, statusFilter, search]);
+
+  // reset page khi filter thay đổi
+  useEffect(() => { setPage(1); }, [typeFilter, statusFilter, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageItems  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  // ─── Stats ──────────────────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    const success = allTx.filter(
+      (tx) => (getTxStatus(tx) ?? "") !== "FAILED",
+    );
+    const totalIn  = success
+      .filter((tx) => isMoneyIn(getTxType(tx)))
+      .reduce((s, tx) => s + Math.abs(tx.amount ?? 0), 0);
+    const totalOut = success
+      .filter((tx) => !isMoneyIn(getTxType(tx)))
+      .reduce((s, tx) => s + Math.abs(tx.amount ?? 0), 0);
+    const topUpCount    = success.filter((tx) => getTxType(tx) === "TOP_UP").length;
+    const depositCount  = success.filter((tx) => getTxType(tx) === "DEPOSIT").length;
+    const purchaseCount = success.filter((tx) => getTxType(tx) === "PURCHASE").length;
+    const members = new Set(
+      allTx.map((tx) => tx.userId ?? tx.accountId ?? tx.userEmail).filter(Boolean),
+    ).size;
+    return { totalIn, totalOut, topUpCount, depositCount, purchaseCount, members };
+  }, [allTx]);
 
   return (
-    <div className="admin-transactions-page">
-      <Header
-        navLinks={ADMIN_NAV_LINKS}
-        activeLink={getAdminActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
+    <AdminLayout>
+      <div className="admin-dashboard-page admin-tx-page">
+        <div className="admin-dashboard">
+          <div className="admin-content">
 
-      <div className="admin-transactions-shell">
-        <section className="admin-transactions-main">
-
-          <div className="admin-transactions-stats">
-            {STATS.map((card) => (
-              <div key={card.label} className="stats-card">
-                <div className="stats-label">{card.label}</div>
-                <div className="stats-value">{card.value}</div>
-                <div className={`stats-note ${card.tone}`}>{card.note}</div>
+            {/* Header */}
+            <header className="admin-topbar" style={{ flexWrap: "wrap", gap: 16 }}>
+              <div>
+                <h1 className="admin-page-title" style={{ fontSize: 22, fontWeight: 700, margin: "0 0 4px", color: "#0f172a" }}>
+                  Member transactions
+                </h1>
+                <p style={{ margin: 0, fontSize: 14, color: "#64748b" }}>
+                  All transactions: top up · deposit · purchase · refund · posting fee
+                </p>
               </div>
-            ))}
-          </div>
+            </header>
 
-          <div className="admin-transactions-filters">
-            <div className="filter-block">
-              <div className="filter-label">Search</div>
-              <div className="filter-input">
-                <Search />
+            {/* Stats */}
+            <section className="admin-stats" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon green"><ArrowDownCircle /></div>
+                  <span className="admin-stat-trend up">money in</span>
+                </div>
+                <div className="admin-stat-title">Total in</div>
+                <div className="admin-stat-value">{formatCurrency(stats.totalIn)}</div>
+              </div>
+
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon" style={{ background: "#fef3c7", color: "#d97706" }}>
+                    <ArrowUpCircle />
+                  </div>
+                  <span className="admin-stat-trend" style={{ color: "#d97706" }}>tiền ra</span>
+                </div>
+                <div className="admin-stat-title">Tổng tiền ra</div>
+                <div className="admin-stat-value">{formatCurrency(stats.totalOut)}</div>
+              </div>
+
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon indigo"><TrendingUp /></div>
+                  <span className="admin-stat-trend up">{stats.topUpCount} top up · {stats.depositCount} deposit · {stats.purchaseCount} purchase</span>
+                </div>
+                <div className="admin-stat-title">Successful transactions</div>
+                <div className="admin-stat-value">
+                  {allTx.filter((tx) => (getTxStatus(tx) ?? "") !== "FAILED").length}
+                </div>
+              </div>
+
+              <div className="admin-card admin-stat-card">
+                <div className="admin-stat-top">
+                  <div className="admin-stat-icon blue"><Users /></div>
+                  <span className="admin-stat-trend up">members</span>
+                </div>
+                <div className="admin-stat-title">Members with transactions</div>
+                <div className="admin-stat-value">{stats.members || allTx.length}</div>
+              </div>
+            </section>
+
+            {/* Filters */}
+            <div className="admin-card admin-tx-filters">
+              {/* Search */}
+              <div className="admin-tx-search">
+                <Search size={15} color="#94a3b8" />
                 <input
-                  type="text"
-                  placeholder="ID, Buyer, or Seller..."
+                  placeholder="Search by name / email / description…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-            </div>
-            <div className="filter-block">
-              <div className="filter-label">Status</div>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="all">All Statuses</option>
-                <option value="completed">Completed</option>
-                <option value="pending">Pending</option>
-              </select>
-            </div>
-            <div className="filter-block">
-              <div className="filter-label">Date Range</div>
-              <select value={range} onChange={(e) => setRange(e.target.value)}>
-                <option value="30">Last 30 days</option>
-                <option value="14">Last 14 days</option>
-                <option value="7">Last 7 days</option>
-              </select>
-            </div>
-            <button type="button" className="reset-btn">
-              Reset Filters
-            </button>
-          </div>
 
-          <div className="admin-transactions-table">
-            <div className="table-row header">
-              <div>Transaction ID</div>
-              <div>Date & Time</div>
-              <div>Buyer & Seller</div>
-              <div>Amount</div>
-              <div>Fee (6%)</div>
-              <div>Status</div>
-              <div>Action</div>
-            </div>
-            {filtered.map((row) => (
-              <div key={row.id} className="table-row">
-                <div className="tx-id">{row.id}</div>
-                <div>{row.datetime}</div>
-                <div className="buyer-seller">
-                  <div>{row.buyer}</div>
-                  <span>{row.seller}</span>
+              {/* Type */}
+              <div className="admin-tx-filter-group">
+                <span className="admin-tx-filter-label">Loại GD</span>
+                <div className="admin-tx-filter-pills">
+                  {TYPE_FILTERS.map((f) => (
+                    <button
+                      key={f.value}
+                      type="button"
+                      className={`admin-tx-pill ${typeFilter === f.value ? "active" : ""}`}
+                      onClick={() => setTypeFilter(f.value)}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
                 </div>
-                <div className="amount">{row.amount}</div>
-                <div className="fee">{row.fee}</div>
-                <div>
-                  <span className={`status ${row.status.toLowerCase()}`}>
-                    {row.status}
+              </div>
+
+              {/* Status */}
+              <div className="admin-tx-filter-group">
+                <span className="admin-tx-filter-label">Status</span>
+                <div className="admin-tx-filter-pills">
+                  {STATUS_FILTERS.map((f) => (
+                    <button
+                      key={f.value}
+                      type="button"
+                      className={`admin-tx-pill ${statusFilter === f.value ? "active" : ""}`}
+                      onClick={() => setStatusFilter(f.value)}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Table */}
+            <section className="admin-card admin-tx-table-card">
+              <div className="admin-tx-table">
+                {/* Header */}
+                <div className="admin-tx-row admin-tx-header">
+                  <div>Member</div>
+                  <div>Type</div>
+                  <div>Description</div>
+                  <div>Date & time</div>
+                  <div style={{ textAlign: "right" }}>Amount</div>
+                  <div>Status</div>
+                </div>
+
+                {loading ? (
+                  <div className="admin-tx-empty">Loading…</div>
+                ) : pageItems.length === 0 ? (
+                  <div className="admin-tx-empty">No matching transactions.</div>
+                ) : (
+                  pageItems.map((tx, idx) => {
+                    const type   = getTxType(tx);
+                    const status = getTxStatus(tx);
+                    const moneyIn = isMoneyIn(type);
+                    const isFailed = status === "FAILED";
+                    const amtColor = isFailed ? "#94a3b8" : moneyIn ? "#10b981" : "#ef4444";
+                    const amtPrefix = isFailed ? "" : moneyIn ? "+" : "−";
+                    const statusCfg = TX_STATUS_CONFIG[status] ?? { label: status ?? "—", bg: "#f1f5f9", color: "#64748b" };
+                    const typeColor = TX_TYPE_COLOR[type] ?? "#64748b";
+                    const member = tx.userName ?? tx.userFullName ?? tx.fullName ?? tx.email ?? tx.userEmail ?? "—";
+
+                    return (
+                      <div
+                        className="admin-tx-row"
+                        key={tx.transactionId ?? tx.id ?? idx}
+                      >
+                        {/* Thành viên */}
+                        <div className="admin-tx-member">
+                          <div className="admin-tx-avatar">
+                            {(member[0] ?? "?").toUpperCase()}
+                          </div>
+                          <span>{member}</span>
+                        </div>
+
+                        {/* Loại */}
+                        <div>
+                          <span
+                            className="admin-tx-type-badge"
+                            style={{ background: `${typeColor}18`, color: typeColor }}
+                          >
+                            {TX_TYPE_LABEL[type] ?? type ?? "—"}
+                          </span>
+                        </div>
+
+                        {/* Mô tả */}
+                        <div className="admin-tx-desc">
+                          {tx.description || "—"}
+                        </div>
+
+                        {/* Ngày */}
+                        <div className="admin-tx-date">
+                          {tx.createdAt
+                            ? new Date(tx.createdAt).toLocaleString("en-US", {
+                                day: "2-digit", month: "2-digit", year: "numeric",
+                                hour: "2-digit", minute: "2-digit",
+                              })
+                            : "—"}
+                        </div>
+
+                        {/* Số tiền */}
+                        <div style={{ textAlign: "right", fontWeight: 700, color: amtColor }}>
+                          {amtPrefix}{formatCurrency(Math.abs(tx.amount ?? 0))}
+                        </div>
+
+                        {/* Trạng thái */}
+                        <div>
+                          <span
+                            className="admin-tx-status-badge"
+                            style={{ background: statusCfg.bg, color: statusCfg.color }}
+                          >
+                            {statusCfg.label}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="admin-tx-pagination">
+                  <span style={{ color: "#64748b", fontSize: 13 }}>
+                    {filtered.length} transactions · Page {page}/{totalPages}
                   </span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      type="button"
+                      className="admin-tx-page-btn"
+                      disabled={page === 1}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      ‹
+                    </button>
+                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                      const pg = page <= 4
+                        ? i + 1
+                        : page >= totalPages - 3
+                          ? totalPages - 6 + i
+                          : page - 3 + i;
+                      if (pg < 1 || pg > totalPages) return null;
+                      return (
+                        <button
+                          key={pg}
+                          type="button"
+                          className={`admin-tx-page-btn ${pg === page ? "active" : ""}`}
+                          onClick={() => setPage(pg)}
+                        >
+                          {pg}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className="admin-tx-page-btn"
+                      disabled={page === totalPages}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      ›
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <button type="button" className="view-btn">
-                    <Eye />
-                  </button>
-                </div>
-              </div>
-            ))}
-            <div className="table-footer">
-              <span>Showing 1 to 5 of 1,248 results</span>
-              <div className="pagination">
-                <button type="button">‹</button>
-                <button type="button" className="active">
-                  1
-                </button>
-                <button type="button">2</button>
-                <button type="button">3</button>
-                <button type="button">…</button>
-                <button type="button">12</button>
-                <button type="button">›</button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+              )}
+            </section>
 
-      <Footer />
-    </div>
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
   );
 }

@@ -30,7 +30,7 @@ export default function UserDetail() {
       component="main"
       sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}
     >
-      <Header />
+      <Header showSearch={false} />
 
       <Box sx={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px" }}>
         {/* Profile Card */}

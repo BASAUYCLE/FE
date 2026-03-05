@@ -1,98 +1,235 @@
-import { useNavigate } from "react-router-dom";
-import { Card, Tag, Button, Typography } from "antd";
-import { Clock, ArrowRight } from "lucide-react";
+import { useState } from "react";
+import { Card, Tag, Button, Typography, Tooltip, message, Popconfirm } from "antd";
+import ProductPreviewModal from "../ProductPreviewModal";
+import { CheckCircleOutlined, CloseCircleOutlined, TruckOutlined } from "@ant-design/icons";
+import { ArrowRight } from "lucide-react";
 import {
+  ORDER_STATUS,
   ORDER_STATUS_LABEL,
   ORDER_STATUS_TAG_COLOR,
 } from "../../constants/orderStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
-import {
-  getEffectiveStatus,
-  getExpirationLabel,
-} from "../../utils/orderHelpers";
-import { ORDER_STATUS } from "../../constants/orderStatus";
+import { useOrders } from "../../contexts/OrderContext";
+import { useNotifications } from "../../contexts/useNotifications";
+import PayNowModal from "./PayNowModal";
 import "./PendingOrderCard.css";
 
-/**
- * Single pending payment card. Reusable; compact spacing.
- */
 export default function PendingOrderCard({ order }) {
-  const navigate = useNavigate();
-  const status = getEffectiveStatus(order);
-  const expired = status === ORDER_STATUS.EXPIRED;
-  const paid = status === ORDER_STATUS.PAID;
-  const expirationLabel = getExpirationLabel(order.expiresAt);
+  const { cancelOrder, confirmDelivery } = useOrders();
+  const [payModalOpen, setPayModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const { addNotification } = useNotifications();
 
-  const handlePayNow = () => {
-    if (expired || paid) return;
-    navigate(`/payment?orderId=${encodeURIComponent(order.orderId)}`);
+  const status = order.status ?? ORDER_STATUS.DEPOSITED;
+
+  const handleCancelOrder = async () => {
+    setLoading(true);
+    try {
+      await cancelOrder(order.orderId);
+      message.success("Order cancelled");
+      addNotification?.({
+        title: "Order cancelled",
+        message: `You cancelled order #${order.orderId}.`,
+        type: "warning",
+      });
+    } catch {
+      message.error("Could not cancel order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  return (
-    <Card
-      className={`pending-order-card ${expired ? "pending-order-card-expired" : ""}`}
-    >
-      <div className="pending-order-card-inner">
-        <div className="pending-order-card-image">
-          {order.image ? (
-            <img src={order.image} alt={order.bikeName} />
-          ) : (
-            <div className="pending-order-card-image-placeholder">No image</div>
-          )}
-        </div>
+  const handleConfirmDelivery = async () => {
+    setLoading(true);
+    try {
+      await confirmDelivery(order.orderId);
+      message.success("Delivery confirmed successfully!");
+      addNotification?.({
+        title: "Delivery confirmed",
+        message: `You confirmed delivery for order #${order.orderId}.`,
+        type: "success",
+      });
+    } catch {
+      message.error("Could not confirm delivery. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        <div className="pending-order-card-details">
-          <Tag color={ORDER_STATUS_TAG_COLOR[status]}>
-            {ORDER_STATUS_LABEL[status]}
-          </Tag>
-          <Typography.Title level={5} className="pending-order-card-title">
-            {order.bikeName}
-          </Typography.Title>
-          <Typography.Text type="secondary" className="pending-order-card-id">
-            ID: {order.orderId}
-          </Typography.Text>
-          <div className="pending-order-card-expiry">
-            <Clock size={12} color="#64748b" />
-            <span>{expirationLabel}</span>
-          </div>
-        </div>
-
-        <div className="pending-order-card-right">
-          <div className="pending-order-card-amount-label">Amount Due</div>
-          <div className="pending-order-card-amount">
-            {formatCurrency(order.amountDue)}
-          </div>
-          <div className="pending-order-card-actions">
-            {paid ? (
-              <Button disabled size="small" style={{ color: "#16a34a" }}>
-                ✓ Paid
-              </Button>
-            ) : expired ? (
-              <Button disabled size="small">
-                Expired
-              </Button>
-            ) : (
+  const renderRightPanel = () => {
+    switch (status) {
+      case ORDER_STATUS.DEPOSITED:
+        return (
+          <div className="poc-right">
+            <div className="poc-amount-label">Remaining</div>
+            <div className="poc-amount">{formatCurrency(order.amountDue ?? 0)}</div>
+            <div className="poc-actions">
               <Button
                 type="primary"
                 size="small"
-                onClick={handlePayNow}
-                style={{
-                  backgroundColor: "#00ccad",
-                  color: "#0f172a",
-                  border: "none",
-                  fontWeight: 600,
-                }}
+                onClick={() => setPayModalOpen(true)}
+                loading={loading}
+                style={{ backgroundColor: "#00ccad", border: "none", fontWeight: 600, color: "#fff" }}
               >
-                Pay Now{" "}
-                <ArrowRight
-                  size={12}
-                  style={{ marginLeft: 2, verticalAlign: "middle" }}
-                />
+                Pay Now <ArrowRight size={12} style={{ marginLeft: 2, verticalAlign: "middle" }} />
               </Button>
+              <Popconfirm
+                title="Cancel order?"
+                description="You will lose your deposit if you cancel."
+                onConfirm={handleCancelOrder}
+                okText="Cancel order"
+                cancelText="No"
+                okButtonProps={{ danger: true }}
+              >
+                <Button size="small" danger loading={loading} style={{ marginTop: 4 }}>
+                  <CloseCircleOutlined /> Cancel
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
+        );
+
+      case ORDER_STATUS.PAID:
+        return (
+          <div className="poc-right">
+            <div className="poc-amount-label">Total</div>
+            <div className="poc-amount">{formatCurrency(order.totalPrice ?? 0)}</div>
+            <div className="poc-actions">
+              <Tooltip title="Waiting for seller to ship">
+                <Button size="small" disabled style={{ color: "#2563eb", fontWeight: 600 }}>
+                  <TruckOutlined /> Awaiting shipment
+                </Button>
+              </Tooltip>
+            </div>
+          </div>
+        );
+
+      case ORDER_STATUS.SHIPPING:
+        return (
+          <div className="poc-right">
+            <div className="poc-amount-label">Total</div>
+            <div className="poc-amount">{formatCurrency(order.totalPrice ?? 0)}</div>
+            {order.shippingTrackingNumber && (
+              <div className="poc-tracking">
+                <TruckOutlined style={{ fontSize: 11, marginRight: 3, color: "#3b82f6" }} />
+                <span>{order.shippingTrackingNumber}</span>
+              </div>
+            )}
+            <div className="poc-actions">
+              <Popconfirm
+                title="Confirm delivery received?"
+                description="This action cannot be undone."
+                onConfirm={handleConfirmDelivery}
+                okText="Received"
+                cancelText="No"
+              >
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={loading}
+                  style={{ backgroundColor: "#16a34a", border: "none", fontWeight: 600, color: "#fff" }}
+                >
+                  <CheckCircleOutlined /> Confirm received
+                </Button>
+              </Popconfirm>
+            </div>
+          </div>
+        );
+
+      case ORDER_STATUS.COMPLETED:
+        return (
+          <div className="poc-right">
+            <div className="poc-amount-label">Total</div>
+            <div className="poc-amount poc-amount-done">{formatCurrency(order.totalPrice ?? 0)}</div>
+            <div className="poc-actions">
+              <Button size="small" disabled style={{ color: "#16a34a", fontWeight: 600 }}>
+                <CheckCircleOutlined /> Completed
+              </Button>
+            </div>
+          </div>
+        );
+
+      case ORDER_STATUS.CANCELLED:
+        return (
+          <div className="poc-right">
+            <div className="poc-amount-label">Total</div>
+            <div className="poc-amount poc-amount-cancelled">{formatCurrency(order.totalPrice ?? 0)}</div>
+            <div className="poc-actions">
+              <Button size="small" disabled>
+                <CloseCircleOutlined /> Cancelled
+              </Button>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const isCompleted  = status === ORDER_STATUS.COMPLETED;
+  const isCancelled  = status === ORDER_STATUS.CANCELLED;
+
+  return (
+    <>
+      <PayNowModal
+        open={payModalOpen}
+        onClose={() => setPayModalOpen(false)}
+        order={order}
+      />
+      <Card
+        className={`pending-order-card ${isCompleted ? "poc-completed" : ""} ${isCancelled ? "poc-cancelled" : ""}`}
+      >
+        <div className="pending-order-card-inner">
+          {/* Image */}
+          <div
+            className="pending-order-card-image"
+            onClick={() => order.bikeId && setPreviewOpen(true)}
+            style={{ cursor: order.bikeId ? "pointer" : "default" }}
+            title={order.bikeId ? "View product" : undefined}
+          >
+            {order.image ? (
+              <img src={order.image} alt={order.bikeName} referrerPolicy="no-referrer" />
+            ) : (
+              <div className="pending-order-card-image-placeholder">No image</div>
             )}
           </div>
+
+          {/* Details */}
+          <div className="pending-order-card-details">
+            <Tag color={ORDER_STATUS_TAG_COLOR[status]}>
+              {ORDER_STATUS_LABEL[status] ?? status}
+            </Tag>
+            <Typography.Title
+              level={5}
+              className="pending-order-card-title"
+              onClick={() => order.bikeId && setPreviewOpen(true)}
+              style={{ cursor: order.bikeId ? "pointer" : "default", margin: 0 }}
+            >
+              {order.bikeName}
+            </Typography.Title>
+            <Typography.Text type="secondary" className="pending-order-card-id">
+              {order.createdAt ? new Date(order.createdAt).toLocaleDateString("vi-VN") : ""}
+            </Typography.Text>
+            {/* Shipping tracking info */}
+            {status === ORDER_STATUS.SHIPPING && order.shippingMethod && (
+              <div className="poc-ship-info">
+                <TruckOutlined style={{ fontSize: 11, color: "#3b82f6" }} />
+                <span>{order.shippingMethod}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Right panel — status-specific */}
+          {renderRightPanel()}
         </div>
-      </div>
-    </Card>
+      </Card>
+      <ProductPreviewModal
+        postId={order.bikeId}
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
+    </>
   );
 }

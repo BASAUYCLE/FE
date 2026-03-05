@@ -1,35 +1,52 @@
-import { useLocation } from "react-router-dom";
-import Header from "../../../components/header";
-import Footer from "../../../components/footer";
+import { useState, useEffect, useCallback } from "react";
+import InspectorLayout from "../../../components/layout/InspectorLayout";
 import InspectionQueueTable from "../../../components/inspector/InspectionQueueTable";
-import {
-  INSPECTOR_NAV_LINKS,
-  getInspectorActiveLink,
-} from "../../../config/inspectorNav";
-import { mockInspections } from "../../../data/inspections";
+import { inspectionService } from "../../../services";
 import "./index.css";
 
+/** Map API /inspection/pending item to table row shape */
+function mapPendingToInspection(item) {
+  return {
+    id: String(item.postId),
+    postId: item.postId,
+    bicycleName: item.bicycleName ?? "—",
+    bicycleImage: item.thumbnailUrl ?? "",
+    bicycleType: item.categoryName ?? "—",
+    sellerName: item.sellerFullName ?? "—",
+    sellerLocation: "",
+    requestedDate: item.createdAt ?? "",
+    status: "PENDING",
+  };
+}
+
 export default function InspectorDetailsList() {
-  const { pathname } = useLocation();
+  const [inspections, setInspections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchPending = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await inspectionService.getPendingInspections();
+      const list = Array.isArray(res?.result) ? res.result : [];
+      setInspections(list.map(mapPendingToInspection));
+    } catch {
+      setInspections([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPending();
+  }, [fetchPending]);
 
   return (
-    <div className="inspector-page">
-      <Header
-        navLinks={INSPECTOR_NAV_LINKS}
-        activeLink={getInspectorActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
+    <InspectorLayout>
       <div className="inspector-dashboard">
         <div className="inspector-content">
-          <InspectionQueueTable inspections={mockInspections} />
+          <InspectionQueueTable inspections={inspections} loading={loading} />
         </div>
       </div>
-      <Footer />
-    </div>
+    </InspectorLayout>
   );
 }

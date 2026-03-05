@@ -1,231 +1,376 @@
-import "./index.css";
-import Header from "../../../components/header";
-import Footer from "../../../components/footer";
-import { useLocation } from "react-router-dom";
-import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import AdminLayout from "../../../components/layout/AdminLayout";
 import {
-  Users,
-  DollarSign,
-  Wrench,
-  UserPlus,
-  ShoppingCart,
-  AlertTriangle,
-  Bike,
+  Users, FileText, CheckCircle, Clock, TrendingUp,
+  DollarSign, ShieldCheck, ShoppingCart, AlertCircle, ArrowRight,
 } from "lucide-react";
+import adminPostService from "../../../services/adminPostService";
+import userService from "../../../services/userService";
+import adminService from "../../../services/adminService";
+import axiosInstance from "../../../services/axiosConfig";
+import systemConfigService from "../../../services/systemConfigService";
+import { formatCurrency } from "../../../utils/formatCurrency";
+import "./index.css";
 
-const stats = [
-  {
-    label: "Total Users",
-    value: "12,543",
-    trend: "+12%",
-    trendType: "up",
-    icon: <Users />,
-    tone: "blue",
-  },
-  {
-    label: "New Listings",
-    value: "842",
-    trend: "+5.2%",
-    trendType: "up",
-    icon: <Bike />,
-    tone: "indigo",
-  },
-  {
-    label: "Total Revenue",
-    value: "$18,450",
-    trend: "+18.4%",
-    trendType: "up",
-    icon: <DollarSign />,
-    tone: "green",
-  },
-  {
-    label: "Pending Inspection",
-    value: "48",
-    trend: "12 Pending",
-    trendType: "warn",
-    icon: <Wrench />,
-    tone: "orange",
-  },
-];
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-const activities = [
-  { title: "Minh Tran just registered", time: "2 minutes ago", type: "user", icon: <UserPlus /> },
-  { title: "Transaction #8492 successful", time: "15 minutes ago", type: "success", icon: <ShoppingCart /> },
-  { title: "New inspection report: ID-120", time: "1 hour ago", type: "alert", icon: <AlertTriangle /> },
-];
+const POSTING_FEE_FALLBACK = 50_000;
 
-const users = [
-  {
-    name: "John Doe",
-    email: "john@example.com",
-    role: "Seller",
-    joined: "12 Oct, 2023",
-    status: "Active",
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDCi_kmv_l_V0lRpVf4Pb2O6F8noT2bPXANF4NiD5nm4fdfWqbYphhBgs-Ibu5_2QFTPWNNwYmo3RHQNbaLN9dLgHAzil6dV0-DkXiATYspLjLn1ZzIUfZIGUNSP42WhYXrwMiQ61_lHcsQ7GuD7vxliG9Ths61SHumr1Lg_rYBlk2i4GTb-qcnaOpW6PDXCTza2KPKjr120gjy6BADwuU_n5QND_mbveRG4UQl1mNKIyZIo_pD_xnJwjhzBv2kYGj_29p6Ac9HrDU",
-  },
-  {
-    name: "Jane Smith",
-    email: "jane@example.com",
-    role: "Buyer",
-    joined: "10 Oct, 2023",
-    status: "Offline",
-    avatar:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuDWC_GUAMiz4KHxCoD5DUavuFHmDt6Mf_b3yRP7vSGkR-XbpacBun19lhX6hyJ-qtg8oEN4Dlmao6jtzdLVMA61N7zLDQh1f5uYmMeK-Osyr2hqYHLTwr1ZV0ggVSnyPqGrDHVBdswy-B_CayEY3x3XP9f_-s4MPtJx7Z9AdnIGfaL-GQorA89TSxi2Ehh0-rYyebjX3HEpnbSIfI6uaMQRPs-uSKRIBD6vQFv0Nm37i4fpAIzAZl_-1ne9yQ-Rh8ExiyWjIbNQZmE",
-  },
-];
+function parseList(res) {
+  const raw = res?.result ?? res?.data ?? res;
+  if (Array.isArray(raw))            return raw;
+  if (Array.isArray(raw?.content))   return raw.content;
+  if (Array.isArray(raw?.data))      return raw.data;
+  return [];
+}
 
-const days = [
-  { label: "Mon", value: "5.2k", height: 40 },
-  { label: "Tue", value: "7.8k", height: 65 },
-  { label: "Wed", value: "6.1k", height: 45 },
-  { label: "Thu", value: "9.4k", height: 80 },
-  { label: "Fri", value: "7.2k", height: 60 },
-  { label: "Sat", value: "11.2k", height: 95 },
-  { label: "Sun", value: "8.9k", height: 75 },
-];
+function extractThumb(p) {
+  const arr = p?.images ?? p?.bicycleImages ?? [];
+  const thumb = arr.find((i) => i?.isThumbnail) ?? arr[0];
+  return thumb?.imageUrl ?? p?.thumbnailUrl ?? p?.imageUrl ?? null;
+}
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
-  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const [stats,      setStats]      = useState(null);
+  const [recentPosts,setRecentPosts]= useState([]);
+  const [recentUsers,setRecentUsers]= useState([]);
+  const [loading,    setLoading]    = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [postsRes, usersRes, txRes, feeRes, inspRes] = await Promise.allSettled([
+        adminPostService.getAllPosts(),
+        userService.getAdminUsers(),
+        adminService.getAllTransactions(),
+        systemConfigService.getByKey("POSTING_FEE"),
+        axiosInstance.get("/inspection/completed"),
+      ]);
+
+      // ── Posts ──────────────────────────────────────────
+      const posts = postsRes.status === "fulfilled" ? parseList(postsRes.value) : [];
+      const pending   = posts.filter((p) => (p.postStatus ?? p.status) === "PENDING").length;
+      const available = posts.filter((p) => (p.postStatus ?? p.status) === "AVAILABLE").length;
+      const deposited = posts.filter((p) => (p.postStatus ?? p.status) === "DEPOSITED").length;
+      const sold      = posts.filter((p) => (p.postStatus ?? p.status) === "SOLD").length;
+      const approved  = posts.filter((p) =>
+        ["AVAILABLE", "DEPOSITED", "SOLD"].includes(p.postStatus ?? p.status)
+      ).length;
+
+      // ── Users ──────────────────────────────────────────
+      const users     = usersRes.status === "fulfilled" ? parseList(usersRes.value) : [];
+      const pendingU  = users.filter((u) =>
+        (u.status ?? u.accountStatus ?? u.userStatus ?? "").toUpperCase() === "PENDING" ||
+        u.isVerified === false || u.verified === false
+      ).length;
+
+      // ── Posting fee & revenue ──────────────────────────
+      let postingFee = POSTING_FEE_FALLBACK;
+      if (feeRes.status === "fulfilled") {
+        const raw = feeRes.value?.result ?? feeRes.value?.data ?? feeRes.value;
+        const v = typeof raw === "string" ? raw : raw?.configValue ?? raw?.config_value ?? String(raw ?? "");
+        const n = parseFloat(v);
+        if (!isNaN(n) && n > 0) postingFee = n;
+      }
+      // Doanh thu = số bài đã submit × phí
+      const submittedPosts = posts.filter((p) =>
+        (p.postStatus ?? p.status ?? "") !== "DRAFTED"
+      ).length;
+      const revenue = submittedPosts * postingFee;
+
+      // ── Transactions ───────────────────────────────────
+      const txList = txRes.status === "fulfilled" ? parseList(txRes.value) : [];
+      const txToday = txList.filter((tx) => {
+        const d = new Date(tx.createdAt ?? "");
+        const now = new Date();
+        return d.toDateString() === now.toDateString();
+      }).length;
+
+      // ── Inspections ────────────────────────────────────
+      const inspList  = inspRes.status === "fulfilled" ? parseList(inspRes.value) : [];
+      const inspCount = inspList.length || approved; // fallback: approved posts đều đã qua inspection
+
+      setStats({
+        totalUsers: users.length,
+        pendingUsers: pendingU,
+        totalPosts: posts.length,
+        pendingPosts: pending,
+        availablePosts: available,
+        depositedPosts: deposited,
+        soldPosts: sold,
+        revenue,
+        postingFee,
+        txToday,
+        inspCount,
+      });
+
+      // ── Recent posts (5 bài mới nhất, có ảnh) ─────────
+      const sorted = [...posts]
+        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
+        .slice(0, 5);
+      setRecentPosts(sorted.map((p) => ({
+        id:     p.postId ?? p.id,
+        title:  p.bicycleName ?? p.title ?? "—",
+        seller: p.sellerFullName ?? p.sellerName ?? "—",
+        status: p.postStatus ?? p.status ?? "—",
+        price:  typeof (p.price) === "number" ? formatCurrency(p.price) : "—",
+        thumb:  extractThumb(p),
+        date:   p.createdAt ?? null,
+      })));
+
+      // ── Recent users (5 user mới nhất) ─────────────────
+      const sortedU = [...users]
+        .sort((a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0))
+        .slice(0, 5);
+      setRecentUsers(sortedU.map((u) => ({
+        id:     u.userId ?? u.id,
+        name:   u.fullName ?? u.name ?? u.email ?? "—",
+        email:  u.email ?? "—",
+        role:   u.role ?? u.userRole ?? "USER",
+        status: u.status ?? u.accountStatus ?? "ACTIVE",
+        date:   u.createdAt ?? null,
+      })));
+    } catch (err) {
+      console.warn("AdminDashboard: load failed", err?.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // ─── Stat cards config ────────────────────────────────────────────────────
+  const statCards = stats ? [
+    {
+      icon: <Users />, tone: "blue",
+      label: "Members", value: stats.totalUsers,
+      sub: stats.pendingUsers > 0 ? `${stats.pendingUsers} pending` : "All approved",
+      href: "/admin-users",
+    },
+    {
+      icon: <FileText />, tone: "indigo",
+      label: "Listings", value: stats.totalPosts,
+      sub: `${stats.pendingPosts} pending inspection · ${stats.availablePosts} on sale`,
+      href: "/admin-listings",
+    },
+    {
+      icon: <DollarSign />, tone: "green",
+      label: "Posting fee revenue", value: formatCurrency(stats.revenue),
+      sub: `${stats.postingFee === POSTING_FEE_FALLBACK ? "" : ""}${formatCurrency(stats.postingFee)} / listing`,
+      href: "/admin-revenue",
+    },
+    {
+      icon: <ShieldCheck />, tone: "teal",
+      label: "Inspected", value: stats.inspCount,
+      sub: `${stats.soldPosts} sold · ${stats.depositedPosts} deposited`,
+      href: "/admin-inspection-reports",
+    },
+  ] : [];
+
+  // ─── Quick link cards ──────────────────────────────────────────────────────
+  const quickLinks = [
+    { label: "Review listings",     icon: <Clock size={20} />,       href: "/admin-listings",            color: "#f59e0b" },
+    { label: "Approved listings",    icon: <CheckCircle size={20} />, href: "/admin-approved-listings",   color: "#10b981" },
+    { label: "User management",      icon: <Users size={20} />,       href: "/admin-users",               color: "#3b82f6" },
+    { label: "Revenue",              icon: <TrendingUp size={20} />,  href: "/admin-revenue",             color: "#8b5cf6" },
+    { label: "Inspection",           icon: <ShieldCheck size={20} />, href: "/admin-inspection-reports",  color: "#00ccad" },
+    { label: "Transactions",         icon: <ShoppingCart size={20} />,href: "/admin-transactions",        color: "#ec4899" },
+  ];
+
+  const STATUS_BADGE = {
+    PENDING:        { label: "Pending",     bg: "#fef3c7", color: "#b45309" },
+    ADMIN_APPROVED: { label: "Await insp", bg: "#dbeafe", color: "#1d4ed8" },
+    AVAILABLE:      { label: "Sale",     bg: "#dcfce7", color: "#15803d" },
+    DEPOSITED:      { label: "Deposit",     bg: "#ffedd5", color: "#c2410c" },
+    SOLD:           { label: "Sold",  bg: "#ede9fe", color: "#6d28d9" },
+    REJECTED:       { label: "Rejected", bg: "#fee2e2", color: "#b91c1c" },
+  };
 
   return (
-    <div className="admin-dashboard-page">
-      <Header
-        navLinks={ADMIN_NAV_LINKS}
-        activeLink={getAdminActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
-      <div className="admin-dashboard">
-        <div className="admin-content">
-          <header className="admin-topbar">
-            <div className="admin-topbar-actions"></div>
-          </header>
+    <AdminLayout>
+      <div className="admin-dashboard-page">
+        <div className="admin-dashboard">
+          <div className="admin-content">
 
-          <section className="admin-stats">
-            {stats.map((card) => (
-              <div className="admin-card admin-stat-card" key={card.label}>
-                <div className="admin-stat-top">
-                  <div className={`admin-stat-icon ${card.tone}`}>{card.icon}</div>
-                  <span className={`admin-stat-trend ${card.trendType}`}>
-                    {card.trend}
-                  </span>
-                </div>
-                <div className="admin-stat-title">{card.label}</div>
-                <div className="admin-stat-value">{card.value}</div>
-              </div>
-            ))}
-          </section>
+            {/* ── Header ── */}
+            <header style={{ marginBottom: 4 }}>
+              <h1 style={{ fontSize: 22, fontWeight: 700, margin: 0, color: "#0f172a" }}>
+                System overview
+              </h1>
+              <p style={{ fontSize: 14, color: "#64748b", margin: "4px 0 0" }}>
+                Live data from database · BASAUYCLE Admin
+              </p>
+            </header>
 
-          <section className="admin-grid">
-            <div className="admin-card">
-              <div className="admin-card-header">
-                <div>
-                  <div className="admin-card-title">Transaction Trends</div>
-                  <div className="admin-card-subtitle">Data for the last 7 days</div>
-                </div>
-                <select className="admin-pill" defaultValue="Weekly">
-                  <option>Weekly</option>
-                  <option>Monthly</option>
-                </select>
-              </div>
-              <div className="admin-chart">
-                {days.map((day, index) => (
-                  <div className="admin-chart-bar" key={day.label}>
+            {/* ── Stat cards ── */}
+            <section className="admin-stats dash-stats-grid">
+              {loading
+                ? [1, 2, 3, 4].map((i) => (
+                    <div key={i} className="admin-card admin-stat-card dash-skeleton" />
+                  ))
+                : statCards.map((c) => (
                     <div
-                      className={`admin-chart-fill ${index === 6 ? "highlight" : ""}`}
-                      style={{ height: `${day.height}%` }}
+                      key={c.label}
+                      className="admin-card admin-stat-card dash-stat-clickable"
+                      onClick={() => navigate(c.href)}
+                      title={`Đến ${c.label}`}
                     >
-                      <span className={`admin-chart-tooltip ${index === 6 ? "show" : ""}`}>
-                        ${day.value}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="admin-chart-labels">
-                {days.map((day) => (
-                  <span key={day.label}>{day.label}</span>
-                ))}
-              </div>
-            </div>
-
-            <div className="admin-card">
-              <div className="admin-card-header">
-                <div className="admin-card-title">Recent Activity</div>
-              </div>
-              <div className="admin-activity">
-                {activities.map((item, index) => (
-                  <div className="admin-activity-row" key={`${item.title}-${index}`}>
-                    <div className="admin-activity-icon">
-                      <span className={`admin-activity-dot ${item.type}`}>
-                        {item.icon}
-                      </span>
-                      {index < activities.length - 1 && (
-                        <span className="admin-activity-line" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="admin-activity-title">{item.title}</div>
-                      <div className="admin-activity-time">{item.time}</div>
-                    </div>
-                  </div>
-                ))}
-                <button className="admin-outline-button">View All Activities</button>
-              </div>
-            </div>
-          </section>
-
-          <section className="admin-card admin-table-card">
-            <div className="admin-card-header">
-              <div className="admin-card-title">New User Management</div>
-              <div className="admin-table-actions">
-                <button className="admin-outline-button">Export Excel</button>
-                <button className="admin-primary-button">Add User</button>
-              </div>
-            </div>
-            <div className="admin-table">
-              <div className="admin-table-row admin-table-header">
-                <div>User</div>
-                <div>Role</div>
-                <div>Join Date</div>
-                <div>Status</div>
-                <div>Actions</div>
-              </div>
-              {users.map((user) => (
-                <div className="admin-table-row" key={user.email}>
-                  <div>
-                    <div className="admin-user-cell">
-                      <img className="admin-user-avatar small" src={user.avatar} alt={user.name} />
-                      <div>
-                        <div className="admin-user-name">{user.name}</div>
-                        <div className="admin-user-email">{user.email}</div>
+                      <div className="admin-stat-top">
+                        <div className={`admin-stat-icon ${c.tone}`}>{c.icon}</div>
+                        <ArrowRight size={14} color="#cbd5e1" />
                       </div>
+                      <div className="admin-stat-title">{c.label}</div>
+                      <div className="admin-stat-value">{c.value}</div>
+                      <div className="dash-stat-sub">{c.sub}</div>
                     </div>
-                  </div>
-                  <div>{user.role}</div>
-                  <div>{user.joined}</div>
-                  <div>
-                    <span className={`admin-status ${user.status.toLowerCase()}`}>
-                      {user.status}
+                  ))}
+            </section>
+
+            {/* ── Quick links ── */}
+            <section className="admin-card" style={{ padding: "18px 20px" }}>
+              <div className="admin-card-title" style={{ marginBottom: 14 }}>Quick access</div>
+              <div className="dash-quick-grid">
+                {quickLinks.map((q) => (
+                  <button
+                    key={q.label}
+                    type="button"
+                    className="dash-quick-btn"
+                    onClick={() => navigate(q.href)}
+                    style={{ "--ql-color": q.color }}
+                  >
+                    <span className="dash-quick-icon" style={{ color: q.color, background: `${q.color}18` }}>
+                      {q.icon}
                     </span>
+                    <span>{q.label}</span>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {/* ── Two columns: recent posts + recent users ── */}
+            <div className="dash-two-col">
+
+              {/* Recent posts */}
+              <section className="admin-card">
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">Recent listings</div>
+                    <div className="admin-card-subtitle">{recentPosts.length} latest</div>
                   </div>
-                  <div className="admin-actions">
-                    <button className="admin-actions-button" aria-label="More actions">
-                      ⋮
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className="dash-see-all"
+                    onClick={() => navigate("/admin-listings")}
+                  >
+                    View all <ArrowRight size={13} />
+                  </button>
                 </div>
-              ))}
+
+                <div className="dash-list">
+                  {loading ? (
+                    [1, 2, 3].map((i) => <div key={i} className="dash-list-skeleton" />)
+                  ) : recentPosts.length === 0 ? (
+                    <div className="dash-empty">
+                      <AlertCircle size={20} color="#cbd5e1" />
+                      <span>No listings yet</span>
+                    </div>
+                  ) : (
+                    recentPosts.map((p) => {
+                      const badge = STATUS_BADGE[p.status] ?? { label: p.status, bg: "#f1f5f9", color: "#64748b" };
+                      return (
+                        <div
+                          key={p.id}
+                          className="dash-list-row dash-list-row-click"
+                          onClick={() => navigate(`/admin-listings`)}
+                        >
+                          {p.thumb ? (
+                            <img src={p.thumb} alt={p.title} className="dash-list-thumb"
+                              onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                          ) : (
+                            <div className="dash-list-thumb-ph" />
+                          )}
+                          <div className="dash-list-info">
+                            <div className="dash-list-title">{p.title}</div>
+                            <div className="dash-list-sub">{p.seller} · {p.price}</div>
+                          </div>
+                          <span
+                            className="dash-badge"
+                            style={{ background: badge.bg, color: badge.color }}
+                          >
+                            {badge.label}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+
+              {/* Recent users */}
+              <section className="admin-card">
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">Recent members</div>
+                    <div className="admin-card-subtitle">{recentUsers.length} latest</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="dash-see-all"
+                    onClick={() => navigate("/admin-users")}
+                  >
+                    View all <ArrowRight size={13} />
+                  </button>
+                </div>
+
+                <div className="dash-list">
+                  {loading ? (
+                    [1, 2, 3].map((i) => <div key={i} className="dash-list-skeleton" />)
+                  ) : recentUsers.length === 0 ? (
+                    <div className="dash-empty">
+                      <AlertCircle size={20} color="#cbd5e1" />
+                      <span>No members yet</span>
+                    </div>
+                  ) : (
+                    recentUsers.map((u) => {
+                      const isAdmin = (u.role ?? "").toUpperCase().includes("ADMIN");
+                      const isInsp  = (u.role ?? "").toUpperCase().includes("INSPECTOR");
+                      const roleColor = isAdmin ? "#7c3aed" : isInsp ? "#0284c7" : "#64748b";
+                      const roleLabel = isAdmin ? "Admin" : isInsp ? "Inspector" : "User";
+                      return (
+                        <div
+                          key={u.id}
+                          className="dash-list-row dash-list-row-click"
+                          onClick={() => navigate("/admin-users")}
+                        >
+                          <div className="dash-user-avatar" style={{ background: `${roleColor}18`, color: roleColor }}>
+                            {(u.name[0] ?? "?").toUpperCase()}
+                          </div>
+                          <div className="dash-list-info">
+                            <div className="dash-list-title">{u.name}</div>
+                            <div className="dash-list-sub">{u.email}</div>
+                          </div>
+                          <span
+                            className="dash-badge"
+                            style={{ background: `${roleColor}14`, color: roleColor }}
+                          >
+                            {roleLabel}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+
             </div>
-          </section>
+          </div>
         </div>
       </div>
-      <Footer />
-    </div>
+    </AdminLayout>
   );
 }

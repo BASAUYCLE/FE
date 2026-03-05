@@ -1,16 +1,36 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Form, Input } from "antd";
+import { Form, Input, message } from "antd";
 import { ArrowRightOutlined } from "@ant-design/icons";
 import bikeLogo from "../../assets/bike-logo.png";
+import authService from "../../services/authService";
 import "../Login/login.css";
 import "./index.css";
 
 export default function ForgotPassword() {
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
-  const onFinish = (values) => {
-    console.log("Forgot password:", values);
-    // TODO: call API to send password reset link
+  const onFinish = async (values) => {
+    setLoading(true);
+    try {
+      await authService.forgotPassword(values.email);
+      setSubmitted(true);
+      message.success(
+        "If that email is registered, you will receive a password reset link.",
+      );
+    } catch (err) {
+      const msg =
+        err?.message ??
+        err?.data?.message ??
+        err?.data?.msg ??
+        err?.message ??
+        "Request failed. Please try again.";
+      message.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,6 +74,7 @@ export default function ForgotPassword() {
                 type="submit"
                 className="auth-card__btn-submit"
                 aria-label="Send reset link"
+                disabled={loading}
               >
                 <ArrowRightOutlined className="auth-card__btn-icon" />
               </button>

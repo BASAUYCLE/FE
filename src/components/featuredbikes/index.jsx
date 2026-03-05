@@ -1,4 +1,4 @@
-import { useRef, useMemo } from "react";
+import { useRef, useMemo, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Box,
@@ -10,79 +10,42 @@ import {
 import { styled } from "@mui/material/styles";
 import { ArrowRightOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import BikeCard from "../card";
-import bikeTarmac from "../../assets/bike-tarmac-sl7.png";
-import santaCruzNomadCC from "../../assets/SantaCruzNomaCC.png";
-import canyonGrizlCFSL from "../../assets/CanyonGrizlCFSL.jpg";
-import specializedTurboLevo from "../../assets/SpecializedTurboLevo.png";
 import { usePostings } from "../../contexts/PostingContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
-// Add image to src/assets/bike-tarmac-sl7-new.png then enable the 2 lines below and set image to bikeTarmacSL7New
-// import bikeTarmacSL7New from "../../assets/bike-tarmac-sl7-new.png";
+import postService from "../../services/postService";
+import { formatCurrency } from "../../utils/formatCurrency";
 
-/** Convert a posting to bike shape for BikeCard */
+/** Chuyển posting sang shape bike cho BikeCard */
 function postingToBike(p) {
+  const priceNum = p.price ?? p.askingPrice ?? 0;
+  const priceDisplay =
+    p.priceDisplay ??
+    (typeof priceNum === "number"
+      ? formatCurrency(priceNum)
+      : String(priceNum ?? "$0"));
+  const images = p.images ?? [];
+  const thumb =
+    images.find((i) => i?.isThumbnail)?.imageUrl ?? images[0]?.imageUrl;
+  const imageUrl = p.imageUrl ?? p.thumbnailUrl ?? thumb ?? null;
   return {
     id: p.id,
-    name: p.bikeName || "Untitled",
-    price: p.priceDisplay || (p.price ? `$${p.price}` : "$0"),
-    category: p.category || "BIKE",
-    image: p.imageUrl || bikeTarmac,
-    badge: p.status === POSTING_STATUS.ACTIVE ? "VERIFIED" : "PENDING",
+    name: p.bikeName ?? p.title ?? p.bicycleName ?? "Untitled",
+    price: priceDisplay,
+    rawPrice: typeof priceNum === "number" ? priceNum : 0,
+    category: p.category ?? p.categoryName ?? p.bicycleType ?? "BIKE",
+    image: imageUrl,
+    badge:
+      p.status === POSTING_STATUS.AVAILABLE || p.postStatus === "AVAILABLE"
+        ? "INSPECTED"
+        : p.status === POSTING_STATUS.PENDING_REVIEW ||
+            p.postStatus === "PENDING_REVIEW"
+          ? "PENDING"
+          : "NEW ARRIVAL",
     specs: {},
-    sellerId: p.sellerId ?? null,
+    sellerId: p.sellerId ?? p.seller_id ?? null,
   };
 }
-
-const featuredBikes = [
-  {
-    id: 1,
-    name: "Specialized Tarmac SL7",
-    price: "$4,250",
-    category: "ROAD / CARBON",
-    image: bikeTarmac,
-    badge: "NEW ARRIVAL",
-    specs: {
-      weight: "7.2kg",
-      groupset: "SRAM Force",
-    },
-  },
-  {
-    id: 2,
-    name: "Santa Cruz Nomad CC",
-    price: "$5,800",
-    category: "MTB / FULL SUSPENSION",
-    image: santaCruzNomadCC,
-    badge: "INSPECTED",
-    specs: {
-      weight: "13.5kg",
-      groupset: "FOX Factory",
-    },
-  },
-  {
-    id: 3,
-    name: "Canyon Grizl CF SL",
-    price: "$2,900",
-    category: "GRAVEL / ADVENTURE",
-    image: canyonGrizlCFSL,
-    specs: {
-      weight: "9.8kg",
-      groupset: "Shimano GRX",
-    },
-  },
-  {
-    id: 4,
-    name: "Specialized Turbo Levo",
-    price: "$8,100",
-    category: "E-MTB / ELECTRIC",
-    image: specializedTurboLevo,
-    badge: "TOP RATED",
-    specs: {
-      weight: "22.5kg",
-      groupset: "Brose 2.2",
-      motorPower: "700Wh",
-    },
-  },
-];
 
 const FeaturedBikesSection = styled(Box)(({ theme }) => ({
   padding: theme.spacing(10, 0),
@@ -93,7 +56,7 @@ const FeaturedBikesSection = styled(Box)(({ theme }) => ({
 }));
 
 const FeaturedBikesContainer = styled(Container)(({ theme }) => ({
-  maxWidth: 1160,
+  maxWidth: 1200,
   paddingLeft: theme.spacing(3),
   paddingRight: theme.spacing(3),
   [theme.breakpoints.down("sm")]: {
@@ -174,11 +137,11 @@ const CarouselScroll = styled(Box)(({ theme }) => ({
 const CarouselCardSlot = styled(Box)({
   flexShrink: 0,
   width: CARD_WIDTH,
-  minHeight: 560,
+  minHeight: 420,
   scrollSnapAlign: "start",
   "& .ant-card": {
     height: "100%",
-    minHeight: 560,
+    minHeight: 420,
     display: "flex",
     flexDirection: "column",
   },
@@ -216,18 +179,70 @@ const ArrowButton = styled(IconButton)(({ theme }) => ({
 
 export default function FeaturedBikes() {
   const scrollRef = useRef(null);
-  const { postings } = usePostings();
+  const { user } = useAuth();
+  const { postings, publicPostings, loadPublicPostings, loadPostingsBySeller } =
+    usePostings();
+  const [apiPostings, setApiPostings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    loadPublicPostings();
+  }, [loadPublicPostings]);
+
+  useEffect(() => {
+    const sellerId = user?.id ?? user?.userId ?? user?.user_id;
+    if (sellerId) loadPostingsBySeller(sellerId);
+  }, [user?.id, user?.userId, user?.user_id, loadPostingsBySeller]);
+
+  // Load bài đăng từ API (posts list hoặc featured) để hiển thị, không dùng mã giả
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    postService
+      .getPosts({ limit: 12 })
+      .then((res) => {
+        if (cancelled) return;
+        const raw = res?.data ?? res?.result ?? res?.content ?? res;
+        const list = Array.isArray(raw)
+          ? raw
+          : (raw?.content ?? raw?.posts ?? []);
+        setApiPostings(list);
+      })
+      .catch(() => {
+        if (!cancelled) setApiPostings([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Chỉ hiển thị bài đã duyệt (ADMIN_APPROVED) hoặc đang hiển thị (AVAILABLE); ưu tiên API, gộp với publicPostings/postings, bỏ trùng theo id
   const allFeaturedBikes = useMemo(() => {
-    const fromPostings = postings
-      .filter(
-        (p) =>
-          p.status === POSTING_STATUS.ACTIVE ||
-          p.status === POSTING_STATUS.PENDING_REVIEW,
-      )
-      .map(postingToBike);
-    return [...fromPostings, ...featuredBikes];
-  }, [postings]);
+    const allowed = (p) =>
+      p.status === POSTING_STATUS.AVAILABLE ||
+      p.status === POSTING_STATUS.ADMIN_APPROVED ||
+      p.postStatus === "AVAILABLE" ||
+      p.postStatus === "ADMIN_APPROVED";
+    const byId = new Map();
+    [...apiPostings, ...publicPostings, ...postings]
+      .filter((p) => {
+        if (!p?.id) return false;
+        const status = p.status ?? p.postStatus;
+        return (
+          status === POSTING_STATUS.AVAILABLE ||
+          status === POSTING_STATUS.ADMIN_APPROVED ||
+          status === "AVAILABLE" ||
+          status === "ADMIN_APPROVED"
+        );
+      })
+      .forEach((p) => {
+        byId.set(p.id, p);
+      });
+    return [...byId.values()].map(postingToBike);
+  }, [apiPostings, postings, publicPostings]);
 
   const scroll = (direction) => {
     if (!scrollRef.current) return;
@@ -268,11 +283,41 @@ export default function FeaturedBikes() {
           </ArrowButton>
 
           <CarouselScroll ref={scrollRef}>
-            {allFeaturedBikes.map((bike) => (
-              <CarouselCardSlot key={bike.id} className="bike-card-wrapper">
-                <BikeCard bike={bike} />
+            {loading ? (
+              <CarouselCardSlot
+                className="bike-card-wrapper"
+                sx={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: 200,
+                }}
+              >
+                <Typography color="text.secondary">Loading...</Typography>
               </CarouselCardSlot>
-            ))}
+            ) : allFeaturedBikes.length === 0 ? (
+              <CarouselCardSlot
+                className="bike-card-wrapper"
+                sx={{
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: 200,
+                }}
+              >
+                <Typography color="text.secondary">
+                  No featured bikes at the moment. Check back later or browse
+                  the marketplace.
+                </Typography>
+              </CarouselCardSlot>
+            ) : (
+              allFeaturedBikes.map((bike) => (
+                <CarouselCardSlot
+                  key={`post-${bike.id}`}
+                  className="bike-card-wrapper"
+                >
+                  <BikeCard bike={bike} />
+                </CarouselCardSlot>
+              ))
+            )}
           </CarouselScroll>
         </CarouselWrapper>
       </FeaturedBikesContainer>

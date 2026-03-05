@@ -1,8 +1,5 @@
-import { useState, useMemo } from "react";
-import { useLocation } from "react-router-dom";
-import Header from "../../../components/header";
-import Footer from "../../../components/footer";
-import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../../config/adminNav";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import AdminLayout from "../../../components/layout/AdminLayout";
 import {
   Search,
   CheckCircle2,
@@ -11,101 +8,91 @@ import {
   Filter,
 } from "lucide-react";
 import { POSTING_STATUS_LABEL } from "../../../constants/postingStatus";
+import adminPostService from "../../../services/adminPostService";
+import { formatCurrency } from "../../../utils/formatCurrency";
+import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import "../dashboard/index.css";
 import "./index.css";
 
-const MOCK_VERIFIED_LISTINGS = [
-  {
-    id: "BK-9021",
-    title: "Specialized Tarmac SL7",
-    seller: "Nguyễn Văn A",
-    category: "Road Bike",
-    price: "125.000.000 ₫",
-    inspectedAt: "28/01/2025",
-    status: "VERIFIED",
-  },
-  {
-    id: "BK-9022",
-    title: "Canyon Grizl CF SL",
-    seller: "Trần Thị B",
-    category: "Gravel",
-    price: "89.000.000 ₫",
-    inspectedAt: "27/01/2025",
-    status: "VERIFIED",
-  },
-  {
-    id: "BK-9023",
-    title: "Trek Domane SL 6",
-    seller: "Lê Văn C",
-    category: "Road Bike",
-    price: "95.000.000 ₫",
-    inspectedAt: "26/01/2025",
-    status: "VERIFIED",
-  },
-  {
-    id: "BK-9024",
-    title: "Giant TCR Advanced",
-    seller: "Phạm Thị D",
-    category: "Road Bike",
-    price: "72.000.000 ₫",
-    inspectedAt: "25/01/2025",
-    status: "VERIFIED",
-  },
-  {
-    id: "BK-9025",
-    title: "Santa Cruz Bronson",
-    seller: "Hoàng Văn E",
-    category: "Mountain",
-    price: "185.000.000 ₫",
-    inspectedAt: "24/01/2025",
-    status: "VERIFIED",
-  },
-];
-
 export default function AdminApprovedListings() {
-  const { pathname } = useLocation();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [previewId, setPreviewId] = useState(null);
+
+  /** Chuẩn hóa 1 post từ BE → row UI */
+  const normalizePost = (row) => {
+    const price = row.price ?? row.askingPrice ?? row.amount;
+    return {
+      id:       row.postId ?? row.id,
+      title:    row.bicycleName ?? row.title ?? row.postTitle ?? "—",
+      seller:
+        row.sellerFullName ?? row.sellerName ??
+        row.seller?.fullName ?? row.seller?.name ?? "—",
+      category: row.categoryName ?? row.category?.categoryName ?? row.category ?? "—",
+      price:    typeof price === "number" ? formatCurrency(price) : (price ?? "—"),
+      thumbnail:
+        (row.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ??
+        row.images?.[0]?.imageUrl ?? row.thumbnailUrl ?? null,
+      inspectedAt:
+        row.inspectedAt ?? row.inspectionDate ??
+        row.updatedAt   ?? row.createdAt      ?? null,
+      status: row.postStatus ?? row.status ?? "ADMIN_APPROVED",
+    };
+  };
+
+  const fetchListings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await adminPostService.getPostsByStatus("ADMIN_APPROVED");
+      const raw = res?.result ?? res?.data ?? res?.content ?? res;
+      const list = Array.isArray(raw) ? raw : (raw?.content ?? raw?.posts ?? raw?.data ?? []);
+      setListings(list.map(normalizePost));
+    } catch (err) {
+      console.warn("AdminApprovedListings: fetch failed", err?.message);
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return MOCK_VERIFIED_LISTINGS.filter((row) => {
+    return listings.filter((row) => {
       const matchSearch =
         !q ||
-        row.title.toLowerCase().includes(q) ||
-        row.seller.toLowerCase().includes(q) ||
-        row.id.toLowerCase().includes(q);
+        (row.title && row.title.toLowerCase().includes(q)) ||
+        (row.seller && row.seller.toLowerCase().includes(q)) ||
+        (row.id && String(row.id).toLowerCase().includes(q));
       const matchCategory =
         categoryFilter === "all" ||
-        row.category.toLowerCase() === categoryFilter.toLowerCase();
+        (row.category &&
+          row.category.toLowerCase() === categoryFilter.toLowerCase());
       return matchSearch && matchCategory;
     });
-  }, [search, categoryFilter]);
+  }, [listings, search, categoryFilter]);
 
   const categories = useMemo(() => {
-    const set = new Set(MOCK_VERIFIED_LISTINGS.map((r) => r.category));
+    const set = new Set(listings.map((r) => r.category).filter(Boolean));
     return ["all", ...Array.from(set)];
-  }, []);
+  }, [listings]);
 
   return (
-    <div className="admin-dashboard-page admin-approved-listings-page">
-      <Header
-        navLinks={ADMIN_NAV_LINKS}
-        activeLink={getAdminActiveLink(pathname)}
-        navVariant="pill"
-        showSearch={false}
-        showWishlistIcon={false}
-        showAvatar
-        showSellButton={false}
-        showLogin={false}
-      />
-      <div className="admin-dashboard">
-        <div className="admin-content">
-          <header className="admin-topbar">
-            <h1 className="admin-page-title">Tin đăng đã qua kiểm duyệt</h1>
-            <p className="admin-page-subtitle">
-              Quản lý các tin đăng đã được kiểm định và duyệt hiển thị.
-            </p>
+    <AdminLayout>
+
+      <div className="admin-dashboard-page admin-approved-listings-page">
+        <div className="admin-dashboard">
+          <div className="admin-content">
+            <header className="admin-topbar">
+              <h1 className="admin-page-title">Bài đăng đã duyệt</h1>
+              <p className="admin-page-subtitle">
+                Các bài post đã được Admin duyệt, đang chờ kiểm định trước khi lên sàn.
+              </p>
           </header>
 
           <section className="admin-card admin-table-card">
@@ -115,7 +102,7 @@ export default function AdminApprovedListings() {
                   <Search className="admin-search-icon" size={18} />
                   <input
                     type="text"
-                    placeholder="Tìm theo tiêu đề, người đăng, mã tin..."
+                    placeholder="Search by title, seller, post ID..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="admin-search-input"
@@ -130,7 +117,7 @@ export default function AdminApprovedListings() {
                   >
                     {categories.map((c) => (
                       <option key={c} value={c}>
-                        {c === "all" ? "Tất cả danh mục" : c}
+                        {c === "all" ? "All categories" : c}
                       </option>
                     ))}
                   </select>
@@ -138,35 +125,54 @@ export default function AdminApprovedListings() {
               </div>
               <div className="admin-table-actions">
                 <span className="admin-count-badge">
-                  {filtered.length} tin đăng
+                  {filtered.length} listing(s)
                 </span>
               </div>
             </div>
             <div className="admin-table admin-approved-table">
               <div className="admin-table-row admin-table-header">
-                <div>Mã / Tin đăng</div>
-                <div>Người đăng</div>
-                <div>Danh mục</div>
-                <div>Giá</div>
-                <div>Ngày kiểm định</div>
-                <div>Trạng thái</div>
-                <div>Thao tác</div>
+                <div>ID / Listing</div>
+                <div>Seller</div>
+                <div>Category</div>
+                <div>Price</div>
+                <div>Ngày duyệt</div>
+                <div>Status</div>
+                <div>Actions</div>
               </div>
-              {filtered.length === 0 ? (
-                <div className="admin-table-empty">Không có tin đăng nào.</div>
+              {loading ? (
+                <div className="admin-table-empty">Loading listings...</div>
+              ) : filtered.length === 0 ? (
+                <div className="admin-table-empty">No listings.</div>
               ) : (
-                filtered.map((row) => (
-                  <div className="admin-table-row" key={row.id}>
-                    <div>
-                      <div className="admin-approved-id">#{row.id}</div>
+                filtered.map((row, idx) => (
+                  <div className="admin-table-row" key={row?.id ?? `approved-${idx}`}>
+                    <div
+                      className="admin-approved-listing-cell admin-row-link"
+                      onClick={() => row.id && setPreviewId(row.id)}
+                      title="View listing"
+                    >
+                      {row.thumbnail ? (
+                        <img
+                          src={row.thumbnail}
+                          alt={row.title}
+                          className="admin-approved-thumb"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="admin-approved-thumb-placeholder" />
+                      )}
                       <div className="admin-approved-title">{row.title}</div>
                     </div>
                     <div>{row.seller}</div>
                     <div>{row.category}</div>
                     <div className="admin-approved-price">{row.price}</div>
-                    <div>{row.inspectedAt}</div>
                     <div>
-                      <span className="admin-status verified">
+                      {row.inspectedAt
+                        ? new Date(row.inspectedAt).toLocaleDateString("vi-VN")
+                        : "—"}
+                    </div>
+                    <div>
+                      <span className={`admin-status ${row.status?.toLowerCase?.() ?? "verified"}`}>
                         <CheckCircle2 size={12} />{" "}
                         {POSTING_STATUS_LABEL[row.status] || row.status}
                       </span>
@@ -177,6 +183,7 @@ export default function AdminApprovedListings() {
                         className="admin-actions-button"
                         title="Xem chi tiết"
                         aria-label="Xem"
+                        onClick={() => row.id && setPreviewId(row.id)}
                       >
                         <Eye size={16} />
                       </button>
@@ -194,9 +201,14 @@ export default function AdminApprovedListings() {
               )}
             </div>
           </section>
+          </div>
         </div>
       </div>
-      <Footer />
-    </div>
+      <ProductPreviewModal
+        postId={previewId}
+        open={!!previewId}
+        onClose={() => setPreviewId(null)}
+      />
+    </AdminLayout>
   );
 }

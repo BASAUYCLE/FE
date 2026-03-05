@@ -1,25 +1,17 @@
 import { ORDER_STATUS } from "../constants/orderStatus";
 
-/**
- * @param {{ expiresAt: string|Date }} order
- * @returns {boolean}
- */
 export function isOrderExpired(order) {
   if (!order?.expiresAt) return false;
   return new Date(order.expiresAt) <= new Date();
 }
 
-/**
- * @param {string|Date} expiresAt
- * @returns {string} e.g. "Expires in 12h", "Expires in 2d", "Expired yesterday"
- */
 export function getExpirationLabel(expiresAt) {
   if (!expiresAt) return "";
   const end = new Date(expiresAt);
   const now = new Date();
   const diffMs = end - now;
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffDays  = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffMs <= 0) {
     const daysAgo = Math.abs(diffDays);
@@ -32,11 +24,9 @@ export function getExpirationLabel(expiresAt) {
 }
 
 /**
- * Normalize status: PAID stays PAID; if past expiresAt, treat as EXPIRED
- * @param {{ status: string, expiresAt: string|Date }} order
+ * Trả về status hiển thị.
+ * Với hệ thống mới không có expiresAt-based EXPIRED nữa.
  */
 export function getEffectiveStatus(order) {
-  if (order?.status === ORDER_STATUS.PAID) return ORDER_STATUS.PAID;
-  if (isOrderExpired(order)) return ORDER_STATUS.EXPIRED;
-  return order?.status || ORDER_STATUS.DEPOSIT_AWAITING;
+  return order?.status ?? ORDER_STATUS.DEPOSITED;
 }

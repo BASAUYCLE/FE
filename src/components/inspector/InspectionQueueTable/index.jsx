@@ -2,7 +2,10 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tag } from "antd";
 import { Search, Filter, Eye, Upload, Play } from "lucide-react";
-import { INSPECTION_STATUS_LABEL, INSPECTION_STATUS_TAG_COLOR } from "../../../constants/inspectionStatus";
+import {
+  INSPECTION_STATUS_LABEL,
+  INSPECTION_STATUS_TAG_COLOR,
+} from "../../../constants/inspectionStatus";
 
 const PAGE_SIZE = 4;
 
@@ -17,9 +20,12 @@ function formatRequestedDate(iso) {
 }
 
 /**
- * Reusable inspection queue table. Used by Dashboard and Inspection Details page.
+ * Reusable inspection queue table.
  */
-export default function InspectionQueueTable({ inspections = [], loading = false }) {
+export default function InspectionQueueTable({
+  inspections = [],
+  loading = false,
+}) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -31,7 +37,7 @@ export default function InspectionQueueTable({ inspections = [], loading = false
       (i) =>
         i.id.toLowerCase().includes(q) ||
         i.bicycleName?.toLowerCase().includes(q) ||
-        i.bicycleType?.toLowerCase().includes(q)
+        i.bicycleType?.toLowerCase().includes(q),
     );
   }, [inspections, search]);
 
@@ -56,7 +62,10 @@ export default function InspectionQueueTable({ inspections = [], loading = false
             />
           </div>
           <button type="button" className="admin-outline-button">
-            <Filter size={14} style={{ marginRight: 6, verticalAlign: "middle" }} />
+            <Filter
+              size={14}
+              style={{ marginRight: 6, verticalAlign: "middle" }}
+            />
             Filters
           </button>
         </div>
@@ -71,70 +80,89 @@ export default function InspectionQueueTable({ inspections = [], loading = false
         </div>
         {loading ? (
           <div className="admin-table-row inspector-table-row">
-            <div style={{ padding: "24px", gridColumn: "1 / -1", textAlign: "center" }}>
+            <div
+              style={{
+                padding: "24px",
+                gridColumn: "1 / -1",
+                textAlign: "center",
+              }}
+            >
               Đang tải...
             </div>
           </div>
         ) : (
-          pageItems.map((item) => (
-          <div key={item.id} className="admin-table-row inspector-table-row">
-            <div>
-              <div className="inspector-bike-cell">
-                <img src={item.bicycleImage} alt={item.bicycleName} />
-                <div>
-                  <div className="inspector-bike-name">{item.bicycleName}</div>
-                  <div className="inspector-bike-meta">
-                    ID: #{item.id} • {item.bicycleType}
+          pageItems.map((item, idx) => (
+            <div key={item?.id ?? item?.postId ?? `inspector-${idx}`} className="admin-table-row inspector-table-row">
+              <div>
+                <div className="inspector-bike-cell">
+                  <img src={item.bicycleImage} alt={item.bicycleName} />
+                  <div>
+                    <div className="inspector-bike-name">
+                      {item.bicycleName}
+                    </div>
+                    <div className="inspector-bike-meta">
+                      ID: #{item.id} • {item.bicycleType}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            <div>
-              <div className="inspector-seller-name">{item.sellerName}</div>
-              <div className="inspector-seller-location">{item.sellerLocation}</div>
-            </div>
-            <div>{formatRequestedDate(item.requestedDate)}</div>
-            <div>
-              <Tag color={INSPECTION_STATUS_TAG_COLOR[item.status] ?? "default"}>
-                {INSPECTION_STATUS_LABEL[item.status] ?? item.status}
-              </Tag>
-            </div>
-            <div className="inspector-actions-cell">
-              <button
-                type="button"
-                className="admin-actions-button"
-                aria-label="View details"
-                onClick={() => navigate(`/inspector/${item.id}`)}
-              >
-                <Eye size={18} />
-              </button>
-              {item.status === "IN_PROGRESS" ? (
+              <div>
+                <div className="inspector-seller-name">{item.sellerName}</div>
+                <div className="inspector-seller-location">
+                  {item.sellerLocation}
+                </div>
+              </div>
+              <div>{formatRequestedDate(item.requestedDate)}</div>
+              <div>
+                <Tag
+                  color={INSPECTION_STATUS_TAG_COLOR[item.status] ?? "default"}
+                >
+                  {INSPECTION_STATUS_LABEL[item.status] ?? item.status}
+                </Tag>
+              </div>
+              <div className="inspector-actions-cell">
                 <button
                   type="button"
-                  className="inspector-btn-continue"
+                  className="admin-actions-button"
+                  aria-label="View details"
                   onClick={() => navigate(`/inspector/${item.id}`)}
                 >
-                  <Play size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />
-                        Not Inspected
+                  <Eye size={18} />
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  className="inspector-btn-upload"
-                  onClick={() => navigate(`/inspector/${item.id}`)}
-                >
-                  <Upload size={12} style={{ marginRight: 4, verticalAlign: "middle" }} />
-                        Inspected
-                </button>
-              )}
+                {item.status === "IN_PROGRESS" ? (
+                  <button
+                    type="button"
+                    className="inspector-btn-continue"
+                    onClick={() => navigate(`/inspector/${item.id}`)}
+                  >
+                    <Play
+                      size={12}
+                      style={{ marginRight: 4, verticalAlign: "middle" }}
+                    />
+                    Not Inspected
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="inspector-btn-upload"
+                    onClick={() => navigate(`/inspector/${item.id}`)}
+                  >
+                    <Upload
+                      size={12}
+                      style={{ marginRight: 4, verticalAlign: "middle" }}
+                    />
+                    Inspected
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))
+          ))
         )}
       </div>
       <div className="inspector-pagination">
         <span>
-          Showing {start + 1}–{Math.min(start + PAGE_SIZE, filteredInspections.length)} of{" "}
+          Showing {start + 1}–
+          {Math.min(start + PAGE_SIZE, filteredInspections.length)} of{" "}
           {filteredInspections.length} inspections
         </span>
         <div className="inspector-pagination-btns">

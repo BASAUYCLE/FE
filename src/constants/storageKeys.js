@@ -1,7 +1,4 @@
-/**
- * Storage keys for localStorage/sessionStorage
- * Dùng một nơi để tránh hardcode và lỗi typo
- */
+// Key localStorage – dùng thay cho chuỗi thô để tránh gõ sai
 export const STORAGE_KEYS = {
   TOKEN: "ev_token",
   USER: "ev_user",

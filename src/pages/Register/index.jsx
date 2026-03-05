@@ -42,25 +42,22 @@ export default function Register() {
       const result = await register(formData);
 
       if (result.success) {
-        message.success("Registration successful! Your account is pending verification.");
+        message.success("Registration successful! Your account is pending verification.", 3);
 
-        // Redirect to login page
+        // Redirect to login after showing success message
         setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 1500);
       } else {
         message.error(result.message || "Registration failed!");
       }
     } catch (error) {
-      console.error("Register error:", error);
-
-      // Handle connection errors
-      if (error.message && error.message.includes('Network Error')) {
-        message.error('Cannot connect to server. Please check if the backend is running!');
-      } else if (error.message && error.message.includes('ERR_CONNECTION_REFUSED')) {
-        message.error('Backend server is not running! Please start backend at http://localhost:8080');
+      // result is only set when register() returns; if it throws, we don't have result
+      const errMsg = error?.message || "An error occurred. Please try again!";
+      if (errMsg.includes("Network Error") || errMsg.includes("ERR_CONNECTION_REFUSED")) {
+        message.error("Cannot connect to server. Please check if the backend is running (e.g. http://localhost:8080).");
       } else {
-        message.error(error.message || "An error occurred. Please try again!");
+        message.error(errMsg);
       }
     } finally {
       setIsSubmitting(false);

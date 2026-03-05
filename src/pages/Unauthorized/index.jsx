@@ -23,11 +23,11 @@ const Unauthorized = () => {
           </svg>
         </div>
         
-        <h1 className="unauthorized-title">Truy cập bị từ chối</h1>
+        <h1 className="unauthorized-title">Access denied</h1>
         
         <p className="unauthorized-message">
           Bạn không có quyền truy cập vào trang này.
-          Vui lòng liên hệ quản trị viên nếu bạn nghĩ đây là lỗi.
+          Please contact the administrator if you believe this is an error.
         </p>
         
         <div className="unauthorized-actions">
@@ -35,7 +35,7 @@ const Unauthorized = () => {
             Về trang chủ
           </Link>
           <Link to="/login" className="btn-secondary">
-            Đăng nhập lại
+            Log in again
           </Link>
         </div>
       </div>

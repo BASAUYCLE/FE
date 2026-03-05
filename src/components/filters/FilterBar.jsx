@@ -2,10 +2,7 @@ import { Select, Button } from "antd";
 import { Filter } from "lucide-react";
 import "./FilterBar.css";
 
-/**
- * Thanh filter dùng chung (Orders, Postings): nhiều Select + nút "More Filters".
- * @param {{ items: Array<{ key: string, label: string, value: string, onChange: (v: string) => void, options: Array<{ value: string, label: string }>, icon?: React.ReactNode }>, onMoreFilters?: () => void, moreLabel?: string }} props
- */
+// Thanh filter (Orders dùng): Select + nút More Filters
 export default function FilterBar({
   items = [],
   onMoreFilters,

@@ -1,398 +1,248 @@
-.admin-transactions-page {
-  min-height: 100vh;
-  background: #f6f9fc;
-  color: #0f172a;
-}
-
-.admin-transactions-shell {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.admin-transactions-sidebar {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  min-height: 780px;
-}
-
-.admin-transactions-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-weight: 700;
-}
-
-.admin-transactions-logo img {
-  width: 36px;
-  height: 36px;
-}
-
-.logo-title {
-  font-size: 16px;
-  color: #0f172a;
-}
-
-.admin-transactions-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.admin-transactions-nav-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  border: none;
-  background: transparent;
-  padding: 10px 14px;
-  border-radius: 14px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  text-align: left;
-}
-
-.admin-transactions-nav-item.active {
-  background: #00ccad;
-  color: #fff;
-  box-shadow: 0 10px 22px rgba(0, 204, 173, 0.25);
-}
-
-.nav-icon {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-}
-
-.nav-icon svg {
-  width: 18px;
-  height: 18px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-}
-
-.admin-transactions-main {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.admin-transactions-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.admin-transactions-top h1 {
-  margin: 0 0 6px;
-  font-size: 24px;
-}
-
-.admin-transactions-top p {
-  margin: 0;
-  color: #64748b;
-  font-size: 14px;
-}
-
-.admin-transactions-top-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.icon-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.divider {
-  width: 1px;
-  height: 28px;
-  background: #e2e8f0;
-}
-
-.admin-user-chip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.admin-user-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #fde68a;
-  display: grid;
-  place-items: center;
-}
-
-.admin-user-avatar svg {
-  width: 18px;
-  height: 18px;
-}
-
-.admin-user-name {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.admin-transactions-toolbar {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.export-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  border-radius: 12px;
-  padding: 8px 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.admin-transactions-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-
-.stats-card {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  padding: 16px 18px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-}
-
-.stats-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  color: #64748b;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.stats-value {
+.admin-tx-page .admin-page-title {
   font-size: 22px;
   font-weight: 700;
-  margin: 8px 0 6px;
+  color: #0f172a;
+  margin: 0 0 4px;
 }
 
-.stats-note {
-  font-size: 12px;
-  color: #16a34a;
+/* ── Filters ────────────────────────────────────────── */
+.admin-tx-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px;
 }
 
-.stats-note.orange {
-  color: #f97316;
-}
-
-.admin-transactions-filters {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr auto;
-  gap: 16px;
-}
-
-.filter-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  color: #94a3b8;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.filter-input {
+.admin-tx-search {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
-  padding: 8px 10px;
   border-radius: 10px;
-  color: #94a3b8;
+  padding: 9px 14px;
 }
 
-.filter-input input {
+.admin-tx-search input {
   border: none;
   background: transparent;
   outline: none;
+  font-size: 13px;
+  color: #0f172a;
   width: 100%;
-  font-size: 13px;
 }
 
-.filter-block select {
-  width: 100%;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 8px 10px;
-  font-size: 13px;
-  background: #fff;
+.admin-tx-search input::placeholder {
+  color: #94a3b8;
 }
 
-.reset-btn {
-  align-self: end;
-  border: none;
-  background: #f1f5f9;
-  border-radius: 10px;
-  padding: 10px 14px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.admin-transactions-table {
-  background: #fff;
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-}
-
-.table-row {
-  display: grid;
-  grid-template-columns: 1.2fr 1.4fr 1.6fr 1fr 0.8fr 1fr 0.6fr;
-  align-items: center;
-  padding: 14px 18px;
-  font-size: 13px;
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.table-row.header {
-  background: #f1faf8;
-  font-size: 11px;
-  text-transform: uppercase;
-  color: #00b894;
-  font-weight: 700;
-}
-
-.tx-id {
-  color: #00b894;
-  font-weight: 600;
-}
-
-.buyer-seller span {
-  display: block;
-  color: #64748b;
-  font-size: 12px;
-}
-
-.amount {
-  font-weight: 700;
-}
-
-.fee {
-  color: #64748b;
-}
-
-.status {
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: capitalize;
-  display: inline-flex;
-}
-
-.status.completed {
-  background: #dcfce7;
-  color: #10b981;
-}
-
-.status.pending {
-  background: #ffedd5;
-  color: #f97316;
-}
-
-.view-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-}
-
-.table-footer {
+.admin-tx-filter-group {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 18px;
-  color: #64748b;
-  font-size: 13px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
-.pagination {
+.admin-tx-filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+  min-width: 60px;
+}
+
+.admin-tx-filter-pills {
   display: flex;
   gap: 6px;
+  flex-wrap: wrap;
 }
 
-.pagination button {
-  border: 1px solid #d1d5db;
+.admin-tx-pill {
+  border: 1px solid #e2e8f0;
   background: #fff;
-  border-radius: 8px;
-  padding: 6px 10px;
+  border-radius: 999px;
+  padding: 4px 14px;
   font-size: 12px;
+  font-weight: 500;
+  color: #475569;
   cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 
-.pagination .active {
+.admin-tx-pill:hover {
+  background: #f1f5f9;
+}
+
+.admin-tx-pill.active {
   background: #00ccad;
   border-color: #00ccad;
   color: #fff;
 }
 
-@media (max-width: 1200px) {
-  .admin-transactions-sidebar {
-    min-height: auto;
-  }
+/* ── Table ──────────────────────────────────────────── */
+.admin-tx-table-card {
+  padding: 0;
+  overflow: hidden;
 }
 
+.admin-tx-table {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-tx-row {
+  display: grid;
+  grid-template-columns: 2fr 1.4fr 2fr 1.6fr 1.4fr 1.2fr;
+  align-items: center;
+  padding: 12px 20px;
+  gap: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.admin-tx-row:last-child {
+  border-bottom: none;
+}
+
+.admin-tx-header {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 10px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-tx-row:not(.admin-tx-header):hover {
+  background: #f8fafc;
+}
+
+.admin-tx-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* Avatar + member */
+.admin-tx-member {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+}
+
+.admin-tx-avatar {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 50%;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-tx-member span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Type badge */
+.admin-tx-type-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Desc */
+.admin-tx-desc {
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Date */
+.admin-tx-date {
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Status badge */
+.admin-tx-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Pagination ──────────────────────────────────────── */
+.admin-tx-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.admin-tx-page-btn {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 32px;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+
+.admin-tx-page-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.admin-tx-page-btn.active {
+  background: #00ccad;
+  border-color: #00ccad;
+  color: #fff;
+}
+
+.admin-tx-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Stats responsive ────────────────────────────────── */
 @media (max-width: 960px) {
-  .admin-transactions-stats {
-    grid-template-columns: repeat(2, 1fr);
+  .admin-tx-row {
+    grid-template-columns: 1.5fr 1fr 1.2fr 1fr;
   }
 
-  .admin-transactions-filters {
-    grid-template-columns: 1fr;
+  .admin-tx-row > :nth-child(3),
+  .admin-tx-row > :nth-child(6) {
+    display: none;
   }
 }
 
-@media (max-width: 720px) {
-  .admin-transactions-stats {
-    grid-template-columns: 1fr;
+@media (max-width: 680px) {
+  .admin-tx-row {
+    grid-template-columns: 2fr 1fr 1fr;
   }
 
-  .table-row {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .table-row > div:nth-child(n + 3) {
+  .admin-tx-row > :nth-child(2),
+  .admin-tx-row > :nth-child(4) {
     display: none;
   }
 }

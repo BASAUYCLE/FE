@@ -1,4 +1,3 @@
-/* Card: compact spacing, balanced layout */
 .pending-order-card {
   border-radius: 10px;
   overflow: hidden;
@@ -29,6 +28,7 @@
   overflow: hidden;
   flex-shrink: 0;
   background-color: #f1f5f9;
+  border: 1px solid #e5e7eb;
 }
 
 .pending-order-card-image img {
@@ -60,54 +60,89 @@
 }
 
 .pending-order-card-title {
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
   margin: 0 0 2px !important;
   line-height: 1.3 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .pending-order-card-id {
   font-size: 12px;
   color: #64748b;
-  margin-bottom: 4px;
+  display: block;
 }
 
-.pending-order-card-expiry {
+.poc-date {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.poc-ship-info,
+.poc-tracking {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
-  color: #64748b;
+  font-size: 11px;
+  color: #3b82f6;
+  margin-top: 3px;
 }
 
-.pending-order-card-right {
+/* Right panel */
+.poc-right {
   flex-shrink: 0;
   text-align: right;
-  min-width: 120px;
+  min-width: 130px;
 }
 
-.pending-order-card-amount-label {
+.poc-amount-label {
   font-size: 10px;
   font-weight: 600;
   color: #64748b;
   letter-spacing: 0.04em;
   margin-bottom: 2px;
+  text-transform: uppercase;
 }
 
-.pending-order-card-amount {
-  font-size: 16px;
+.poc-amount {
+  font-size: 15px;
   font-weight: 700;
   color: #0f172a;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
 
-.pending-order-card-actions .ant-btn {
-  font-size: 13px;
-  padding: 6px 14px;
+.poc-amount-done {
+  color: #16a34a;
+}
+
+.poc-amount-cancelled {
+  color: #94a3b8;
+  text-decoration: line-through;
+}
+
+.poc-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.poc-actions .ant-btn {
+  font-size: 12px;
+  padding: 4px 10px;
   height: auto;
   line-height: 1.3;
 }
 
-.pending-order-card.pending-order-card-expired {
-  opacity: 0.88;
+/* State variants */
+.poc-completed {
+  border-left: 3px solid #16a34a;
+}
+
+.poc-cancelled {
+  opacity: 0.7;
+  border-left: 3px solid #cbd5e1;
 }

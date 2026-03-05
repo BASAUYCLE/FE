@@ -26,13 +26,16 @@ import {
   UserOutlined,
   CloseOutlined,
   LogoutOutlined,
+  DashboardOutlined,
+  AuditOutlined,
 } from "@ant-design/icons";
 import { Receipt, FileText } from "lucide-react";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { useNotifications } from "../../contexts/useNotifications";
-import { NAV_LINKS, getActiveLink } from "../../config/headerConfig";
+import { getNavLinksForRole, getActiveLink } from "../../config/headerConfig";
+import { formatDateTime } from "../../utils/date";
 import "./index.css";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
@@ -44,7 +47,7 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
 }));
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
-  maxWidth: 1160,
+  maxWidth: 1200,
   width: "100%",
   margin: "0 auto",
   padding: "14px 24px",
@@ -204,36 +207,72 @@ const NotificationsMenu = styled(Menu)(({ theme }) => ({
   },
 }));
 
-const userMenuItems = [
-  {
-    label: "Wishlist",
-    path: "/wishlist",
-    icon: <HeartOutlined style={{ fontSize: 18 }} />,
-  },
-  {
-    label: "Wallet",
-    path: "/wallet",
-    icon: <WalletOutlined style={{ fontSize: 18 }} />,
-  },
-  {
-    label: "Pending Payments",
-    path: "/orders",
-    icon: <Receipt size={18} />,
-  },
-  {
-    label: "Quản lý tin đăng",
-    path: "/manage-listings",
-    icon: <FileText size={18} />,
-  },
-  {
-    label: "Tài khoản",
-    path: "/account",
-    icon: <UserOutlined style={{ fontSize: 18 }} />,
-  },
-];
+/** Menu dropdown theo role: MEMBER (Wishlist, Wallet, Orders, Quản lý tin, Account); ADMIN (Admin Dashboard, Account); INSPECTOR (Inspection, Account) */
+function getMenuItemsForRole(role) {
+  const roleUpper = (role ?? "MEMBER").toUpperCase();
+  if (roleUpper === "ADMIN") {
+    return [
+      {
+        label: "Admin Dashboard",
+        path: "/admin-dashboard",
+        icon: <DashboardOutlined style={{ fontSize: 18 }} />,
+      },
+      {
+        label: "Account",
+        path: "/account",
+        icon: <UserOutlined style={{ fontSize: 18 }} />,
+      },
+    ];
+  }
+  if (roleUpper === "INSPECTOR") {
+    return [
+      {
+        label: "Inspection",
+        path: "/inspector",
+        icon: <AuditOutlined style={{ fontSize: 18 }} />,
+      },
+      {
+        label: "Account",
+        path: "/account",
+        icon: <UserOutlined style={{ fontSize: 18 }} />,
+      },
+    ];
+  }
+  return [
+    {
+      label: "Wishlist",
+      path: "/wishlist",
+      icon: <HeartOutlined style={{ fontSize: 18 }} />,
+    },
+    {
+      label: "Wallet",
+      path: "/wallet",
+      icon: <WalletOutlined style={{ fontSize: 18 }} />,
+    },
+    { label: "My Orders", path: "/orders", icon: <Receipt size={18} /> },
+    { label: "My Sales", path: "/my-sales", icon: <Receipt size={18} /> },
+    {
+      label: "Manage Listings",
+      path: "/manage-listings",
+      icon: <FileText size={18} />,
+    },
+    {
+      label: "Account",
+      path: "/account",
+      icon: <UserOutlined style={{ fontSize: 18 }} />,
+    },
+  ];
+}
+
+/** Lấy role từ user (backend có thể trả user_role hoặc userRole) */
+function getUserRole(user) {
+  if (!user) return "MEMBER";
+  const r = user.role ?? user.userRole ?? user.user_role ?? "MEMBER";
+  return String(r).toUpperCase();
+}
 
 export default function Header({
-  navLinks = NAV_LINKS,
+  navLinks: navLinksProp,
   activeLink: activeLinkProp,
   navVariant = "default",
   showSearch = true,
@@ -242,16 +281,23 @@ export default function Header({
   showAvatar: showAvatarProp,
   showWishlistIcon = true,
   showNotificationIcon = true,
+  homeLink = "/",
 }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
   const isLoggedIn = isAuthenticated?.() ?? !!user;
+  const role = getUserRole(user);
 
   const activeLink = activeLinkProp ?? getActiveLink(pathname);
   const showAvatar = showAvatarProp ?? isLoggedIn;
   const showLogin = showLoginProp ?? !isLoggedIn;
-  const showSellButtonResolved = showSellButton ?? pathname !== "/post";
+  const navLinks = navLinksProp ?? getNavLinksForRole(role);
+  const userMenuItems = getMenuItemsForRole(role);
+  const showSellButtonResolved =
+    (showSellButton ?? pathname !== "/post") &&
+    role !== "ADMIN" &&
+    role !== "INSPECTOR";
 
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const [wishlistAnchor, setWishlistAnchor] = useState(null);
@@ -299,7 +345,7 @@ export default function Header({
   return (
     <StyledAppBar position="sticky">
       <StyledToolbar>
-        <LogoLink to="/" aria-label="Home">
+        <LogoLink to={homeLink} aria-label="Home">
           <img
             src={bikeLogo}
             alt=""
@@ -342,10 +388,10 @@ export default function Header({
                 placeholder="Search bikes..."
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    const q = e.target?.value?.trim?.();
+                    const query = e.target?.value?.trim?.();
                     navigate(
-                      q
-                        ? `/marketplace?q=${encodeURIComponent(q)}`
+                      query
+                        ? `/marketplace?q=${encodeURIComponent(query)}`
                         : "/marketplace",
                     );
                   }
@@ -388,7 +434,7 @@ export default function Header({
               </Badge>
             </IconButton>
           )}
-          {showNotificationIcon && (
+          {showNotificationIcon && role === "MEMBER" && (
             <IconButton
               onClick={handleNotifOpen}
               aria-label="Notifications"
@@ -465,9 +511,9 @@ export default function Header({
                   </MenuItem>
                 ))}
                 <MenuItem
-                  onClick={() => {
+                  onClick={async () => {
                     handleUserMenuClose();
-                    logout();
+                    await logout();
                     navigate("/");
                   }}
                   sx={{ borderTop: "1px solid #f3f4f6" }}
@@ -483,7 +529,7 @@ export default function Header({
         </RightSection>
       </StyledToolbar>
 
-      {/* Wishlist Dropdown */}
+      {/* Dropdown Wishlist */}
       <WishlistMenu
         id="wishlist-menu"
         anchorEl={wishlistAnchor}
@@ -525,9 +571,9 @@ export default function Header({
             </Box>
           ) : (
             <>
-              {wishlist.slice(0, 5).map((bike) => (
+              {wishlist.slice(0, 5).map((bike, idx) => (
                 <MenuItem
-                  key={bike.id}
+                  key={bike?.id ?? bike?.postId ?? `wishlist-${idx}`}
                   sx={{
                     flexDirection: "row",
                     alignItems: "center",
@@ -653,10 +699,10 @@ export default function Header({
               </Typography>
             </Box>
           ) : (
-            notifications.map((n) => (
+            notifications.map((n, idx) => (
               <MenuItem
-                key={n.id}
-                onClick={() => markAsRead(n.id)}
+                key={n?.id ?? `notif-${idx}`}
+                onClick={() => n?.id != null && markAsRead(n.id)}
                 sx={{
                   flexDirection: "column",
                   alignItems: "flex-start",
@@ -709,7 +755,7 @@ export default function Header({
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      removeNotification(n.id);
+                      if (n?.id != null) removeNotification(n.id);
                     }}
                     sx={{ ml: 0.5 }}
                   >
@@ -740,13 +786,7 @@ export default function Header({
                   </Typography>
                 )}
                 <Typography variant="caption" color="#9ca3af" sx={{ mt: 0.5 }}>
-                  {new Date(n.createdAt).toLocaleDateString("vi-VN", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {formatDateTime(n.createdAt)}
                 </Typography>
               </MenuItem>
             ))

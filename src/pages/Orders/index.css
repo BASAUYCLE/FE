@@ -27,35 +27,53 @@
 }
 
 .orders-container .orders-subtitle {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   font-size: 14px;
   line-height: 1.4;
+  display: block;
+}
+
+/* Status tabs */
+.orders-tabs .ant-tabs-nav {
+  margin-bottom: 0;
+}
+
+.orders-tabs .ant-tabs-tab {
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.orders-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  font-weight: 600;
+  color: #00ccad;
+}
+
+.orders-tabs .ant-tabs-ink-bar {
+  background: #00ccad;
+}
+
+.orders-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 5px;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+.orders-tabs .ant-tabs-tab-active .orders-tab-badge {
+  background: #ccfbf1;
+  color: #0d9488;
 }
 
 .orders-list {
   min-height: 80px;
-  margin-top: 20px !important;
-}
-
-.orders-page .orders-info-cards .ant-card {
-  border-radius: 10px;
-}
-
-.orders-page .orders-info-cards .ant-card-body {
-  padding: 20px !important;
-}
-
-.orders-page .orders-info-cards .ant-typography {
-  margin-bottom: 0 !important;
-}
-
-.orders-info-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background-color: #f0fdf4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
+  padding-top: 16px;
 }

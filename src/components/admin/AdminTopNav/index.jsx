@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import "./index.css";
 
+// Liên kết menu admin – thêm hoặc sửa tại đây để cập nhật nav
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", to: "/admin-dashboard" },
   { id: "users", label: "User Management", to: "/admin-users" },
@@ -15,15 +16,15 @@ export default function AdminTopNav() {
     <div className="admin-top-nav">
       <div className="admin-top-nav-inner">
         <nav className="admin-top-nav-list" aria-label="Admin navigation">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.map((navItem) => (
             <NavLink
-              key={item.id}
-              to={item.to}
+              key={navItem.id}
+              to={navItem.to}
               className={({ isActive }) =>
-                `admin-top-nav-link${isActive ? " active" : ""}`
+                isActive ? "admin-top-nav-link active" : "admin-top-nav-link"
               }
             >
-              {item.label}
+              {navItem.label}
             </NavLink>
           ))}
         </nav>

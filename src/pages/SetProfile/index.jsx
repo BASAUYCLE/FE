@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -13,27 +13,61 @@ import {
 import { EditOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import userService from "../../services/userService";
 import "./index.css";
-
-const initialUserData = {
-  fullName: "Alex Thompson",
-  email: "alex.thompson@example.com",
-  phone: "+1 (555) 123-4567",
-  address: "123 Cycling Way, Portland, OR 97201",
-  bio: "Avid cyclist and vintage bike enthusiast. Currently collecting mountain bikes from the early 90s. Always happy to chat about frame geometry!",
-};
 
 export default function SetProfile() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState(initialUserData);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    address: "",
+    bio: "",
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    userService
+      .getProfile()
+      .then((res) => {
+        if (cancelled) return;
+        const u = res?.data ?? res?.result ?? res;
+        setFormData({
+          fullName: u?.fullName ?? u?.name ?? u?.user_full_name ?? "",
+          email: u?.email ?? u?.user_email ?? "",
+          phone: u?.phone ?? u?.phoneNumber ?? "",
+          address: u?.address ?? u?.user_address ?? "",
+          bio: u?.bio ?? u?.description ?? "",
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setFormData((p) => ({ ...p }));
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    // TODO: Call API to save profile
-    navigate("/user-detail");
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await userService.updateProfile(formData);
+      navigate("/user-detail");
+    } catch (err) {
+      console.warn("SetProfile: update failed", err?.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -239,8 +273,9 @@ export default function SetProfile() {
                 className="set-profile-save-btn"
                 sx={{ textTransform: "none" }}
                 onClick={handleSave}
+                disabled={saving || loading}
               >
-                Save Changes
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </Box>
           </CardContent>

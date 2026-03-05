@@ -1,394 +1,351 @@
-import { useState } from "react";
-import "./index.css";
+import React, { useState, useEffect } from "react";
+import { Button, Form, Input, message, Spin, Card, Space, Divider, Table } from "antd";
+import { Wallet, Plus } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { walletService, transactionService } from "../../services";
+import { formatCurrency } from "../../utils/formatCurrency";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import "./index.css";
 
 const MyWallet = () => {
-  const [activeTab, setActiveTab] = useState("deposit");
-  const [amount, setAmount] = useState("1000000");
-  const [paymentMethod, setPaymentMethod] = useState("bank");
+  const { user } = useAuth();
+  const [wallet, setWallet] = useState(null);
+  const [transactions, setTransactions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [topUpLoading, setTopUpLoading] = useState(false);
+  const [form] = Form.useForm();
 
-  const quickAmounts = [500000, 1000000, 5000000];
+  // Lấy thông tin ví và lịch sử giao dịch
+  const fetchWalletData = async () => {
+    if (!user?.id && !user?.userId && !user?.email) {
+      message.error("Please sign in to view your wallet");
+      return;
+    }
 
-  const addAmount = (value) => {
-    setAmount((prev) => {
-      const current = parseInt(prev) || 0;
-      return (current + value).toString();
-    });
+    setLoading(true);
+    try {
+      // Lấy thông tin ví
+      const walletRes = await walletService.getWallet();
+      const walletData = walletRes?.result ?? walletRes?.data ?? walletRes;
+      setWallet(walletData);
+
+      // Lấy lịch sử giao dịch
+      const txRes = await transactionService.getHistory({ limit: 20 });
+      const txList = txRes?.result ?? txRes?.data ?? txRes;
+      setTransactions(Array.isArray(txList) ? txList : []);
+    } catch (error) {
+      message.error(error?.message || "Failed to load wallet information");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const transactions = [
+  useEffect(() => {
+    fetchWalletData();
+  }, [user]);
+
+  // Xử lý nạp tiền - redirect sang VNPay
+  const handleTopUp = async (values) => {
+    if (!values.amount || values.amount <= 0) {
+      message.error("Amount must be greater than 0");
+      return;
+    }
+
+    setTopUpLoading(true);
+    try {
+      const res = await walletService.topUp(parseInt(values.amount));
+      const paymentUrl = res?.result ?? res?.data;
+
+      if (paymentUrl && typeof paymentUrl === "string") {
+        // Redirect sang VNPay Sandbox
+        message.info("Redirecting to VNPay...");
+        setTimeout(() => {
+          window.location.href = paymentUrl;
+        }, 500);
+      } else {
+        message.error("Could not create payment link");
+      }
+    } catch (error) {
+      message.error(error?.message || "Top-up failed");
+    } finally {
+      setTopUpLoading(false);
+    }
+  };
+
+  /**
+   * BE có thể trả về transactionType (camelCase) hoặc transaction_type (snake_case).
+   * DB values: TOP_UP | DEPOSIT | PURCHASE | REFUND | POSTING_FEE, ...
+   */
+  const getTxType = (record) =>
+    record.transactionType ?? record.transaction_type ?? record.type ?? null;
+
+  /**
+   * Suy luận hướng tiền (vào/ra) theo description từ dbo.Transactions.
+   * Ưu tiên description; nếu không rõ thì fallback sang transactionType/amount.
+   */
+  const getDirectionFromDescription = (record) => {
+    const desc = (record.description ?? "").toString().toLowerCase();
+    if (!desc) return null;
+    const moneyInKeywords = [
+      "nạp tiền",
+      "nap tien",
+      "top up",
+      "top-up",
+      "hoàn tiền",
+      "hoan tien",
+      "refund",
+    ];
+    const moneyOutKeywords = [
+      "đặt cọc",
+      "dat coc",
+      "thanh toán",
+      "thanh toan",
+      "mua hàng",
+      "mua hang",
+      "phí đăng",
+      "phi dang",
+      "posting fee",
+    ];
+    if (moneyInKeywords.some((k) => desc.includes(k))) return "IN";
+    if (moneyOutKeywords.some((k) => desc.includes(k))) return "OUT";
+    return null;
+  };
+
+  const TX_TYPE_LABEL = {
+    TOP_UP:      "Top up",
+    DEPOSIT:     "Deposit",
+    PURCHASE:    "Purchase",
+    REFUND:      "Refund",
+    POSTING_FEE: "Posting fee",
+  };
+
+  const TX_STATUS_MAP = {
+    SUCCESS: { color: "#22c55e", text: "Success" },
+    PENDING: { color: "#f59e0b", text: "Processing" },
+    FAILED:  { color: "#ef4444", text: "Failed" },
+  };
+
+  // Cấu hình bảng giao dịch
+  const transactionColumns = [
     {
-      date: "Oct 24, 2025",
-      type: "Deposit",
-      typeIcon: "",
-      transactionId: "TXN-892918",
-      amount: "+5,000,000 VND",
-      status: "SUCCESS",
-      statusColor: "success",
+      title: "Date",
+      dataIndex: "createdAt",
+      key: "date",
+      render: (date) =>
+        date ? new Date(date).toLocaleString("en-US") : "—",
+      width: 170,
     },
     {
-      date: "Oct 21, 2025",
-      type: "Bike Purchase",
-      typeIcon: "",
-      transactionId: "TXN-773128",
-      amount: "-12,400,000 VND",
-      status: "SUCCESS",
-      statusColor: "success",
+      title: "Type",
+      key: "type",
+      render: (_, record) => {
+        const txType = getTxType(record);
+        return TX_TYPE_LABEL[txType] ?? txType ?? "—";
+      },
+      width: 130,
     },
     {
-      date: "Oct 18, 2025",
-      type: "Refund",
-      typeIcon: "",
-      transactionId: "TXN-661903",
-      amount: "+850,000 VND",
-      status: "SUCCESS",
-      statusColor: "success",
+      title: "Amount",
+      dataIndex: "amount",
+      key: "amount",
+      render: (amount, record) => {
+        const status = record.status ?? record.transactionStatus;
+        const isFailed = status === "FAILED";
+        const raw = Number(amount ?? 0);
+
+        // 1) Thử suy luận theo description
+        const dirFromDesc = getDirectionFromDescription(record);
+
+        // 2) Nếu description không rõ, fallback theo amount dương/âm
+        const moneyIn  =
+          dirFromDesc === "IN"  ? true  :
+          dirFromDesc === "OUT" ? false :
+          raw > 0;
+
+        const prefix = isFailed || raw === 0 ? "" : moneyIn ? "+" : "−";
+        const color  = isFailed
+          ? "#94a3b8"
+          : moneyIn
+            ? "#10b981"
+            : "#ef4444";
+
+        return (
+          <span style={{ color, fontWeight: 700, fontSize: 14 }}>
+            {prefix}{formatCurrency(Math.abs(raw))}
+          </span>
+        );
+      },
+      width: 150,
     },
     {
-      date: "Oct 15, 2025",
-      type: "Deposit",
-      typeIcon: "",
-      transactionId: "TXN-536102",
-      amount: "+30,000,000 VND",
-      status: "PROCESSING",
-      statusColor: "processing",
+      title: "Status",
+      key: "status",
+      render: (_, record) => {
+        const status = record.status ?? record.transactionStatus;
+        const info = TX_STATUS_MAP[status] ?? { color: "#94a3b8", text: status ?? "—" };
+        return (
+          <span style={{ color: info.color, fontWeight: 500 }}>
+            {info.text}
+          </span>
+        );
+      },
+      width: 130,
     },
   ];
 
+  if (!user) {
+    return (
+      <div className="wallet-page">
+        <Header showSearch={false} />
+        <div className="wallet-container" style={{ textAlign: "center", padding: "60px 20px" }}>
+          <h2>Please sign in to view your wallet</h2>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div className="wallet-page">
-      <Header />
-      {/* Main Content */}
+      <Header showSearch={false} />
       <div className="wallet-container">
         <div className="wallet-title-section">
-          <h1 className="wallet-title">My Wallet</h1>
-          <p className="wallet-subtitle">
-            Manage your funds and view transaction history
-          </p>
+          <h1 className="wallet-title">
+            <Wallet size={20} style={{ marginRight: 8 }} /> My Wallet
+          </h1>
+          <p className="wallet-subtitle">Manage balance and view transaction history</p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="wallet-summary">
-          <div className="wallet-summary-card">
-            <div className="wallet-summary-header">
-              <svg
-                className="wallet-summary-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <rect
-                  x="2"
-                  y="4"
-                  width="20"
-                  height="16"
-                  rx="2"
-                  strokeWidth="2"
-                />
-                <path d="M2 10h20" strokeWidth="2" />
-              </svg>
-              <span className="wallet-summary-label">Available Balance</span>
-            </div>
-            <div className="wallet-summary-amount">25,450,000 VND</div>
-            <div className="wallet-summary-change positive">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path
-                  d="m5 12 7-7 7 7"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M12 19V5"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              +5.2% this month
-            </div>
+        {/* Thông tin ví */}
+        {loading ? (
+          <div style={{ textAlign: "center", padding: "60px 20px" }}>
+            <Spin size="large" tip="Loading wallet..." />
           </div>
-
-          <div className="wallet-summary-card">
-            <div className="wallet-summary-header">
-              <svg
-                className="wallet-summary-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <path d="M3 3h18v18H3z" strokeWidth="2" />
-                <path d="M9 3v18M3 9h18M3 15h18" strokeWidth="2" />
-              </svg>
-              <span className="wallet-summary-label">Total Spent</span>
-            </div>
-            <div className="wallet-summary-amount">12,400,000 VND</div>
-            <div className="wallet-summary-meta">Across 14 purchases</div>
-          </div>
-
-          <div className="wallet-summary-card">
-            <div className="wallet-summary-header">
-              <svg
-                className="wallet-summary-icon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-              >
-                <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                <path d="M12 6v6l4 2" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              <span className="wallet-summary-label">Pending</span>
-            </div>
-            <div className="wallet-summary-amount">0 VND</div>
-            <div className="wallet-summary-meta">No active disputes</div>
-          </div>
-        </div>
-
-        {/* Two Column Layout */}
-        <div className="wallet-grid">
-          {/* Left Column - Top Up Funds */}
-          <div className="wallet-card wallet-topup-card">
-            <div className="wallet-card-header">
-              <h2 className="wallet-card-title">Top Up Funds</h2>
-              <span className="wallet-badge">FAST DEPOSIT</span>
-            </div>
-
-            {/* Tabs */}
-            <div className="wallet-tabs">
-              <button
-                className={`wallet-tab ${activeTab === "deposit" ? "active" : ""}`}
-                onClick={() => setActiveTab("deposit")}
-              >
-                Deposit
-              </button>
-              <button
-                className={`wallet-tab ${activeTab === "withdraw" ? "active" : ""}`}
-                onClick={() => setActiveTab("withdraw")}
-              >
-                Withdraw
-              </button>
-            </div>
-
-            {/* Amount Input */}
-            <div className="wallet-input-group">
-              <label className="wallet-label">Enter Amount (VND)</label>
-              <div className="wallet-input-wrapper">
-                <input
-                  type="text"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="wallet-input"
-                />
-                <span className="wallet-input-suffix">VND</span>
+        ) : wallet ? (
+          <div className="wallet-summary">
+            <Card className="wallet-summary-card">
+              <div className="wallet-summary-header">
+                <div className="wallet-summary-icon">
+                  <Wallet size={18} />
+                </div>
+                <span className="wallet-summary-label">Current balance</span>
               </div>
-            </div>
-
-            {/* Quick Amount Chips */}
-            <div className="wallet-quick-amounts">
-              {quickAmounts.map((amt) => (
-                <button
-                  key={amt}
-                  className="wallet-chip"
-                  onClick={() => addAmount(amt)}
-                >
-                  +{amt.toLocaleString()}
-                </button>
-              ))}
-            </div>
-
-            {/* Payment Method */}
-            <div className="wallet-payment-section">
-              <label className="wallet-label">Payment Method</label>
-              <div className="wallet-payment-methods">
-                <button
-                  className={`wallet-payment-method ${paymentMethod === "bank" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("bank")}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path
-                      d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"
-                      strokeWidth="2"
-                    />
-                    <path d="M9 22V12h6v10" strokeWidth="2" />
-                  </svg>
-                  <span>Bank Transfer</span>
-                </button>
-                <button
-                  className={`wallet-payment-method ${paymentMethod === "card" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("card")}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect
-                      x="2"
-                      y="5"
-                      width="20"
-                      height="14"
-                      rx="2"
-                      strokeWidth="2"
-                    />
-                    <path d="M2 10h20" strokeWidth="2" />
-                  </svg>
-                  <span>Credit Card</span>
-                </button>
-                <button
-                  className={`wallet-payment-method ${paymentMethod === "qr" ? "active" : ""}`}
-                  onClick={() => setPaymentMethod("qr")}
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="3" width="8" height="8" strokeWidth="2" />
-                    <rect x="3" y="13" width="8" height="8" strokeWidth="2" />
-                    <rect x="13" y="3" width="8" height="8" strokeWidth="2" />
-                    <path
-                      d="M13 13h2v2h-2v-2zM17 13h2v2h-2v-2zM13 17h2v2h-2v-2zM17 17h2v2h-2v-2zM15 15h2v2h-2v-2z"
-                      strokeWidth="2"
-                    />
-                  </svg>
-                  <span>VN Pay QR</span>
-                </button>
+              <div className="wallet-summary-amount">
+                {formatCurrency(wallet.balance || 0)}
               </div>
-            </div>
-
-            {/* Proceed Button */}
-            <button className="wallet-btn-primary">
-              Proceed to Deposit
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path
-                  d="M5 12h14M12 5l7 7-7 7"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+              <div className="wallet-summary-meta">Updated: {wallet.updatedAt ? new Date(wallet.updatedAt).toLocaleDateString("en-US") : "—"}</div>
+            </Card>
           </div>
-
-          {/* Right Column */}
-          <div className="wallet-right-column">
-            {/* Secure Transactions Card */}
-            <div className="wallet-card wallet-secure-card">
-              <div className="wallet-secure-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path
-                    d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-              <h3 className="wallet-secure-title">Secure Transactions</h3>
-              <p className="wallet-secure-text">
-                Funds are held in escrow for buyer protection
-              </p>
-              <p className="wallet-secure-description">
-                By depositing funds, you agree to our terms of service. Deposits
-                are usually processed instantly, though bank transfers might
-                take up to 2-4 hours depending on your bank's processing time.
-              </p>
-            </div>
-
-            {/* Sell Banner */}
-            <div className="wallet-card wallet-banner-card">
-              <div className="wallet-banner-content">
-                <h3 className="wallet-banner-title">Sell your bike today</h3>
-                <p className="wallet-banner-text">
-                  Turn your extra gear into wallet balance instantly
-                </p>
-                <button className="wallet-btn-banner">Create Listing</button>
-              </div>
-              <div className="wallet-banner-bg"></div>
-            </div>
+        ) : (
+          <div style={{ padding: "20px", textAlign: "center", color: "#999" }}>
+            Could not load wallet
           </div>
-        </div>
+        )}
 
-        {/* Transaction History */}
-        <div className="wallet-card wallet-history-card">
-          <div className="wallet-history-header">
-            <h2 className="wallet-card-title">Transaction History</h2>
-            <div className="wallet-history-actions">
-              <button className="wallet-btn-secondary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path
-                    d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Filter
-              </button>
-              <button className="wallet-btn-secondary">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path
-                    d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                Export
-              </button>
-            </div>
-          </div>
+        {/* Form nạp tiền */}
+        <Card className="wallet-topup-card wallet-card">
+          <h2 style={{ marginBottom: "24px", display: "flex", alignItems: "center" }}>
+            <Plus size={18} style={{ marginRight: 8 }} />
+            Add Money to Wallet
+          </h2>
 
-          {/* Table */}
-          <div className="wallet-table-wrapper">
-            <table className="wallet-table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>TYPE</th>
-                  <th>TRANSACTION ID</th>
-                  <th>AMOUNT</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.map((tx, index) => (
-                  <tr key={index}>
-                    <td>{tx.date}</td>
-                    <td>
-                      <div className="wallet-type-cell">
-                        <span className="wallet-type-icon">{tx.typeIcon}</span>
-                        <span>{tx.type}</span>
-                      </div>
-                    </td>
-                    <td className="wallet-tx-id">{tx.transactionId}</td>
-                    <td
-                      className={`wallet-amount ${tx.amount.startsWith("+") ? "positive" : "negative"}`}
-                    >
-                      {tx.amount}
-                    </td>
-                    <td>
-                      <span className={`wallet-status-badge ${tx.statusColor}`}>
-                        {tx.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Form form={form} onFinish={handleTopUp} layout="vertical">
+            <Form.Item
+              label="Amount (VND)"
+              name="amount"
+              rules={[
+                { required: true, message: "Please enter amount" },
+                {
+                  pattern: /^[0-9]+$/,
+                  message: "Amount must be a positive integer",
+                },
+                {
+                  validator: (_, value) => {
+                    if (value && value < 10000) {
+                      return Promise.reject(
+                        new Error("Minimum amount is 10,000 VND")
+                      );
+                    }
+                    if (value && value > 100000000) {
+                      return Promise.reject(
+                        new Error("Maximum amount is 100,000,000 VND")
+                      );
+                    }
+                    return Promise.resolve();
+                  },
+                },
+              ]}
+            >
+              <Input
+                placeholder="Enter amount"
+                type="number"
+                min="10000"
+                step="10000"
+                size="large"
+              />
+            </Form.Item>
 
-          {/* Pagination */}
-          <div className="wallet-pagination">
-            <div className="wallet-pagination-info">
-              Showing 4 of 48 transactions
+            {/* Nút nhanh */}
+            <div style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px", fontWeight: "500" }}>
+                Quick amount:
+              </label>
+              <Space wrap>
+                <Button onClick={() => form.setFieldValue("amount", 100000)}>
+                  100K
+                </Button>
+                <Button onClick={() => form.setFieldValue("amount", 500000)}>
+                  500K
+                </Button>
+                <Button onClick={() => form.setFieldValue("amount", 1000000)}>
+                  1M
+                </Button>
+                <Button onClick={() => form.setFieldValue("amount", 5000000)}>
+                  5M
+                </Button>
+              </Space>
             </div>
-            <div className="wallet-pagination-controls">
-              <button className="wallet-pagination-btn" disabled>
-                Previous
-              </button>
-              <button className="wallet-pagination-btn">Next</button>
-            </div>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={topUpLoading}
+              block
+              size="large"
+            >
+              {topUpLoading ? "Processing..." : "Add Money "}
+            </Button>
+          </Form>
+        </Card>
+
+        {/* Transaction history */}
+        <Card className="wallet-history-card wallet-card">
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h2 style={{ margin: 0 }}>Transaction history</h2>
           </div>
-        </div>
+          <Divider style={{ margin: "16px 0" }} />
+          {transactions.length > 0 ? (
+            <Table
+              columns={transactionColumns}
+              dataSource={transactions.map((tx, idx) => ({
+                ...tx,
+                key: tx.transactionId ?? tx.id ?? idx,
+              }))}
+              pagination={{ pageSize: 10, pageSizeOptions: [5, 10, 20] }}
+              scroll={{ x: 800 }}
+            />
+          ) : (
+            <div style={{ textAlign: "center", padding: "40px 20px", color: "#999" }}>
+              No transactions yet
+            </div>
+          )}
+        </Card>
       </div>
-
       <Footer />
     </div>
   );
 };
 
 export default MyWallet;
+

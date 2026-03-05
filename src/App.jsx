@@ -9,12 +9,15 @@ import { ConfigProvider, App as AntApp } from "antd";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { usePostingStatusNotifications } from "./contexts/usePostingStatusNotifications";
 import { fontFamily, antdToken } from "./config/theme";
 
+// Lazy-load trang để app khởi động nhanh hơn
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Home = lazy(() => import("./pages/Home"));
 const Payment = lazy(() => import("./pages/Payment"));
+const PaymentResult = lazy(() => import("./pages/Payment/PaymentResult"));
 const Wallet = lazy(() => import("./pages/Wallet"));
 const PostBike = lazy(() => import("./pages/Post"));
 const ManageListings = lazy(() => import("./pages/ManageListings"));
@@ -23,9 +26,10 @@ const Account = lazy(() => import("./pages/Account"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail"));
 const Marketplace = lazy(() => import("./pages/Marketplace"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Orders = lazy(() => import("./pages/Orders"));
+const MySales = lazy(() => import("./pages/MySales"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
-const CategoryManagement = lazy(() => import("./pages/admin/category"));
 const AdminDashboard = lazy(() => import("./pages/admin/dashboard"));
 const AdminReports = lazy(() => import("./pages/admin/reports"));
 const AdminUsers = lazy(() => import("./pages/admin/user"));
@@ -43,7 +47,6 @@ const InspectorDetail = lazy(() => import("./pages/inspector/detail"));
 const InspectorDetailsList = lazy(
   () => import("./pages/inspector/details-list"),
 );
-const InspectorCompleted = lazy(() => import("./pages/inspector/completed"));
 const InspectorDisputes = lazy(() => import("./pages/inspector/disputes"));
 
 const muiTheme = createTheme({
@@ -59,6 +62,11 @@ function PageFallback() {
   );
 }
 
+function PostingStatusEffect() {
+  usePostingStatusNotifications();
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider theme={muiTheme}>
@@ -71,6 +79,7 @@ function App() {
                 <PostingProvider>
                   <OrderProvider>
                     <NotificationProvider>
+                      <PostingStatusEffect />
                       <Suspense fallback={<PageFallback />}>
                         <Routes>
                           <Route path="/" element={<Home />} />
@@ -85,10 +94,22 @@ function App() {
                             element={<ForgotPassword />}
                           />
                           <Route
+                            path="/reset-password"
+                            element={<ResetPassword />}
+                          />
+                          <Route
                             path="/payment"
                             element={
                               <ProtectedRoute>
                                 <Payment />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/payment/result"
+                            element={
+                              <ProtectedRoute>
+                                <PaymentResult />
                               </ProtectedRoute>
                             }
                           />
@@ -150,6 +171,14 @@ function App() {
                             }
                           />
                           <Route
+                            path="/my-sales"
+                            element={
+                              <ProtectedRoute>
+                                <MySales />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
                             path="/unauthorized"
                             element={<Unauthorized />}
                           />
@@ -187,26 +216,12 @@ function App() {
                             element={<AdminTransactions />}
                           />
                           <Route
-                            path="/admin-categories"
-                            element={<CategoryManagement />}
-                          />
-                          <Route
-                            path="/admin/category"
-                            element={
-                              <Navigate to="/admin-categories" replace />
-                            }
-                          />
-                          <Route
                             path="/inspector"
                             element={<InspectorDashboard />}
                           />
                           <Route
                             path="/inspector/details"
                             element={<InspectorDetailsList />}
-                          />
-                          <Route
-                            path="/inspector/completed"
-                            element={<InspectorCompleted />}
                           />
                           <Route
                             path="/inspector/disputes"

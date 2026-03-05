@@ -30,7 +30,7 @@
 .hero-content {
     position: relative;
     z-index: 10;
-    max-width: 1160px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 80px 24px 200px;
     width: 100%;
@@ -99,7 +99,7 @@
 .hero-search-wrapper {
     position: relative;
     z-index: 20;
-    max-width: 1160px;
+    max-width: 1200px;
     margin: -80px auto 0;
     padding: 0 24px;
 }

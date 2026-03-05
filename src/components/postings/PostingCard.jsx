@@ -1,31 +1,25 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Tag, Button, Typography } from "antd";
-import { Calendar, Pencil, Eye, CheckCircle, RotateCcw } from "lucide-react";
+import { Card, Tag, Button, Typography, message } from "antd";
+import { Calendar, Pencil, Eye, CheckCircle, RotateCcw, Send } from "lucide-react";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
   POSTING_STATUS_TAG_COLOR,
 } from "../../constants/postingStatus";
+import { formatDate } from "../../utils/date";
 import { usePostings } from "../../contexts/PostingContext";
+import postService from "../../services/postService";
 import "./PostingCard.css";
 
-function formatDate(isoString) {
-  if (!isoString) return "";
-  const d = new Date(isoString);
-  return d.toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
-export default function PostingCard({ posting }) {
+export default function PostingCard({ posting, onSubmitted }) {
   const navigate = useNavigate();
   const { updatePostingStatus } = usePostings();
+  const [submitting, setSubmitting] = useState(false);
   const status = posting.status;
   const isActive = status === POSTING_STATUS.ACTIVE;
   const isVerified = status === POSTING_STATUS.VERIFIED;
-  const isDraft = status === POSTING_STATUS.DRAFT;
+  const isDraft = status === POSTING_STATUS.DRAFTED;
   const isSold = status === POSTING_STATUS.SOLD;
   const isExpired = status === POSTING_STATUS.EXPIRED;
   const isPending = status === POSTING_STATUS.PENDING_REVIEW;
@@ -55,9 +49,6 @@ export default function PostingCard({ posting }) {
           <Typography.Title level={5} className="posting-card-title">
             {posting.bikeName}
           </Typography.Title>
-          <Typography.Text type="secondary" className="posting-card-id">
-            ID: {posting.postingId}
-          </Typography.Text>
           <div className="posting-card-date">
             <Calendar size={12} color="#64748b" />
             <span>Posted {formatDate(posting.createdAt)}</span>
@@ -102,7 +93,12 @@ export default function PostingCard({ posting }) {
               </Button>
             )}
             {isRejected && (
-              <Button size="small" type="default" icon={<Pencil size={12} />} onClick={() => navigate(`/post?edit=${posting.id}`)}>
+              <Button
+                size="small"
+                type="default"
+                icon={<Pencil size={12} />}
+                onClick={() => navigate(`/post?edit=${posting.id}`)}
+              >
                 Edit
               </Button>
             )}
@@ -126,8 +122,27 @@ export default function PostingCard({ posting }) {
                 >
                   Edit
                 </Button>
-                <Button size="small" type="primary">
-                  Publish
+                <Button
+                  size="small"
+                  type="primary"
+                  icon={<Send size={12} />}
+                  loading={submitting}
+                  onClick={async () => {
+                    const id = posting.id ?? posting.backendPostId;
+                    if (!id) return;
+                    setSubmitting(true);
+                    try {
+                      await postService.submitDraft(id);
+                      message.success("Submitted for review. Awaiting admin/inspector approval.");
+                      onSubmitted?.();
+                    } catch (err) {
+                      message.error(err?.message ?? err?.data?.message ?? "Submit for review failed.");
+                    } finally {
+                      setSubmitting(false);
+                    }
+                  }}
+                >
+                  Submit for review
                 </Button>
               </>
             )}

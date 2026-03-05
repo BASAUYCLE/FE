@@ -6,8 +6,10 @@ import {
   useEffect,
   useMemo,
 } from "react";
+import { message } from "antd";
 import { useAuth } from "./AuthContext";
-import { userService } from "../services";
+import { wishlistService } from "../services";
+import { formatCurrency } from "../utils/formatCurrency";
 
 const WishlistContext = createContext(null);
 const STORAGE_KEY_PREFIX = "basauycle-wishlist";
@@ -41,13 +43,13 @@ function saveWishlistToStorage(userId, items) {
 
 export function WishlistProvider({ children }) {
   const { user, token, isAuthenticated } = useAuth();
-  const userId = user?.id ?? user?.email ?? null;
+  const userId = user?.id ?? user?.userId ?? user?.email ?? null;
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const authenticated = isAuthenticated?.() ?? !!(token && user);
 
-  // Clear wishlist and storage when user logs out
+  // Xóa wishlist và storage khi user đăng xuất
   useEffect(() => {
     if (!authenticated) {
       setWishlist([]);
@@ -55,13 +57,91 @@ export function WishlistProvider({ children }) {
     }
   }, [authenticated]);
 
-  // Normalize API response: axios returns response.data, backend may use data / wishlist / array
+  // Chuẩn hóa response API từ /wishlist endpoint (BE có thể trả postId, post: { ... })
   const normalizeWishlist = useCallback((response) => {
-    const raw = response?.data ?? response?.wishlist ?? response;
-    return Array.isArray(raw) ? raw : [];
+    const result = response?.result ?? response?.data ?? response;
+    const list = Array.isArray(result) ? result : [];
+    return list.map((item) => {
+      if (typeof item !== "object" || item === null) return item;
+      const post = item.post ?? item;
+      const id = item.postId ?? item.id ?? post?.postId ?? post?.id;
+      const thumb =
+        post?.images?.find((i) => i?.isThumbnail) ?? post?.images?.[0];
+      const imageUrl =
+        thumb?.imageUrl ??
+        thumb?.image_url ??
+        item.image ??
+        item.thumbnailUrl;
+
+      const name =
+        post?.bicycleName ??
+        post?.bicycle_name ??
+        item.bicycleName ??
+        item.name;
+
+      const priceNum = post?.price ?? item.price ?? 0;
+      const priceDisplay =
+        typeof priceNum === "number"
+          ? formatCurrency(priceNum)
+          : String(priceNum ?? "0");
+
+      const brand =
+        post?.brandName ??
+        post?.brand ??
+        post?.brand_name ??
+        post?.brandLabel ??
+        post?.brand?.brandName ??
+        item.brand ??
+        null;
+
+      const category =
+        post?.category ??
+        post?.categoryName ??
+        post?.bicycleType ??
+        post?.categoryLabel ??
+        item.category ??
+        null;
+
+      const frameSize = post?.frameSize ?? post?.size ?? item.frameSize ?? null;
+      const modelYear =
+        post?.modelYear ??
+        post?.model_year ??
+        post?.year ??
+        item.modelYear ??
+        item.year ??
+        null;
+
+      const baseSpecs = {
+        ...(post?.specs ?? {}),
+        ...(item.specs ?? {}),
+      };
+
+      return {
+        ...item,
+        id: id ?? item.id,
+        postId: item.postId ?? id,
+        name: name ?? item.name ?? "Untitled",
+        image: imageUrl ?? item.image,
+        price: priceDisplay,
+        rawPrice: typeof priceNum === "number" ? priceNum : undefined,
+        brand,
+        category: category ?? item.category,
+        frameSize,
+        modelYear,
+        specs: {
+          ...baseSpecs,
+          brand,
+          category,
+          frameSize,
+          modelYear,
+        },
+      };
+    });
   }, []);
 
-  // Fetch wishlist from backend when authenticated; restore from localStorage first so reload doesn't lose data
+  // Gọi API wishlist khi đã đăng nhập
+  const useWishlistApi = import.meta.env.VITE_USE_WISHLIST_API !== "false"; // Mặc định là true
+
   useEffect(() => {
     if (!authenticated) return;
 
@@ -69,9 +149,14 @@ export function WishlistProvider({ children }) {
     const cached = loadWishlistFromStorage(userId);
     if (cached.length > 0) setWishlist(cached);
 
+    if (!useWishlistApi) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
-    userService
-      .getWishlist()
+    wishlistService
+      .getMyWishlist()
       .then((response) => {
         if (cancelled) return;
         const list = normalizeWishlist(response);
@@ -92,64 +177,96 @@ export function WishlistProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [authenticated, userId, normalizeWishlist]);
+  }, [authenticated, userId, useWishlistApi, normalizeWishlist]);
 
   const addToWishlist = useCallback(
     async (product) => {
       if (!authenticated) return;
-      const itemId = product?.id ?? product;
+      const itemId = product?.postId ?? product?.id ?? product;
+      const postId = itemId != null ? Number(itemId) : NaN;
+      if (typeof postId !== "number" || !Number.isFinite(postId)) {
+        console.warn("[Wishlist] Invalid postId for addToWishlist:", product);
+        return;
+      }
       const productObj =
         typeof product === "object" && product !== null
           ? product
-          : { id: itemId };
+          : { id: postId, postId };
+      if (!useWishlistApi) {
+        setWishlist((prev) => {
+          if (
+            prev.some((p) => (p.id ?? p.postId) === postId || String(p.id ?? p.postId) === String(postId))
+          )
+            return prev;
+          const next = [...prev, { ...productObj, id: postId, postId, addedAt: Date.now() }];
+          saveWishlistToStorage(userId, next);
+          return next;
+        });
+        return;
+      }
       try {
-        await userService.addToWishlist(itemId);
-        const response = await userService.getWishlist();
+        await wishlistService.addToWishlist(postId);
+        const response = await wishlistService.getMyWishlist();
         const list = normalizeWishlist(response);
         setWishlist(list);
         saveWishlistToStorage(userId, list);
-      } catch {
+      } catch (err) {
+        const msg = err?.message ?? err?.data?.message ?? "Could not add to wishlist.";
+        message.error(msg);
         setWishlist((prev) => {
           if (
-            prev.some((p) => p.id === itemId || String(p.id) === String(itemId))
+            prev.some((p) => (p.id ?? p.postId) === postId || String(p.id ?? p.postId) === String(postId))
           )
             return prev;
-          const next = [...prev, { ...productObj, addedAt: Date.now() }];
+          const next = [...prev, { ...productObj, id: postId, postId, addedAt: Date.now() }];
           saveWishlistToStorage(userId, next);
           return next;
         });
       }
     },
-    [authenticated, userId, normalizeWishlist],
+    [authenticated, userId, normalizeWishlist, useWishlistApi],
   );
 
   const removeFromWishlist = useCallback(
     async (productId) => {
       if (!authenticated) return;
+      const postId = productId != null ? Number(productId) : NaN;
+      const matchId = (p) => (p.postId ?? p.id) === productId || (p.postId ?? p.id) === postId || String(p.postId ?? p.id) === String(productId);
+      if (!useWishlistApi) {
+        setWishlist((prev) => {
+          const next = prev.filter((p) => !matchId(p));
+          saveWishlistToStorage(userId, next);
+          return next;
+        });
+        return;
+      }
+      if (!Number.isFinite(postId)) return;
       try {
-        await userService.removeFromWishlist(productId);
-        const response = await userService.getWishlist();
+        await wishlistService.removeFromWishlist(postId);
+        const response = await wishlistService.getMyWishlist();
         const list = normalizeWishlist(response);
         setWishlist(list);
         saveWishlistToStorage(userId, list);
       } catch {
         setWishlist((prev) => {
-          const next = prev.filter(
-            (p) => p.id !== productId && String(p.id) !== String(productId),
-          );
+          const next = prev.filter((p) => !matchId(p));
           saveWishlistToStorage(userId, next);
           return next;
         });
       }
     },
-    [authenticated, userId, normalizeWishlist],
+    [authenticated, userId, normalizeWishlist, useWishlistApi],
   );
 
   const isInWishlist = useCallback(
-    (productId) =>
-      wishlist.some(
-        (p) => p.id === productId || String(p.id) === String(productId),
-      ),
+    (productId) => {
+      if (productId == null) return false;
+      const id = Number(productId);
+      return wishlist.some((p) => {
+        const pid = p.postId ?? p.id;
+        return pid === productId || pid === id || String(pid) === String(productId);
+      });
+    },
     [wishlist],
   );
 

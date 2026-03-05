@@ -10,27 +10,85 @@ import { STORAGE_KEYS } from "../constants/storageKeys";
 
 const AuthContext = createContext();
 
+/** Chuẩn hóa user.role (backend có thể gửi user_role hoặc userRole) */
+function normalizeUser(userObj) {
+  if (!userObj || typeof userObj !== "object") return userObj;
+  const role =
+    userObj.role ?? userObj.userRole ?? userObj.user_role ?? "MEMBER";
+  if (userObj.role === role) return userObj;
+  return { ...userObj, role: String(role).toUpperCase() };
+}
+
+/** Check if account is PENDING (waiting approval) – block login */
+function isPendingVerification(user) {
+  if (!user || typeof user !== "object") return false;
+  const status = (user.is_verified ?? user.isVerified ?? user.status ?? "")
+    .toString()
+    .toUpperCase();
+  return status === "PENDING";
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };
 
+/** Dùng trong component có thể render ngoài AuthProvider (vd. PostingStatusEffect); trả về null thay vì throw. */
+export const useAuthOptional = () => useContext(AuthContext) ?? null;
+
 export const AuthProvider = ({ children }) => {
+  // Xoá dữ liệu cũ còn sót lại trong localStorage (migration sang sessionStorage)
+  localStorage.removeItem(STORAGE_KEYS.TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER);
+
   const [user, setUser] = useState(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.USER);
-      return saved ? JSON.parse(saved) : null;
+      const saved = sessionStorage.getItem(STORAGE_KEYS.USER);
+      const userObj = saved ? JSON.parse(saved) : null;
+      return normalizeUser(userObj);
     } catch {
       return null;
     }
   });
   const [token, setToken] = useState(() =>
-    localStorage.getItem(STORAGE_KEYS.TOKEN),
+    sessionStorage.getItem(STORAGE_KEYS.TOKEN),
   );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => setLoading(false), []);
+
+  // Khi đã có token + user, gọi getProfile lấy role; nếu PENDING thì đăng xuất
+  useEffect(() => {
+    if (!token || !user?.email) return;
+    let cancelled = false;
+    userService
+      .getProfile()
+      .then((profileRes) => {
+        if (cancelled) return;
+        const data = profileRes?.data ?? profileRes?.result ?? profileRes;
+        const profileUser =
+          data?.user ??
+          data?.userInfo ??
+          (typeof data?.id === "number" || data?.email ? data : null);
+        if (profileUser && typeof profileUser === "object") {
+          if (isPendingVerification(profileUser)) {
+            sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+            sessionStorage.removeItem(STORAGE_KEYS.USER);
+            setToken(null);
+            setUser(null);
+            return;
+          }
+          const normalized = normalizeUser(profileUser);
+          setUser(normalized);
+          sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
+        }
+      })
+      .catch(() => { });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, user?.email]);
 
   const login = async (credentials) => {
     try {
@@ -38,27 +96,59 @@ export const AuthProvider = ({ children }) => {
 
       const response = await authService.login(credentials);
 
-      // authService already stores token and user in localStorage
+      // authService đã lưu token và user vào localStorage
       if (response.user && response.token) {
-        setUser(response.user);
         setToken(response.token);
-        return { success: true, data: response };
+        let finalUser = normalizeUser(response.user);
+        setUser(finalUser);
+        try {
+          const profileRes = await userService.getProfile();
+          const data = profileRes?.data ?? profileRes?.result ?? profileRes;
+          const profileUser =
+            data?.user ??
+            data?.userInfo ??
+            (typeof data?.id === "number" || data?.email ? data : null);
+          if (profileUser && typeof profileUser === "object") {
+            if (isPendingVerification(profileUser)) {
+              setToken(null);
+              setUser(null);
+              sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+              sessionStorage.removeItem(STORAGE_KEYS.USER);
+              return {
+                success: false,
+                message:
+                  "Your account is pending approval. Please contact the administrator.",
+              };
+            }
+            finalUser = normalizeUser(profileUser);
+            setUser(finalUser);
+            sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(finalUser));
+          }
+        } catch (_) { }
+        return { success: true, data: response, user: finalUser };
       }
       return {
         success: false,
-        message:
-          "Đăng nhập không thành công. Vui lòng kiểm tra email và mật khẩu.",
+        message: "Login failed. Please check your email and password.",
       };
     } catch (error) {
-      const msg =
+      const rawMsg =
         error?.message ||
-        (typeof error === "string" ? error : "Đăng nhập thất bại");
-      // Chỉ log console.error cho lỗi không mong đợi (mạng, server); lỗi sai mật khẩu không log đỏ
+        error?.data?.message ||
+        (typeof error === "string" ? error : "Login failed");
+      const isPendingBlock =
+        error?.status === 403 &&
+        (String(rawMsg).toLowerCase().includes("pending") ||
+          String(rawMsg).toLowerCase().includes("verification"));
+      const msg = isPendingBlock
+        ? "Your account is pending approval. Please contact the administrator."
+        : rawMsg;
       if (
         import.meta.env.DEV &&
         error?.status !== 401 &&
         error?.status !== 403 &&
-        !msg.includes("Đăng nhập")
+        !rawMsg.includes("pending") &&
+        !rawMsg.includes("approval")
       ) {
         console.error("[Auth] Login error:", error);
       }
@@ -68,12 +158,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // New method for direct login with user and token
   const loginWithSession = (userData, userToken) => {
-    setUser(userData);
+    const normalized = normalizeUser(userData);
+    setUser(normalized);
     setToken(userToken);
-    localStorage.setItem(STORAGE_KEYS.TOKEN, userToken);
-    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+    sessionStorage.setItem(STORAGE_KEYS.TOKEN, userToken);
+    sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
   };
 
   const register = async (userData) => {
@@ -81,19 +171,27 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
 
       const response = await authService.register(userData);
+      const data = response?.data ?? response?.result ?? response;
 
-      // If registration includes auto-login (returns token)
-      if (response.token && response.user) {
-        setUser(response.user);
-        setToken(response.token);
-        localStorage.setItem(STORAGE_KEYS.TOKEN, response.token);
-        localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(response.user));
+      // Nếu đăng ký kèm auto-login (trả về token)
+      const token = data?.token ?? response?.token;
+      const userObj = data?.user ?? data?.userInfo ?? response?.user ?? data;
+      if (token && userObj && typeof userObj === "object") {
+        const normalized = normalizeUser(userObj);
+        setUser(normalized);
+        setToken(token);
+        sessionStorage.setItem(STORAGE_KEYS.TOKEN, token);
+        sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
       }
 
       return { success: true, data: response };
     } catch (error) {
-      console.error("Register error:", error);
-      return { success: false, message: error.message || "Đăng ký thất bại" };
+      const msg =
+        error?.message ??
+        error?.data?.message ??
+        error?.data?.msg ??
+        "Registration failed.";
+      return { success: false, message: msg };
     } finally {
       setLoading(false);
     }
@@ -104,16 +202,43 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await userService.updateProfile(userData);
 
-      // userService already updates localStorage
-      if (response.user) {
-        setUser(response.user);
-        return { success: true, data: response.user };
-      } else {
-        return { success: false, message: "Cập nhật thất bại" };
+      // BE trả về ApiResponse<UserResponse> — user data nằm trong result, data, hoặc response trực tiếp
+      const updatedUser =
+        response?.result ??
+        response?.data ??
+        response?.user ??
+        (response?.id || response?.email ? response : null);
+
+      if (updatedUser && typeof updatedUser === "object") {
+        const normalized = normalizeUser(updatedUser);
+        setUser(normalized);
+        sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
+        return { success: true, data: normalized };
       }
+
+      // Nếu không có user data trong response nhưng request thành công (2xx), vẫn fetch lại profile
+      try {
+        const profileRes = await userService.getProfile();
+        const data = profileRes?.data ?? profileRes?.result ?? profileRes;
+        const profileUser =
+          data?.user ?? data?.userInfo ?? (data?.id || data?.email ? data : null);
+        if (profileUser) {
+          const normalized = normalizeUser(profileUser);
+          setUser(normalized);
+          sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
+          return { success: true, data: normalized };
+        }
+      } catch (_) { }
+
+      return { success: true };
     } catch (error) {
       console.error("Update profile error:", error);
-      return { success: false, message: error.message || "Cập nhật thất bại" };
+      const msg =
+        error?.message ??
+        error?.data?.message ??
+        error?.data?.msg ??
+        "Update failed.";
+      return { success: false, message: msg };
     } finally {
       setLoading(false);
     }
@@ -129,7 +254,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Change password error:", error);
       return {
         success: false,
-        message: error.message || "Đổi mật khẩu thất bại",
+        message: error.message || "Change password failed.",
       };
     } finally {
       setLoading(false);
@@ -138,20 +263,32 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      // Call backend logout endpoint
       await authService.logout();
     } catch (error) {
-      console.error("Logout error:", error);
-      // Continue with local logout even if API call fails
+      if (error?.status !== 404) {
+        console.error("Logout error:", error);
+      }
     } finally {
       setUser(null);
       setToken(null);
-      localStorage.removeItem(STORAGE_KEYS.TOKEN);
-      localStorage.removeItem(STORAGE_KEYS.USER);
+      sessionStorage.removeItem(STORAGE_KEYS.TOKEN);
+      sessionStorage.removeItem(STORAGE_KEYS.USER);
     }
   };
 
   const isAuthenticated = () => !!token && !!user;
+
+  // Lắng nghe sự kiện logout bắt buộc (401 từ axiosConfig) để đồng bộ header/session
+  useEffect(() => {
+    const handleForcedLogout = () => {
+      setUser(null);
+      setToken(null);
+    };
+    window.addEventListener("basauycle-auth-logout", handleForcedLogout);
+    return () => {
+      window.removeEventListener("basauycle-auth-logout", handleForcedLogout);
+    };
+  }, []);
 
   const value = useMemo(
     () => ({
