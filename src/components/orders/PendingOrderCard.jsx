@@ -12,6 +12,7 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { useOrders } from "../../contexts/OrderContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import PayNowModal from "./PayNowModal";
+import FeedbackModal from "./FeedbackModal";
 import "./PendingOrderCard.css";
 
 export default function PendingOrderCard({ order }) {
@@ -19,6 +20,7 @@ export default function PendingOrderCard({ order }) {
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const { addNotification } = useNotifications();
 
   const status = order.status ?? ORDER_STATUS.DEPOSITED;
@@ -143,8 +145,16 @@ export default function PendingOrderCard({ order }) {
             <div className="poc-amount-label">Total</div>
             <div className="poc-amount poc-amount-done">{formatCurrency(order.totalPrice ?? 0)}</div>
             <div className="poc-actions">
-              <Button size="small" disabled style={{ color: "#16a34a", fontWeight: 600 }}>
+              <Button size="small" disabled style={{ color: "#16a34a", fontWeight: 600, marginBottom: 4 }}>
                 <CheckCircleOutlined /> Completed
+              </Button>
+              <Button
+                size="small"
+                type="default"
+                onClick={() => setFeedbackOpen(true)}
+                style={{ fontWeight: 500 }}
+              >
+                Đánh giá người bán
               </Button>
             </div>
           </div>
@@ -176,6 +186,11 @@ export default function PendingOrderCard({ order }) {
       <PayNowModal
         open={payModalOpen}
         onClose={() => setPayModalOpen(false)}
+        order={order}
+      />
+      <FeedbackModal
+        open={feedbackOpen && status === ORDER_STATUS.COMPLETED}
+        onClose={() => setFeedbackOpen(false)}
         order={order}
       />
       <Card

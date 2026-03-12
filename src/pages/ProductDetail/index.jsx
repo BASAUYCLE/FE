@@ -665,9 +665,33 @@ export default function ProductDetail() {
                   <Typography variant="body2" color="#6b7280" sx={{ mb: 0.25 }}>
                     {isStaffView ? "Listing owner" : "Seller"}
                   </Typography>
-                  <Typography fontWeight={600}>
-                    {product.seller.name}
-                  </Typography>
+                  {(() => {
+                    const sellerId = product.sellerId;
+                    if (sellerId) {
+                      return (
+                        <Typography
+                          component={Link}
+                          to={`/user/${sellerId}/feedback`}
+                          sx={{
+                            fontWeight: 600,
+                            color: "#0f766e",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                            "&:hover": {
+                              textDecoration: "underline",
+                            },
+                          }}
+                        >
+                          {product.seller.name}
+                        </Typography>
+                      );
+                    }
+                    return (
+                      <Typography fontWeight={600}>
+                        {product.seller.name}
+                      </Typography>
+                    );
+                  })()}
                   <Typography variant="body2" color="#6b7280">
                     {product.seller.rating} ({product.seller.reviews} reviews)
                   </Typography>

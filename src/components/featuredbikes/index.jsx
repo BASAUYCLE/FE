@@ -2,13 +2,15 @@ import { useRef, useMemo, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Box, Container, Typography, IconButton, Link as MUILink } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { ArrowRightOutlined, ArrowLeftOutlined, StarFilled } from "@ant-design/icons";
+import { ArrowRightOutlined, ArrowLeftOutlined, StarFilled, HeartOutlined, HeartFilled } from "@ant-design/icons";
 import BikeCard from "../card";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { useWishlist } from "../../contexts/WishlistContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { message } from "antd";
 import demoBike from "../../assets/bike-logo.png";
 import roadBikeImage from "../../assets/RoadBike.png";
 import mountainBikeImage from "../../assets/MountainBike.png";
@@ -319,6 +321,7 @@ const SimpleProductImageWrapper = styled("div")(() => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  position: "relative",
 }));
 
 const SimpleProductTitle = styled(Typography)({
@@ -385,6 +388,10 @@ function resolveCategoryKeyFromText(text) {
 }
 
 function SimpleProductCard({ bike, variant = "grid" }) {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
+  const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+
   const rating =
     typeof bike.rating === "number"
       ? bike.rating.toFixed(1)
@@ -398,6 +405,32 @@ function SimpleProductCard({ bike, variant = "grid" }) {
   const sold = Number.isFinite(Number(soldRaw)) ? Number(soldRaw) : 0;
 
   const isList = variant === "list";
+
+  const isLoggedIn = isAuthenticated?.() ?? !!user;
+  const inWishlist = isInWishlist(bike.id);
+  const isOwnListing =
+    bike.sellerId != null &&
+    user &&
+    (bike.sellerId == user.id ||
+      bike.sellerId == user.userId ||
+      bike.sellerId == user.user_id ||
+      bike.sellerId === user.email);
+
+  const handleFavoriteClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isOwnListing) return;
+    if (!isLoggedIn) {
+      message.info("Vui lòng đăng nhập để dùng Wishlist");
+      navigate("/login");
+      return;
+    }
+    if (inWishlist) {
+      removeFromWishlist(bike.id);
+    } else {
+      addToWishlist(bike);
+    }
+  };
 
   return (
     <SimpleProductCardRoot
@@ -440,6 +473,33 @@ function SimpleProductCard({ bike, variant = "grid" }) {
             display: "block",
           }}
         />
+        {!isOwnListing && (
+          <IconButton
+            onClick={handleFavoriteClick}
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              width: 32,
+              height: 32,
+              backgroundColor: "rgba(255,255,255,0.95)",
+              borderRadius: "50%",
+              boxShadow: "0 1px 4px rgba(15,23,42,0.15)",
+              "&:hover": {
+                backgroundColor: "#f9fafb",
+              },
+            }}
+            aria-label={
+              inWishlist ? "Remove from wishlist" : "Add to wishlist"
+            }
+          >
+            {inWishlist ? (
+              <HeartFilled style={{ color: "#ef4444", fontSize: 16 }} />
+            ) : (
+              <HeartOutlined style={{ color: "#6b7280", fontSize: 16 }} />
+            )}
+          </IconButton>
+        )}
       </SimpleProductImageWrapper>
       <Box
         sx={

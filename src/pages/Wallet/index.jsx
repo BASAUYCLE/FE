@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Button, Form, Input, message, Spin, Card, Space, Divider, Table } from "antd";
 import { Wallet, Plus } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -112,6 +112,20 @@ const MyWallet = () => {
     return null;
   };
 
+  // Số tiền thay đổi (dương: cộng vào ví, âm: trừ khỏi ví)
+  const getSignedAmount = (record) => {
+    const status = record.status ?? record.transactionStatus;
+    if (status === "FAILED") return 0;
+    const raw = Number(record.amount ?? 0);
+    if (!raw) return 0;
+
+    const dirFromDesc = getDirectionFromDescription(record);
+    const moneyIn =
+      dirFromDesc === "IN" ? true : dirFromDesc === "OUT" ? false : raw > 0;
+
+    return moneyIn ? Math.abs(raw) : -Math.abs(raw);
+  };
+
   const TX_TYPE_LABEL = {
     TOP_UP:      "Top up",
     DEPOSIT:     "Deposit",
@@ -125,6 +139,39 @@ const MyWallet = () => {
     PENDING: { color: "#f59e0b", text: "Processing" },
     FAILED:  { color: "#ef4444", text: "Failed" },
   };
+
+  // Chuẩn hóa dataSource cho bảng, kèm currentBalance
+  const tableData = useMemo(() => {
+    if (!transactions.length) return [];
+
+    // Nếu chưa có thông tin ví, trả danh sách tối thiểu
+    if (!wallet) {
+      return transactions.map((tx, idx) => ({
+        ...tx,
+        key: tx.transactionId ?? tx.id ?? idx,
+      }));
+    }
+
+    // Sắp xếp mới nhất → cũ nhất để dòng đầu là transaction mới nhất
+    const sorted = [...transactions].sort((a, b) => {
+      const da = new Date(a.createdAt ?? a.created_at ?? 0).getTime();
+      const db = new Date(b.createdAt ?? b.created_at ?? 0).getTime();
+      return db - da;
+    });
+
+    let running = Number(wallet.balance ?? 0);
+
+    return sorted.map((tx, idx) => {
+      const row = {
+        ...tx,
+        currentBalance: running,
+        key: tx.transactionId ?? tx.id ?? idx,
+      };
+      const delta = getSignedAmount(tx);
+      running -= delta;
+      return row;
+    });
+  }, [transactions, wallet]);
 
   // Cấu hình bảng giao dịch
   const transactionColumns = [
@@ -191,6 +238,15 @@ const MyWallet = () => {
         );
       },
       width: 130,
+    },
+    {
+      title: "Current balance",
+      key: "currentBalance",
+      render: (_, record) =>
+        record.currentBalance != null
+          ? formatCurrency(record.currentBalance)
+          : "—",
+      width: 180,
     },
   ];
 
@@ -328,10 +384,7 @@ const MyWallet = () => {
           {transactions.length > 0 ? (
             <Table
               columns={transactionColumns}
-              dataSource={transactions.map((tx, idx) => ({
-                ...tx,
-                key: tx.transactionId ?? tx.id ?? idx,
-              }))}
+              dataSource={tableData}
               pagination={{ pageSize: 10, pageSizeOptions: [5, 10, 20] }}
               scroll={{ x: 800 }}
             />

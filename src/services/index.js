@@ -16,6 +16,7 @@ export { default as transactionService } from "./transactionService";
 export { default as wishlistService } from "./wishlistService";
 export { default as addressService } from "./addressService";
 export { default as locationService } from "./locationService";
+export { default as feedbackService } from "./feedbackService";
 
 // Cùng instance axios (nếu có chỗ còn import "api")
 export { default as api } from "./axiosConfig";

@@ -56,6 +56,7 @@ const InspectorDetailsList = lazy(
   () => import("./pages/inspector/details-list"),
 );
 const InspectorDisputes = lazy(() => import("./pages/inspector/disputes"));
+const UserFeedbackPage = lazy(() => import("./pages/UserFeedback"));
 
 const muiTheme = createTheme({
   palette: { mode: "light" },
@@ -162,6 +163,10 @@ function App() {
                           <Route
                             path="/product/:id"
                             element={<ProductDetail />}
+                          />
+                          <Route
+                            path="/user/:userId/feedback"
+                            element={<UserFeedbackPage />}
                           />
                           <Route
                             path="/user-detail"

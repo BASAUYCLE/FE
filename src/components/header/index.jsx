@@ -264,7 +264,7 @@ const NotificationsMenu = styled(Menu)(({ theme }) => ({
 }));
 
 /** Menu dropdown theo role: MEMBER (Wishlist, Wallet, Orders, Quản lý tin, Account); ADMIN (Admin Dashboard, Account); INSPECTOR (Inspection, Account) */
-function getMenuItemsForRole(role) {
+function getMenuItemsForRole(role, user) {
   const roleUpper = (role ?? "MEMBER").toUpperCase();
   if (roleUpper === "ADMIN") {
     return [
@@ -317,6 +317,15 @@ function getMenuItemsForRole(role) {
       path: "/account",
       icon: <UserOutlined style={{ fontSize: 18 }} />,
     },
+    ...(user && (user.id || user.userId || user.user_id)
+      ? [
+          {
+            label: "My Feedback",
+            path: `/user/${user.id ?? user.userId ?? user.user_id}/feedback`,
+            icon: <UserOutlined style={{ fontSize: 18 }} />,
+          },
+        ]
+      : []),
   ];
 }
 
@@ -349,7 +358,7 @@ export default function Header({
   const showAvatar = showAvatarProp ?? isLoggedIn;
   const showLogin = showLoginProp ?? !isLoggedIn;
   const navLinks = navLinksProp ?? getNavLinksForRole(role);
-  const userMenuItems = getMenuItemsForRole(role);
+  const userMenuItems = getMenuItemsForRole(role, user);
   const showSellButtonResolved =
     (showSellButton ?? pathname !== "/post") &&
     role !== "ADMIN" &&
