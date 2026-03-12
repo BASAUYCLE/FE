@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { message } from "antd";
 import {
@@ -38,19 +38,19 @@ import { getNavLinksForRole, getActiveLink } from "../../config/headerConfig";
 import { formatDateTime } from "../../utils/date";
 import "./index.css";
 
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.common.white, 0.94),
-  backdropFilter: "blur(16px)",
-  borderBottom: `1px solid ${alpha(theme.palette.common.black, 0.06)}`,
-  boxShadow: "none",
-  color: theme.palette.text.primary,
+const StyledAppBar = styled(AppBar)(() => ({
+  background:
+    "linear-gradient(90deg, #00c9b7 0%, #00e6c3 45%, #00b894 100%)",
+  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.18)",
+  color: "#ffffff",
+  borderBottom: "none",
 }));
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
-  maxWidth: 1200,
+  maxWidth: 1320,
   width: "100%",
   margin: "0 auto",
-  padding: "14px 24px",
+  padding: "16px 24px 16px",
   display: "flex",
   alignItems: "center",
   gap: theme.spacing(3),
@@ -67,53 +67,74 @@ const LogoLink = styled(Link)({
 const NavLinks = styled(Box)(({ theme }) => ({
   display: "flex",
   alignItems: "center",
+  justifyContent: "center",
   gap: theme.spacing(2.25),
-  marginLeft: theme.spacing(3),
   fontSize: 14,
+}));
+
+const NavBarRow = styled(Box)(({ theme }) => ({
+  width: "100%",
+  backgroundColor: "#ffffff",
+  borderTop: "1px solid rgba(15,23,42,0.06)",
+  boxShadow: "0 2px 4px rgba(15,23,42,0.06)",
 }));
 
 const NavLink = styled(Link, {
   shouldForwardProp: (prop) => prop !== "active" && prop !== "variant",
 })(({ active, variant }) => ({
-  color: active ? "#020617" : "#4b5563",
+  // Mặc định: dùng cho thanh menu nền trắng (hàng dưới)
+  color: active ? "#0f766e" : "#111827",
   textDecoration: "none",
   fontWeight: 500,
   fontSize: 14,
   transition: "color 0.2s, background 0.2s, box-shadow 0.2s",
+  paddingBottom: 4,
+  borderBottom: active ? "2px solid #0f766e" : "2px solid transparent",
+  "&:hover": {
+    color: "#0f766e",
+  },
+  // Biến thể pill: dùng cho chỗ khác (nếu có) trên nền màu
   ...(variant === "pill" && {
     padding: "8px 14px",
     borderRadius: 10,
-    color: active ? "#00b894" : "#64748b",
+    color: active ? "#ffffff" : "rgba(255,255,255,0.86)",
     fontWeight: 600,
+    borderBottom: "none",
   }),
   ...(variant === "pill" &&
     active && {
-      background: "#e7fbf4",
-      boxShadow: "0 6px 14px rgba(0, 184, 148, 0.2)",
+      background: "rgba(0,0,0,0.16)",
+      boxShadow: "0 10px 22px rgba(0,0,0,0.35)",
     }),
-  "&:hover": {
-    color: variant === "pill" ? "#00b894" : "#020617",
-    ...(variant === "pill" ? { background: "#f1f5f9" } : {}),
-  },
+  ...(variant === "pill" && {
+    "&:hover": {
+      color: "#ffffff",
+      background: "rgba(0,0,0,0.22)",
+    },
+  }),
 }));
 
-const SearchWrapper = styled(Box)(() => ({
+const SearchWrapper = styled(Box)(({ theme }) => ({
   flex: 1,
   display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
   justifyContent: "center",
+  padding: theme.spacing(0, 2),
 }));
 
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
-  borderRadius: 12,
-  backgroundColor: "#f3f4f6",
-  padding: "8px 14px",
-  height: 40,
-  maxWidth: 360,
+  borderRadius: 999,
+  backgroundColor: "#ffffff",
+  padding: "8px 16px",
+  height: 42,
+  maxWidth: 520,
   width: "100%",
   display: "flex",
   alignItems: "center",
   gap: theme.spacing(1.25),
+  boxShadow: "0 0 0 1px rgba(15,23,42,0.06)",
 }));
 
 const SearchIcon = styled(SearchOutlined)({
@@ -124,7 +145,7 @@ const SearchIcon = styled(SearchOutlined)({
 const StyledInputBase = styled(InputBase)({
   flex: 1,
   fontSize: 14,
-  color: "#6b7280",
+  color: "#111827",
   "& input": {
     padding: 0,
     "&::placeholder": {
@@ -141,21 +162,21 @@ const RightSection = styled(Box)(({ theme }) => ({
 }));
 
 const SellButton = styled(Button)({
-  backgroundColor: "#00ccad",
-  color: "#0f172a",
+  backgroundColor: "rgba(0,0,0,0.28)",
+  color: "#ffffff",
   padding: "10px 20px",
   borderRadius: 8,
   fontSize: 14,
   fontWeight: 700,
   textTransform: "none",
   "&:hover": {
-    backgroundColor: "#00b89a",
+    backgroundColor: "rgba(0,0,0,0.38)",
   },
 });
 
 const LoginButton = styled(Button)({
-  backgroundColor: "#f1f5f9",
-  color: "#0f172a",
+  backgroundColor: "transparent",
+  color: "#ffffff",
   border: "none",
   padding: "10px 20px",
   borderRadius: 8,
@@ -163,7 +184,7 @@ const LoginButton = styled(Button)({
   fontWeight: 700,
   textTransform: "none",
   "&:hover": {
-    backgroundColor: "#e2e8f0",
+    backgroundColor: "rgba(0,0,0,0.16)",
   },
 });
 
@@ -182,6 +203,41 @@ const UserMenu = styled(Menu)(({ theme }) => ({
   "& .MuiListItemIcon-root": {
     minWidth: 0,
     color: "#6b7280",
+  },
+}));
+
+const SuggestionsRow = styled(Box)(({ theme }) => ({
+  marginTop: 6,
+  display: "flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: theme.spacing(1.25),
+  width: "100%",
+  maxWidth: 520,
+}));
+
+const SuggestionLabel = styled(Typography)({
+  fontSize: 12,
+  color: "#ffffff",
+  whiteSpace: "nowrap",
+  fontWeight: 400,
+});
+
+const SuggestionTag = styled("button")(({ theme }) => ({
+  border: "none",
+  outline: "none",
+  cursor: "pointer",
+  padding: "4px 11px",
+  borderRadius: 999,
+  fontSize: 12,
+  fontWeight: 500,
+  backgroundColor: "rgba(45,212,191,0.9)", // teal-300 nhạt
+  color: "#ffffff",
+  whiteSpace: "nowrap",
+  transition: "background-color 0.2s, transform 0.1s",
+  "&:hover": {
+    backgroundColor: "rgba(20,184,166,1)", // teal-400 đậm hơn khi hover
+    transform: "translateY(-1px)",
   },
 }));
 
@@ -316,6 +372,32 @@ export default function Header({
   const openWishlist = Boolean(wishlistAnchor);
   const openNotif = Boolean(notifAnchor);
 
+  // Typewriter effect for search placeholder
+  const TYPING_TEXT = "Nhập tên xe, hãng xe cần tìm...";
+  const [placeholderText, setPlaceholderText] = useState("");
+  const [typingIndex, setTypingIndex] = useState(0);
+  const [searchValue, setSearchValue] = useState("");
+
+  useEffect(() => {
+    const baseDelay = 100; // ms per character
+
+    const timer = setTimeout(() => {
+      // Khi gõ xong toàn bộ câu, reset để gõ lại từ đầu
+      const nextIndex = typingIndex >= TYPING_TEXT.length ? 0 : typingIndex + 1;
+      setTypingIndex(nextIndex);
+      setPlaceholderText(TYPING_TEXT.slice(0, nextIndex));
+    }, baseDelay);
+
+    return () => clearTimeout(timer);
+  }, [typingIndex]);
+
+  const handleSearchSubmit = (raw) => {
+    const query = raw?.trim?.() ?? "";
+    navigate(
+      query ? `/marketplace?q=${encodeURIComponent(query)}` : "/marketplace",
+    );
+  };
+
   const handleUserMenuOpen = (e) => {
     e.preventDefault();
     setUserMenuAnchor(e.currentTarget);
@@ -345,189 +427,229 @@ export default function Header({
   return (
     <StyledAppBar position="sticky">
       <StyledToolbar>
-        <LogoLink to={homeLink} aria-label="Home">
-          <img
-            src={bikeLogo}
-            alt=""
-            style={{ width: 40, height: 40, objectFit: "contain" }}
-          />
-          <Box
-            component="span"
-            sx={{
-              fontWeight: 700,
-              fontSize: 20,
-              letterSpacing: "0.02em",
-              color: "#000",
-              textTransform: "uppercase",
-            }}
-          >
-            BASAUYCLE
-          </Box>
-        </LogoLink>
-
-        {navLinks.length > 0 && (
-          <NavLinks component="nav">
-            {navLinks.map((link) => (
-              <NavLink
-                key={link.label}
-                to={link.href || "#"}
-                active={activeLink === link.label}
-                variant={navVariant}
-              >
-                {link.label}
-              </NavLink>
-            ))}
-          </NavLinks>
-        )}
-
-        {showSearch && (
-          <SearchWrapper>
-            <Search>
-              <SearchIcon />
-              <StyledInputBase
-                placeholder="Search bikes..."
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    const query = e.target?.value?.trim?.();
-                    navigate(
-                      query
-                        ? `/marketplace?q=${encodeURIComponent(query)}`
-                        : "/marketplace",
-                    );
-                  }
-                }}
-              />
-            </Search>
-          </SearchWrapper>
-        )}
-
-        <Box sx={{ flexGrow: 1 }} />
-
-        <RightSection>
-          {showWishlistIcon && (
-            <IconButton
-              onClick={handleWishlistOpen}
-              aria-label="Wishlist"
-              aria-controls={openWishlist ? "wishlist-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={openWishlist ? "true" : undefined}
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          <LogoLink to={homeLink} aria-label="Home">
+            <img
+              src={bikeLogo}
+              alt=""
+              style={{ width: 40, height: 40, objectFit: "contain" }}
+            />
+            <Box
+              component="span"
               sx={{
-                color: "#6b7280",
-                "&:hover": {
-                  color: "#00ccad",
-                  backgroundColor: "rgba(0,204,173,0.08)",
-                },
+                fontWeight: 700,
+                fontSize: 20,
+                letterSpacing: "0.02em",
+                color: "#ffffff",
+                textTransform: "uppercase",
               }}
             >
-              <Badge
-                badgeContent={isLoggedIn ? wishlist.length : 0}
-                showZero={false}
+              BASAUYCLE
+            </Box>
+          </LogoLink>
+
+          {showSearch && (
+            <SearchWrapper>
+              <Search>
+                <SearchIcon />
+                <StyledInputBase
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  placeholder={placeholderText}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleSearchSubmit(e.target.value);
+                    }
+                  }}
+                />
+              </Search>
+              <SuggestionsRow>
+                <SuggestionLabel>Tìm kiếm nhiều nhất:</SuggestionLabel>
+                {["Road Bike", "Mountain Bike", "Gravel Bike"].map((text) => (
+                  <SuggestionTag
+                    key={text}
+                    type="button"
+                    onClick={() => {
+                      setSearchValue(text);
+                      handleSearchSubmit(text);
+                    }}
+                  >
+                    {text}
+                  </SuggestionTag>
+                ))}
+              </SuggestionsRow>
+            </SearchWrapper>
+          )}
+
+          <RightSection>
+            {showWishlistIcon && (
+              <IconButton
+                onClick={handleWishlistOpen}
+                aria-label="Wishlist"
+                aria-controls={openWishlist ? "wishlist-menu" : undefined}
+                aria-haspopup="true"
+                aria-expanded={openWishlist ? "true" : undefined}
                 sx={{
-                  "& .MuiBadge-badge": {
-                    bgcolor: "#00ccad",
-                    color: "#0f172a",
-                    fontWeight: 700,
+                  color: "#e5e7eb",
+                  "&:hover": {
+                    color: "#ffffff",
+                    backgroundColor: "rgba(255,255,255,0.14)",
                   },
                 }}
               >
-                <HeartOutlined style={{ fontSize: 20 }} />
-              </Badge>
-            </IconButton>
-          )}
-          {showNotificationIcon && role === "MEMBER" && (
-            <IconButton
-              onClick={handleNotifOpen}
-              aria-label="Notifications"
-              aria-controls={openNotif ? "notif-menu" : undefined}
-              aria-haspopup="true"
-              aria-expanded={openNotif ? "true" : undefined}
-              sx={{
-                color: "#6b7280",
-                "&:hover": {
-                  color: "#00ccad",
-                  backgroundColor: "rgba(0,204,173,0.08)",
-                },
-              }}
-            >
-              <Badge
-                badgeContent={isLoggedIn ? unreadCount : 0}
-                color="error"
-                showZero={false}
-              >
-                <BellOutlined style={{ fontSize: 20 }} />
-              </Badge>
-            </IconButton>
-          )}
-          {showSellButtonResolved && (
-            <SellButton component={Link} to="/post">
-              Sell Your Bike
-            </SellButton>
-          )}
-          {showLogin && (
-            <LoginButton component={Link} to="/login">
-              Sign In
-            </LoginButton>
-          )}
-          {showAvatar && (
-            <>
-              <Avatar
-                src={user?.avatar ?? user?.imageUrl ?? user?.profileImage}
-                onClick={handleUserMenuOpen}
-                aria-controls={openUserMenu ? "user-menu" : undefined}
+                <Badge
+                  badgeContent={isLoggedIn ? wishlist.length : 0}
+                  showZero={false}
+                  sx={{
+                    "& .MuiBadge-badge": {
+                      bgcolor: "#00ccad",
+                      color: "#0f172a",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
+                  <HeartOutlined style={{ fontSize: 20 }} />
+                </Badge>
+              </IconButton>
+            )}
+            {showNotificationIcon && role === "MEMBER" && (
+              <IconButton
+                onClick={handleNotifOpen}
+                aria-label="Notifications"
+                aria-controls={openNotif ? "notif-menu" : undefined}
                 aria-haspopup="true"
-                aria-expanded={openUserMenu ? "true" : undefined}
+                aria-expanded={openNotif ? "true" : undefined}
                 sx={{
-                  width: 36,
-                  height: 36,
-                  bgcolor: "#00ccad",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  fontSize: 16,
-                  "&:hover": { bgcolor: "#00b89a" },
+                  color: "#e5e7eb",
+                  "&:hover": {
+                    color: "#ffffff",
+                    backgroundColor: "rgba(255,255,255,0.14)",
+                  },
                 }}
               >
-                {(user?.name || user?.fullName || "U").trim()[0].toUpperCase()}
-              </Avatar>
-              <UserMenu
-                id="user-menu"
-                anchorEl={userMenuAnchor}
-                open={openUserMenu}
-                onClose={handleUserMenuClose}
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                transformOrigin={{ vertical: "top", horizontal: "right" }}
-              >
-                {userMenuItems.map((item) => (
-                  <MenuItem
-                    key={item.path}
-                    onClick={() => {
-                      handleUserMenuClose();
-                      navigate(item.path);
-                    }}
-                    sx={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <ListItemIcon>{item.icon}</ListItemIcon>
-                    <ListItemText primary={item.label} />
-                  </MenuItem>
-                ))}
-                <MenuItem
-                  onClick={async () => {
-                    handleUserMenuClose();
-                    await logout();
-                    navigate("/");
-                  }}
-                  sx={{ borderTop: "1px solid #f3f4f6" }}
+                <Badge
+                  badgeContent={isLoggedIn ? unreadCount : 0}
+                  color="error"
+                  showZero={false}
                 >
-                  <ListItemIcon>
-                    <LogoutOutlined style={{ fontSize: 18 }} />
-                  </ListItemIcon>
-                  <ListItemText primary="Sign Out" />
-                </MenuItem>
-              </UserMenu>
-            </>
-          )}
-        </RightSection>
+                  <BellOutlined style={{ fontSize: 20 }} />
+                </Badge>
+              </IconButton>
+            )}
+            {showLogin && (
+              <LoginButton component={Link} to="/login">
+                Sign In
+              </LoginButton>
+            )}
+            {showAvatar && (
+              <>
+                <Avatar
+                  src={user?.avatar ?? user?.imageUrl ?? user?.profileImage}
+                  onClick={handleUserMenuOpen}
+                  aria-controls={openUserMenu ? "user-menu" : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={openUserMenu ? "true" : undefined}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    bgcolor: "#00ccad",
+                    color: "#fff",
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    "&:hover": { bgcolor: "#00b89a" },
+                  }}
+                >
+                  {(user?.name || user?.fullName || "U").trim()[0].toUpperCase()}
+                </Avatar>
+                <UserMenu
+                  id="user-menu"
+                  anchorEl={userMenuAnchor}
+                  open={openUserMenu}
+                  onClose={handleUserMenuClose}
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  transformOrigin={{ vertical: "top", horizontal: "right" }}
+                >
+                  {userMenuItems.map((item) => (
+                    <MenuItem
+                      key={item.path}
+                      onClick={() => {
+                        handleUserMenuClose();
+                        navigate(item.path);
+                      }}
+                      sx={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <ListItemIcon>{item.icon}</ListItemIcon>
+                      <ListItemText primary={item.label} />
+                    </MenuItem>
+                  ))}
+                  <MenuItem
+                    onClick={async () => {
+                      handleUserMenuClose();
+                      await logout();
+                      navigate("/");
+                    }}
+                    sx={{ borderTop: "1px solid #f3f4f6" }}
+                  >
+                    <ListItemIcon>
+                      <LogoutOutlined style={{ fontSize: 18 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Sign Out" />
+                  </MenuItem>
+                </UserMenu>
+              </>
+            )}
+          </RightSection>
+        </Box>
       </StyledToolbar>
+
+      {navLinks.length > 0 && (
+        <NavBarRow>
+          <Box
+            sx={{
+              maxWidth: 1320,
+              width: "100%",
+              margin: "0 auto",
+              px: 3,
+              py: 1.75,
+            }}
+          >
+            <NavLinks component="nav">
+              {navLinks.map((link) => (
+                <NavLink
+                  key={link.label}
+                  to={link.href || "#"}
+                  active={activeLink === link.label}
+                  variant={navVariant}
+                >
+                  {link.label}
+                </NavLink>
+              ))}
+              <NavLink
+                to="/about"
+                active={pathname === "/about"}
+                variant={navVariant}
+              >
+                About
+              </NavLink>
+              <NavLink
+                to="/post"
+                active={pathname === "/post"}
+                variant={navVariant}
+              >
+                Post
+              </NavLink>
+            </NavLinks>
+          </Box>
+        </NavBarRow>
+      )}
 
       {/* Dropdown Wishlist */}
       <WishlistMenu

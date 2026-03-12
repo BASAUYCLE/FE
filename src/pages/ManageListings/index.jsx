@@ -528,7 +528,7 @@ export default function ManageListings() {
 
   return (
     <div className="manage-listings-page">
-      <Header showSearch={false} />
+      <Header />
       <main className="manage-listings-main">
         <div className="manage-listings-container">
           <PageBreadcrumb items={BREADCRUMB_ITEMS} />

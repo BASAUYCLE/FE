@@ -16,6 +16,14 @@ import { fontFamily, antdToken } from "./config/theme";
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Home = lazy(() => import("./pages/Home"));
+const About = lazy(() => import("./pages/About"));
+const GuideBuy = lazy(() => import("./pages/GuideBuy"));
+const GuidePayment = lazy(() => import("./pages/GuidePayment"));
+const Shipping = lazy(() => import("./pages/Shipping"));
+const PaymentPolicy = lazy(() => import("./pages/PaymentPolicy"));
+const Complaint = lazy(() => import("./pages/Complaint"));
+const ReturnPolicyPage = lazy(() => import("./pages/ReturnPolicy"));
+const PrivacyPage = lazy(() => import("./pages/Privacy"));
 const Payment = lazy(() => import("./pages/Payment"));
 const PaymentResult = lazy(() => import("./pages/Payment/PaymentResult"));
 const Wallet = lazy(() => import("./pages/Wallet"));
@@ -83,6 +91,23 @@ function App() {
                       <Suspense fallback={<PageFallback />}>
                         <Routes>
                           <Route path="/" element={<Home />} />
+                          <Route path="/about" element={<About />} />
+                          <Route path="/guide-buy" element={<GuideBuy />} />
+                          <Route
+                            path="/guide-payment"
+                            element={<GuidePayment />}
+                          />
+                          <Route path="/shipping" element={<Shipping />} />
+                          <Route
+                            path="/payment-policy"
+                            element={<PaymentPolicy />}
+                          />
+                          <Route path="/complaint" element={<Complaint />} />
+                          <Route
+                            path="/return"
+                            element={<ReturnPolicyPage />}
+                          />
+                          <Route path="/privacy" element={<PrivacyPage />} />
                           <Route
                             path="/marketplace"
                             element={<Marketplace />}

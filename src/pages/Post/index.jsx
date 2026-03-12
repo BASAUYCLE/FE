@@ -1349,7 +1349,7 @@ export default function PostBike() {
 
   return (
     <div className="post-bike-container">
-      <Header showSearch={false} />
+      <Header />
 
       <main className="post-main-content">
         <div className="post-content-container">

@@ -6,7 +6,7 @@
 }
 
 .vnpay-shell {
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 40px 40px 80px;
 }

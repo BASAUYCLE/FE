@@ -309,7 +309,7 @@ export default function ProductDetail() {
           <Header />
         )}
         <Box
-          sx={{ maxWidth: 1200, margin: "0 auto", p: 4, textAlign: "center" }}
+          sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}
         >
           <Typography variant="h6" color="text.secondary">
             Loading listing…
@@ -332,7 +332,7 @@ export default function ProductDetail() {
       <Box sx={{ minHeight: "100vh", bgcolor: "#f9fafa" }}>
         <Header />
         <Box
-          sx={{ maxWidth: 1200, margin: "0 auto", p: 4, textAlign: "center" }}
+          sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}
         >
           <Typography variant="h5" gutterBottom>
             Product not found
@@ -412,7 +412,7 @@ export default function ProductDetail() {
         <Header />
       )}
 
-      <Box sx={{ maxWidth: 1200, margin: "0 auto", p: 3 }}>
+      <Box sx={{ maxWidth: 1320, margin: "0 auto", p: 3 }}>
         <Breadcrumbs sx={{ mb: 3, fontSize: 12 }}>
           {breadcrumbs.map((b, i) =>
             b.href ? (

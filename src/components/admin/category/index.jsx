@@ -23,7 +23,7 @@ const FilterSection = styled(Box)(({ theme }) => ({
 }));
 
 const FilterContainer = styled(Container)({
-  maxWidth: 1200,
+  maxWidth: 1320,
 });
 
 const PillChipsWrapper = styled(Box)(({ theme }) => ({

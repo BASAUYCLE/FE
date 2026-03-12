@@ -11,6 +11,8 @@
   --accent-yellow: #FAD02E;
   --background-light: #f9fafa;
   --background-dark: #1e2124;
+  --container-max: 1320px; /* giống layout rộng của HelloBike */
+  --container-pad: 24px;
 }
 
 body {
@@ -20,6 +22,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-light);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Dùng cho các trang muốn layout giống HelloBike */
+.hb-container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding-left: var(--container-pad);
+  padding-right: var(--container-pad);
 }
 
 h1, h2, h3, h4, h5, h6, p, span, a, button, input, textarea, select, label {

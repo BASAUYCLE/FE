@@ -1,10 +1,7 @@
 import { Box } from "@mui/material";
 import Header from "../../components/header";
 import Hero from "../../components/hero";
-import CategoryFilter from "../../components/admin/category";
 import FeaturedBikes from "../../components/featuredbikes";
-import Features from "../../components/features";
-import CTA from "../../components/CTA";
 import Footer from "../../components/footer";
 
 export default function Home() {
@@ -13,12 +10,9 @@ export default function Home() {
       component="main"
       sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}
     >
-      <Header showSearch={false} />
+      <Header />
       <Hero />
-      <CategoryFilter />
       <FeaturedBikes />
-      <Features />
-      <CTA />
       <Footer
         showSubscribe={false}
         companyLinks={[

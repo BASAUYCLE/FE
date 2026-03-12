@@ -79,7 +79,7 @@ const PaymentResult = () => {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Header showSearch={false} />
+      <Header />
 
       <div style={{ flex: 1, padding: "40px 20px", maxWidth: "800px", margin: "0 auto", width: "100%" }}>
         {isSuccess ? (

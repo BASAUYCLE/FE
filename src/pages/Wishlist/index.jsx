@@ -232,7 +232,7 @@ export default function Wishlist() {
       component="main"
       sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}
     >
-      <Header showSearch={false} />
+      <Header />
 
       <Box className="wishlist-page">
         <Box className="wishlist-layout">

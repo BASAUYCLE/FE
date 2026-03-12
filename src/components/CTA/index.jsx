@@ -25,7 +25,7 @@ const BackgroundShape = styled(Box)({
 const CTAContainer = styled(Container)({
     position: 'relative',
     zIndex: 10,
-    maxWidth: 1200,
+    maxWidth: 1320,
 });
 
 const CTAContent = styled(Box)({

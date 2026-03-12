@@ -5,7 +5,7 @@ import { Select } from "antd";
 import { AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
-import BikeCard from "../../components/card";
+import { SimpleProductCard } from "../../components/featuredbikes";
 import BikeFilterSidebar from "../../components/filters/BikeFilterSidebar";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -145,7 +145,9 @@ export default function Marketplace() {
   const typeFromUrl = searchParams.get("type");
   const [priceRange, setPriceRange] = useState(PRICE_RANGE_DEFAULT);
   const [brandFilter, setBrandFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState(
+    () => searchParams.get("category") || "all",
+  );
   const [frameSizeFilter, setFrameSizeFilter] = useState("all");
   const [modelYearFilter, setModelYearFilter] = useState("all");
   const [searchName, setSearchName] = useState("");
@@ -352,12 +354,31 @@ export default function Marketplace() {
     searchName,
   ]);
 
-  const displayedCount = displayedBikes.length;
+  // Sort results theo lựa chọn (Newest / Price)
+  const sortedBikes = useMemo(() => {
+    const list = [...displayedBikes];
+    if (sortBy === "price-low") {
+      list.sort(
+        (a, b) =>
+          Number(a.rawPrice ?? 0) - Number(b.rawPrice ?? 0),
+      );
+    } else if (sortBy === "price-high") {
+      list.sort(
+        (a, b) =>
+          Number(b.rawPrice ?? 0) - Number(a.rawPrice ?? 0),
+      );
+    } else {
+      // "newest" – giữ nguyên thứ tự (đã là mới nhất từ API)
+    }
+    return list;
+  }, [displayedBikes, sortBy]);
+
+  const displayedCount = sortedBikes.length;
   const totalPages = Math.max(1, Math.ceil(displayedCount / PAGE_SIZE));
   const paginatedBikes = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return displayedBikes.slice(start, start + PAGE_SIZE);
-  }, [displayedBikes, page]);
+    return sortedBikes.slice(start, start + PAGE_SIZE);
+  }, [sortedBikes, page]);
 
   // Reset về trang 1 khi filter thay đổi đáng kể
   useEffect(() => {
@@ -431,7 +452,7 @@ export default function Marketplace() {
 
   return (
     <Box className="marketplace-page">
-      <Header showSearch={false} />
+      <Header />
       <Box className="marketplace-layout">
         {/* Sidebar Filters */}
         <aside className="marketplace-sidebar">
@@ -513,7 +534,11 @@ export default function Marketplace() {
               </Box>
             ) : (
               paginatedBikes.map((bike, idx) => (
-                <BikeCard key={bike?.id ?? bike?.postId ?? `bike-${idx}`} bike={bike} />
+                <SimpleProductCard
+                  key={bike?.id ?? bike?.postId ?? `bike-${idx}`}
+                  bike={bike}
+                  variant={viewMode === "list" ? "list" : "grid"}
+                />
               ))
             )}
           </Box>

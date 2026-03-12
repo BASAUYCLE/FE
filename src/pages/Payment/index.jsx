@@ -102,7 +102,7 @@ export default function VNPayPayment() {
 
   return (
     <div className="vnpay-page">
-      <Header showSearch={false} />
+      <Header />
       <main className="vnpay-shell vnpay-main">
         <div className="vnpay-breadcrumb">
           Home <span>&gt;</span> Checkout <span>&gt;</span>{" "}

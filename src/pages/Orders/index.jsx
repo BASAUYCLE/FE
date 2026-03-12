@@ -64,7 +64,7 @@ export default function OrdersPage() {
 
   return (
     <div className="orders-page">
-      <Header showSearch={false} />
+      <Header />
       <main className="orders-main">
         <div className="orders-container">
           <PageBreadcrumb items={BREADCRUMB_ITEMS} />

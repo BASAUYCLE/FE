@@ -197,7 +197,7 @@ const MyWallet = () => {
   if (!user) {
     return (
       <div className="wallet-page">
-        <Header showSearch={false} />
+        <Header />
         <div className="wallet-container" style={{ textAlign: "center", padding: "60px 20px" }}>
           <h2>Please sign in to view your wallet</h2>
         </div>
@@ -208,7 +208,7 @@ const MyWallet = () => {
 
   return (
     <div className="wallet-page">
-      <Header showSearch={false} />
+      <Header />
       <div className="wallet-container">
         <div className="wallet-title-section">
           <h1 className="wallet-title">

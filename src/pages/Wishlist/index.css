@@ -1,6 +1,6 @@
 /* Wishlist page */
 .wishlist-page {
-  max-width: 1200px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 24px;
 }
