@@ -50,6 +50,10 @@ const AdminInspectionReports = lazy(
   () => import("./pages/admin/inspection-reports"),
 );
 const AdminTransactions = lazy(() => import("./pages/admin/transaction"));
+<<<<<<< HEAD
+const AdminConfig = lazy(() => import("./pages/admin/config"));
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 const InspectorDashboard = lazy(() => import("./pages/inspector/dashboard"));
 const InspectorDetail = lazy(() => import("./pages/inspector/detail"));
 const InspectorDetailsList = lazy(
@@ -246,6 +250,13 @@ function App() {
                             element={<AdminTransactions />}
                           />
                           <Route
+<<<<<<< HEAD
+                            path="/admin-config"
+                            element={<AdminConfig />}
+                          />
+                          <Route
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
                             path="/inspector"
                             element={<InspectorDashboard />}
                           />

@@ -1,12 +1,43 @@
+<<<<<<< HEAD
+/* Register page - extends auth styles from Login/login.css, đồng bộ với Login */
+
+.auth-card--register:not(.auth-card--split) {
+=======
 /* Register page - extends auth styles from Login/login.css */
 
 .auth-card--register {
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   padding: 32px;
 }
 
+<<<<<<< HEAD
+/* Split layout Register: full page, không giới hạn max-width */
+.auth-card--split.auth-card--register {
+  max-height: none;
+  max-width: none;
+}
+
+/* Cột form/video đồng đều với Login: 42% form, còn lại video */
+.auth-card--split.auth-card--register .auth-card__left {
+  flex: 0 0 42%;
+  min-width: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding: 40px 44px 48px;
+}
+
+.auth-card--register .auth-card__title {
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.auth-card--split.auth-card--register .auth-card__subtitle {
+  text-align: left;
+=======
 .auth-card--register .auth-card__title {
   margin-bottom: 8px;
 }
@@ -15,16 +46,25 @@
   font-size: 14px;
   color: #64748b;
   text-align: center;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   margin: 0 0 24px;
 }
 
 .auth-card__link-inline {
+<<<<<<< HEAD
+  color: #0d9488;
+=======
   color: #00ccad;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   font-weight: 500;
   text-decoration: none;
 }
 
 .auth-card__link-inline:hover {
+<<<<<<< HEAD
+  color: #0f766e;
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   text-decoration: underline;
 }
 
@@ -34,6 +74,16 @@
 }
 
 .auth-card--register .auth-form .ant-form-item {
+<<<<<<< HEAD
+  margin-bottom: 18px;
+}
+
+.auth-card--register .auth-form__submit {
+  margin-bottom: 18px;
+}
+
+/* National ID Card Verification Upload Section - đồng đều với form */
+=======
   margin-bottom: 16px;
 }
 
@@ -42,11 +92,16 @@
 }
 
 /* National ID Card Verification Upload Section */
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 .cccd-upload-section {
   background: #f8fafc;
   padding: 20px;
   border-radius: 12px;
+<<<<<<< HEAD
+  margin-bottom: 18px;
+=======
   margin-bottom: 20px;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   border: 1px solid #e2e8f0;
 }
 
@@ -55,22 +110,51 @@
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 8px;
+<<<<<<< HEAD
+  word-wrap: break-word;
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .cccd-upload-subtitle {
   font-size: 13px;
   color: #64748b;
   margin: 0 0 16px;
+<<<<<<< HEAD
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Mỗi ô upload (Front/Back) cùng khoảng cách và căn label trái */
+.cccd-upload-section .ant-form-item {
+  margin-bottom: 18px;
+=======
 }
 
 .cccd-upload-section .ant-form-item {
   margin-bottom: 12px;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .cccd-upload-section .ant-form-item:last-child {
   margin-bottom: 0;
 }
 
+<<<<<<< HEAD
+.cccd-upload-section .ant-form-item-label {
+  text-align: left;
+}
+
+.cccd-upload-section .ant-form-item-label > label {
+  font-size: 14px;
+  color: #475569;
+  font-weight: 500;
+  height: auto;
+}
+
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 .cccd-upload-section .ant-upload-list-picture-card-container {
   width: 100%;
   height: auto;
@@ -79,14 +163,22 @@
 .cccd-upload-section .ant-upload.ant-upload-select-picture-card {
   width: 100%;
   height: 140px;
+<<<<<<< HEAD
+  background: #fff;
+=======
   background: white;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   border: 2px dashed #cbd5e1;
   border-radius: 8px;
   transition: all 0.3s;
 }
 
 .cccd-upload-section .ant-upload.ant-upload-select-picture-card:hover {
+<<<<<<< HEAD
+  border-color: #0d9488;
+=======
   border-color: #00ccad;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .cccd-upload-section .ant-upload-list-picture-card .ant-upload-list-item {
@@ -95,17 +187,30 @@
   border-radius: 8px;
 }
 
+<<<<<<< HEAD
+/* Nội dung trong ô upload: icon + chữ căn giữa, đồng nhất */
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 .upload-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
+<<<<<<< HEAD
+  width: 100%;
+  text-align: center;
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .upload-content .anticon {
   font-size: 28px;
+<<<<<<< HEAD
+  color: #0d9488;
+=======
   color: #00ccad;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .upload-text {
@@ -134,21 +239,42 @@
   }
 }
 
+<<<<<<< HEAD
+/* Scrollbar styling: form cột khi split, hoặc card khi không split */
+.auth-card--register::-webkit-scrollbar,
+.auth-card--split.auth-card--register .auth-card__left::-webkit-scrollbar {
+  width: 6px;
+}
+
+.auth-card--register::-webkit-scrollbar-track,
+.auth-card--split.auth-card--register .auth-card__left::-webkit-scrollbar-track {
+=======
 /* Scrollbar styling */
 .auth-card--register::-webkit-scrollbar {
   width: 6px;
 }
 
 .auth-card--register::-webkit-scrollbar-track {
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   background: #f1f5f9;
   border-radius: 10px;
 }
 
+<<<<<<< HEAD
+.auth-card--register::-webkit-scrollbar-thumb,
+.auth-card--split.auth-card--register .auth-card__left::-webkit-scrollbar-thumb {
+=======
 .auth-card--register::-webkit-scrollbar-thumb {
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   background: #cbd5e1;
   border-radius: 10px;
 }
 
+<<<<<<< HEAD
+.auth-card--register::-webkit-scrollbar-thumb:hover,
+.auth-card--split.auth-card--register .auth-card__left::-webkit-scrollbar-thumb:hover {
+=======
 .auth-card--register::-webkit-scrollbar-thumb:hover {
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   background: #94a3b8;
 }

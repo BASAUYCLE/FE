@@ -20,6 +20,26 @@
   gap: 24px;
 }
 
+<<<<<<< HEAD
+.admin-page-header {
+  margin-bottom: 4px;
+}
+
+.admin-page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #111827;
+}
+
+.admin-page-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 .admin-card {
   background: #ffffff;
   border-radius: 16px;
@@ -465,6 +485,45 @@
   gap: 10px;
 }
 
+<<<<<<< HEAD
+/* Ô hiển thị tài khoản (admin/inspector duyệt) */
+.admin-account-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  max-width: 100%;
+}
+
+.admin-account-cell .admin-account-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  text-transform: uppercase;
+}
+
+.admin-account-cell .admin-account-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+=======
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 .admin-user-avatar.small {
   width: 32px;
   height: 32px;

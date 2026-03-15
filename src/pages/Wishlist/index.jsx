@@ -78,6 +78,15 @@ export default function Wishlist() {
         const brandList = Array.isArray(brandsRaw)
           ? brandsRaw
           : Array.isArray(brandsRaw?.result)
+<<<<<<< HEAD
+            ? brandsRaw.result
+            : [];
+        const categoryList = Array.isArray(categoriesRaw)
+          ? categoriesRaw
+          : Array.isArray(categoriesRaw?.result)
+            ? categoriesRaw.result
+            : [];
+=======
           ? brandsRaw.result
           : [];
         const categoryList = Array.isArray(categoriesRaw)
@@ -85,6 +94,7 @@ export default function Wishlist() {
           : Array.isArray(categoriesRaw?.result)
           ? categoriesRaw.result
           : [];
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
         const meta = metaRes?.data ?? metaRes?.result ?? metaRes;
 
         setBrandOptions([
@@ -120,9 +130,13 @@ export default function Wishlist() {
               { value: "all", label: "All Years" },
               ...meta.modelYears.map((y) => {
                 const v =
+<<<<<<< HEAD
+                  typeof y === "object" ? (y.value ?? y.year ?? y.label) : y;
+=======
                   typeof y === "object"
                     ? y.value ?? y.year ?? y.label
                     : y;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
                 const str = String(v);
                 return { value: str, label: str };
               }),
@@ -162,12 +176,16 @@ export default function Wishlist() {
         if (price < priceRange[0] || price > priceRange[1]) return false;
       }
 
+<<<<<<< HEAD
+      const brandText = (b.brand ?? b.specs?.brand ?? b.category ?? "")
+=======
       const brandText = (
         b.brand ??
         b.specs?.brand ??
         b.category ??
         ""
       )
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
         .toString()
         .toLowerCase();
       const categoryText = (b.category ?? "").toString().toLowerCase();
@@ -179,12 +197,16 @@ export default function Wishlist() {
       )
         .toString()
         .toLowerCase();
+<<<<<<< HEAD
+      const yearText = (b.modelYear ?? b.year ?? b.specs?.modelYear ?? "")
+=======
       const yearText = (
         b.modelYear ??
         b.year ??
         b.specs?.modelYear ??
         ""
       )
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
         .toString()
         .trim();
 

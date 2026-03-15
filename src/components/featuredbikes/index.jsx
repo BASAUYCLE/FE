@@ -1,8 +1,26 @@
 import { useRef, useMemo, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+<<<<<<< HEAD
+import {
+  Box,
+  Container,
+  Typography,
+  IconButton,
+  Link as MUILink,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import {
+  ArrowRightOutlined,
+  ArrowLeftOutlined,
+  StarFilled,
+  HeartOutlined,
+  HeartFilled,
+} from "@ant-design/icons";
+=======
 import { Box, Container, Typography, IconButton, Link as MUILink } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { ArrowRightOutlined, ArrowLeftOutlined, StarFilled, HeartOutlined, HeartFilled } from "@ant-design/icons";
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 import BikeCard from "../card";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -395,7 +413,11 @@ function SimpleProductCard({ bike, variant = "grid" }) {
   const rating =
     typeof bike.rating === "number"
       ? bike.rating.toFixed(1)
+<<<<<<< HEAD
+      : (bike.rating ?? "5.0");
+=======
       : bike.rating ?? "5.0";
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   const soldRaw =
     bike.sold ??
     bike.salesCount ??
@@ -489,9 +511,13 @@ function SimpleProductCard({ bike, variant = "grid" }) {
                 backgroundColor: "#f9fafb",
               },
             }}
+<<<<<<< HEAD
+            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
+=======
             aria-label={
               inWishlist ? "Remove from wishlist" : "Add to wishlist"
             }
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
           >
             {inWishlist ? (
               <HeartFilled style={{ color: "#ef4444", fontSize: 16 }} />
@@ -524,9 +550,13 @@ function SimpleProductCard({ bike, variant = "grid" }) {
             <SimpleProductMetaText>{rating}</SimpleProductMetaText>
           </Box>
           {sold > 0 && (
+<<<<<<< HEAD
+            <SimpleProductMetaText>Đã bán {sold}</SimpleProductMetaText>
+=======
             <SimpleProductMetaText>
               Đã bán {sold}
             </SimpleProductMetaText>
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
           )}
           <SimpleProductMetaText style={{ color: "#16a34a", fontWeight: 500 }}>
             Còn hàng
@@ -832,6 +862,30 @@ export default function FeaturedBikes() {
                   onMouseUp={() => handleRowMouseLeaveOrUp(key)}
                   onMouseMove={(e) => handleRowMouseMove(key, e)}
                 >
+<<<<<<< HEAD
+                  {bikes.length === 0 ? (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#6b7280",
+                        fontSize: 13,
+                        fontStyle: "italic",
+                        px: 1,
+                      }}
+                    >
+                      Hiện chưa có xe trong danh mục này.
+                    </Typography>
+                  ) : (
+                    bikes.slice(0, 5).map((bike) => (
+                      <Box
+                        key={`home-cat-${key}-${bike.id}`}
+                        sx={{ minWidth: 230, maxWidth: 250, flexShrink: 0 }}
+                      >
+                        <SimpleProductCard bike={bike} />
+                      </Box>
+                    ))
+                  )}
+=======
                 {bikes.length === 0 ? (
                   <Typography
                     variant="body2"
@@ -854,6 +908,7 @@ export default function FeaturedBikes() {
                     </Box>
                   ))
                 )}
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
                 </CategoryRow>
                 <ArrowButton
                   className="category-row-arrow"

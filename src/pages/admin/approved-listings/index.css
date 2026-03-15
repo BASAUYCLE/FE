@@ -57,7 +57,11 @@
 }
 
 .admin-approved-table.admin-table .admin-table-row {
+<<<<<<< HEAD
+  grid-template-columns: 2fr 1.2fr 1fr 1.2fr 1fr 1.2fr 1.2fr 0.6fr;
+=======
   grid-template-columns: 2fr 1.2fr 1fr 1.2fr 1fr 1.2fr 0.6fr;
+>>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .admin-approved-listing-cell {
