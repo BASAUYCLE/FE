@@ -9,21 +9,6 @@ const systemConfigService = {
 
   /** GET /system-config/{key} — lấy giá trị theo key */
   getByKey: (key) => axiosInstance.get(E.BY_KEY(key)),
-<<<<<<< HEAD
-
-  /**
-   * PUT /system-config/{key} — cập nhật giá trị theo key
-   * Payload linh hoạt vì BE có thể dùng configValue/value/config_value.
-   */
-  updateByKey: (key, value) =>
-    axiosInstance.put(E.BY_KEY(key), {
-      configKey: key,
-      configValue: value,
-      value,
-      config_value: value,
-    }),
-=======
->>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 };
 
 export default systemConfigService;

@@ -45,28 +45,9 @@
   text-transform: uppercase;
 }
 
-<<<<<<< HEAD
-.app-sidebar-nav-group {
-  padding: 12px 16px 4px;
-}
-
-.app-sidebar-nav-group-title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #94a3b8;
-  margin-bottom: 8px;
-}
-
-.app-sidebar-nav {
-  flex: 1;
-  padding: 8px 12px 16px;
-=======
 .app-sidebar-nav {
   flex: 1;
   padding: 16px 12px;
->>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -112,20 +93,6 @@
   overflow: hidden;
 }
 
-<<<<<<< HEAD
-.app-sidebar-link-arrow {
-  width: 16px;
-  height: 16px;
-  opacity: 0.6;
-  flex-shrink: 0;
-}
-
-.app-sidebar-link.active .app-sidebar-link-arrow {
-  opacity: 1;
-}
-
-=======
->>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 .app-sidebar-main {
   flex: 1;
   margin-left: 260px;
@@ -134,135 +101,17 @@
   flex-direction: column;
 }
 
-<<<<<<< HEAD
-.app-sidebar-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 16px;
-  padding: 16px 24px;
-  background: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-}
-
-.app-sidebar-header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.app-sidebar-header-icon-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #64748b;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
-}
-
-.app-sidebar-header-icon-btn:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.app-sidebar-header-user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 6px 12px 6px 6px;
-  border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-}
-
-.app-sidebar-header-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #00b894 0%, #00ccad 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.app-sidebar-header-user-info {
-  text-align: left;
-}
-
-.app-sidebar-header-user-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f172a;
-  display: block;
-  line-height: 1.3;
-}
-
-.app-sidebar-header-user-role {
-  font-size: 12px;
-  color: #64748b;
-  display: block;
-  line-height: 1.3;
-  text-transform: uppercase;
-}
-
-.app-sidebar-body {
-  flex: 1;
-  padding: 24px;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
-.app-sidebar-account {
-  border-top: 1px solid #e2e8f0;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: #f8fafc;
-}
-
-.app-sidebar-account-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #00b894 0%, #00ccad 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 700;
-  flex-shrink: 0;
-=======
 .app-sidebar-account {
   border-top: 1px solid #f1f5f9;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
->>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
 }
 
 .app-sidebar-account-name {
   font-size: 13px;
-<<<<<<< HEAD
-  font-weight: 600;
-=======
   font-weight: 700;
->>>>>>> 0f4ae3c012d14e94779d74fd8aa67dae4df7d70b
   color: #0f172a;
   overflow: hidden;
   text-overflow: ellipsis;
