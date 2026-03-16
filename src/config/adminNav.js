@@ -8,6 +8,7 @@ export const ADMIN_NAV_LINKS = [
   { label: "Inspections", href: "/admin-inspection-reports" },
   { label: "Transactions", href: "/admin-transactions" },
   { label: "Reports", href: "/admin-reports" },
+  { label: "Config", href: "/admin-config" },
 ];
 
 // Nhãn nav cần highlight theo path hiện tại
@@ -21,6 +22,7 @@ const PATH_TO_ACTIVE_LABEL = {
   "/admin-inspection-reports": "Inspections",
   "/admin-transactions": "Transactions",
   "/admin-reports": "Reports",
+  "/admin-config": "Config",
 };
 
 export function getAdminActiveLink(pathname) {

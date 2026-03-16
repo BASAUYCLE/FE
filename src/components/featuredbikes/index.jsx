@@ -1,8 +1,20 @@
 import { useRef, useMemo, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Box, Container, Typography, IconButton, Link as MUILink } from "@mui/material";
+import {
+  Box,
+  Container,
+  Typography,
+  IconButton,
+  Link as MUILink,
+} from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { ArrowRightOutlined, ArrowLeftOutlined, StarFilled, HeartOutlined, HeartFilled } from "@ant-design/icons";
+import {
+  ArrowRightOutlined,
+  ArrowLeftOutlined,
+  StarFilled,
+  HeartOutlined,
+  HeartFilled,
+} from "@ant-design/icons";
 import BikeCard from "../card";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -395,7 +407,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
   const rating =
     typeof bike.rating === "number"
       ? bike.rating.toFixed(1)
-      : bike.rating ?? "5.0";
+      : (bike.rating ?? "5.0");
   const soldRaw =
     bike.sold ??
     bike.salesCount ??
@@ -489,9 +501,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
                 backgroundColor: "#f9fafb",
               },
             }}
-            aria-label={
-              inWishlist ? "Remove from wishlist" : "Add to wishlist"
-            }
+            aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"}
           >
             {inWishlist ? (
               <HeartFilled style={{ color: "#ef4444", fontSize: 16 }} />
@@ -524,9 +534,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
             <SimpleProductMetaText>{rating}</SimpleProductMetaText>
           </Box>
           {sold > 0 && (
-            <SimpleProductMetaText>
-              Đã bán {sold}
-            </SimpleProductMetaText>
+            <SimpleProductMetaText>Đã bán {sold}</SimpleProductMetaText>
           )}
           <SimpleProductMetaText style={{ color: "#16a34a", fontWeight: 500 }}>
             Còn hàng
@@ -832,28 +840,28 @@ export default function FeaturedBikes() {
                   onMouseUp={() => handleRowMouseLeaveOrUp(key)}
                   onMouseMove={(e) => handleRowMouseMove(key, e)}
                 >
-                {bikes.length === 0 ? (
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: "#6b7280",
-                      fontSize: 13,
-                      fontStyle: "italic",
-                      px: 1,
-                    }}
-                  >
-                    Hiện chưa có xe trong danh mục này.
-                  </Typography>
-                ) : (
-                  bikes.slice(0, 5).map((bike) => (
-                    <Box
-                      key={`home-cat-${key}-${bike.id}`}
-                      sx={{ minWidth: 230, maxWidth: 250, flexShrink: 0 }}
+                  {bikes.length === 0 ? (
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: "#6b7280",
+                        fontSize: 13,
+                        fontStyle: "italic",
+                        px: 1,
+                      }}
                     >
-                      <SimpleProductCard bike={bike} />
-                    </Box>
-                  ))
-                )}
+                      Hiện chưa có xe trong danh mục này.
+                    </Typography>
+                  ) : (
+                    bikes.slice(0, 5).map((bike) => (
+                      <Box
+                        key={`home-cat-${key}-${bike.id}`}
+                        sx={{ minWidth: 230, maxWidth: 250, flexShrink: 0 }}
+                      >
+                        <SimpleProductCard bike={bike} />
+                      </Box>
+                    ))
+                  )}
                 </CategoryRow>
                 <ArrowButton
                   className="category-row-arrow"

@@ -235,7 +235,10 @@ export default function ProductDetail() {
   // ============ Checkout Modal ============
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const checkoutPrice = posting?.price ?? 0;
-  const numericCheckoutPrice = typeof checkoutPrice === "number" ? checkoutPrice : Number(String(checkoutPrice).replace(/[^0-9.]/g, "")) || 0;
+  const numericCheckoutPrice =
+    typeof checkoutPrice === "number"
+      ? checkoutPrice
+      : Number(String(checkoutPrice).replace(/[^0-9.]/g, "")) || 0;
 
   const openCheckout = () => {
     if (!isLoggedIn) {

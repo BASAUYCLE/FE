@@ -78,13 +78,13 @@ export default function Wishlist() {
         const brandList = Array.isArray(brandsRaw)
           ? brandsRaw
           : Array.isArray(brandsRaw?.result)
-          ? brandsRaw.result
-          : [];
+            ? brandsRaw.result
+            : [];
         const categoryList = Array.isArray(categoriesRaw)
           ? categoriesRaw
           : Array.isArray(categoriesRaw?.result)
-          ? categoriesRaw.result
-          : [];
+            ? categoriesRaw.result
+            : [];
         const meta = metaRes?.data ?? metaRes?.result ?? metaRes;
 
         setBrandOptions([
@@ -120,9 +120,7 @@ export default function Wishlist() {
               { value: "all", label: "All Years" },
               ...meta.modelYears.map((y) => {
                 const v =
-                  typeof y === "object"
-                    ? y.value ?? y.year ?? y.label
-                    : y;
+                  typeof y === "object" ? (y.value ?? y.year ?? y.label) : y;
                 const str = String(v);
                 return { value: str, label: str };
               }),
@@ -162,12 +160,7 @@ export default function Wishlist() {
         if (price < priceRange[0] || price > priceRange[1]) return false;
       }
 
-      const brandText = (
-        b.brand ??
-        b.specs?.brand ??
-        b.category ??
-        ""
-      )
+      const brandText = (b.brand ?? b.specs?.brand ?? b.category ?? "")
         .toString()
         .toLowerCase();
       const categoryText = (b.category ?? "").toString().toLowerCase();
@@ -179,12 +172,7 @@ export default function Wishlist() {
       )
         .toString()
         .toLowerCase();
-      const yearText = (
-        b.modelYear ??
-        b.year ??
-        b.specs?.modelYear ??
-        ""
-      )
+      const yearText = (b.modelYear ?? b.year ?? b.specs?.modelYear ?? "")
         .toString()
         .trim();
 

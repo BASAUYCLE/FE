@@ -1,8 +1,13 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import {
-  Search, FileCheck2, Eye, Filter,
-  CheckCircle2, XCircle, Clock,
+  Search,
+  FileCheck2,
+  Eye,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from "lucide-react";
 import axiosInstance from "../../../services/axiosConfig";
 import adminPostService from "../../../services/adminPostService";
@@ -20,55 +25,87 @@ const RESULT_CONFIG = {
 
 const STATUS_CONFIG = {
   APPROVED: { label: "Approved", icon: CheckCircle2, className: "approved" },
-  REJECTED: { label: "Rejected", icon: XCircle,     className: "rejected" },
-  PENDING:  { label: "Pending",  icon: Clock,        className: "pending"  },
+  REJECTED: { label: "Rejected", icon: XCircle, className: "rejected" },
+  PENDING: { label: "Pending", icon: Clock, className: "pending" },
 };
 
-const INSPECTED_STATUSES = ["AVAILABLE", "DEPOSITED", "SOLD", "REJECTED", "HIDDEN"];
+const INSPECTED_STATUSES = [
+  "AVAILABLE",
+  "DEPOSITED",
+  "SOLD",
+  "REJECTED",
+  "HIDDEN",
+];
+
+/** Lấy chữ cái đầu để hiển thị avatar (inspector) */
+function getInitials(name) {
+  if (!name || typeof name !== "string") return "?";
+  const trimmed = name.trim();
+  if (trimmed === "—") return "—";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length >= 2)
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2);
+  return (parts[0]?.slice(0, 2) ?? "?").toUpperCase();
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function parseList(res) {
   const raw = res?.result ?? res?.data ?? res;
-  if (Array.isArray(raw))              return raw;
-  if (Array.isArray(raw?.content))     return raw.content;
-  if (Array.isArray(raw?.reports))     return raw.reports;
-  if (Array.isArray(raw?.data))        return raw.data;
-  if (raw && typeof raw === "object")  return [raw];
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw?.content)) return raw.content;
+  if (Array.isArray(raw?.reports)) return raw.reports;
+  if (Array.isArray(raw?.data)) return raw.data;
+  if (raw && typeof raw === "object") return [raw];
   return null;
 }
 
 function normalizeReport(row) {
-  const result  = row.result ?? row.inspectionResult ?? null;
-  const status  =
-    row.status ?? row.postStatus ??
-    (result === "PASS" ? "APPROVED" : result === "FAIL" ? "REJECTED" : "PENDING");
+  const result = row.result ?? row.inspectionResult ?? null;
+  const status =
+    row.status ??
+    row.postStatus ??
+    (result === "PASS"
+      ? "APPROVED"
+      : result === "FAIL"
+        ? "REJECTED"
+        : "PENDING");
 
   return {
-    id:           row.reportId    ?? row.id           ?? row.postId,
-    postId:       row.postId      ?? row.bicyclePostId ?? row.id,
-    title:        row.bicycleName ?? row.listingTitle  ?? row.title ?? row.postTitle ?? "—",
+    id: row.reportId ?? row.id ?? row.postId,
+    postId: row.postId ?? row.bicyclePostId ?? row.id,
+    title:
+      row.bicycleName ?? row.listingTitle ?? row.title ?? row.postTitle ?? "—",
     thumbnail:
       (row.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ??
       row.images?.[0]?.imageUrl ??
-      row.thumbnailUrl ?? row.thumbnail ?? row.imageUrl ?? null,
-    seller:       row.sellerFullName ?? row.sellerName ?? row.seller ?? "—",
-    inspector:    row.inspectorName  ?? row.inspectorFullName ?? row.inspector ?? "—",
-    inspectedAt:  row.inspectedAt   ?? row.completedAt ?? row.updatedAt ?? row.createdAt ?? null,
-    result:       result,
-    status:       status,
+      row.thumbnailUrl ??
+      row.thumbnail ??
+      row.imageUrl ??
+      null,
+    seller: row.sellerFullName ?? row.sellerName ?? row.seller ?? "—",
+    inspector:
+      row.inspectorName ?? row.inspectorFullName ?? row.inspector ?? "—",
+    inspectedAt:
+      row.inspectedAt ??
+      row.completedAt ??
+      row.updatedAt ??
+      row.createdAt ??
+      null,
+    result: result,
+    status: status,
     overallCondition: row.overallCondition ?? row.condition ?? null,
-    notes:        row.notes ?? row.inspectorNotes ?? null,
-    price:        row.price ?? row.salePrice ?? null,
+    notes: row.notes ?? row.inspectorNotes ?? null,
+    price: row.price ?? row.salePrice ?? null,
   };
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminInspectionReports() {
-  const [reports, setReports]   = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [search, setSearch]     = useState("");
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [expanded, setExpanded] = useState(null);
   const [previewId, setPreviewId] = useState(null);
@@ -81,12 +118,12 @@ export default function AdminInspectionReports() {
     const URLS = [
       "/admin/inspection/reports",
       "/admin/inspections",
-      "/inspection/completed",      // inspector endpoint – admin có thể gọi được
+      "/inspection/completed", // inspector endpoint – admin có thể gọi được
       "/inspection/reports",
     ];
     for (const url of URLS) {
       try {
-        const res  = await axiosInstance.get(url);
+        const res = await axiosInstance.get(url);
         const list = parseList(res);
         if (list && list.length > 0) {
           console.info(`AdminReports: ✓ ${url} → ${list.length}`);
@@ -94,7 +131,8 @@ export default function AdminInspectionReports() {
         }
       } catch (err) {
         const s = err?.status ?? 0;
-        if (s !== 404 && s !== 403) console.warn(`AdminReports: ${url} →`, err?.message);
+        if (s !== 404 && s !== 403)
+          console.warn(`AdminReports: ${url} →`, err?.message);
       }
     }
     return null;
@@ -107,10 +145,13 @@ export default function AdminInspectionReports() {
     try {
       const res = await adminPostService.getAllPosts();
       const raw = res?.result ?? res?.data ?? res;
-      allPosts = Array.isArray(raw) ? raw
-        : Array.isArray(raw?.content) ? raw.content
-        : Array.isArray(raw?.data)    ? raw.data
-        : [];
+      allPosts = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw?.content)
+          ? raw.content
+          : Array.isArray(raw?.data)
+            ? raw.data
+            : [];
     } catch {
       // getAllPosts thất bại → thử từng status
       const settled = await Promise.allSettled(
@@ -120,7 +161,7 @@ export default function AdminInspectionReports() {
         .filter((r) => r.status === "fulfilled")
         .flatMap((r) => {
           const raw = r.value?.result ?? r.value?.data ?? r.value;
-          return Array.isArray(raw) ? raw : raw?.content ?? raw?.data ?? [];
+          return Array.isArray(raw) ? raw : (raw?.content ?? raw?.data ?? []);
         });
     }
 
@@ -140,17 +181,19 @@ export default function AdminInspectionReports() {
 
         const postStatus = p.postStatus ?? p.status ?? "";
         const baseInfo = {
-          postId:        pid,
-          bicycleName:   p.bicycleName ?? p.title,
-          sellerFullName:p.sellerFullName ?? p.sellerName,
+          postId: pid,
+          bicycleName: p.bicycleName ?? p.title,
+          sellerFullName: p.sellerFullName ?? p.sellerName,
           thumbnailUrl:
             (p.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ??
             p.images?.[0]?.imageUrl ??
-            p.thumbnailUrl ?? p.thumbnail ?? p.imageUrl,
-          price:         p.price ?? p.salePrice,
-          status:        postStatus === "REJECTED" ? "REJECTED" : "APPROVED",
-          result:        postStatus === "REJECTED" ? "FAIL" : "PASS",
-          inspectedAt:   p.updatedAt ?? p.inspectedAt ?? p.createdAt,
+            p.thumbnailUrl ??
+            p.thumbnail ??
+            p.imageUrl,
+          price: p.price ?? p.salePrice,
+          status: postStatus === "REJECTED" ? "REJECTED" : "APPROVED",
+          result: postStatus === "REJECTED" ? "FAIL" : "PASS",
+          inspectedAt: p.updatedAt ?? p.inspectedAt ?? p.createdAt,
         };
 
         // Thử lấy full report
@@ -189,7 +232,9 @@ export default function AdminInspectionReports() {
         list = await fetchPerPost();
       }
       // Sắp xếp mới nhất trước
-      list.sort((a, b) => new Date(b.inspectedAt ?? 0) - new Date(a.inspectedAt ?? 0));
+      list.sort(
+        (a, b) => new Date(b.inspectedAt ?? 0) - new Date(a.inspectedAt ?? 0),
+      );
       setReports(list);
     } catch (err) {
       console.warn("AdminReports: fetch failed", err?.message);
@@ -199,7 +244,9 @@ export default function AdminInspectionReports() {
     }
   }, [tryDirectEndpoints, fetchPerPost]);
 
-  useEffect(() => { fetchAll(); }, [fetchAll]);
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
 
   // ── Filter ────────────────────────────────────────────────────────────────
 
@@ -227,13 +274,16 @@ export default function AdminInspectionReports() {
       <div className="admin-dashboard-page admin-inspection-reports-page">
         <div className="admin-dashboard">
           <div className="admin-content">
-
             {/* Header */}
-            <header className="admin-topbar" style={{ flexWrap: "wrap", gap: 16 }}>
+            <header
+              className="admin-topbar"
+              style={{ flexWrap: "wrap", gap: 16 }}
+            >
               <div>
                 <h1 className="admin-page-title">Inspection history</h1>
                 <p className="admin-page-subtitle">
-                  All listings inspected by inspectors · {reports.length} reports
+                  All listings inspected by inspectors · {reports.length}{" "}
+                  reports
                 </p>
               </div>
             </header>
@@ -263,7 +313,10 @@ export default function AdminInspectionReports() {
                 },
               ].map((s) => (
                 <div key={s.label} className="admin-card admin-ir-stat">
-                  <span className="admin-ir-stat-val" style={{ color: s.color }}>
+                  <span
+                    className="admin-ir-stat-val"
+                    style={{ color: s.color }}
+                  >
                     {s.value}
                   </span>
                   <span className="admin-ir-stat-label">{s.label}</span>
@@ -313,7 +366,9 @@ export default function AdminInspectionReports() {
                 </div>
 
                 {loading ? (
-                  <div className="admin-table-empty">Loading inspection reports…</div>
+                  <div className="admin-table-empty">
+                    Loading inspection reports…
+                  </div>
                 ) : filtered.length === 0 ? (
                   <div className="admin-table-empty">
                     <FileCheck2 size={32} color="#cbd5e1" />
@@ -323,7 +378,8 @@ export default function AdminInspectionReports() {
                   </div>
                 ) : (
                   filtered.map((row, idx) => {
-                    const statusCfg = STATUS_CONFIG[row.status] ?? STATUS_CONFIG.PENDING;
+                    const statusCfg =
+                      STATUS_CONFIG[row.status] ?? STATUS_CONFIG.PENDING;
                     const resultCfg = RESULT_CONFIG[row.result];
                     const Icon = statusCfg.icon;
                     const isExpanded = expanded === (row.postId ?? row.id);
@@ -334,7 +390,9 @@ export default function AdminInspectionReports() {
                           {/* Xe + seller */}
                           <div
                             className="admin-ir-bike admin-ir-bike-link"
-                            onClick={() => row.postId && setPreviewId(row.postId)}
+                            onClick={() =>
+                              row.postId && setPreviewId(row.postId)
+                            }
                             title={row.postId ? "View listing" : undefined}
                           >
                             {row.thumbnail ? (
@@ -342,14 +400,20 @@ export default function AdminInspectionReports() {
                                 src={row.thumbnail}
                                 alt={row.title}
                                 className="admin-ir-thumb"
-                                onError={(e) => { e.currentTarget.style.display = "none"; }}
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                }}
                               />
                             ) : (
                               <div className="admin-ir-thumb-placeholder" />
                             )}
                             <div>
-                              <div className="admin-ir-bike-name">{row.title}</div>
-                              <div className="admin-ir-seller">{row.seller}</div>
+                              <div className="admin-ir-bike-name">
+                                {row.title}
+                              </div>
+                              <div className="admin-ir-seller">
+                                {row.seller}
+                              </div>
                               {row.price && (
                                 <div className="admin-ir-price">
                                   {formatCurrency(row.price)}
@@ -359,15 +423,37 @@ export default function AdminInspectionReports() {
                           </div>
 
                           {/* Inspector */}
-                          <div className="admin-ir-inspector">{row.inspector}</div>
+                          <div className="admin-ir-inspector">
+                            {row.inspector && row.inspector !== "—" ? (
+                              <div
+                                className="admin-account-cell"
+                                title={row.inspector}
+                              >
+                                <span className="admin-account-avatar">
+                                  {getInitials(row.inspector)}
+                                </span>
+                                <span className="admin-account-name">
+                                  {row.inspector}
+                                </span>
+                              </div>
+                            ) : (
+                              "—"
+                            )}
+                          </div>
 
                           {/* Thời gian */}
                           <div className="admin-ir-date">
                             {row.inspectedAt
-                              ? new Date(row.inspectedAt).toLocaleString("en-US", {
-                                  day: "2-digit", month: "2-digit", year: "numeric",
-                                  hour: "2-digit", minute: "2-digit",
-                                })
+                              ? new Date(row.inspectedAt).toLocaleString(
+                                  "en-US",
+                                  {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  },
+                                )
                               : "—"}
                           </div>
 
@@ -379,17 +465,23 @@ export default function AdminInspectionReports() {
                           {/* Result */}
                           <div>
                             {resultCfg ? (
-                              <span className={`admin-report-result ${resultCfg.className}`}>
+                              <span
+                                className={`admin-report-result ${resultCfg.className}`}
+                              >
                                 {resultCfg.label}
                               </span>
                             ) : (
-                              <span className="admin-report-result pending">Pending</span>
+                              <span className="admin-report-result pending">
+                                Pending
+                              </span>
                             )}
                           </div>
 
                           {/* Status + expand */}
                           <div className="admin-ir-status-cell">
-                            <span className={`admin-report-status ${statusCfg.className}`}>
+                            <span
+                              className={`admin-report-status ${statusCfg.className}`}
+                            >
                               <Icon size={12} /> {statusCfg.label}
                             </span>
                             {row.notes && (
@@ -398,7 +490,9 @@ export default function AdminInspectionReports() {
                                 className="admin-ir-expand-btn"
                                 title="View inspector notes"
                                 onClick={() =>
-                                  setExpanded(isExpanded ? null : (row.postId ?? row.id))
+                                  setExpanded(
+                                    isExpanded ? null : (row.postId ?? row.id),
+                                  )
                                 }
                               >
                                 <Eye size={14} />
@@ -410,8 +504,12 @@ export default function AdminInspectionReports() {
                         {/* Notes row (expand) */}
                         {isExpanded && row.notes && (
                           <div className="admin-ir-notes-row">
-                            <span className="admin-ir-notes-label">Inspector notes:</span>
-                            <span className="admin-ir-notes-text">{row.notes}</span>
+                            <span className="admin-ir-notes-label">
+                              Inspector notes:
+                            </span>
+                            <span className="admin-ir-notes-text">
+                              {row.notes}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -420,7 +518,6 @@ export default function AdminInspectionReports() {
                 )}
               </div>
             </section>
-
           </div>
         </div>
       </div>

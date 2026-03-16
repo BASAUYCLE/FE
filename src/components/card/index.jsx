@@ -167,7 +167,9 @@ export default function BikeCard({ bike }) {
         <Typography.Text className="bike-card-price">
           {bike.price}
         </Typography.Text>
-        <Typography.Text className="bike-card-name">{bike.name}</Typography.Text>
+        <Typography.Text className="bike-card-name">
+          {bike.name}
+        </Typography.Text>
         <Space className="bike-card-specs" size="middle" wrap>
           {bike.specs?.weight && (
             <Space size={6} className="bike-card-spec">

@@ -1,12 +1,20 @@
-/* Forgot Password - extends auth styles */
+/* Forgot Password - đồng bộ với Login/Register split layout */
 
 .auth-page--forgot .auth-card__subtitle {
   font-size: 14px;
   color: #64748b;
-  text-align: center;
+  text-align: left;
   margin: 0 0 24px;
 }
 
 .auth-page--forgot .auth-form .ant-form-item {
-  margin-bottom: 24px;
+  margin-bottom: 18px;
+}
+
+.auth-card__links--forgot {
+  margin-top: 24px;
+}
+
+.auth-card__links--forgot .auth-card__link {
+  font-size: 14px;
 }
