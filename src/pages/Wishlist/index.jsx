@@ -1,15 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Box, Typography, Button, IconButton } from "@mui/material";
-import {
-  AppstoreOutlined,
-  UnorderedListOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { Box, Typography, Button } from "@mui/material";
+import { PlusOutlined } from "@ant-design/icons";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
-import BikeCard from "../../components/card";
-import BikeFilterSidebar from "../../components/filters/BikeFilterSidebar";
+import { SimpleProductCard } from "../../components/featuredbikes";
+import MarketplaceFilterBar from "../../components/filters/MarketplaceFilterBar";
 import { useWishlist } from "../../contexts/WishlistContext";
 import postService from "../../services/postService";
 import "./index.css";
@@ -54,6 +50,7 @@ export default function Wishlist() {
     { value: "all", label: "All Years" },
     ...DEFAULT_MODEL_YEARS.map((y) => ({ value: y, label: y })),
   ]);
+  const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
 
   // Load đầy đủ Brand/Category/FrameSize/ModelYear giống Marketplace/Post
@@ -146,7 +143,7 @@ export default function Wishlist() {
   };
 
   const displayItems = useMemo(() => {
-    return wishlist.filter((b) => {
+    const filtered = wishlist.filter((b) => {
       // Search by name
       if (searchName.trim()) {
         const q = searchName.trim().toLowerCase();
@@ -196,6 +193,14 @@ export default function Wishlist() {
 
       return true;
     });
+
+    const sorted = [...filtered];
+    if (sortBy === "price-low") {
+      sorted.sort((a, b) => getRawPrice(a) - getRawPrice(b));
+    } else if (sortBy === "price-high") {
+      sorted.sort((a, b) => getRawPrice(b) - getRawPrice(a));
+    }
+    return sorted;
   }, [
     wishlist,
     searchName,
@@ -204,6 +209,7 @@ export default function Wishlist() {
     categoryFilter,
     frameSizeFilter,
     modelYearFilter,
+    sortBy,
   ]);
 
   const handleResetFilters = () => {
@@ -224,9 +230,8 @@ export default function Wishlist() {
 
       <Box className="wishlist-page">
         <Box className="wishlist-layout">
-          {/* Sidebar */}
-          <aside className="wishlist-sidebar">
-            <BikeFilterSidebar
+          <Box className="wishlist-main">
+            <MarketplaceFilterBar
               searchName={searchName}
               onSearchNameChange={setSearchName}
               brandFilter={brandFilter}
@@ -250,11 +255,12 @@ export default function Wishlist() {
               onClearFilters={handleResetFilters}
               priceMin={PRICE_MIN}
               priceMax={PRICE_MAX}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
             />
-          </aside>
 
-          {/* Main content */}
-          <Box className="wishlist-main">
             <Box className="wishlist-header">
               <Box>
                 <Typography className="wishlist-title">
@@ -265,31 +271,18 @@ export default function Wishlist() {
                   next ride.
                 </Typography>
               </Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <IconButton
-                  size="small"
-                  onClick={() => setViewMode("grid")}
-                  sx={{ color: viewMode === "grid" ? "#00ccad" : "#9ca3af" }}
-                >
-                  <AppstoreOutlined />
-                </IconButton>
-                <IconButton
-                  size="small"
-                  onClick={() => setViewMode("list")}
-                  sx={{ color: viewMode === "list" ? "#00ccad" : "#9ca3af" }}
-                >
-                  <UnorderedListOutlined />
-                </IconButton>
-              </Box>
             </Box>
 
             <Box
-              className={`wishlist-grid ${viewMode === "list" ? "list-view" : ""}`}
+              className={`wishlist-grid ${viewMode === "list" ? "list" : ""} ${
+                displayItems.length === 0 ? "wishlist-grid-empty" : ""
+              }`}
             >
               {displayItems.map((bike, idx) => (
-                <BikeCard
+                <SimpleProductCard
                   key={bike?.id ?? bike?.postId ?? `wishlist-item-${idx}`}
-                  bike={bike}
+                  bike={{ ...bike, id: bike?.id ?? bike?.postId }}
+                  variant={viewMode === "list" ? "list" : "grid"}
                 />
               ))}
               {/* Add more card */}

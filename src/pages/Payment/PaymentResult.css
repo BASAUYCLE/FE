@@ -1,5 +1,60 @@
 /* Payment Result Page Styles */
 
+@keyframes payment-result-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.payment-result-spin {
+  animation: payment-result-spin 0.85s linear infinite;
+  color: #00b894;
+}
+
+/* Large success: solid green circle + white Lucide check (replaces Ant default icon) */
+.payment-result-hero {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.payment-result-hero--success {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.payment-result-hero-check {
+  stroke: #ffffff;
+}
+
+.payment-result-hero--error {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.payment-result-hero-x {
+  stroke: #ffffff;
+}
+
+.payment-result-inline-icon {
+  flex-shrink: 0;
+}
+
+.payment-result-inline-icon--success {
+  color: #10b981;
+}
+
+.payment-result-inline-icon--error {
+  color: #dc2626;
+}
+
 .payment-result-container {
   display: flex;
   flex-direction: column;
@@ -12,6 +67,31 @@
   max-width: 800px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
+}
+
+/* Stacked layout: Result centered, details card below */
+.payment-result-centered .ant-result {
+  padding: 0 0 8px;
+  background: transparent;
+}
+
+.payment-result-centered .ant-result-title,
+.payment-result-centered .ant-result-subtitle {
+  text-align: center;
+}
+
+.payment-result-centered .ant-result-extra {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.payment-result-detail-card {
+  margin-top: 30px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .payment-result-card {
@@ -83,23 +163,6 @@
 .payment-result-status.error {
   background-color: #fef2f2;
   color: #dc2626;
-}
-
-.payment-result-info {
-  margin-top: 30px;
-  padding: 15px;
-  background-color: #e3f2fd;
-  border-radius: 6px;
-  border-left: 4px solid #1976d2;
-}
-
-.payment-result-info p {
-  margin: 0;
-  color: #1976d2;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 .payment-result-troubleshooting {

@@ -25,66 +25,65 @@ export default function GuideBuy() {
               mb: 4,
             }}
           >
-            Hướng dẫn mua hàng tại BASAUYCLE
+            Buying Guide at BASAUYCLE
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            1. Mua trực tiếp tại cửa hàng
+            1. Buy directly at our stores
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            Bạn có thể đến trực tiếp các cửa hàng trong hệ thống BASAUYCLE để
-            xem xe, thử xe và được tư vấn chi tiết trước khi quyết định mua.
+            You can visit BASAUYCLE stores to view bikes, test ride, and receive
+            detailed consultation before making a purchase decision.
           </Typography>
 
           <Typography
             component="h3"
             sx={{ fontSize: 16, fontWeight: 600, mt: 2, mb: 1 }}
           >
-            Thanh toán tại cửa hàng
+            In-store payment
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Sau khi chọn được chiếc xe phù hợp, bạn có thể thanh toán bằng tiền
-            mặt, chuyển khoản hoặc các phương thức thanh toán điện tử mà cửa
-            hàng hỗ trợ. Nhân viên sẽ xuất hóa đơn và kích hoạt chế độ bảo hành
-            tương ứng cho xe.
+            After choosing the right bike, you can pay by cash, bank transfer,
+            or supported electronic payment methods. Our staff will issue the
+            invoice and activate the corresponding warranty.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            2. Mua hàng online qua website
+            2. Buy online via website
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            Bước 1: Truy cập trang chủ BASAUYCLE và vào mục Marketplace để lựa
-            chọn mẫu xe bạn quan tâm.
+            Step 1: Visit BASAUYCLE homepage and go to Marketplace to select the
+            bike model you are interested in.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            Bước 2: Nhấn nút “Đặt mua” hoặc “Mua ngay” trên trang chi tiết xe.
+            Step 2: Click "Place Order" or "Buy Now" on the bike detail page.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            Bước 3: Điền đầy đủ thông tin liên hệ và địa chỉ nhận hàng.
+            Step 3: Fill in your contact details and delivery address.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Bước 4: Xác nhận đơn hàng và lựa chọn hình thức thanh toán phù hợp
-            (ví dụ: thanh toán online qua ví/NGÂN HÀNG hoặc thanh toán khi nhận
-            xe nếu được hỗ trợ).
+            Step 4: Confirm the order and choose a suitable payment method
+            (for example: online wallet/bank payment, or cash on delivery if
+            available).
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            3. Mua hàng qua kênh hỗ trợ
+            3. Buy through support channels
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Nếu bạn cần được tư vấn nhanh, hãy liên hệ hotline hoặc chat với
-            đội ngũ hỗ trợ của BASAUYCLE. Họ sẽ giúp bạn chọn đúng mẫu xe theo
-            nhu cầu (đi làm, đi học, tập luyện, đua, touring…) và hướng dẫn
-            hoàn tất đơn hàng tương tự như trên website.
+            If you need quick consultation, contact our hotline or chat with
+            BASAUYCLE support team. They will help you choose the right bike
+            for your needs (commuting, school, training, racing, touring, etc.)
+            and guide you through order completion just like on the website.
           </Typography>
         </Container>
       </Box>

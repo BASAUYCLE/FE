@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Modal, Form, Input, Upload, Button, Divider, Tag, message } from "antd";
+import {
+  Modal,
+  Form,
+  Input,
+  Upload,
+  Button,
+  Divider,
+  Tag,
+  message,
+} from "antd";
 import { UploadOutlined, TruckOutlined } from "@ant-design/icons";
 import {
   ORDER_STATUS_LABEL,
@@ -8,6 +17,7 @@ import {
 import { useOrders } from "../../contexts/OrderContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { confirmCrud } from "../../utils/confirmCrud";
 
 export default function ConfirmShippingModal({ open, onClose, order }) {
   const { confirmShipping } = useOrders();
@@ -24,12 +34,19 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
       return;
     }
 
+    const ok = await confirmCrud({
+      title: "Xác nhận đã gửi hàng?",
+      content: `Đơn #${order.orderId}: bạn xác nhận thông tin vận chuyển và mã vận đơn là chính xác? Hành động này sẽ thông báo cho người mua.`,
+      okText: "Xác nhận gửi hàng",
+    });
+    if (!ok) return;
+
     setSubmitting(true);
     try {
       await confirmShipping(order.orderId, {
-        shippingMethod:         values.shippingMethod || "",
+        shippingMethod: values.shippingMethod || "",
         shippingTrackingNumber: values.shippingTrackingNumber || "",
-        proofImageFile:         proofFile,
+        proofImageFile: proofFile,
       });
       message.success("Shipping confirmed successfully!");
       addNotification?.({
@@ -62,7 +79,9 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
       return false;
     },
     onRemove: () => setProofFile(null),
-    fileList: proofFile ? [{ uid: "-1", name: proofFile.name, status: "done" }] : [],
+    fileList: proofFile
+      ? [{ uid: "-1", name: proofFile.name, status: "done" }]
+      : [],
   };
 
   return (
@@ -72,13 +91,15 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
       onCancel={handleClose}
       footer={null}
       centered
-      width={440}
+      width={560}
       destroyOnClose
-      styles={{ body: { padding: 0 } }}
+      styles={{ body: { padding: 0, maxHeight: "72vh", overflowY: "auto" } }}
     >
       {/* Header */}
       <div style={{ padding: "14px 18px 0" }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}>
+        <h3
+          style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#0f172a" }}
+        >
           <TruckOutlined style={{ marginRight: 8, color: "#00ccad" }} />
           Confirm shipping
         </h3>
@@ -94,17 +115,30 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
               alt={order?.bikeName}
               referrerPolicy="no-referrer"
               style={{
-                width: 56, height: 44, objectFit: "cover", borderRadius: 6,
-                border: "1px solid #e5e7eb", flexShrink: 0,
+                width: 56,
+                height: 44,
+                objectFit: "cover",
+                borderRadius: 6,
+                border: "1px solid #e5e7eb",
+                flexShrink: 0,
               }}
             />
           ) : (
-            <div style={{
-              width: 56, height: 44, borderRadius: 6, background: "#f1f5f9",
-              border: "1px solid #e5e7eb", flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 10, color: "#94a3b8",
-            }}>
+            <div
+              style={{
+                width: 56,
+                height: 44,
+                borderRadius: 6,
+                background: "#f1f5f9",
+                border: "1px solid #e5e7eb",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 10,
+                color: "#94a3b8",
+              }}
+            >
               No img
             </div>
           )}
@@ -164,24 +198,41 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
         <Form form={form} layout="vertical" size="small">
           <Form.Item
             name="shippingMethod"
-            label={<span style={{ fontSize: 12, fontWeight: 600 }}>Shipping carrier</span>}
+            label={
+              <span style={{ fontSize: 12, fontWeight: 600 }}>
+                Shipping carrier
+              </span>
+            }
           >
-            <Input placeholder="e.g. GHTK, GHN, Viettel Post..." style={{ fontSize: 13 }} />
+            <Input
+              placeholder="e.g. GHTK, GHN, Viettel Post..."
+              style={{ fontSize: 13 }}
+            />
           </Form.Item>
 
           <Form.Item
             name="shippingTrackingNumber"
-            label={<span style={{ fontSize: 12, fontWeight: 600 }}>Tracking number</span>}
+            label={
+              <span style={{ fontSize: 12, fontWeight: 600 }}>
+                Tracking number
+              </span>
+            }
           >
             <Input placeholder="e.g. GHTK123456789" style={{ fontSize: 13 }} />
           </Form.Item>
 
           <Form.Item
-            label={<span style={{ fontSize: 12, fontWeight: 600 }}>Shipping proof (photo)</span>}
+            label={
+              <span style={{ fontSize: 12, fontWeight: 600 }}>
+                Shipping proof (photo)
+              </span>
+            }
             style={{ marginBottom: 0 }}
           >
             <Upload {...uploadProps}>
-              <Button size="small" icon={<UploadOutlined />}>Chọn ảnh</Button>
+              <Button size="small" icon={<UploadOutlined />}>
+                Choose image
+              </Button>
             </Upload>
             <div style={{ fontSize: 11, color: "#6b7280", marginTop: 3 }}>
               Receipt, shipping slip, etc.
@@ -197,9 +248,15 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
           onClick={handleClose}
           disabled={submitting}
           style={{
-            flex: 1, padding: "9px 0", border: "1px solid #d1d5db",
-            borderRadius: 8, background: "#fff", fontWeight: 600,
-            fontSize: 13, color: "#475569", cursor: "pointer",
+            flex: 1,
+            padding: "9px 0",
+            border: "1px solid #d1d5db",
+            borderRadius: 8,
+            background: "#fff",
+            fontWeight: 600,
+            fontSize: 13,
+            color: "#475569",
+            cursor: "pointer",
           }}
         >
           Cancel
@@ -209,10 +266,17 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
           onClick={handleSubmit}
           disabled={submitting}
           style={{
-            flex: 2, padding: "9px 0", border: "none", borderRadius: 8,
+            flex: 2,
+            padding: "9px 0",
+            border: "none",
+            borderRadius: 8,
             background: submitting ? "#94a3b8" : "#00ccad",
-            boxShadow: submitting ? "none" : "0 8px 20px rgba(0, 204, 173, 0.35)",
-            fontWeight: 700, fontSize: 13, color: "#0f172a",
+            boxShadow: submitting
+              ? "none"
+              : "0 8px 20px rgba(0, 204, 173, 0.35)",
+            fontWeight: 700,
+            fontSize: 13,
+            color: "#0f172a",
             cursor: submitting ? "wait" : "pointer",
           }}
         >

@@ -23,24 +23,33 @@ import {
   HeartOutlined,
   BellOutlined,
   WalletOutlined,
-  UserOutlined,
   CloseOutlined,
-  LogoutOutlined,
-  DashboardOutlined,
-  AuditOutlined,
 } from "@ant-design/icons";
-import { Receipt, FileText } from "lucide-react";
+import {
+  Receipt,
+  FileText,
+  Heart,
+  UserRound,
+  LayoutDashboard,
+  ClipboardCheck,
+  MessageCircle,
+  LogOut,
+  CreditCard,
+  ShoppingCart,
+  DollarSign,
+  ClipboardList,
+} from "lucide-react";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { useNotifications } from "../../contexts/useNotifications";
+import { confirmCrud } from "../../utils/confirmCrud";
 import { getNavLinksForRole, getActiveLink } from "../../config/headerConfig";
 import { formatDateTime } from "../../utils/date";
 import "./index.css";
 
 const StyledAppBar = styled(AppBar)(() => ({
-  background:
-    "linear-gradient(90deg, #00c9b7 0%, #00e6c3 45%, #00b894 100%)",
+  background: "linear-gradient(90deg, #00c9b7 0%, #00e6c3 45%, #00b894 100%)",
   boxShadow: "0 8px 20px rgba(0, 0, 0, 0.18)",
   color: "#ffffff",
   borderBottom: "none",
@@ -271,12 +280,12 @@ function getMenuItemsForRole(role, user) {
       {
         label: "Admin Dashboard",
         path: "/admin-dashboard",
-        icon: <DashboardOutlined style={{ fontSize: 18 }} />,
+        icon: <LayoutDashboard size={18} />,
       },
       {
         label: "Account",
         path: "/account",
-        icon: <UserOutlined style={{ fontSize: 18 }} />,
+        icon: <UserRound size={18} />,
       },
     ];
   }
@@ -285,12 +294,12 @@ function getMenuItemsForRole(role, user) {
       {
         label: "Inspection",
         path: "/inspector",
-        icon: <AuditOutlined style={{ fontSize: 18 }} />,
+        icon: <ClipboardCheck size={18} />,
       },
       {
         label: "Account",
         path: "/account",
-        icon: <UserOutlined style={{ fontSize: 18 }} />,
+        icon: <UserRound size={18} />,
       },
     ];
   }
@@ -298,31 +307,31 @@ function getMenuItemsForRole(role, user) {
     {
       label: "Wishlist",
       path: "/wishlist",
-      icon: <HeartOutlined style={{ fontSize: 18 }} />,
+      icon: <Heart size={18} />,
     },
     {
       label: "Wallet",
       path: "/wallet",
-      icon: <WalletOutlined style={{ fontSize: 18 }} />,
+      icon: <CreditCard size={18} />,
     },
-    { label: "My Orders", path: "/orders", icon: <Receipt size={18} /> },
-    { label: "My Sales", path: "/my-sales", icon: <Receipt size={18} /> },
+    { label: "My Orders", path: "/orders", icon: <ShoppingCart size={18} /> },
+    { label: "My Sales", path: "/my-sales", icon: <DollarSign size={18} /> },
     {
       label: "Manage Listings",
       path: "/manage-listings",
-      icon: <FileText size={18} />,
+      icon: <ClipboardList size={18} />,
     },
     {
       label: "Account",
       path: "/account",
-      icon: <UserOutlined style={{ fontSize: 18 }} />,
+      icon: <UserRound size={18} />,
     },
     ...(user && (user.id || user.userId || user.user_id)
       ? [
           {
             label: "My Feedback",
             path: `/user/${user.id ?? user.userId ?? user.user_id}/feedback`,
-            icon: <UserOutlined style={{ fontSize: 18 }} />,
+            icon: <MessageCircle size={18} />,
           },
         ]
       : []),
@@ -382,7 +391,7 @@ export default function Header({
   const openNotif = Boolean(notifAnchor);
 
   // Typewriter effect for search placeholder
-  const TYPING_TEXT = "Nhập tên xe, hãng xe cần tìm...";
+  const TYPING_TEXT = "Search by car name or brand...";
   const [placeholderText, setPlaceholderText] = useState("");
   const [typingIndex, setTypingIndex] = useState(0);
   const [searchValue, setSearchValue] = useState("");
@@ -405,6 +414,16 @@ export default function Header({
     navigate(
       query ? `/marketplace?q=${encodeURIComponent(query)}` : "/marketplace",
     );
+  };
+
+  const handleQuickCategoryClick = (category) => {
+    const value = category?.trim?.() ?? "";
+    if (!value) {
+      navigate("/marketplace");
+      return;
+    }
+    setSearchValue(value);
+    navigate(`/marketplace?category=${encodeURIComponent(value)}`);
   };
 
   const handleUserMenuOpen = (e) => {
@@ -480,15 +499,12 @@ export default function Header({
                 />
               </Search>
               <SuggestionsRow>
-                <SuggestionLabel>Tìm kiếm nhiều nhất:</SuggestionLabel>
+                <SuggestionLabel>Trending Searches:</SuggestionLabel>
                 {["Road Bike", "Mountain Bike", "Gravel Bike"].map((text) => (
                   <SuggestionTag
                     key={text}
                     type="button"
-                    onClick={() => {
-                      setSearchValue(text);
-                      handleSearchSubmit(text);
-                    }}
+                    onClick={() => handleQuickCategoryClick(text)}
                   >
                     {text}
                   </SuggestionTag>
@@ -576,7 +592,9 @@ export default function Header({
                     "&:hover": { bgcolor: "#00b89a" },
                   }}
                 >
-                  {(user?.name || user?.fullName || "U").trim()[0].toUpperCase()}
+                  {(user?.name || user?.fullName || "U")
+                    .trim()[0]
+                    .toUpperCase()}
                 </Avatar>
                 <UserMenu
                   id="user-menu"
@@ -608,7 +626,7 @@ export default function Header({
                     sx={{ borderTop: "1px solid #f3f4f6" }}
                   >
                     <ListItemIcon>
-                      <LogoutOutlined style={{ fontSize: 18 }} />
+                      <LogOut size={18} />
                     </ListItemIcon>
                     <ListItemText primary="Sign Out" />
                   </MenuItem>
@@ -744,8 +762,15 @@ export default function Header({
                   </Box>
                   <IconButton
                     size="small"
-                    onClick={(e) => {
+                    onClick={async (e) => {
                       e.stopPropagation();
+                      const ok = await confirmCrud({
+                        title: "Xóa khỏi Wishlist?",
+                        content: `Gỡ "${bike.name ?? "mục này"}" khỏi danh sách yêu thích?`,
+                        okText: "Xóa",
+                        danger: true,
+                      });
+                      if (!ok) return;
                       removeFromWishlist(bike.id);
                     }}
                   >
@@ -806,7 +831,7 @@ export default function Header({
             }}
           >
             <Typography variant="subtitle1" fontWeight={700} color="#1a1a1a">
-              Thông báo
+              Notifications
             </Typography>
             {notifications.length > 0 && (
               <Button
@@ -814,7 +839,7 @@ export default function Header({
                 onClick={markAllAsRead}
                 sx={{ color: "#00ccad", fontSize: 12, textTransform: "none" }}
               >
-                Đánh dấu đã đọc
+                Mark all as read
               </Button>
             )}
           </Box>

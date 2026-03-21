@@ -5,6 +5,19 @@
   padding: 24px;
 }
 
+/* Filter bar: same alignment as Marketplace (shared MarketplaceFilterBar) */
+.wishlist-page .mp-filter-bar-toprow {
+  justify-content: flex-start !important;
+}
+
+.wishlist-page .mp-filter-bar {
+  justify-content: flex-start !important;
+}
+
+.wishlist-page .mp-filter-inline-selected {
+  justify-content: flex-start !important;
+}
+
 .wishlist-search-bar {
   margin-bottom: 24px;
 }
@@ -24,10 +37,7 @@
 }
 
 .wishlist-layout {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  gap: 32px;
-  align-items: start;
+  display: block;
 }
 
 .wishlist-sidebar {
@@ -137,6 +147,7 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 20px;
+  margin-top: 10px;
   gap: 16px;
 }
 
@@ -155,13 +166,18 @@
 
 .wishlist-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
   margin-bottom: 40px;
 }
 
-.wishlist-grid.list-view {
+.wishlist-grid.list {
   grid-template-columns: 1fr;
+}
+
+.wishlist-grid.wishlist-grid-empty {
+  grid-template-columns: minmax(280px, 360px);
+  justify-content: center;
 }
 
 .wishlist-add-card {
@@ -210,40 +226,25 @@
   border-color: #00ccad !important;
 }
 
-.wishlist-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  margin-bottom: 40px;
-}
-
-.wishlist-grid.list-view {
-  grid-template-columns: 1fr;
-}
-
-.wishlist-grid.list-view .bike-card {
-  max-width: 720px;
-}
-
-.wishlist-grid.list-view .bike-card {
-  max-width: 720px;
+.wishlist-grid.list > a {
+  max-width: 100%;
 }
 
 @media (max-width: 1024px) {
   .wishlist-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (max-width: 768px) {
   .wishlist-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 900px) {
   .wishlist-layout {
-    grid-template-columns: 1fr;
+    display: block;
   }
 
   .wishlist-sidebar {

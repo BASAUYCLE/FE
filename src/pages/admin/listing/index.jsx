@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { message, Modal, Input } from "antd";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import {
@@ -19,6 +18,7 @@ import {
 } from "../../../constants/postingStatus";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDate } from "../../../utils/date";
+import { useConfirmCrud } from "../../../utils/confirmCrud";
 import "./index.css";
 
 function getThumbnailUrl(item) {
@@ -28,6 +28,7 @@ function getThumbnailUrl(item) {
 }
 
 export default function ListingApproval() {
+  const askConfirm = useConfirmCrud();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvingId, setApprovingId] = useState(null);
@@ -36,8 +37,6 @@ export default function ListingApproval() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectPostId, setRejectPostId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
 
   const fetchPending = useCallback(async () => {
     try {
@@ -57,7 +56,14 @@ export default function ListingApproval() {
     fetchPending();
   }, [fetchPending]);
 
-  const handleApprove = async (postId) => {
+  const handleApprove = async (postId, row) => {
+    const name = row?.bicycleName ?? "—";
+    const ok = await askConfirm({
+      title: "Xác nhận phê duyệt tin?",
+      content: `Tin "${name}" sẽ chuyển sang bước kiểm định (Inspector). Hành động này sẽ áp dụng ngay.`,
+      okText: "Phê duyệt",
+    });
+    if (!ok) return;
     try {
       setApprovingId(postId);
       await adminPostService.approvePost(postId);
@@ -72,7 +78,15 @@ export default function ListingApproval() {
     }
   };
 
-  const openRejectModal = (postId) => {
+  const openRejectModal = async (postId, row) => {
+    const name = row?.bicycleName ?? "—";
+    const ok = await askConfirm({
+      title: "Từ chối tin đăng?",
+      content: `Bạn sắp từ chối tin "${name}". Ở bước tiếp theo cần nhập lý do (hiển thị cho người bán).`,
+      okText: "Tiếp tục",
+      danger: true,
+    });
+    if (!ok) return;
     setRejectPostId(postId);
     setRejectReason("");
     setRejectModalOpen(true);
@@ -85,6 +99,13 @@ export default function ListingApproval() {
       return;
     }
     if (!rejectPostId) return;
+    const ok = await askConfirm({
+      title: "Gửi từ chối?",
+      content: `Xác nhận từ chối tin #${rejectPostId} với lý do đã nhập? Thao tác thường không hoàn tác.`,
+      okText: "Gửi từ chối",
+      danger: true,
+    });
+    if (!ok) return;
     try {
       setRejectingId(rejectPostId);
       await adminPostService.rejectPost(rejectPostId, {
@@ -110,162 +131,169 @@ export default function ListingApproval() {
     <AdminLayout>
       <div className="admin-listings-page">
         <div className="admin-listings-shell">
-        <div className="admin-listings-stats">
-          <div className="admin-listings-stat">
-            <div className="stat-header">
-              <span className="stat-label">PENDING REVIEW</span>
-              <span className="stat-icon green">
-                <ClipboardList />
-              </span>
-            </div>
-            <div className="stat-value">
-              {loading ? "…" : String(pendingCount)}
-            </div>
-            <div className="stat-note green">From API /admin/posts/pending</div>
-          </div>
-          <div className="admin-listings-stat">
-            <div className="stat-header">
-              <span className="stat-label">APPROVED TODAY</span>
-              <span className="stat-icon green">
-                <CheckCircle2 />
-              </span>
-            </div>
-            <div className="stat-value">—</div>
-            <div className="stat-note green">N/A</div>
-          </div>
-          <div className="admin-listings-stat">
-            <div className="stat-header">
-              <span className="stat-label">REJECTION RATE</span>
-              <span className="stat-icon red">
-                <AlertTriangle />
-              </span>
-            </div>
-            <div className="stat-value">—</div>
-            <div className="stat-note red">N/A</div>
-          </div>
-        </div>
-
-        <div className="admin-listings-queue">
-          <div className="queue-header">
-            <div>
-              <h2>Listing Approval Queue</h2>
-            </div>
-            <div className="queue-actions">
-              <button type="button" className="queue-filter">
-                <Filter />
-                Filter
-              </button>
-              <button
-                type="button"
-                className="queue-refresh"
-                onClick={fetchPending}
-                disabled={loading}
-              >
-                <RefreshCcw />
-                Refresh Queue
-              </button>
-            </div>
-          </div>
-
-          <div className="queue-table">
-            <div className="queue-row queue-header-row">
-              <div>BIKE INFO</div>
-              <div>SELLER</div>
-              <div>CATEGORY</div>
-              <div>PRICE</div>
-              <div>SUBMISSION</div>
-              <div>STATUS</div>
-              <div>ACTIONS</div>
-            </div>
-            {loading ? (
-              <div className="queue-row">
-                <div
-                  style={{
-                    padding: "24px",
-                    gridColumn: "1 / -1",
-                    textAlign: "center",
-                  }}
-                >
-                  Loading...
-                </div>
+          <div className="admin-listings-stats">
+            <div className="admin-listings-stat">
+              <div className="stat-header">
+                <span className="stat-label">PENDING REVIEW</span>
+                <span className="stat-icon green">
+                  <ClipboardList />
+                </span>
               </div>
-            ) : (
-              listings.map((row, idx) => {
-                const thumb = getThumbnailUrl(row);
-                const status = row.postStatus ?? "PENDING";
-                return (
-                  <div className="queue-row" key={row?.postId ?? row?.id ?? `row-${idx}`}>
+              <div className="stat-value">
+                {loading ? "…" : String(pendingCount)}
+              </div>
+              <div className="stat-note green">
+                From API /admin/posts/pending
+              </div>
+            </div>
+            <div className="admin-listings-stat">
+              <div className="stat-header">
+                <span className="stat-label">APPROVED TODAY</span>
+                <span className="stat-icon green">
+                  <CheckCircle2 />
+                </span>
+              </div>
+              <div className="stat-value">—</div>
+              <div className="stat-note green">N/A</div>
+            </div>
+            <div className="admin-listings-stat">
+              <div className="stat-header">
+                <span className="stat-label">REJECTION RATE</span>
+                <span className="stat-icon red">
+                  <AlertTriangle />
+                </span>
+              </div>
+              <div className="stat-value">—</div>
+              <div className="stat-note red">N/A</div>
+            </div>
+          </div>
+
+          <div className="admin-listings-queue">
+            <div className="queue-header">
+              <div>
+                <h2>Listing Approval Queue</h2>
+              </div>
+              <div className="queue-actions">
+                <button type="button" className="queue-filter">
+                  <Filter />
+                  Filter
+                </button>
+                <button
+                  type="button"
+                  className="queue-refresh"
+                  onClick={fetchPending}
+                  disabled={loading}
+                >
+                  <RefreshCcw />
+                  Refresh Queue
+                </button>
+              </div>
+            </div>
+
+            <div className="queue-table">
+              <div className="queue-row queue-header-row">
+                <div>BIKE INFO</div>
+                <div>SELLER</div>
+                <div>CATEGORY</div>
+                <div>PRICE</div>
+                <div>SUBMISSION</div>
+                <div>STATUS</div>
+                <div>ACTIONS</div>
+              </div>
+              {loading ? (
+                <div className="queue-row">
+                  <div
+                    style={{
+                      padding: "24px",
+                      gridColumn: "1 / -1",
+                      textAlign: "center",
+                    }}
+                  >
+                    Loading...
+                  </div>
+                </div>
+              ) : (
+                listings.map((row, idx) => {
+                  const thumb = getThumbnailUrl(row);
+                  const status = row.postStatus ?? "PENDING";
+                  return (
                     <div
-                      className="queue-bike admin-row-link"
-                      onClick={() => row.postId && setPreviewId(row.postId)}
-                      title="View listing"
+                      className="queue-row"
+                      key={row?.postId ?? row?.id ?? `row-${idx}`}
                     >
-                      {thumb ? (
-                        <img src={thumb} alt={row.bicycleName} />
-                      ) : (
-                        <div className="queue-bike-placeholder">No image</div>
-                      )}
-                      <div>
-                        <div className="queue-bike-title">
-                          {row.bicycleName ?? "—"}
+                      <div
+                        className="queue-bike admin-row-link"
+                        onClick={() => row.postId && setPreviewId(row.postId)}
+                        title="View listing"
+                      >
+                        {thumb ? (
+                          <img src={thumb} alt={row.bicycleName} />
+                        ) : (
+                          <div className="queue-bike-placeholder">No image</div>
+                        )}
+                        <div>
+                          <div className="queue-bike-title">
+                            {row.bicycleName ?? "—"}
+                          </div>
                         </div>
                       </div>
+                      <div>{row.sellerFullName ?? row.sellerName ?? "—"}</div>
+                      <div>
+                        <span className="queue-category">
+                          {row.categoryName ?? "—"}
+                        </span>
+                      </div>
+                      <div className="queue-price">
+                        {formatCurrency(row.price)}
+                      </div>
+                      <div>{formatDate(row.createdAt) || "—"}</div>
+                      <div>
+                        <span
+                          className={`queue-inspection ${(POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()}`}
+                        >
+                          <FileCheck2 />
+                          {POSTING_STATUS_LABEL[status] ?? status}
+                        </span>
+                      </div>
+                      <div className="queue-actions-cell">
+                        <button
+                          type="button"
+                          className="queue-icon"
+                          onClick={() => row.postId && setPreviewId(row.postId)}
+                          title="View details"
+                        >
+                          <Eye />
+                        </button>
+                        <button
+                          type="button"
+                          className="queue-approve"
+                          onClick={() => handleApprove(row.postId, row)}
+                          disabled={approvingId === row.postId}
+                        >
+                          {approvingId === row.postId
+                            ? "Approving…"
+                            : "Approve"}
+                        </button>
+                        <button
+                          type="button"
+                          className="queue-reject"
+                          onClick={() => openRejectModal(row.postId, row)}
+                          disabled={rejectingId === row.postId}
+                        >
+                          {rejectingId === row.postId ? "Rejecting…" : "Reject"}
+                        </button>
+                      </div>
                     </div>
-                    <div>{row.sellerFullName ?? row.sellerName ?? "—"}</div>
-                    <div>
-                      <span className="queue-category">
-                        {row.categoryName ?? "—"}
-                      </span>
-                    </div>
-                    <div className="queue-price">
-                      {formatCurrency(row.price)}
-                    </div>
-                    <div>{formatDate(row.createdAt) || "—"}</div>
-                    <div>
-                      <span
-                        className={`queue-inspection ${(POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()}`}
-                      >
-                        <FileCheck2 />
-                        {POSTING_STATUS_LABEL[status] ?? status}
-                      </span>
-                    </div>
-                    <div className="queue-actions-cell">
-                      <button
-                        type="button"
-                        className="queue-icon"
-                        onClick={() => row.postId && setPreviewId(row.postId)}
-                        title="View details"
-                      >
-                        <Eye />
-                      </button>
-                      <button
-                        type="button"
-                        className="queue-approve"
-                        onClick={() => handleApprove(row.postId)}
-                        disabled={approvingId === row.postId}
-                      >
-                        {approvingId === row.postId ? "Approving…" : "Approve"}
-                      </button>
-                      <button
-                        type="button"
-                        className="queue-reject"
-                        onClick={() => openRejectModal(row.postId)}
-                        disabled={rejectingId === row.postId}
-                      >
-                        {rejectingId === row.postId ? "Rejecting…" : "Reject"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+                  );
+                })
+              )}
+            </div>
 
-          <div className="queue-footer">
-            <span>Showing {listings.length} pending result(s)</span>
+            <div className="queue-footer">
+              <span>Showing {listings.length} pending result(s)</span>
+            </div>
           </div>
         </div>
-      </div>
       </div>
 
       <Modal

@@ -10,6 +10,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { usePostingStatusNotifications } from "./contexts/usePostingStatusNotifications";
+import MemberPostingsSync from "./components/MemberPostingsSync";
 import { fontFamily, antdToken } from "./config/theme";
 
 // Lazy-load trang để app khởi động nhanh hơn
@@ -90,6 +91,7 @@ function App() {
                   <OrderProvider>
                     <NotificationProvider>
                       <PostingStatusEffect />
+                      <MemberPostingsSync />
                       <Suspense fallback={<PageFallback />}>
                         <Routes>
                           <Route path="/" element={<Home />} />

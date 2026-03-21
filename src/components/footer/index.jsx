@@ -18,7 +18,7 @@ export default function Footer() {
             <span className="app-footer-logo-text">BASAUYCLE</span>
           </Link>
           <p className="app-footer-tagline">
-            Hệ thống Cửa Hàng Bán Lẻ Xe Đạp Chuyên Nghiệp Hàng Đầu Việt Nam
+          Professional Bicycle Marketplace
           </p>
           <div className="app-footer-contact">
             <div><strong>Hotline:</strong> </div>
@@ -26,13 +26,13 @@ export default function Footer() {
             <div><strong>Website:</strong></div>
           </div>
           <div className="app-footer-intro">
-            <Link to="/about">Giới thiệu về BASAUYCLE</Link>
+            <Link to="/about">Introducing BASAUYCLE</Link>
           </div>
         </div>
 
         {/* Block 2: Hệ thống cửa hàng */}
         <div className="app-footer-col">
-          <h3 className="app-footer-title">Hệ Thống Cửa Hàng</h3>
+          <h3 className="app-footer-title">Store System</h3>
           <div className="app-footer-stores">
             <div className="app-footer-store">
               <strong>BASAUYCLE 1</strong>
@@ -49,22 +49,22 @@ export default function Footer() {
 
         {/* Block 3: Thông tin và chính sách */}
         <div className="app-footer-col">
-          <h3 className="app-footer-title">Thông tin và chính sách</h3>
+          <h3 className="app-footer-title">Information & Policies</h3>
           <div className="app-footer-links">
-            <Link to="/guide-buy">Hướng dẫn mua hàng</Link>
-            <Link to="/guide-payment">Hướng dẫn thanh toán</Link>
-            <Link to="/shipping">Phương thức vận chuyển</Link>
-            <Link to="/payment-policy">Chính sách thanh toán</Link>
-            <Link to="/complaint">Chính sách xử lý khiếu nại</Link>
-            <Link to="/return">Chính sách đổi trả và hoàn tiền</Link>
-            <Link to="/privacy">Chính sách bảo mật thông tin</Link>
+            <Link to="/guide-buy">Shopping Guide</Link>
+            <Link to="/guide-payment">Payment Guide</Link>
+            <Link to="/shipping">Shipping Methods</Link>
+            <Link to="/payment-policy">Payment Policy</Link>
+            <Link to="/complaint">Complaint Handling Policy</Link>
+            <Link to="/return">Return & Refund Policy</Link>
+            <Link to="/privacy">Privacy Policy</Link>
           </div>
         </div>
 
         {/* Block 4: Phương thức thanh toán (đặt cạnh cột Chính sách) */}
         <div className="app-footer-col app-footer-payment-col">
           <h3 className="app-footer-title app-footer-title--nowrap">
-            Phương thức thanh toán
+          Payment Methods
           </h3>
           <div className="app-footer-payment-methods app-footer-payment-methods--inline">
             <div className="app-footer-payment-item">
@@ -78,9 +78,9 @@ export default function Footer() {
       <div className="app-footer-bottom-wrap">
         <div className="app-footer-inner app-footer-bottom-inner">
           <div className="app-footer-bottom-text">
-            © 2026 BASAUYCLE. All rights reserved. Sử dụng nội dung và dịch vụ tại BASAUYCLE có nghĩa là bạn đồng ý với{" "}
-            <strong>Thỏa thuận sử dụng</strong> và{" "}
-            <strong>Chính sách bảo mật</strong> của chúng tôi.
+            © 2026 BASAUYCLE. All rights reserved. By accessing and using BASAUYCLE’s content and services, you agree to be bound by our{" "}
+            <strong>Terms of Use</strong> and{" "}
+            <strong>Privacy Policy.</strong>
           </div>
         </div>
       </div>

@@ -105,7 +105,7 @@ export default function SaleCard({ order }) {
         return (
           <div className="poc-actions">
             <Button size="small" disabled>
-              <CloseCircleOutlined /> Đã hủy
+              <CloseCircleOutlined /> Cancelled
             </Button>
           </div>
         );

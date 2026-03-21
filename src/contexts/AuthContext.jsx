@@ -19,6 +19,25 @@ function normalizeUser(userObj) {
   return { ...userObj, role: String(role).toUpperCase() };
 }
 
+/** Thông báo thân thiện khi đăng nhập sai (BE hay trả "Unauthenticated", v.v.) */
+function loginWrongCredentialsMessage(rawMsg, status) {
+  if (status !== 401) return rawMsg;
+  const s = String(rawMsg || "")
+    .toLowerCase()
+    .trim();
+  if (
+    !s ||
+    s.includes("unauthenticated") ||
+    s === "unauthorized" ||
+    s.includes("invalid credentials") ||
+    s.includes("bad credentials") ||
+    s.includes("full authentication is required")
+  ) {
+    return "Sai mật khẩu hoặc email đăng nhập.";
+  }
+  return rawMsg;
+}
+
 /** Check if account is PENDING (waiting approval) – block login */
 function isPendingVerification(user) {
   if (!user || typeof user !== "object") return false;
@@ -84,7 +103,7 @@ export const AuthProvider = ({ children }) => {
           sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
         }
       })
-      .catch(() => { });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -122,14 +141,17 @@ export const AuthProvider = ({ children }) => {
             }
             finalUser = normalizeUser(profileUser);
             setUser(finalUser);
-            sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(finalUser));
+            sessionStorage.setItem(
+              STORAGE_KEYS.USER,
+              JSON.stringify(finalUser),
+            );
           }
-        } catch (_) { }
+        } catch (_) {}
         return { success: true, data: response, user: finalUser };
       }
       return {
         success: false,
-        message: "Login failed. Please check your email and password.",
+        message: "Sai mật khẩu hoặc email đăng nhập.",
       };
     } catch (error) {
       const rawMsg =
@@ -221,14 +243,16 @@ export const AuthProvider = ({ children }) => {
         const profileRes = await userService.getProfile();
         const data = profileRes?.data ?? profileRes?.result ?? profileRes;
         const profileUser =
-          data?.user ?? data?.userInfo ?? (data?.id || data?.email ? data : null);
+          data?.user ??
+          data?.userInfo ??
+          (data?.id || data?.email ? data : null);
         if (profileUser) {
           const normalized = normalizeUser(profileUser);
           setUser(normalized);
           sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
           return { success: true, data: normalized };
         }
-      } catch (_) { }
+      } catch (_) {}
 
       return { success: true };
     } catch (error) {

@@ -43,6 +43,28 @@ function getErrorMessage(data) {
 
 const LOGIN_PATHS = ["/login", "/register", "/forgot-password"];
 
+/** Request POST /auth/login — chuẩn hóa 401 (Spring hay trả "Unauthenticated") */
+function isAuthLoginRequest(config) {
+  const u = String(config?.url ?? "");
+  return u.includes("auth/login");
+}
+
+const LOGIN_WRONG_CREDENTIALS_MSG = "Sai mật khẩu hoặc email đăng nhập.";
+
+function messageFor401LoginRequest(backendMsg) {
+  const s = String(backendMsg || "")
+    .toLowerCase()
+    .trim();
+  const generic =
+    !s ||
+    s.includes("unauthenticated") ||
+    s === "unauthorized" ||
+    s.includes("invalid credentials") ||
+    s.includes("bad credentials") ||
+    s.includes("full authentication is required");
+  return generic ? LOGIN_WRONG_CREDENTIALS_MSG : backendMsg;
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response.data,
   (error) => {
@@ -66,9 +88,18 @@ axiosInstance.interceptors.response.use(
       if (!LOGIN_PATHS.includes(window.location.pathname)) {
         window.location.href = "/login";
       }
+      const rawBackend = getErrorMessage(data);
+      const isLoginPost =
+        isAuthLoginRequest(error.config) &&
+        String(error.config?.method || "get").toLowerCase() === "post";
+      const msg401 = isLoginPost
+        ? messageFor401LoginRequest(rawBackend || message)
+        : rawBackend ||
+          message ||
+          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
       return Promise.reject({
         status: 401,
-        message: getErrorMessage(data) || "Invalid email or password. Password must be at least 8 characters.",
+        message: msg401,
         data,
         response: error.response,
       });

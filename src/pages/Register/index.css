@@ -1,4 +1,4 @@
-/* Register page - extends auth styles from Login/login.css, đồng bộ với Login */
+/* Register: AuthPage immersive (video + card). Các rule .auth-card--register cho layout cũ nếu còn dùng; CCCD/upload dùng chung Post. */
 
 .auth-card--register:not(.auth-card--split) {
   max-width: 500px;
@@ -34,7 +34,7 @@
 }
 
 .auth-card__link-inline {
-  color: #0d9488;
+  color: var(--primary, #00ccad);
   font-weight: 500;
   text-decoration: none;
 }
@@ -118,7 +118,7 @@
 }
 
 .cccd-upload-section .ant-upload.ant-upload-select-picture-card:hover {
-  border-color: #0d9488;
+  border-color: var(--primary, #00ccad);
 }
 
 .cccd-upload-section .ant-upload-list-picture-card .ant-upload-list-item {
@@ -140,7 +140,7 @@
 
 .upload-content .anticon {
   font-size: 28px;
-  color: #0d9488;
+  color: var(--primary, #00ccad);
 }
 
 .upload-text {

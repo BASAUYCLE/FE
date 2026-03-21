@@ -7,12 +7,26 @@
 
 .orders-main {
   flex: 1;
-  padding: 20px 16px 40px;
+  padding: 16px 12px 32px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .orders-main {
+    padding: 20px 16px 36px;
+  }
+}
+
+@media (min-width: 900px) {
+  .orders-main {
+    padding: 24px 20px 40px;
+  }
 }
 
 .orders-container {
-  max-width: var(--container-max);
+  max-width: var(--page-content-max);
   margin: 0 auto;
+  font-size: 14px;
 }
 
 .orders-container .ant-breadcrumb {
@@ -39,13 +53,17 @@
 }
 
 .orders-tabs .ant-tabs-tab {
-  font-size: 13px;
-  padding: 8px 0;
+  font-size: 14px;
+  padding: 10px 4px;
 }
 
 .orders-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
   font-weight: 600;
   color: #00ccad;
+}
+
+.orders-tabs .ant-tabs-tab-btn {
+  font-size: 14px;
 }
 
 .orders-tabs .ant-tabs-ink-bar {
@@ -76,4 +94,5 @@
 .orders-list {
   min-height: 80px;
   padding-top: 16px;
+  font-size: 14px;
 }

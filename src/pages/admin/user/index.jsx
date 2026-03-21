@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import { message, Modal, Dropdown, Input } from "antd";
 import userService from "../../../services/userService";
+import { confirmCrud } from "../../../utils/confirmCrud";
 import {
   ChevronDown,
   Search,
@@ -68,7 +69,12 @@ function normalizeUser(row) {
     row.accountStatus ??
     row.account_status;
   let status = "Pending";
-  if (rawStatus === "VERIFIED" || rawStatus === true || rawStatus === "true" || rawStatus === "Active") {
+  if (
+    rawStatus === "VERIFIED" ||
+    rawStatus === true ||
+    rawStatus === "true" ||
+    rawStatus === "Active"
+  ) {
     status = "Active";
   } else if (rawStatus === "REJECTED") {
     status = "Rejected";
@@ -129,12 +135,10 @@ export default function UserManagement() {
       const list = Array.isArray(data)
         ? data
         : (data?.content ?? data?.users ?? []);
-      const normalized = list
-        .map(normalizeUser)
-        .map((u) => ({
-          ...u,
-          displayId: `#USR-${String(u.id).padStart(5, "0")}`,
-        }));
+      const normalized = list.map(normalizeUser).map((u) => ({
+        ...u,
+        displayId: `#USR-${String(u.id).padStart(5, "0")}`,
+      }));
       if (normalized.length > 0) setUsers(normalized);
     } catch (err) {
       try {
@@ -143,12 +147,10 @@ export default function UserManagement() {
         const list = Array.isArray(data)
           ? data
           : (data?.content ?? data?.users ?? []);
-        const normalized = list
-          .map(normalizeUser)
-          .map((u) => ({
-            ...u,
-            displayId: `#USR-${String(u.id).padStart(5, "0")}`,
-          }));
+        const normalized = list.map(normalizeUser).map((u) => ({
+          ...u,
+          displayId: `#USR-${String(u.id).padStart(5, "0")}`,
+        }));
         if (normalized.length > 0) setUsers(normalized);
       } catch (e) {
         console.warn("UserManagement: load users failed", e?.message);
@@ -198,12 +200,21 @@ export default function UserManagement() {
       message.warning("Please enter a rejection reason.");
       return;
     }
+    const ok = await confirmCrud({
+      title: "Từ chối và gửi thông báo?",
+      content: `Tài khoản ${user.email} sẽ bị từ chối theo lý do đã nhập. Thao tác này thường không hoàn tác.`,
+      okText: "Gửi từ chối",
+      danger: true,
+    });
+    if (!ok) return;
     setVerifyingId(id);
     try {
       // Send rejection email via API with reason
       // Backend will automatically delete the user after sending rejection email
       await userService.verifyUser(id, "REJECT", reason);
-      message.success(`Account ${user.email} has been rejected and deleted. Rejection email sent.`);
+      message.success(
+        `Account ${user.email} has been rejected and deleted. Rejection email sent.`,
+      );
       setRejectModalOpen(false);
       setUserToReject(null);
       setRejectReason("");
@@ -236,11 +247,20 @@ export default function UserManagement() {
       message.warning("Please enter a reason for hiding this account.");
       return;
     }
+    const ok = await confirmCrud({
+      title: "Khóa / ẩn tài khoản?",
+      content: `Người dùng ${user.email} sẽ không thể đăng nhập. Email thông báo sẽ được gửi.`,
+      okText: "Xác nhận khóa",
+      danger: true,
+    });
+    if (!ok) return;
     setVerifyingId(id);
     try {
       // Send hide email via API with reason and block login
       await userService.hideUser(id, reason);
-      message.success(`Account ${user.email} has been hidden. User cannot login. Notification email sent.`);
+      message.success(
+        `Account ${user.email} has been hidden. User cannot login. Notification email sent.`,
+      );
       setHideModalOpen(false);
       setUserToHide(null);
       setHideReason("");
@@ -306,7 +326,9 @@ export default function UserManagement() {
     : memberUsers;
 
   const pendingCount = memberUsers.filter((u) => u.status === "Pending").length;
-  const rejectedCount = memberUsers.filter((u) => u.status === "Rejected").length;
+  const rejectedCount = memberUsers.filter(
+    (u) => u.status === "Rejected",
+  ).length;
   const hiddenCount = memberUsers.filter((u) => u.status === "Hidden").length;
 
   const filteredUsers =
@@ -321,175 +343,178 @@ export default function UserManagement() {
 
   return (
     <AdminLayout>
-
       <div className="user-management-page">
         <main className="user-content">
-        <section className="user-header">
-          <div className="user-header-spacer" />
-        </section>
+          <section className="user-header">
+            <div className="user-header-spacer" />
+          </section>
 
-        <section className="user-stats">
-          {statsConfig.map((item) => {
-            const value =
-              item.key === "members"
-                ? memberUsers.length
-                : item.key === "verified"
-                  ? memberUsers.filter((u) => u.status === "Active").length
-                  : item.key === "pending"
-                    ? pendingCount
-                    : item.key === "rejected"
-                      ? rejectedCount
-                      : hiddenCount;
-            const isActive = item.filter === statusFilter;
-            return (
-              <div
-                className={`stat-card ${isActive ? "stat-card--active" : ""}`}
-                key={item.key}
-                onClick={() => setStatusFilter(item.filter)}
-              >
-                <div className="stat-icon">{item.icon}</div>
-                <div className="stat-meta">
-                  <div className="stat-label">{item.label}</div>
-                  <div className="stat-row">
-                    <span className="stat-value">{value}</span>
+          <section className="user-stats">
+            {statsConfig.map((item) => {
+              const value =
+                item.key === "members"
+                  ? memberUsers.length
+                  : item.key === "verified"
+                    ? memberUsers.filter((u) => u.status === "Active").length
+                    : item.key === "pending"
+                      ? pendingCount
+                      : item.key === "rejected"
+                        ? rejectedCount
+                        : hiddenCount;
+              const isActive = item.filter === statusFilter;
+              return (
+                <div
+                  className={`stat-card ${isActive ? "stat-card--active" : ""}`}
+                  key={item.key}
+                  onClick={() => setStatusFilter(item.filter)}
+                >
+                  <div className="stat-icon">{item.icon}</div>
+                  <div className="stat-meta">
+                    <div className="stat-label">{item.label}</div>
+                    <div className="stat-row">
+                      <span className="stat-value">{value}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </section>
+              );
+            })}
+          </section>
 
-        <section className="user-table-card">
-          <div className="user-table-toolbar">
-            <div className="search-input">
-              <Search />
-              <input
-                type="text"
-                placeholder="Search by name, email or ID..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <div className="user-table-toolbar-meta">
-              <span
-                className={`user-filter-pill ${
-                  statusFilter === "All" ? "user-filter-pill--muted" : ""
-                }`}
-              >
-                {statusFilter === "All"
-                  ? "Showing all members"
-                  : statusFilter === "Verified"
-                    ? "Showing verified (Active) members"
-                    : `Showing ${statusFilter.toLowerCase()} members`}
-              </span>
-            </div>
-          </div>
-          <div className="user-table">
-            <div className="user-table-row header">
-              <div>User</div>
-              <div>Email Address</div>
-              <div>Role</div>
-              <div>Joined</div>
-              <div>Status</div>
-              <div>Actions</div>
-            </div>
-            {loading ? (
-              <div className="user-table-row">
-                <div
-                  style={{
-                    padding: "24px",
-                    gridColumn: "1 / -1",
-                    textAlign: "center",
-                  }}
-                >
-                  Loading users...
-                </div>
+          <section className="user-table-card">
+            <div className="user-table-toolbar">
+              <div className="search-input">
+                <Search />
+                <input
+                  type="text"
+                  placeholder="Search by name, email or ID..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
               </div>
-            ) : (
-              filteredUsers.map((user) => (
-                <div className="user-table-row" key={user.id ?? user.displayId}>
-                  <div className="user-cell">
-                    <div className="user-avatar">{(user.name || "?")[0]}</div>
+              <div className="user-table-toolbar-meta">
+                <span
+                  className={`user-filter-pill ${
+                    statusFilter === "All" ? "user-filter-pill--muted" : ""
+                  }`}
+                >
+                  {statusFilter === "All"
+                    ? "Showing all members"
+                    : statusFilter === "Verified"
+                      ? "Showing verified (Active) members"
+                      : `Showing ${statusFilter.toLowerCase()} members`}
+                </span>
+              </div>
+            </div>
+            <div className="user-table">
+              <div className="user-table-row header">
+                <div>User</div>
+                <div>Email Address</div>
+                <div>Role</div>
+                <div>Joined</div>
+                <div>Status</div>
+                <div>Actions</div>
+              </div>
+              {loading ? (
+                <div className="user-table-row">
+                  <div
+                    style={{
+                      padding: "24px",
+                      gridColumn: "1 / -1",
+                      textAlign: "center",
+                    }}
+                  >
+                    Loading users...
+                  </div>
+                </div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div
+                    className="user-table-row"
+                    key={user.id ?? user.displayId}
+                  >
+                    <div className="user-cell">
+                      <div className="user-avatar">{(user.name || "?")[0]}</div>
+                      <div>
+                        <div className="user-name">{user.name}</div>
+                        {user.displayId && (
+                          <div className="user-id">{user.displayId}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="user-email">{user.email}</div>
                     <div>
-                      <div className="user-name">{user.name}</div>
-                      {user.displayId && (
-                        <div className="user-id">{user.displayId}</div>
+                      <span
+                        className={`role-badge ${(user.role || "").toLowerCase()}`}
+                      >
+                        {user.role}
+                      </span>
+                    </div>
+                    <div>{user.joined}</div>
+                    <div className="status-cell">
+                      <Dropdown
+                        menu={{
+                          items: [
+                            {
+                              key: "Active",
+                              label: "Active",
+                              onClick: () =>
+                                user.status === "Pending" && handleVerify(user),
+                            },
+                            {
+                              key: "Pending",
+                              label: "Pending",
+                              onClick: () => {},
+                            },
+                            {
+                              key: "Hidden",
+                              label: "Hide Account",
+                              onClick: () =>
+                                user.status !== "Hidden" && handleHide(user),
+                            },
+                            {
+                              key: "Rejected",
+                              label: "Reject",
+                              danger: true,
+                              onClick: () =>
+                                user.status !== "Rejected" &&
+                                handleReject(user),
+                            },
+                          ],
+                        }}
+                        trigger={["click"]}
+                      >
+                        <span
+                          className={`status-pill status-pill--dropdown ${(user.status || "").toLowerCase()}`}
+                        >
+                          {user.status}
+                          <ChevronDown
+                            className="status-pill-chevron"
+                            size={14}
+                          />
+                        </span>
+                      </Dropdown>
+                    </div>
+                    <div className="user-actions">
+                      {(user.cccdFront || user.cccdBack) && (
+                        <button
+                          type="button"
+                          className="outline-btn view-id-btn"
+                          onClick={() => setViewIdCardUser(user)}
+                        >
+                          View ID
+                        </button>
                       )}
                     </div>
                   </div>
-                  <div className="user-email">{user.email}</div>
-                  <div>
-                    <span
-                      className={`role-badge ${(user.role || "").toLowerCase()}`}
-                    >
-                      {user.role}
-                    </span>
-                  </div>
-                  <div>{user.joined}</div>
-                  <div className="status-cell">
-                    <Dropdown
-                      menu={{
-                        items: [
-                          {
-                            key: "Active",
-                            label: "Active",
-                            onClick: () =>
-                              user.status === "Pending" && handleVerify(user),
-                          },
-                          {
-                            key: "Pending",
-                            label: "Pending",
-                            onClick: () => {},
-                          },
-                          {
-                            key: "Hidden",
-                            label: "Hide Account",
-                            onClick: () =>
-                              user.status !== "Hidden" && handleHide(user),
-                          },
-                          {
-                            key: "Rejected",
-                            label: "Reject",
-                            danger: true,
-                            onClick: () =>
-                              user.status !== "Rejected" && handleReject(user),
-                          },
-                        ],
-                      }}
-                      trigger={["click"]}
-                    >
-                      <span
-                        className={`status-pill status-pill--dropdown ${(user.status || "").toLowerCase()}`}
-                      >
-                        {user.status}
-                        <ChevronDown
-                          className="status-pill-chevron"
-                          size={14}
-                        />
-                      </span>
-                    </Dropdown>
-                  </div>
-                  <div className="user-actions">
-                    {(user.cccdFront || user.cccdBack) && (
-                      <button
-                        type="button"
-                        className="outline-btn view-id-btn"
-                        onClick={() => setViewIdCardUser(user)}
-                      >
-                        View ID
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-          <div className="user-table-footer">
-            <span>
-              Showing {filteredUsers.length} / {memberUsers.length} member(s)
-            </span>
-          </div>
-        </section>
+                ))
+              )}
+            </div>
+            <div className="user-table-footer">
+              <span>
+                Showing {filteredUsers.length} / {memberUsers.length} member(s)
+              </span>
+            </div>
+          </section>
         </main>
       </div>
 
@@ -564,11 +589,12 @@ export default function UserManagement() {
       >
         <div style={{ marginBottom: 16 }}>
           <p style={{ marginBottom: 8, color: "#64748b" }}>
-            Are you sure you want to reject <strong>{userToReject?.email}</strong>?
+            Are you sure you want to reject{" "}
+            <strong>{userToReject?.email}</strong>?
           </p>
           <p style={{ marginBottom: 16, color: "#64748b" }}>
-            They will receive a rejection email with your reason and their account will be deleted.
-            They can register again later.
+            They will receive a rejection email with your reason and their
+            account will be deleted. They can register again later.
           </p>
         </div>
         <div>
@@ -606,8 +632,9 @@ export default function UserManagement() {
             Are you sure you want to hide <strong>{userToHide?.email}</strong>?
           </p>
           <p style={{ marginBottom: 16, color: "#64748b" }}>
-            They will receive an email notification with your reason. Their account will be hidden and they cannot login.
-            The account will not be deleted.
+            They will receive an email notification with your reason. Their
+            account will be hidden and they cannot login. The account will not
+            be deleted.
           </p>
         </div>
         <div>

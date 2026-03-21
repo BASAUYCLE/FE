@@ -30,6 +30,7 @@ import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import adminPostService from "../../services/adminPostService";
 import postService from "../../services/postService";
+import { confirmCrud } from "../../utils/confirmCrud";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
@@ -362,15 +363,25 @@ export default function ProductDetail() {
   }
 
   const inWishlist = isInWishlist(product.id);
-  const handleWishlistClick = () => {
+  const handleWishlistClick = async () => {
     if (isOwnListing) return;
     if (!isLoggedIn) {
       message.info("Please sign in to use wishlist");
       navigate("/login");
       return;
     }
-    if (inWishlist) removeFromWishlist(product.id);
-    else addToWishlist(product);
+    if (inWishlist) {
+      const ok = await confirmCrud({
+        title: "Remove from wishlist?",
+        content: `Remove "${product.name ?? "this item"}" from your wishlist?`,
+        okText: "Remove",
+        danger: true,
+      });
+      if (!ok) return;
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
   };
 
   const breadcrumbs = isStaffView

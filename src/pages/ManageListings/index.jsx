@@ -13,6 +13,7 @@ import {
   message,
   Tooltip,
   Switch,
+  Pagination,
 } from "antd";
 import {
   Search,
@@ -26,7 +27,6 @@ import {
 } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
-import PageBreadcrumb from "../../components/PageBreadcrumb";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/useNotifications";
@@ -36,12 +36,8 @@ import {
   POSTING_STATUS_TAG_COLOR,
 } from "../../constants/postingStatus";
 import postService from "../../services/postService";
+import { confirmCrud } from "../../utils/confirmCrud";
 import "./index.css";
-
-const BREADCRUMB_ITEMS = [
-  { label: "Account", path: "/account" },
-  { label: "Listing Management" },
-];
 
 /* Tab theo luồng: PENDING → ADMIN_APPROVED → AVAILABLE | REJECTED; + VERIFIED, DEPOSITED, SOLD, DRAFTED */
 const TAB_KEYS = {
@@ -69,8 +65,6 @@ const TAB_ITEMS = [
 ];
 
 import { formatDate } from "../../utils/date";
-
-const POSTING_STATUS_STORAGE_KEY = "basauycle-posting-status-prev";
 
 function getStatusLabel(status) {
   return POSTING_STATUS_LABEL[status] ?? status;
@@ -135,62 +129,6 @@ export default function ManageListings() {
     fetchMyPostings();
   }, [fetchMyPostings]);
 
-  // Thông báo cho member khi bài đăng chuyển sang đã duyệt (ADMIN_APPROVED), hiển thị (AVAILABLE) hoặc bị từ chối (REJECTED). Dùng localStorage để nhớ trạng thái trước, nhận thông báo dù mở Home hay Quản lý tin đăng.
-  useEffect(() => {
-    if (!postings.length || !addNotification) return;
-    let prev = {};
-    try {
-      const raw = localStorage.getItem(POSTING_STATUS_STORAGE_KEY);
-      if (raw) prev = JSON.parse(raw);
-    } catch (_) {}
-    for (const p of postings) {
-      const id = p.id;
-      const status = p.status;
-      const prevStatus = prev[id];
-      const name = p.bikeName || "Listing";
-      if (
-        status === POSTING_STATUS.ADMIN_APPROVED &&
-        prevStatus === POSTING_STATUS.PENDING
-      ) {
-        addNotification({
-          title: "Listing approved",
-          message: `"${name}" has been approved and is pending inspection.`,
-          type: "success",
-        });
-      } else if (
-        status === POSTING_STATUS.AVAILABLE &&
-        (prevStatus === POSTING_STATUS.PENDING ||
-          prevStatus === POSTING_STATUS.ADMIN_APPROVED)
-      ) {
-        addNotification({
-          title: "Listing is live",
-          message: `"${name}" has passed inspection and is now on Marketplace.`,
-          type: "success",
-        });
-      } else if (
-        status === POSTING_STATUS.REJECTED &&
-        prevStatus &&
-        prevStatus !== POSTING_STATUS.REJECTED
-      ) {
-        addNotification({
-          title: "Listing rejected",
-          message: p.rejectionReason
-            ? `"${name}" was rejected: ${p.rejectionReason}`
-            : `"${name}" has been rejected.`,
-          type: "warning",
-        });
-      }
-    }
-    try {
-      localStorage.setItem(
-        POSTING_STATUS_STORAGE_KEY,
-        JSON.stringify(
-          Object.fromEntries(postings.map((p) => [p.id, p.status])),
-        ),
-      );
-    } catch (_) {}
-  }, [postings, addNotification]);
-
   const filteredByTab = useMemo(() => {
     // Chỉ hiển thị bài thuộc về seller hiện tại (phòng trường hợp postings có lẫn dữ liệu cũ)
     const mySellerId = sellerId;
@@ -198,16 +136,13 @@ export default function ManageListings() {
     if (mySellerId != null) {
       list = list.filter((p) => {
         const ownerId =
-          p.sellerId ??
-          p.seller_id ??
-          p.seller?.id ??
-          p.seller?.userId ??
-          null;
+          p.sellerId ?? p.seller_id ?? p.seller?.id ?? p.seller?.userId ?? null;
         return ownerId == mySellerId;
       });
     }
     if (activeTab === TAB_KEYS.ALL) {
-      if (hideDrafts) list = list.filter((p) => p.status !== POSTING_STATUS.DRAFTED);
+      if (hideDrafts)
+        list = list.filter((p) => p.status !== POSTING_STATUS.DRAFTED);
     } else {
       list = list.filter((p) => p.status === activeTab);
     }
@@ -232,7 +167,11 @@ export default function ManageListings() {
 
   const handleDelete = (id) => {
     const posting = postings.find(
-      (p) => p.id === id || p.id === Number(id) || p.backendPostId === id || p.backendPostId === Number(id),
+      (p) =>
+        p.id === id ||
+        p.id === Number(id) ||
+        p.backendPostId === id ||
+        p.backendPostId === Number(id),
     );
     if (posting) setDeleteModal({ open: true, id, name: posting.bikeName });
   };
@@ -251,6 +190,12 @@ export default function ManageListings() {
   const handleSubmitDraft = async (record) => {
     const id = record.id ?? record.backendPostId;
     if (!id) return;
+    const ok = await confirmCrud({
+      title: "Gửi duyệt tin đăng?",
+      content: `Tin "${record.bikeName ?? "này"}" sẽ được gửi cho quản trị / kiểm định xem xét.`,
+      okText: "Gửi duyệt",
+    });
+    if (!ok) return;
     setSubmittingDraftId(id);
     try {
       await postService.submitDraft(id);
@@ -262,7 +207,8 @@ export default function ManageListings() {
       message.success("Draft submitted for review. Awaiting approval.");
       await fetchMyPostings();
     } catch (err) {
-      const msg = err?.message ?? err?.data?.message ?? "Submit for review failed.";
+      const msg =
+        err?.message ?? err?.data?.message ?? "Submit for review failed.";
       message.error(msg);
     } finally {
       setSubmittingDraftId(null);
@@ -462,7 +408,9 @@ export default function ManageListings() {
                   type="primary"
                   size="small"
                   icon={<Send size={14} />}
-                  loading={submittingDraftId === (record.id ?? record.backendPostId)}
+                  loading={
+                    submittingDraftId === (record.id ?? record.backendPostId)
+                  }
                   onClick={() => handleSubmitDraft(record)}
                   title="Submit for review"
                 >
@@ -531,11 +479,10 @@ export default function ManageListings() {
       <Header />
       <main className="manage-listings-main">
         <div className="manage-listings-container">
-          <PageBreadcrumb items={BREADCRUMB_ITEMS} />
           <div className="manage-listings-header">
             <div>
               <Typography.Title level={2} className="manage-listings-title">
-                Listing Management
+                Manage Listings
               </Typography.Title>
               <Typography.Text
                 type="secondary"
@@ -612,47 +559,14 @@ export default function ManageListings() {
                   {Math.min(page * pageSize, filteredBySearch.length)} of{" "}
                   {filteredBySearch.length} listing(s)
                 </Typography.Text>
-                <Space>
-                  <Button
-                    size="small"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    Previous
-                  </Button>
-                  {Array.from(
-                    { length: Math.ceil(filteredBySearch.length / pageSize) },
-                    (_, i) => i + 1,
-                  )
-                    .filter(
-                      (n) =>
-                        n === 1 ||
-                        n === page ||
-                        n === Math.ceil(filteredBySearch.length / pageSize) ||
-                        Math.abs(n - page) <= 1,
-                    )
-                    .map((n, idx, arr) => (
-                      <span key={n}>
-                        {idx > 0 && arr[idx - 1] !== n - 1 && " … "}
-                        <Button
-                          type={page === n ? "primary" : "default"}
-                          size="small"
-                          onClick={() => setPage(n)}
-                        >
-                          {n}
-                        </Button>
-                      </span>
-                    ))}
-                  <Button
-                    size="small"
-                    disabled={
-                      page >= Math.ceil(filteredBySearch.length / pageSize)
-                    }
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    Next
-                  </Button>
-                </Space>
+                <Pagination
+                  current={page}
+                  pageSize={pageSize}
+                  total={filteredBySearch.length}
+                  showSizeChanger={false}
+                  onChange={(nextPage) => setPage(nextPage)}
+                  size="small"
+                />
               </div>
             )}
           </div>
@@ -664,7 +578,9 @@ export default function ManageListings() {
         title="Confirm delete"
         open={deleteModal.open}
         onOk={confirmDelete}
-        onCancel={() => !deleting && setDeleteModal({ open: false, id: null, name: "" })}
+        onCancel={() =>
+          !deleting && setDeleteModal({ open: false, id: null, name: "" })
+        }
         okText="Delete"
         cancelText="Cancel"
         okButtonProps={{ danger: true }}

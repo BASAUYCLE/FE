@@ -9,11 +9,11 @@ import {
   Divider,
   Button,
 } from "@mui/material";
-import { Rate, Empty, Tabs, Tag, Image } from "antd";
+import { Rate, Empty, Tabs, Tag, Image, Tooltip } from "antd";
 import {
-  StarFilled,
-  ShoppingCartOutlined,
+  InfoCircleOutlined,
 } from "@ant-design/icons";
+import { Share2, UserPlus, Star } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import userService from "../../services/userService";
@@ -21,7 +21,81 @@ import postService from "../../services/postService";
 import { feedbackService } from "../../services";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { POSTING_STATUS } from "../../constants/postingStatus";
+import feedbackBannerImage from "../../assets/banner_feedback.png";
 import "../Orders/index.css";
+
+/** Mỗi lần hiển thị: 4 cột × 3 hàng = 12 tin */
+const LISTINGS_PAGE_SIZE = 12;
+
+const FEEDBACK_KEYWORD_MAP = [
+  { key: "product-quality", label: "Good product quality", patterns: ["chất lượng", "quality"] },
+  { key: "polite", label: "Polite and friendly communication", patterns: ["lịch sự", "thân thiện", "friendly", "polite"] },
+  { key: "accurate", label: "Product description is accurate", patterns: ["đúng mô tả", "mô tả đúng", "as described"] },
+  { key: "good-price", label: "Good value for money", patterns: ["giá tốt", "good price", "giá hợp lý"] },
+  { key: "on-time", label: "On time", patterns: ["đúng hẹn", "on time"] },
+];
+
+function getFeedbackRole(feedback) {
+  const roleRaw = String(
+    feedback?.reviewerRole ??
+      feedback?.fromRole ??
+      feedback?.feedbackFrom ??
+      feedback?.role ??
+      "",
+  ).toLowerCase();
+  if (roleRaw.includes("seller")) return "seller";
+  if (roleRaw.includes("buyer")) return "buyer";
+  return "buyer";
+}
+
+function extractFeedbackLabels(feedback) {
+  const rawTags = feedback?.tags ?? feedback?.keywords ?? feedback?.criteria ?? [];
+  const text = String(feedback?.comment ?? "").toLowerCase();
+  const labels = new Set();
+
+  if (Array.isArray(rawTags)) {
+    rawTags.forEach((item) => {
+      const label = String(item?.label ?? item?.name ?? item ?? "").trim();
+      if (label) labels.add(label);
+    });
+  }
+
+  FEEDBACK_KEYWORD_MAP.forEach((cfg) => {
+    if (cfg.patterns.some((p) => text.includes(p))) labels.add(cfg.label);
+  });
+
+  return [...labels];
+}
+
+function pickFirstValue(...values) {
+  for (const value of values) {
+    if (value === null || value === undefined) continue;
+    if (typeof value === "string" && value.trim() === "") continue;
+    return value;
+  }
+  return null;
+}
+
+function formatRelativeTime(input) {
+  if (!input) return null;
+  const date = new Date(input);
+  if (Number.isNaN(date.getTime())) return null;
+  const diffMs = date.getTime() - Date.now();
+  const absSec = Math.abs(diffMs / 1000);
+  const rtf = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  if (absSec < 60) return rtf.format(Math.round(diffMs / 1000), "second");
+  if (absSec < 3600) return rtf.format(Math.round(diffMs / (1000 * 60)), "minute");
+  if (absSec < 86400) return rtf.format(Math.round(diffMs / (1000 * 60 * 60)), "hour");
+  if (absSec < 2592000) return rtf.format(Math.round(diffMs / (1000 * 60 * 60 * 24)), "day");
+  if (absSec < 31536000) return rtf.format(Math.round(diffMs / (1000 * 60 * 60 * 24 * 30)), "month");
+  return rtf.format(Math.round(diffMs / (1000 * 60 * 60 * 24 * 365)), "year");
+}
+
+function toNumberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
 
 export default function UserFeedbackPage() {
   const { userId } = useParams();
@@ -32,10 +106,10 @@ export default function UserFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [loadingFeedbacks, setLoadingFeedbacks] = useState(true);
   const [ratingSummary, setRatingSummary] = useState(null);
-  const [visibleActive, setVisibleActive] = useState(6);
-  const [visibleSold, setVisibleSold] = useState(6);
+  const [visibleActive, setVisibleActive] = useState(LISTINGS_PAGE_SIZE);
+  const [visibleSold, setVisibleSold] = useState(LISTINGS_PAGE_SIZE);
+  const [listingsTab, setListingsTab] = useState("active");
   const [feedbackFilter, setFeedbackFilter] = useState("all");
-  const [helpfulCounts, setHelpfulCounts] = useState({});
 
   useEffect(() => {
     let cancelled = false;
@@ -83,16 +157,6 @@ export default function UserFeedbackPage() {
           ? fbRaw.result ?? fbRaw
           : fbRaw?.content ?? [];
         setFeedbacks(fbList);
-        // Khởi tạo số lượt "Helpful" nếu BE có trường, mặc định 0
-        const initialHelpful = {};
-        fbList.forEach((f) => {
-          const id = f.feedbackId ?? f.id;
-          if (id != null) {
-            initialHelpful[id] = f.helpfulCount ?? 0;
-          }
-        });
-        setHelpfulCounts(initialHelpful);
-
         const ratingRaw = ratingRes?.data ?? ratingRes?.result ?? ratingRes;
         const ratingObj = ratingRaw?.result ?? ratingRaw ?? null;
         setRatingSummary(ratingObj);
@@ -137,9 +201,23 @@ export default function UserFeedbackPage() {
     };
   }, [userId]);
 
+  const uniqueListings = useMemo(() => {
+    const byId = new Map();
+    const noIdItems = [];
+    listings.forEach((p, idx) => {
+      const id = p?.postId ?? p?.id;
+      if (id == null || id === "") {
+        noIdItems.push({ ...p, __fallbackKey: `no-id-${idx}` });
+        return;
+      }
+      byId.set(String(id), p);
+    });
+    return [...byId.values(), ...noIdItems];
+  }, [listings]);
+
   const activeListings = useMemo(
     () =>
-      listings.filter((p) => {
+      uniqueListings.filter((p) => {
         const s = (p.status ?? p.postStatus ?? "").toString().toUpperCase();
         return (
           s === POSTING_STATUS.AVAILABLE ||
@@ -147,29 +225,40 @@ export default function UserFeedbackPage() {
           s === POSTING_STATUS.ACTIVE
         );
       }),
-    [listings],
+    [uniqueListings],
   );
 
   const soldListings = useMemo(
     () =>
-      listings.filter((p) => {
+      uniqueListings.filter((p) => {
         const s = (p.status ?? p.postStatus ?? "").toString().toUpperCase();
         return s === POSTING_STATUS.SOLD;
       }),
-    [listings],
+    [uniqueListings],
   );
 
   const stats = useMemo(() => {
     if (!feedbacks.length)
       return { avg: 0, count: 0, five: 0, four: 0, three: 0, two: 0, one: 0 };
-    const count =
-      ratingSummary?.totalReviews != null
-        ? Number(ratingSummary.totalReviews)
-        : feedbacks.length;
+    const countFromApi = pickFirstValue(
+      ratingSummary?.totalReviews,
+      ratingSummary?.totalReview,
+      ratingSummary?.reviewCount,
+      ratingSummary?.totalRatings,
+      ratingSummary?.total_reviews,
+      ratingSummary?.count,
+    );
+    const avgFromApi = pickFirstValue(
+      ratingSummary?.averageRating,
+      ratingSummary?.avgRating,
+      ratingSummary?.average,
+      ratingSummary?.avg,
+      ratingSummary?.average_rating,
+    );
+    const count = toNumberOrNull(countFromApi) ?? feedbacks.length;
     const baseAvg =
-      ratingSummary?.averageRating != null
-        ? Number(ratingSummary.averageRating)
-        : feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / count;
+      toNumberOrNull(avgFromApi) ??
+      (count > 0 ? feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0) / count : 0);
     const total = baseAvg * count;
     const buckets = { five: 0, four: 0, three: 0, two: 0, one: 0 };
     feedbacks.forEach((f) => {
@@ -184,142 +273,308 @@ export default function UserFeedbackPage() {
       count,
       ...buckets,
     };
-  }, [feedbacks]);
+  }, [feedbacks, ratingSummary]);
 
   const displayName =
     ratingSummary?.sellerName ||
+    ratingSummary?.sellerFullName ||
+    ratingSummary?.fullName ||
     user?.fullName ||
     user?.name ||
     user?.username ||
-    "Thành viên BASAUYCLE";
+    "BASAUYCLE Member";
+
+  const avatarUrl = pickFirstValue(
+    user?.avatar,
+    user?.avatarUrl,
+    user?.avatar_url,
+    user?.profileImageUrl,
+    user?.profileImage,
+    user?.imageUrl,
+    user?.image_url,
+    ratingSummary?.sellerAvatar,
+    ratingSummary?.sellerAvatarUrl,
+  );
+
+  const lastActiveRaw = pickFirstValue(
+    user?.lastActiveAt,
+    user?.lastSeenAt,
+    user?.updatedAt,
+    user?.updated_at,
+    ratingSummary?.lastActiveAt,
+  );
+  const responseRateRaw = pickFirstValue(
+    user?.responseRate,
+    user?.response_rate,
+    user?.responseRatio,
+    user?.response_ratio,
+    ratingSummary?.responseRate,
+    ratingSummary?.response_ratio,
+    ratingSummary?.responseRatio,
+  );
+  const followerRaw = pickFirstValue(
+    user?.followerCount,
+    user?.followCount,
+    user?.followersCount,
+    user?.followers,
+    user?.totalFollowers,
+    user?.totalFollower,
+    user?.total_follower,
+    ratingSummary?.followerCount,
+    ratingSummary?.followCount,
+    ratingSummary?.followersCount,
+    ratingSummary?.followers,
+  );
+  const locationText = pickFirstValue(
+    user?.location,
+    user?.address,
+    user?.city && user?.province ? `${user.city}, ${user.province}` : null,
+    user?.provinceName,
+    ratingSummary?.sellerLocation,
+    activeListings?.[0]?.location,
+    soldListings?.[0]?.location,
+  );
+
+  const activityText = formatRelativeTime(lastActiveRaw); // không ??
+  const responseRateText =
+    responseRateRaw == null
+      ? null
+      : String(responseRateRaw).includes("%")
+        ? String(responseRateRaw)
+        : `${responseRateRaw}%`;
+  const followerText =
+    followerRaw == null ? null : Number(followerRaw).toLocaleString("vi-VN");
+  const displayLocation = locationText ?? "Bien Hoa City, Dong Nai";
+
   const avatarLetter = displayName?.[0]?.toUpperCase?.() ?? "?";
 
   // Reset số lượng hiển thị khi user hoặc danh sách thay đổi
   useEffect(() => {
-    setVisibleActive(6);
-    setVisibleSold(6);
+    setVisibleActive(LISTINGS_PAGE_SIZE);
+    setVisibleSold(LISTINGS_PAGE_SIZE);
+    setListingsTab("active");
     setFeedbackFilter("all");
   }, [userId, activeListings.length, soldListings.length]);
 
   const filteredFeedbacks = useMemo(() => {
-    // Hiện tại tất cả feedback đều từ người mua → filter chỉ đổi nhãn
+    if (feedbackFilter === "buyer") {
+      return feedbacks.filter((fb) => getFeedbackRole(fb) === "buyer");
+    }
+    if (feedbackFilter === "seller") {
+      return feedbacks.filter((fb) => getFeedbackRole(fb) === "seller");
+    }
     return feedbacks;
   }, [feedbacks, feedbackFilter]);
 
+  const feedbackFilterCount = useMemo(() => {
+    const buyer = feedbacks.filter((fb) => getFeedbackRole(fb) === "buyer").length;
+    const seller = feedbacks.filter((fb) => getFeedbackRole(fb) === "seller").length;
+    return { buyer, seller };
+  }, [feedbacks]);
+
+  const feedbackTagSummary = useMemo(() => {
+    const counter = new Map();
+    feedbacks.forEach((fb) => {
+      extractFeedbackLabels(fb).forEach((label) => {
+        counter.set(label, (counter.get(label) ?? 0) + 1);
+      });
+    });
+    return [...counter.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .map(([label, count]) => ({ label, count }));
+  }, [feedbacks]);
+
   const ratingLabel =
     stats.count === 0
-      ? "Chưa có đánh giá"
+      ? "No ratings yet"
       : Number(stats.avg) >= 4.5
         ? "Rất hài lòng"
         : Number(stats.avg) >= 3.5
           ? "Hài lòng"
-          : "Chưa hài lòng";
+          : "Not satisfied";
 
   return (
     <Box
       component="main"
-      sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}
+      sx={{ minHeight: "100vh", backgroundColor: "#f3f4f6" }}
     >
       <Header />
 
       <Box
         sx={{
-          maxWidth: 1320,
+          maxWidth: "var(--page-content-max)",
           margin: "0 auto",
-          padding: { xs: "24px 16px", md: "32px 24px" },
+          padding: { xs: "16px 12px", sm: "20px 16px", md: "24px 20px" },
+          boxSizing: "border-box",
         }}
       >
         {/* Header seller info + summary */}
         <Card
           sx={{
-            mb: 3,
-            borderRadius: 3,
-            boxShadow: "0 10px 30px rgba(15,23,42,0.1)",
+            mb: 2,
+            borderRadius: 2,
+            boxShadow: "0 1px 3px rgba(15,23,42,0.08)",
+            overflow: "hidden",
+            border: "1px solid #e8eaed",
           }}
         >
-          <CardContent sx={{ p: 3.25 }}>
+          <Box sx={{ lineHeight: 0, backgroundColor: "#ffffff", maxHeight: 160, overflow: "hidden" }}>
+            <Box
+              component="img"
+              src={feedbackBannerImage}
+              alt="User feedback banner"
+              sx={{
+                width: "100%",
+                height: 160,
+                display: "block",
+                objectFit: "cover",
+                objectPosition: "center",
+              }}
+            />
+          </Box>
+          <CardContent sx={{ p: { xs: 2, sm: 2.25 } }}>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 2.5,
+                gap: 2,
                 flexWrap: "wrap",
               }}
             >
               <Avatar
                 sx={{
-                  width: 72,
-                  height: 72,
-                  bgcolor: "#0f766e",
-                  fontSize: 32,
+                  width: 88,
+                  height: 88,
+                  bgcolor: "#00CCAD",
+                  fontSize: 28,
                   fontWeight: 600,
                 }}
+                src={avatarUrl || undefined}
               >
                 {avatarLetter}
               </Avatar>
 
-              <Box sx={{ flex: 1, minWidth: 220 }}>
-                <Typography variant="h5" fontWeight={700} color="#111827">
+              <Box sx={{ flex: 1, minWidth: 200 }}>
+                <Typography sx={{ fontSize: { xs: 18, sm: 20 }, fontWeight: 700, color: "#0f172a", lineHeight: 1.2 }}>
                   {displayName}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  color="#6b7280"
-                  sx={{ mt: 0.25 }}
+                <Box
+                  sx={{
+                    mt: 0.9,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    flexWrap: "wrap",
+                  }}
                 >
-                  Hoạt động gần đây • Tỷ lệ phản hồi —
-                </Typography>
+                  <Box
+                    sx={{
+                      px: 1.1,
+                      py: 0.4,
+                      borderRadius: 999,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      color: "#64748b",
+                      fontSize: 13,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Active {activityText}
+                  </Box>
+                  <Box
+                    sx={{
+                      px: 1.1,
+                      py: 0.4,
+                      borderRadius: 999,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      color: "#64748b",
+                      fontSize: 13,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Response rate: {responseRateText}
+                  </Box>
+                  <Box
+                    sx={{
+                      px: 1.1,
+                      py: 0.4,
+                      borderRadius: 999,
+                      backgroundColor: "#f8fafc",
+                      border: "1px solid #e2e8f0",
+                      color: "#64748b",
+                      fontSize: 13,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    Followers:{" "}
+                    <Box component="span" sx={{ textDecoration: "underline", textUnderlineOffset: 2 }}>
+                      {followerText}
+                    </Box>
+                  </Box>
+                </Box>
 
                 <Box
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 1.5,
-                    mt: 1.5,
+                    gap: 1.25,
+                    mt: 1,
                     flexWrap: "wrap",
                   }}
                 >
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    <Rate
-                      allowHalf
-                      disabled
-                      value={Number(stats.avg) || 0}
-                      style={{ color: "#f59e0b", fontSize: 18 }}
-                    />
-                    <Typography
-                      sx={{ fontSize: 14, fontWeight: 600, color: "#111827" }}
-                    >
-                      {stats.avg} / 5
+                  <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.75 }}>
+                    <Typography sx={{ fontSize: 14, fontWeight: 700, color: "#111827", lineHeight: 1 }}>
+                      {stats.avg}
                     </Typography>
-                    <Typography
-                      sx={{ fontSize: 13, color: "#6b7280" }}
-                    >
-                      {loadingFeedbacks
-                        ? "Đang tải..."
-                        : `(${stats.count} đánh giá)`}
+                    <Star size={15} color="#f59e0b" fill="#f59e0b" />
+                    <Typography sx={{ fontSize: 13, color: "#475569", textDecoration: "underline", textUnderlineOffset: 2 }}>
+                      ({stats.count} ratings)
                     </Typography>
                   </Box>
 
-                  <Box
+                </Box>
+
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mt: 1.25, flexWrap: "wrap" }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Share2 size={15} />}
                     sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.75,
-                      px: 1.5,
-                      py: 0.5,
                       borderRadius: 999,
-                      backgroundColor: "#ecfdf5",
+                      borderColor: "#cbd5e1",
+                      color: "#0f172a",
+                      textTransform: "none",
+                      px: 1.75,
+                      py: 0.5,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      minWidth: 0,
+                      "&:hover": { borderColor: "#94a3b8", backgroundColor: "#f8fafc" },
                     }}
                   >
-                    <ShoppingCartOutlined
-                      style={{ fontSize: 16, color: "#16a34a" }}
-                    />
-                    <Typography
-                      sx={{ fontSize: 13, fontWeight: 500, color: "#166534" }}
-                    >
-                      Đơn hàng đã bán: {soldListings.length || feedbacks.length}
-                    </Typography>
-                  </Box>
+                    Share
+                  </Button>
+
+                  <Button
+                    variant="outlined"
+                    startIcon={<UserPlus size={15} />}
+                    sx={{
+                      borderRadius: 999,
+                      borderColor: "#cbd5e1",
+                      color: "#0f172a",
+                      backgroundColor: "#ffffff",
+                      textTransform: "none",
+                      px: 1.75,
+                      py: 0.5,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      minWidth: 0,
+                      "&:hover": { borderColor: "#94a3b8", backgroundColor: "#f8fafc" },
+                    }}
+                  >
+                    Follow
+                  </Button>
                 </Box>
               </Box>
             </Box>
@@ -329,43 +584,63 @@ export default function UserFeedbackPage() {
         {/* Listings section */}
         <Card
           sx={{
-            mb: 3,
-            borderRadius: 3,
-            boxShadow: "0 10px 25px rgba(15,23,42,0.06)",
+            mb: 2,
+            borderRadius: 2,
+            boxShadow: "0 1px 3px rgba(15,23,42,0.08)",
+            border: "1px solid #e8eaed",
           }}
         >
-          <CardContent sx={{ p: 3 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 2.25 } }}>
             <Box
               sx={{
                 display: "flex",
                 alignItems: "baseline",
                 justifyContent: "space-between",
-                mb: 1.5,
+                mb: 1.25,
               }}
             >
-              <Typography variant="h6" fontWeight={700} color="#111827">
-                Tất cả tin đăng{" "}
-                <Typography component="span" sx={{ fontWeight: 400, fontSize: 14, color: "#6b7280" }}>
-                  ({listings.length})
+              <Typography sx={{ fontSize: 17, fontWeight: 700, color: "#111827" }}>
+                All listings{" "}
+                <Typography component="span" sx={{ fontWeight: 400, fontSize: 13, color: "#6b7280" }}>
+                  ({uniqueListings.length})
                 </Typography>
               </Typography>
             </Box>
 
             <Tabs
-              defaultActiveKey="active"
+              activeKey={listingsTab}
+              onChange={setListingsTab}
+              indicator={{ size: 0 }}
+              tabBarGutter={10}
+              tabBarStyle={{ marginBottom: 0, borderBottom: "none" }}
               items={[
                 {
                   key: "active",
-                  label: `Tin đang hoạt động (${activeListings.length})`,
+                  label: (
+                    <Box
+                      sx={{
+                        borderRadius: 999,
+                        px: 2.25,
+                        py: 0.8,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: listingsTab === "active" ? "#ffffff" : "#111827",
+                        backgroundColor: listingsTab === "active" ? "#111827" : "#f3f4f6",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      Active listings ({activeListings.length})
+                    </Box>
+                  ),
                   children: (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 1.5 }}>
                       {loadingListings ? (
-                        <Box sx={{ textAlign: "center", py: 3 }}>
-                          <Empty description="Đang tải tin đăng..." />
+                        <Box sx={{ textAlign: "center", py: 2.5 }}>
+                          <Empty description="Loading listings..." />
                         </Box>
                       ) : activeListings.length === 0 ? (
-                        <Box sx={{ textAlign: "center", py: 3 }}>
-                          <Empty description="Chưa có tin đang hoạt động" />
+                        <Box sx={{ textAlign: "center", py: 2.5 }}>
+                          <Empty description="No active listings yet" />
                         </Box>
                       ) : (
                         <Box
@@ -373,10 +648,10 @@ export default function UserFeedbackPage() {
                             display: "grid",
                             gridTemplateColumns: {
                               xs: "1fr",
-                              sm: "1fr 1fr",
-                              md: "repeat(3, minmax(0, 1fr))",
+                              sm: "repeat(2, minmax(0, 1fr))",
+                              md: "repeat(4, minmax(0, 1fr))",
                             },
-                            gap: 2.5,
+                            gap: 1.5,
                           }}
                         >
                           {activeListings.slice(0, visibleActive).map((p) => {
@@ -385,7 +660,7 @@ export default function UserFeedbackPage() {
                               p.bicycleName ??
                               p.bicycle_name ??
                               p.title ??
-                              "Tin đăng";
+                              "Listing";
                             const thumb =
                               p.thumbnailUrl ||
                               p.imageUrl ||
@@ -425,32 +700,33 @@ export default function UserFeedbackPage() {
                                   />
                                 ) : null}
                               </Box>
-                              <Box sx={{ p: 1.5 }}>
+                              <Box sx={{ p: 1.25 }}>
                                 <Typography
                                   sx={{
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     fontWeight: 500,
                                     color: "#111827",
-                                    minHeight: 38,
+                                    minHeight: 34,
+                                    lineHeight: 1.35,
                                   }}
                                 >
                                   {title}
                                 </Typography>
                                 <Typography
                                   sx={{
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: 700,
                                     color: "#dc2626",
-                                    mt: 0.5,
+                                    mt: 0.35,
                                   }}
                                 >
                                   {formatCurrency(p.price ?? 0)}
                                 </Typography>
                                 <Typography
                                   sx={{
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     color: "#6b7280",
-                                    mt: 0.5,
+                                    mt: 0.35,
                                   }}
                                 >
                                   {p.location ?? ""}
@@ -462,9 +738,10 @@ export default function UserFeedbackPage() {
                           {activeListings.length > visibleActive && (
                             <Box
                               sx={{
-                                mt: 3,
+                                mt: 2,
                                 display: "flex",
                                 justifyContent: "center",
+                                gridColumn: "1 / -1",
                               }}
                             >
                               <Button
@@ -472,7 +749,7 @@ export default function UserFeedbackPage() {
                                 size="medium"
                                 onClick={() =>
                                   setVisibleActive((prev) =>
-                                    Math.min(prev + 6, activeListings.length),
+                                    Math.min(prev + LISTINGS_PAGE_SIZE, activeListings.length),
                                   )
                                 }
                                 sx={{
@@ -500,16 +777,31 @@ export default function UserFeedbackPage() {
                 },
                 {
                   key: "sold",
-                  label: `Đã bán (${soldListings.length})`,
+                  label: (
+                    <Box
+                      sx={{
+                        borderRadius: 999,
+                        px: 2.25,
+                        py: 0.8,
+                        fontSize: 13,
+                        fontWeight: 600,
+                        color: listingsTab === "sold" ? "#ffffff" : "#111827",
+                        backgroundColor: listingsTab === "sold" ? "#111827" : "#f3f4f6",
+                        lineHeight: 1.1,
+                      }}
+                    >
+                      Sold ({soldListings.length})
+                    </Box>
+                  ),
                   children: (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 1.5 }}>
                       {loadingListings ? (
-                        <Box sx={{ textAlign: "center", py: 3 }}>
-                          <Empty description="Đang tải tin đăng..." />
+                        <Box sx={{ textAlign: "center", py: 2.5 }}>
+                          <Empty description="Loading listings..." />
                         </Box>
                       ) : soldListings.length === 0 ? (
-                        <Box sx={{ textAlign: "center", py: 3 }}>
-                          <Empty description="Chưa có tin đã bán" />
+                        <Box sx={{ textAlign: "center", py: 2.5 }}>
+                          <Empty description="No sold listings yet" />
                         </Box>
                       ) : (
                         <Box
@@ -517,10 +809,10 @@ export default function UserFeedbackPage() {
                             display: "grid",
                             gridTemplateColumns: {
                               xs: "1fr",
-                              sm: "1fr 1fr",
-                              md: "repeat(3, minmax(0, 1fr))",
+                              sm: "repeat(2, minmax(0, 1fr))",
+                              md: "repeat(4, minmax(0, 1fr))",
                             },
-                            gap: 2.5,
+                            gap: 1.5,
                           }}
                         >
                           {soldListings.slice(0, visibleSold).map((p) => {
@@ -529,7 +821,7 @@ export default function UserFeedbackPage() {
                               p.bicycleName ??
                               p.bicycle_name ??
                               p.title ??
-                              "Tin đăng";
+                              "Listing";
                             const thumb =
                               p.thumbnailUrl ||
                               p.imageUrl ||
@@ -569,32 +861,33 @@ export default function UserFeedbackPage() {
                                   />
                                 ) : null}
                               </Box>
-                              <Box sx={{ p: 1.5 }}>
+                              <Box sx={{ p: 1.25 }}>
                                 <Typography
                                   sx={{
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     fontWeight: 500,
                                     color: "#111827",
-                                    minHeight: 38,
+                                    minHeight: 34,
+                                    lineHeight: 1.35,
                                   }}
                                 >
                                   {title}
                                 </Typography>
                                 <Typography
                                   sx={{
-                                    fontSize: 14,
+                                    fontSize: 13,
                                     fontWeight: 700,
                                     color: "#dc2626",
-                                    mt: 0.5,
+                                    mt: 0.35,
                                   }}
                                 >
                                   {formatCurrency(p.price ?? 0)}
                                 </Typography>
                                 <Typography
                                   sx={{
-                                    fontSize: 12,
+                                    fontSize: 11,
                                     color: "#6b7280",
-                                    mt: 0.5,
+                                    mt: 0.35,
                                   }}
                                 >
                                   {p.location ?? ""}
@@ -606,9 +899,10 @@ export default function UserFeedbackPage() {
                           {soldListings.length > visibleSold && (
                             <Box
                               sx={{
-                                mt: 3,
+                                mt: 2,
                                 display: "flex",
                                 justifyContent: "center",
+                                gridColumn: "1 / -1",
                               }}
                             >
                               <Button
@@ -616,7 +910,7 @@ export default function UserFeedbackPage() {
                                 size="medium"
                                 onClick={() =>
                                   setVisibleSold((prev) =>
-                                    Math.min(prev + 6, soldListings.length),
+                                    Math.min(prev + LISTINGS_PAGE_SIZE, soldListings.length),
                                   )
                                 }
                                 sx={{
@@ -650,125 +944,80 @@ export default function UserFeedbackPage() {
         {/* Feedback section */}
         <Card
           sx={{
-            borderRadius: 3,
-            boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
+            borderRadius: 2,
+            boxShadow: "0 1px 3px rgba(15,23,42,0.08)",
+            border: "1px solid #e8eaed",
           }}
         >
-          <CardContent sx={{ p: 3 }}>
+          <CardContent sx={{ p: { xs: 2, sm: 2.25 } }}>
+            <Typography sx={{ fontSize: 17, fontWeight: 700, color: "#111827", mb: 1.5 }}>
+              Ratings
+            </Typography>
             {/* Summary row like Chợ Tốt */}
             <Box
               sx={{
                 display: "flex",
                 flexDirection: { xs: "column", md: "row" },
-                gap: 3,
-                mb: 3,
+                gap: 2,
+                mb: 2,
               }}
             >
               <Box
                 sx={{
-                  flex: 1,
-                  minWidth: 220,
+                  minWidth: { xs: "100%", md: 220 },
+                  maxWidth: 280,
                   backgroundColor: "#fef9c3",
                   borderRadius: 2,
-                  p: 2,
+                  p: 1.75,
                 }}
               >
                 <Typography
-                  sx={{ fontSize: 14, fontWeight: 600, color: "#92400e", mb: 0.5 }}
+                  sx={{ fontSize: { xs: 20, sm: 22 }, fontWeight: 700, color: "#111827", lineHeight: 1.15, mb: 0.5 }}
                 >
-                  {stats.avg} ★ {ratingLabel}
+                  {stats.avg}{" "}
+                  <Box component="span" sx={{ display: "inline-flex", verticalAlign: "middle" }}>
+                    <Star size={15} color="#f59e0b" fill="#f59e0b" />
+                  </Box>{" "}
+                  {ratingLabel}
                 </Typography>
                 <Typography
-                  sx={{ fontSize: 13, color: "#92400e" }}
+                  sx={{ fontSize: 14, color: "#4b5563" }}
                 >
                   {loadingFeedbacks
-                    ? "Đang tải đánh giá..."
-                    : `(${stats.count} đánh giá từ người dùng)`}
+                    ? "Loading ratings..."
+                    : `(${stats.count} ratings from users)`}
                 </Typography>
               </Box>
 
-              {/* Rating breakdown bars */}
-              <Box
-                sx={{
-                  flex: 1,
-                  minWidth: 220,
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 0.5,
-                }}
-              >
-                {[5, 4, 3, 2, 1].map((star) => {
-                  const countForStar =
-                    star === 5
-                      ? stats.five
-                      : star === 4
-                        ? stats.four
-                        : star === 3
-                          ? stats.three
-                          : star === 2
-                            ? stats.two
-                            : stats.one;
-                  const percent =
-                    stats.count > 0 ? (countForStar / stats.count) * 100 : 0;
-                  return (
-                    <Box
-                      key={star}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography
-                        sx={{ fontSize: 12, color: "#6b7280", minWidth: 40 }}
-                      >
-                        {star} ★
-                      </Typography>
-                      <Box
-                        sx={{
-                          flex: 1,
-                          height: 6,
-                          borderRadius: 999,
-                          backgroundColor: "#e5e7eb",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            width: `${percent}%`,
-                            height: "100%",
-                            backgroundColor: "#f59e0b",
-                            transition: "width 0.3s ease",
-                          }}
-                        />
-                      </Box>
-                      <Typography
-                        sx={{
-                          fontSize: 12,
-                          color: "#6b7280",
-                          minWidth: 16,
-                          textAlign: "right",
-                        }}
-                      >
-                        {countForStar}
-                      </Typography>
-                    </Box>
-                  );
-                })}
-              </Box>
-
-              <Box sx={{ flex: 1, minWidth: 260 }}>
-                <Typography
-                  sx={{ fontSize: 13, fontWeight: 500, color: "#6b7280", mb: 1 }}
-                >
-                  Người dùng đánh giá
-                </Typography>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
+                  <Typography
+                    sx={{ fontSize: 14, fontWeight: 600, color: "#111827" }}
+                  >
+                    User rating breakdown
+                  </Typography>
+                  <Tooltip
+                    title="Filter highlighted seller criteria based on user ratings"
+                    placement="topLeft"
+                    color="#1f1f1f"
+                    overlayInnerStyle={{ borderRadius: 14, fontSize: 14, lineHeight: 1.45, padding: "14px 16px" }}
+                    arrow
+                  >
+                    <InfoCircleOutlined style={{ fontSize: 18, color: "#6b7280", cursor: "pointer" }} />
+                  </Tooltip>
+                </Box>
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  <Tag color="#facc15">
-                    Giao tiếp lịch sự, thân thiện (0)
-                  </Tag>
-                  <Tag color="#22c55e">Đúng hẹn (0)</Tag>
-                  <Tag>Đúng mô tả (0)</Tag>
+                  {feedbackTagSummary.length > 0 ? (
+                    feedbackTagSummary.map((item) => (
+                      <Tag key={item.label} style={{ borderRadius: 999, paddingInline: 10 }}>
+                        {item.label} ({item.count})
+                      </Tag>
+                    ))
+                  ) : (
+                    <Typography sx={{ fontSize: 14, color: "#6b7280" }}>
+                      No rating criteria data yet
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -776,49 +1025,77 @@ export default function UserFeedbackPage() {
             {/* Filter row */}
             <Box
               sx={{
-                position: "sticky",
-                top: 0,
-                zIndex: 1,
-                backgroundColor: "#ffffff",
-                pb: 2.5,
-                mb: 2.5,
+                pb: 1.25,
+                mb: 2,
                 borderBottom: "1px solid #f3f4f6",
-                boxShadow: "0 1px 2px rgba(15,23,42,0.06)",
               }}
             >
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", md: "row" },
-                  justifyContent: "flex-start",
-                  alignItems: "flex-start",
-                  gap: 2,
+                  display: "inline-flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: 0.75,
                 }}
               >
-                <Box>
-                  <Typography
-                    sx={{ fontSize: 13, fontWeight: 500, color: "#6b7280", mb: 1 }}
-                  >
-                    Lọc đánh giá theo
-                  </Typography>
-                  <Box sx={{ display: "inline-flex", gap: 1 }}>
-                    <Tag color="#111827" style={{ color: "#fff" }}>
-                      Tất cả ({stats.count})
-                    </Tag>
-                    <Tag>Từ người mua ({stats.count})</Tag>
-                    <Tag>Từ người bán (0)</Tag>
-                  </Box>
-                </Box>
+                <Typography sx={{ fontSize: 13, fontWeight: 500, color: "#4b5563", mr: 0.5 }}>
+                  Filter ratings by
+                </Typography>
+                <Button
+                  size="small"
+                  onClick={() => setFeedbackFilter("all")}
+                  sx={{
+                    borderRadius: 999,
+                    px: 2,
+                    textTransform: "none",
+                    fontSize: 13,
+                    color: feedbackFilter === "all" ? "#fff" : "#111827",
+                    backgroundColor: feedbackFilter === "all" ? "#111827" : "#f3f4f6",
+                    "&:hover": { backgroundColor: feedbackFilter === "all" ? "#111827" : "#e5e7eb" },
+                  }}
+                >
+                  All ({stats.count})
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => setFeedbackFilter("buyer")}
+                  sx={{
+                    borderRadius: 999,
+                    px: 2,
+                    textTransform: "none",
+                    fontSize: 14,
+                    color: feedbackFilter === "buyer" ? "#fff" : "#111827",
+                    backgroundColor: feedbackFilter === "buyer" ? "#111827" : "#f3f4f6",
+                    "&:hover": { backgroundColor: feedbackFilter === "buyer" ? "#111827" : "#e5e7eb" },
+                  }}
+                >
+                  From buyers ({feedbackFilterCount.buyer})
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => setFeedbackFilter("seller")}
+                  sx={{
+                    borderRadius: 999,
+                    px: 2,
+                    textTransform: "none",
+                    fontSize: 14,
+                    color: feedbackFilter === "seller" ? "#fff" : "#111827",
+                    backgroundColor: feedbackFilter === "seller" ? "#111827" : "#f3f4f6",
+                    "&:hover": { backgroundColor: feedbackFilter === "seller" ? "#111827" : "#e5e7eb" },
+                  }}
+                >
+                  From sellers ({feedbackFilterCount.seller})
+                </Button>
               </Box>
             </Box>
 
             {loadingFeedbacks ? (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <Empty description="Đang tải đánh giá..." />
+              <Box sx={{ textAlign: "center", py: 3 }}>
+                <Empty description="Loading ratings..." />
               </Box>
             ) : filteredFeedbacks.length === 0 ? (
-              <Box sx={{ textAlign: "center", py: 4 }}>
-                <Empty description="Chưa có feedback nào cho người bán này." />
+              <Box sx={{ textAlign: "center", py: 3 }}>
+                <Empty description="No feedback for this seller yet." />
               </Box>
             ) : (
               <>
@@ -827,21 +1104,12 @@ export default function UserFeedbackPage() {
                     display: "grid",
                     gridTemplateColumns: {
                       xs: "1fr",
-                      md: "repeat(2, minmax(0, 1fr))",
                     },
-                    gap: 2,
+                    gap: 1.5,
                   }}
                 >
                   {filteredFeedbacks.map((fb, idx) => {
                     const id = fb.feedbackId ?? fb.id ?? idx;
-                    const helpful = helpfulCounts[id] ?? 0;
-
-                    const handleHelpfulClick = () => {
-                      setHelpfulCounts((prev) => ({
-                        ...prev,
-                        [id]: (prev[id] ?? 0) + 1,
-                      }));
-                    };
 
                     const rawImages =
                       (Array.isArray(fb.images) && fb.images) ||
@@ -859,10 +1127,10 @@ export default function UserFeedbackPage() {
                       <Box
                         key={id}
                         sx={{
-                          borderRadius: 2,
+                          borderRadius: 1.5,
                           border: "1px solid #e5e7eb",
                           backgroundColor: "#fff",
-                          p: 1.75,
+                          p: 1.5,
                         }}
                       >
                         {/* Avatar + name + stars + time */}
@@ -893,7 +1161,7 @@ export default function UserFeedbackPage() {
                                 color: "#111827",
                               }}
                             >
-                              {fb.buyerName ?? "Người mua"}
+                              {fb.buyerName ?? "Buyer"}
                             </Typography>
                             <Box
                               sx={{
@@ -947,7 +1215,7 @@ export default function UserFeedbackPage() {
                                 <Image
                                   key={i}
                                   src={url}
-                                  alt={`Ảnh đánh giá ${i + 1}`}
+                                  alt={`Review image ${i + 1}`}
                                   width={72}
                                   height={72}
                                   style={{
@@ -982,82 +1250,24 @@ export default function UserFeedbackPage() {
                           </Typography>
                         </Box>
 
-                        {/* Tags */}
-                        <Box
-                          sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}
-                        >
-                          <Tag
-                            bordered={false}
-                            color="#fef3c7"
-                            style={{
-                              borderRadius: 999,
-                              padding: "2px 10px",
-                              fontSize: 12,
-                            }}
-                          >
-                            Giao tiếp lịch sự
-                          </Tag>
-                          <Tag
-                            bordered={false}
-                            color="#e0f2fe"
-                            style={{
-                              borderRadius: 999,
-                              padding: "2px 10px",
-                              fontSize: 12,
-                            }}
-                          >
-                            Đúng hẹn
-                          </Tag>
-                          <Tag
-                            bordered={false}
-                            style={{
-                              borderRadius: 999,
-                              padding: "2px 10px",
-                              fontSize: 12,
-                            }}
-                          >
-                            Đúng mô tả
-                          </Tag>
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                          {extractFeedbackLabels(fb).slice(0, 4).map((label) => (
+                            <Tag
+                              key={`${id}-${label}`}
+                              bordered={false}
+                              style={{
+                                borderRadius: 999,
+                                padding: "2px 10px",
+                                fontSize: 12,
+                              }}
+                            >
+                              {label}
+                            </Tag>
+                          ))}
                         </Box>
-
-                        {/* Helpful button */}
-                        <Button
-                          variant="text"
-                          size="small"
-                          onClick={handleHelpfulClick}
-                          sx={{
-                            mt: 1,
-                            px: 0,
-                            minWidth: 0,
-                            fontSize: 12,
-                            textTransform: "none",
-                            color: "#6b7280",
-                            "&:hover": {
-                              backgroundColor: "transparent",
-                              color: "#0f766e",
-                            },
-                          }}
-                        >
-                          👍 Helpful ({helpful})
-                        </Button>
                       </Box>
                     );
                   })}
-                </Box>
-
-                <Box sx={{ textAlign: "center", mt: 3 }}>
-                  <Button
-                    variant="outlined"
-                    size="medium"
-                    sx={{
-                      borderRadius: 999,
-                      px: 3.5,
-                      textTransform: "none",
-                      fontSize: 14,
-                    }}
-                  >
-                    Xem tất cả {stats.count} đánh giá
-                  </Button>
                 </Box>
               </>
             )}

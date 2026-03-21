@@ -126,7 +126,7 @@ const authService = {
       return { token, user };
     } catch (error) {
       if (error?.status === 401 && !error?.message) {
-        error.message = "Invalid email or password.";
+        error.message = "Sai mật khẩu hoặc email đăng nhập.";
       }
       throw error;
     }

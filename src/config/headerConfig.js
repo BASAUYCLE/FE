@@ -18,15 +18,17 @@ export function getNavLinksForRole(role) {
 const PATH_TO_ACTIVE_LABEL = {
   "/": "Home",
   "/marketplace": "Marketplace",
-  "/post": "Home",
   "/manage-listings": "Manage Listings",
   "/wishlist": "Wishlist",
   "/account": "Account",
-  "/wallet": "Home",
-  "/payment": "Home",
 };
 
 export function getActiveLink(pathname) {
+  // Wallet/Payment pages don't have a dedicated nav link,
+  // so do not highlight any main nav item.
+  if (pathname?.startsWith("/wallet")) return null;
+  if (pathname?.startsWith("/payment")) return null;
+
   if (pathname && PATH_TO_ACTIVE_LABEL[pathname]) {
     return PATH_TO_ACTIVE_LABEL[pathname];
   }

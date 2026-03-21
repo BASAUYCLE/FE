@@ -2,9 +2,18 @@ import { useEffect, useContext } from "react";
 import { useAuthOptional } from "./AuthContext";
 import { usePostings } from "./PostingContext";
 import { NotificationContext } from "./NotificationContext";
-import { POSTING_STATUS } from "../constants/postingStatus";
+import { emitPostingStatusNotifications } from "../utils/postingStatusNotify";
 
 const STORAGE_KEY = "basauycle-posting-status-prev";
+
+function getPrevStatus(prevMap, postingId) {
+  if (postingId == null) return undefined;
+  return (
+    prevMap[postingId] ??
+    prevMap[String(postingId)] ??
+    prevMap[Number(postingId)]
+  );
+}
 
 // So sánh trạng thái tin đăng với localStorage, thông báo khi duyệt/hiển thị/từ chối
 // Dùng useAuthOptional để không throw khi render ngoài AuthProvider (tránh lỗi console)
@@ -32,45 +41,15 @@ export function usePostingStatusNotifications() {
       if (raw) prev = JSON.parse(raw);
     } catch (_) {}
     for (const p of postings) {
-      const prevStatus = prev[p.id];
-      const name = p.bikeName || "Listing";
-      if (
-        p.status === POSTING_STATUS.ADMIN_APPROVED &&
-        prevStatus === POSTING_STATUS.PENDING
-      ) {
-        addNotification({
-          title: "Listing approved",
-          message: `"${name}" has been approved by admin and is awaiting inspection.`,
-          type: "success",
-        });
-      } else if (
-        p.status === POSTING_STATUS.AVAILABLE &&
-        (prevStatus === POSTING_STATUS.PENDING ||
-          prevStatus === POSTING_STATUS.ADMIN_APPROVED)
-      ) {
-        addNotification({
-          title: "Listing is live",
-          message: `"${name}" has passed inspection and is now on Marketplace.`,
-          type: "success",
-        });
-      } else if (
-        p.status === POSTING_STATUS.REJECTED &&
-        prevStatus &&
-        prevStatus !== POSTING_STATUS.REJECTED
-      ) {
-        addNotification({
-          title: "Listing rejected",
-          message: p.rejectionReason
-            ? `"${name}" was rejected: ${p.rejectionReason}`
-            : `"${name}" has been rejected.`,
-          type: "warning",
-        });
-      }
+      const prevStatus = getPrevStatus(prev, p.id);
+      emitPostingStatusNotifications(p, prevStatus, addNotification);
     }
     try {
       localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify(Object.fromEntries(postings.map((p) => [p.id, p.status]))),
+        JSON.stringify(
+          Object.fromEntries(postings.map((p) => [p.id, p.status])),
+        ),
       );
     } catch (_) {}
   }, [user, postings, addNotification]);

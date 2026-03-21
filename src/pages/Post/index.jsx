@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Input, Select, Button, Upload, App } from "antd";
+import { Input, Select, Button, Upload, App, Alert } from "antd";
 import {
   InfoCircleOutlined,
   SettingOutlined,
@@ -10,7 +10,6 @@ import {
 } from "@ant-design/icons";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
-import PageBreadcrumb from "../../components/PageBreadcrumb";
 import StepProgress from "../../components/StepProgress";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -18,6 +17,13 @@ import { useNotifications } from "../../contexts/useNotifications";
 import { postService, userService } from "../../services";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 import { STORAGE_KEYS } from "../../constants/storageKeys";
+import { confirmCrud } from "../../utils/confirmCrud";
+import { formatCurrency } from "../../utils/formatCurrency";
+import systemConfigService from "../../services/systemConfigService";
+import {
+  POSTING_FEE_FALLBACK_VND,
+  parsePostingFeeVnd,
+} from "../../constants/postingFee";
 import "./index.css";
 
 export default function PostBike() {
@@ -31,6 +37,7 @@ export default function PostBike() {
   const [sellerId, setSellerId] = useState(user?.userId ?? user?.id ?? null);
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSections, setCompletedSections] = useState([]);
+  const [listingFeeVnd, setListingFeeVnd] = useState(POSTING_FEE_FALLBACK_VND);
 
   // Form field states
   const [bikeName, setBikeName] = useState("");
@@ -55,8 +62,7 @@ export default function PostBike() {
   const [postStatusLoaded, setPostStatusLoaded] = useState(false);
   // Chuẩn hóa status: BE có thể trả "Draft" / "DRAFT" / "DRAFTED"
   const statusUpper = postStatus ? String(postStatus).toUpperCase() : "";
-  const isDraftStatus =
-    statusUpper === "DRAFTED" || statusUpper === "DRAFT";
+  const isDraftStatus = statusUpper === "DRAFTED" || statusUpper === "DRAFT";
   const isEditingDraft = editId && isDraftStatus;
   const canEditPost = isEditingDraft;
   const isEditingNonDraft = editId && postStatusLoaded && !canEditPost; // chỉ lock sau khi đã biết status
@@ -200,6 +206,22 @@ export default function PostBike() {
     "pricing",
   ];
 
+  // Phí đăng tin (cấu hình admin) — hiển thị cho member khi đăng bài
+  useEffect(() => {
+    let cancelled = false;
+    systemConfigService
+      .getByKey("POSTING_FEE")
+      .then((res) => {
+        if (!cancelled) setListingFeeVnd(parsePostingFeeVnd(res));
+      })
+      .catch(() => {
+        if (!cancelled) setListingFeeVnd(POSTING_FEE_FALLBACK_VND);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Load dropdown data (brands, categories) + form metadata (sizes, photo categories, groupsets, brake types) từ BE
   useEffect(() => {
     let cancelled = false;
@@ -275,9 +297,9 @@ export default function PostBike() {
                 label: g.label ?? g.groupName ?? "",
                 options: Array.isArray(g.options)
                   ? g.options.map((o) => ({
-                    value: o.value ?? o.id,
-                    label: o.label ?? o.name ?? o.value,
-                  }))
+                      value: o.value ?? o.id,
+                      label: o.label ?? o.name ?? o.value,
+                    }))
                   : [],
               }))
               .filter((g) => g.label || (g.options && g.options.length > 0));
@@ -293,12 +315,11 @@ export default function PostBike() {
         }
       } catch (err) {
         // Chỉ log error nếu không phải là metadata 404 (expected error)
-        const isMetadata404 = err?.config?.url?.includes('/metadata/post-form');
+        const isMetadata404 = err?.config?.url?.includes("/metadata/post-form");
         if (!isMetadata404) {
           console.error("[PostBike] Failed to load brands/categories:", err);
           const msg =
-            err?.message ||
-            "Failed to load Brand/Category list from backend.";
+            err?.message || "Failed to load Brand/Category list from backend.";
           setDropdownError(msg);
           message.error(msg);
         }
@@ -369,7 +390,7 @@ export default function PostBike() {
         const brandOpt = brandOptions.find(
           (o) =>
             String(o.label).toLowerCase() ===
-            String(posting.brand || "").toLowerCase() ||
+              String(posting.brand || "").toLowerCase() ||
             o.value === posting.brandId,
         );
         if (brandOpt) setBrandId(brandOpt.value);
@@ -381,7 +402,7 @@ export default function PostBike() {
         const categoryOpt = categoryOptions.find(
           (o) =>
             String(o.label).toLowerCase() ===
-            String(posting.category || "").toLowerCase() ||
+              String(posting.category || "").toLowerCase() ||
             o.value === posting.categoryId,
         );
         if (categoryOpt) setCategoryId(categoryOpt.value);
@@ -459,9 +480,7 @@ export default function PostBike() {
       const ctxStatus = posting.postStatus ?? posting.status ?? null;
       const normalized =
         ctxStatus != null ? String(ctxStatus).toUpperCase() : "";
-      setPostStatus(
-        normalized === "DRAFT" ? "DRAFTED" : normalized || null,
-      );
+      setPostStatus(normalized === "DRAFT" ? "DRAFTED" : normalized || null);
       setPostStatusLoaded(true);
       applyPosting(posting);
       return;
@@ -481,7 +500,9 @@ export default function PostBike() {
         images.forEach((img) => {
           const url = img?.imageUrl ?? img?.image_url;
           if (!url) return;
-          const type = (img?.imageType ?? img?.image_type ?? "").toString().toUpperCase();
+          const type = (img?.imageType ?? img?.image_type ?? "")
+            .toString()
+            .toUpperCase();
           switch (type) {
             case "OVERALL_DRIVE_SIDE":
               slotImageMap.driveSide = slotImageMap.driveSide ?? url;
@@ -508,15 +529,14 @@ export default function PostBike() {
               imageUrls.push(url);
           }
         });
-        const primaryUrls = requiredPhotoKeys.map(({ key }) => slotImageMap[key]).filter(Boolean);
+        const primaryUrls = requiredPhotoKeys
+          .map(({ key }) => slotImageMap[key])
+          .filter(Boolean);
         const allImageUrls = [...primaryUrls, ...imageUrls, ...defectImageUrls];
 
         const status = raw.postStatus ?? raw.post_status ?? raw.status;
-        const normalized =
-          status != null ? String(status).toUpperCase() : "";
-        setPostStatus(
-          normalized === "DRAFT" ? "DRAFTED" : normalized || null,
-        );
+        const normalized = status != null ? String(status).toUpperCase() : "";
+        setPostStatus(normalized === "DRAFT" ? "DRAFTED" : normalized || null);
         setPostStatusLoaded(true);
 
         applyPosting({
@@ -792,7 +812,8 @@ export default function PostBike() {
 
     // sellerId bắt buộc cho cả tạo mới và cập nhật (BE dùng để xác thực owner)
     const effectiveSellerId = sellerId ?? user?.userId ?? user?.id;
-    const sellerIdNum = effectiveSellerId != null ? Number(effectiveSellerId) : NaN;
+    const sellerIdNum =
+      effectiveSellerId != null ? Number(effectiveSellerId) : NaN;
     if (!Number.isFinite(sellerIdNum) || sellerIdNum < 1) {
       message.warning("Could not identify account. Please sign in again.");
       return;
@@ -806,7 +827,11 @@ export default function PostBike() {
     }
 
     const key = "save-draft";
-    message.loading({ content: editId ? "Updating draft..." : "Saving draft...", key, duration: 0 });
+    message.loading({
+      content: editId ? "Updating draft..." : "Saving draft...",
+      key,
+      duration: 0,
+    });
 
     try {
       const sanitizeVnd = (raw) => {
@@ -821,7 +846,8 @@ export default function PostBike() {
       const draftPayload = {
         sellerId: sellerIdNum,
         brandId: brandId != null && brandId !== "" ? Number(brandId) : null,
-        categoryId: categoryId != null && categoryId !== "" ? Number(categoryId) : null,
+        categoryId:
+          categoryId != null && categoryId !== "" ? Number(categoryId) : null,
         bicycleName: bikeName.trim(),
         bicycleColor: color.trim() || null,
         price: vnd,
@@ -830,7 +856,8 @@ export default function PostBike() {
         frameMaterial: frameMaterial ? String(frameMaterial).trim() : null,
         brakeType: brakeType ? String(brakeType).trim() : null,
         size: frameSize ? String(frameSize).trim() : null,
-        modelYear: modelYear != null && modelYear !== "" ? Number(modelYear) : null,
+        modelYear:
+          modelYear != null && modelYear !== "" ? Number(modelYear) : null,
       };
 
       let postId = editId ? Number(editId) : null;
@@ -922,7 +949,9 @@ export default function PostBike() {
       });
 
       message.success({
-        content: editId ? "Draft updated successfully!" : "Draft saved successfully!",
+        content: editId
+          ? "Draft updated successfully!"
+          : "Draft saved successfully!",
         key,
       });
       if (!editId) {
@@ -939,10 +968,11 @@ export default function PostBike() {
       const msg = error?.message ?? error?.data?.message ?? error?.data?.msg;
       const isStatusError =
         status === 400 &&
-        (code === 1020 || /current status|cannot update|trạng thái/i.test(String(msg)));
+        (code === 1020 ||
+          /current status|cannot update|trạng thái/i.test(String(msg)));
       const content = isStatusError
-? "You can only update a listing in draft status. This one may have been submitted or already posted."
-    : msg || "Save draft failed. Please try again.";
+        ? "You can only update a listing in draft status. This one may have been submitted or already posted."
+        : msg || "Save draft failed. Please try again.";
       message.error({ content, key });
     }
   };
@@ -959,8 +989,18 @@ export default function PostBike() {
     if (!bikeName.trim() || !brandId || !categoryId || !price.trim()) {
       validationErrors.push("Basic info: Bike name, Brand, Category, Price");
     }
-    if (!frameSize.trim() || !frameMaterial || !groupset || !brakeType || !modelYear || !color.trim() || !description.trim()) {
-      validationErrors.push("Specs: Size, Material, Groupset, Brake, Year, Color, Description");
+    if (
+      !frameSize.trim() ||
+      !frameMaterial ||
+      !groupset ||
+      !brakeType ||
+      !modelYear ||
+      !color.trim() ||
+      !description.trim()
+    ) {
+      validationErrors.push(
+        "Specs: Size, Material, Groupset, Brake, Year, Color, Description",
+      );
     }
     if (!allRequiredPhotosFilled) {
       validationErrors.push("Required photos: All 6 slots");
@@ -975,9 +1015,34 @@ export default function PostBike() {
       return;
     }
 
+    const publishTitle = isEditingDraft
+      ? "Gửi tin để duyệt?"
+      : editId
+        ? "Cập nhật tin đăng?"
+        : "Đăng tin lên Marketplace?";
+    const feeHint =
+      !editId || isEditingDraft
+        ? ` Phí đăng tin (cấu hình hiện tại): ${formatCurrency(listingFeeVnd)} — sẽ trừ ví khi hệ thống áp dụng phí.`
+        : "";
+    const publishContent = isEditingDraft
+      ? `Tin sẽ chuyển sang chờ duyệt. Bạn không chỉnh sửa được cho đến khi có kết quả.${feeHint}`
+      : editId
+        ? `Thông tin tin đăng sẽ được cập nhật trên hệ thống.${feeHint}`
+        : `Tin đăng sẽ được tạo và đăng tải lên hệ thống.${feeHint}`;
+    const confirmed = await confirmCrud({
+      title: publishTitle,
+      content: publishContent,
+      okText: "Tiếp tục",
+    });
+    if (!confirmed) return;
+
     const key = "post-bike";
     message.loading({
-      content: isEditingDraft ? "Submitting draft..." : editId ? "Updating..." : "Posting...",
+      content: isEditingDraft
+        ? "Submitting draft..."
+        : editId
+          ? "Updating..."
+          : "Posting...",
       key,
       duration: 0,
     });
@@ -993,7 +1058,10 @@ export default function PostBike() {
 
       const vnd = sanitizeVnd(price);
       if (vnd == null) {
-        message.warning({ content: "Invalid price. Please enter a number.", key });
+        message.warning({
+          content: "Invalid price. Please enter a number.",
+          key,
+        });
         return;
       }
 
@@ -1046,7 +1114,8 @@ export default function PostBike() {
       const setImageError = (imgErr) => {
         imageUploadFailed = true;
         const body = imgErr?.response?.data ?? imgErr?.data;
-        lastImageErrorMsg = body?.message ?? body?.msg ?? body?.error ?? imgErr?.message ?? null;
+        lastImageErrorMsg =
+          body?.message ?? body?.msg ?? body?.error ?? imgErr?.message ?? null;
       };
 
       // CASE 1: Submitting a draft
@@ -1064,7 +1133,11 @@ export default function PostBike() {
               requiredPhotoKeys.map(({ key: slotKey }) => {
                 const raw = getRequiredPhotoFile(slotKey);
                 const imageFile = raw?.originFileObj ?? raw;
-                if (!imageFile || !(imageFile instanceof File || imageFile instanceof Blob)) return Promise.resolve();
+                if (
+                  !imageFile ||
+                  !(imageFile instanceof File || imageFile instanceof Blob)
+                )
+                  return Promise.resolve();
                 return postService.uploadPostImage({
                   postId,
                   imageFile,
@@ -1079,7 +1152,10 @@ export default function PostBike() {
             await Promise.all(
               defectFiles
                 .map((f) => f?.originFileObj ?? f)
-                .filter((file) => file && (file instanceof File || file instanceof Blob))
+                .filter(
+                  (file) =>
+                    file && (file instanceof File || file instanceof Blob),
+                )
                 .map((imageFile) =>
                   postService.uploadPostImage({
                     postId,
@@ -1118,7 +1194,11 @@ export default function PostBike() {
         }
         postId = Number(rawPostId);
         if (!Number.isFinite(postId) || postId < 1) {
-          console.error("[Publish] createPost returned invalid postId:", rawPostId, created);
+          console.error(
+            "[Publish] createPost returned invalid postId:",
+            rawPostId,
+            created,
+          );
           throw new Error("Failed to create listing (invalid postId).");
         }
         if (typeof console?.debug === "function") {
@@ -1131,7 +1211,8 @@ export default function PostBike() {
             await new Promise((r) => setTimeout(r, 600));
             const uploadOne = async (slotKey, imageFile, isThumbnail) => {
               const file = imageFile?.originFileObj ?? imageFile;
-              if (!file || !(file instanceof File || file instanceof Blob)) return null;
+              if (!file || !(file instanceof File || file instanceof Blob))
+                return null;
               try {
                 return await postService.uploadPostImage({
                   postId,
@@ -1143,7 +1224,9 @@ export default function PostBike() {
                 const status = e?.status ?? e?.response?.status;
                 const isTimeout = /timeout|ETIMEDOUT/i.test(e?.message ?? "");
                 if (status === 404 || isTimeout) {
-                  await new Promise((r) => setTimeout(r, isTimeout ? 1500 : 500));
+                  await new Promise((r) =>
+                    setTimeout(r, isTimeout ? 1500 : 500),
+                  );
                   return postService.uploadPostImage({
                     postId,
                     imageFile: file,
@@ -1184,7 +1267,11 @@ export default function PostBike() {
               requiredPhotoKeys.map(({ key: slotKey }) => {
                 const raw = getRequiredPhotoFile(slotKey);
                 const imageFile = raw?.originFileObj ?? raw;
-                if (!imageFile || !(imageFile instanceof File || imageFile instanceof Blob)) return Promise.resolve();
+                if (
+                  !imageFile ||
+                  !(imageFile instanceof File || imageFile instanceof Blob)
+                )
+                  return Promise.resolve();
                 return postService.uploadPostImage({
                   postId,
                   imageFile,
@@ -1199,7 +1286,10 @@ export default function PostBike() {
             await Promise.all(
               defectFiles
                 .map((f) => f?.originFileObj ?? f)
-                .filter((file) => file && (file instanceof File || file instanceof Blob))
+                .filter(
+                  (file) =>
+                    file && (file instanceof File || file instanceof Blob),
+                )
                 .map((imageFile) =>
                   postService.uploadPostImage({
                     postId,
@@ -1226,7 +1316,9 @@ export default function PostBike() {
       images.forEach((img) => {
         const url = img?.imageUrl ?? img?.image_url;
         if (!url) return;
-        const type = (img?.imageType ?? img?.image_type ?? "").toString().toUpperCase();
+        const type = (img?.imageType ?? img?.image_type ?? "")
+          .toString()
+          .toUpperCase();
         switch (type) {
           case "OVERALL_DRIVE_SIDE":
             slotImageMap.driveSide = slotImageMap.driveSide ?? url;
@@ -1253,7 +1345,9 @@ export default function PostBike() {
             extraImageUrls.push(url);
         }
       });
-      const primaryUrls = requiredPhotoKeys.map(({ key }) => slotImageMap[key]).filter(Boolean);
+      const primaryUrls = requiredPhotoKeys
+        .map(({ key }) => slotImageMap[key])
+        .filter(Boolean);
       const imageUrls = [...primaryUrls, ...extraImageUrls, ...defectImageUrls];
       const thumbnail =
         images.find((i) => i?.isThumbnail)?.imageUrl ??
@@ -1292,7 +1386,11 @@ export default function PostBike() {
 
       // Show success notification
       addNotification({
-        title: isEditingDraft ? "Draft submitted" : editId ? "Updated" : "Listing posted",
+        title: isEditingDraft
+          ? "Draft submitted"
+          : editId
+            ? "Updated"
+            : "Listing posted",
         message: isEditingDraft
           ? "Draft has been submitted for review. Awaiting admin approval."
           : editId
@@ -1303,16 +1401,20 @@ export default function PostBike() {
       });
 
       if (imageUploadFailed) {
-        const detail = lastImageErrorMsg && String(lastImageErrorMsg).trim()
-          ? ` Chi tiết: ${lastImageErrorMsg}`
-          : "";
+        const detail =
+          lastImageErrorMsg && String(lastImageErrorMsg).trim()
+            ? ` Chi tiết: ${lastImageErrorMsg}`
+            : "";
         message.warning({
           content: `Listing ${isEditingDraft ? "submitted" : editId ? "updated" : "created"} (ID: ${postId}) but images could not be uploaded. You can edit later.${detail}`,
           key,
           duration: 6,
         });
       } else {
-        message.success({ content: `${isEditingDraft ? "Draft submitted" : editId ? "Updated" : "Posted"} successfully!`, key });
+        message.success({
+          content: `${isEditingDraft ? "Draft submitted" : editId ? "Updated" : "Posted"} successfully!`,
+          key,
+        });
       }
 
       navigate("/manage-listings");
@@ -1322,7 +1424,7 @@ export default function PostBike() {
         err?.data?.msg ??
         err?.data?.error ??
         (err?.data?.result && typeof err.data.result === "object"
-          ? err.data.result.message ?? err.data.result.msg
+          ? (err.data.result.message ?? err.data.result.msg)
           : null);
       let msg =
         typeof fromBackend === "string"
@@ -1342,345 +1444,364 @@ export default function PostBike() {
     }
   };
 
-  const BREADCRUMB_ITEMS = [
-    { label: "Marketplace", path: "/marketplace" },
-    { label: "Sell Your Bike" },
-  ];
-
   return (
     <div className="post-bike-container">
       <Header />
 
       <main className="post-main-content">
         <div className="post-content-container">
-          <PageBreadcrumb items={BREADCRUMB_ITEMS} />
-
           {/* Page Header */}
           <div className="post-header">
-          <h1 className="post-title">Post a Bike for Sale</h1>
-          <p className="post-subtitle">
-            Reach over 50,000 cycling enthusiasts worldwide
-          </p>
-        </div>
-
-        {/* Step Progress */}
-        <StepProgress
-          currentStep={currentStep}
-          completedSections={completedSections}
-          onStepClick={handleStepClick}
-        />
-
-        {/* Warning for non-draft (non-DRAFTED) posts */}
-        {isEditingNonDraft && (
-          <div style={{
-            padding: '16px',
-            margin: '20px 0',
-            background: '#fff7e6',
-            border: '1px solid #ffd591',
-            borderRadius: '8px',
-            color: '#ad6800'
-          }}>
-            <InfoCircleOutlined style={{ marginRight: '8px' }} />
-            <strong>Read-only listing:</strong> You can only edit a listing in draft status. This listing cannot be edited.
+            <h1 className="post-title">Post a Bike for Sale</h1>
+            <p className="post-subtitle"></p>
           </div>
-        )}
 
-        {/* Info when editing draft (DRAFTED) */}
-        {isEditingDraft && (
-          <div style={{
-            padding: '16px',
-            margin: '20px 0',
-            background: '#e6f7ff',
-            border: '1px solid #91d5ff',
-            borderRadius: '8px',
-            color: '#0050b3'
-          }}>
-            <InfoCircleOutlined style={{ marginRight: '8px' }} />
-            <strong>Editing draft:</strong> You can update the details and submit for review when ready.
-          </div>
-        )}
+          {!isFormReadOnly && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 20, textAlign: "left" }}
+              message="Phí đăng tin (member)"
+              description={
+                <>
+                  Khi tin được đăng/hiển thị, hệ thống có thể trừ{" "}
+                  <strong>{formatCurrency(listingFeeVnd)}</strong> từ ví điện tử
+                  của bạn (theo cấu hình admin, đồng bộ với trang quản trị). Vui
+                  lòng đảm bảo số dư đủ hoặc nạp thêm trước khi đăng bài.
+                </>
+              }
+            />
+          )}
 
-        {/* Form Container */}
-        <div className="post-form-container">
-          {/* Basic Information */}
-          <div id="basic-info" className="form-section">
-            <div className="section-content">
-              <div className="section-title-row">
-                <InfoCircleOutlined className="section-icon-teal" />
-                <h2 className="section-title">Basic Information</h2>
-              </div>
+          {/* Step Progress */}
+          <StepProgress
+            currentStep={currentStep}
+            completedSections={completedSections}
+            onStepClick={handleStepClick}
+          />
 
-              <div className="form-field">
-                <label className="field-label">Bike Name / Listing Title</label>
-                <Input
-                  placeholder="e.g. 2023 Specialized Tarmac SL7 Pro"
-                  size="large"
-                  className="field-input"
-                  value={bikeName}
-                  onChange={(e) => setBikeName(e.target.value)}
-                  disabled={isFormReadOnly}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-field">
-                  <label className="field-label">Brand</label>
-                  <Select
-                    placeholder="Select Brand"
-                    size="large"
-                    className="field-select"
-                    value={brandId}
-                    onChange={(value) => setBrandId(value)}
-                    options={brandOptions}
-                    loading={dropdownLoading}
-                    disabled={isFormReadOnly}
-                    notFoundContent={
-                      dropdownError
-                        ? dropdownError
-                        : "No brands in DB (seed Brands table)."
-                    }
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label className="field-label">Category</label>
-                  <Select
-                    placeholder="Select Category"
-                    size="large"
-                    className="field-select"
-                    value={categoryId}
-                    onChange={(value) => setCategoryId(value)}
-                    options={categoryOptions}
-                    loading={dropdownLoading}
-                    disabled={isFormReadOnly}
-                    notFoundContent={
-                      dropdownError
-                        ? dropdownError
-                        : "No categories in DB (seed Categories table)."
-                    }
-                  />
-                </div>
-              </div>
+          {/* Warning for non-draft (non-DRAFTED) posts */}
+          {isEditingNonDraft && (
+            <div
+              style={{
+                padding: "16px",
+                margin: "20px 0",
+                background: "#fff7e6",
+                border: "1px solid #ffd591",
+                borderRadius: "8px",
+                color: "#ad6800",
+              }}
+            >
+              <InfoCircleOutlined style={{ marginRight: "8px" }} />
+              <strong>Read-only listing:</strong> You can only edit a listing in
+              draft status. This listing cannot be edited.
             </div>
-          </div>
+          )}
 
-          {/* Technical Specifications */}
-          <div id="technical-specs" className="form-section">
-            <div className="section-content">
-              <div className="section-title-row">
-                <SettingOutlined className="section-icon-teal" />
-                <h2 className="section-title">Technical Specifications</h2>
-              </div>
+          {/* Info when editing draft (DRAFTED) */}
+          {isEditingDraft && (
+            <div
+              style={{
+                padding: "16px",
+                margin: "20px 0",
+                background: "#e6f7ff",
+                border: "1px solid #91d5ff",
+                borderRadius: "8px",
+                color: "#0050b3",
+              }}
+            >
+              <InfoCircleOutlined style={{ marginRight: "8px" }} />
+              <strong>Editing draft:</strong> You can update the details and
+              submit for review when ready.
+            </div>
+          )}
 
-              <div className="form-row">
-                <div className="form-field">
-                  <label className="field-label">Frame Size</label>
-                  <Select
-                    placeholder="Select Size"
-                    size="large"
-                    className="field-select"
-                    value={frameSize || undefined}
-                    onChange={(value) => setFrameSize(value)}
-                    options={sizeOptions.map((s) => ({ value: s, label: s }))}
-                    disabled={isFormReadOnly}
-                  />
+          {/* Form Container */}
+          <div className="post-form-container">
+            {/* Basic Information */}
+            <div id="basic-info" className="form-section">
+              <div className="section-content">
+                <div className="section-title-row">
+                  <InfoCircleOutlined className="section-icon-teal" />
+                  <h2 className="section-title">Basic Information</h2>
                 </div>
 
                 <div className="form-field">
-                  <label className="field-label">Frame Material</label>
-                  <Select
-                    placeholder="Select Material"
-                    size="large"
-                    className="field-select"
-                    value={frameMaterial}
-                    onChange={(value) => setFrameMaterial(value)}
-                    disabled={isFormReadOnly}
-                    options={[
-                      { value: "Carbon Fiber", label: "Carbon Fiber" },
-                      { value: "Aluminum", label: "Aluminum" },
-                      { value: "Steel", label: "Steel" },
-                      { value: "Titanium", label: "Titanium" },
-                    ]}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-field">
-                  <label className="field-label">Groupset</label>
-                  <Select
-                    placeholder="Select Groupset"
-                    size="large"
-                    className="field-select"
-                    value={groupset}
-                    onChange={(value) => setGroupset(value)}
-                    options={groupsetOptions}
-                    disabled={isFormReadOnly}
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label className="field-label">Brake Type</label>
-                  <Select
-                    placeholder="Select Brake Type"
-                    size="large"
-                    className="field-select"
-                    value={brakeType}
-                    onChange={(value) => setBrakeType(value)}
-                    options={brakeTypeOptions}
-                    disabled={isFormReadOnly}
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-field">
-                  <label className="field-label">Model Year</label>
-                  <Select
-                    placeholder="Select Year"
-                    size="large"
-                    className="field-select"
-                    value={modelYear}
-                    onChange={(value) => setModelYear(value)}
-                    disabled={isFormReadOnly}
-                    options={Array.from({ length: 15 }, (_, i) => {
-                      const year = 2025 - i;
-                      return { value: String(year), label: String(year) };
-                    })}
-                  />
-                </div>
-
-                <div className="form-field">
-                  <label className="field-label">Color</label>
+                  <label className="field-label">
+                    Bike Name / Listing Title
+                  </label>
                   <Input
-                    placeholder="e.g. Black/Red"
+                    placeholder="e.g. 2023 Specialized Tarmac SL7 Pro"
                     size="large"
                     className="field-input"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
+                    value={bikeName}
+                    onChange={(e) => setBikeName(e.target.value)}
+                    disabled={isFormReadOnly}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label className="field-label">Brand</label>
+                    <Select
+                      placeholder="Select Brand"
+                      size="large"
+                      className="field-select"
+                      value={brandId}
+                      onChange={(value) => setBrandId(value)}
+                      options={brandOptions}
+                      loading={dropdownLoading}
+                      disabled={isFormReadOnly}
+                      notFoundContent={
+                        dropdownError
+                          ? dropdownError
+                          : "No brands in DB (seed Brands table)."
+                      }
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label className="field-label">Category</label>
+                    <Select
+                      placeholder="Select Category"
+                      size="large"
+                      className="field-select"
+                      value={categoryId}
+                      onChange={(value) => setCategoryId(value)}
+                      options={categoryOptions}
+                      loading={dropdownLoading}
+                      disabled={isFormReadOnly}
+                      notFoundContent={
+                        dropdownError
+                          ? dropdownError
+                          : "No categories in DB (seed Categories table)."
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Technical Specifications */}
+            <div id="technical-specs" className="form-section">
+              <div className="section-content">
+                <div className="section-title-row">
+                  <SettingOutlined className="section-icon-teal" />
+                  <h2 className="section-title">Technical Specifications</h2>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label className="field-label">Frame Size</label>
+                    <Select
+                      placeholder="Select Size"
+                      size="large"
+                      className="field-select"
+                      value={frameSize || undefined}
+                      onChange={(value) => setFrameSize(value)}
+                      options={sizeOptions.map((s) => ({ value: s, label: s }))}
+                      disabled={isFormReadOnly}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label className="field-label">Frame Material</label>
+                    <Select
+                      placeholder="Select Material"
+                      size="large"
+                      className="field-select"
+                      value={frameMaterial}
+                      onChange={(value) => setFrameMaterial(value)}
+                      disabled={isFormReadOnly}
+                      options={[
+                        { value: "Carbon Fiber", label: "Carbon Fiber" },
+                        { value: "Aluminum", label: "Aluminum" },
+                        { value: "Steel", label: "Steel" },
+                        { value: "Titanium", label: "Titanium" },
+                      ]}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label className="field-label">Groupset</label>
+                    <Select
+                      placeholder="Select Groupset"
+                      size="large"
+                      className="field-select"
+                      value={groupset}
+                      onChange={(value) => setGroupset(value)}
+                      options={groupsetOptions}
+                      disabled={isFormReadOnly}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label className="field-label">Brake Type</label>
+                    <Select
+                      placeholder="Select Brake Type"
+                      size="large"
+                      className="field-select"
+                      value={brakeType}
+                      onChange={(value) => setBrakeType(value)}
+                      options={brakeTypeOptions}
+                      disabled={isFormReadOnly}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-field">
+                    <label className="field-label">Model Year</label>
+                    <Select
+                      placeholder="Select Year"
+                      size="large"
+                      className="field-select"
+                      value={modelYear}
+                      onChange={(value) => setModelYear(value)}
+                      disabled={isFormReadOnly}
+                      options={Array.from({ length: 15 }, (_, i) => {
+                        const year = 2025 - i;
+                        return { value: String(year), label: String(year) };
+                      })}
+                    />
+                  </div>
+
+                  <div className="form-field">
+                    <label className="field-label">Color</label>
+                    <Input
+                      placeholder="e.g. Black/Red"
+                      size="large"
+                      className="field-input"
+                      value={color}
+                      onChange={(e) => setColor(e.target.value)}
+                      disabled={isFormReadOnly}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-field">
+                  <label className="field-label">Description</label>
+                  <Input.TextArea
+                    placeholder="Describe condition, history, accessories, reason for selling..."
+                    size="large"
+                    className="field-input"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={4}
+                    showCount
+                    maxLength={2000}
                     disabled={isFormReadOnly}
                   />
                 </div>
               </div>
-
-              <div className="form-field">
-                <label className="field-label">Description</label>
-                <Input.TextArea
-                  placeholder="Describe condition, history, accessories, reason for selling..."
-                  size="large"
-                  className="field-input"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  showCount
-                  maxLength={2000}
-                  disabled={isFormReadOnly}
-                />
-              </div>
             </div>
-          </div>
 
-          {/* Photos & Videos - style giống Register */}
-          <div id="photos-videos" className="form-section post-upload-section">
-            <h3 className="post-upload-title">Required bike photos</h3>
-            <p className="post-upload-subtitle">
-              Tải lên 6 ảnh theo các góc dưới đây (bắt buộc)
-            </p>
+            {/* Photos & Videos - style giống Register */}
+            <div
+              id="photos-videos"
+              className="form-section post-upload-section"
+            >
+              <h3 className="post-upload-title">Required bike photos</h3>
+              <p className="post-upload-subtitle">
+                Upload 6 images from the following angles (required)
+              </p>
 
-            <div className="required-photos-grid">
-              {requiredPhotoKeys.map(({ key, label, labelVi }) => (
-                <div key={key} className="required-photo-slot">
-                  <div className="required-photo-label">
-                    {label} ({labelVi})
+              <div className="required-photos-grid">
+                {requiredPhotoKeys.map(({ key, label, labelVi }) => (
+                  <div key={key} className="required-photo-slot">
+                    <div className="required-photo-label">
+                      {label} ({labelVi})
+                    </div>
+                    <Upload
+                      {...createRequiredUploadProps(key)}
+                      className="required-photo-upload register-style-upload"
+                    >
+                      {(requiredPhotos[key]?.length || 0) < 1 && (
+                        <div className="upload-content">
+                          <UploadOutlined />
+                          <div className="upload-text">{label}</div>
+                        </div>
+                      )}
+                    </Upload>
                   </div>
+                ))}
+              </div>
+
+              <div className="defect-section">
+                <h3 className="post-upload-title defect-title">
+                  Describe the issue (optional)
+                </h3>
+                <p className="post-upload-subtitle">
+                  Up to 5 images – Show any scratches or damage (if any)
+                </p>
+                <div className="defect-upload-row">
                   <Upload
-                    {...createRequiredUploadProps(key)}
-                    className="required-photo-upload register-style-upload"
+                    {...defectUploadProps}
+                    className="defect-upload"
+                    showUploadList={{
+                      showPreviewIcon: true,
+                      showRemoveIcon: true,
+                    }}
                   >
-                    {(requiredPhotos[key]?.length || 0) < 1 && (
-                      <div className="upload-content">
-                        <UploadOutlined />
-                        <div className="upload-text">{label}</div>
-                      </div>
-                    )}
+                    <div className="upload-content">
+                      <UploadOutlined />
+                      <div className="upload-text">Add photo</div>
+                    </div>
                   </Upload>
                 </div>
-              ))}
+              </div>
             </div>
 
-            <div className="defect-section">
-              <h3 className="post-upload-title defect-title">
-                Điểm lỗi (tùy chọn)
-              </h3>
-              <p className="post-upload-subtitle">
-                Tối đa 5 ảnh - Chụp các vết trầy, hư hỏng nếu có.
-              </p>
-              <div className="defect-upload-row">
-                <Upload
-                  {...defectUploadProps}
-                  className="defect-upload"
-                  showUploadList={{
-                    showPreviewIcon: true,
-                    showRemoveIcon: true,
-                  }}
-                >
-                  <div className="upload-content">
-                    <UploadOutlined />
-                    <div className="upload-text">Add photo</div>
-                  </div>
-                </Upload>
+            {/* Pricing */}
+            <div id="pricing" className="form-section">
+              <div className="section-content">
+                <div className="section-title-row">
+                  <CreditCardOutlined className="section-icon-teal" />
+                  <h2 className="section-title">Pricing</h2>
+                </div>
+
+                <div className="form-field price-field">
+                  <label className="field-label">Sale Price (VND)</label>
+                  <Input
+                    placeholder="0.00"
+                    size="large"
+                    className="field-input"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    disabled={isFormReadOnly}
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Pricing */}
-          <div id="pricing" className="form-section">
-            <div className="section-content">
-              <div className="section-title-row">
-                <CreditCardOutlined className="section-icon-teal" />
-                <h2 className="section-title">Pricing</h2>
-              </div>
-
-              <div className="form-field price-field">
-                <label className="field-label">Sale Price (VND)</label>
-                <Input
-                  placeholder="0.00"
-                  size="large"
-                  className="field-input"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  disabled={isFormReadOnly}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Form Actions - sibling of post-form-container for correct layout */}
-        <div className="form-actions">
-          <Button
-            size="large"
-            className="action-btn-draft"
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={handleSaveDraft}
-            disabled={isFormReadOnly}
-          >
-            {isEditingDraft ? "Cập nhật nháp" : "Lưu nháp"}
-          </Button>
-
-          <div className="action-btn-group">
+          {/* Form Actions - sibling of post-form-container for correct layout */}
+          <div className="form-actions">
             <Button
-              type="primary"
               size="large"
-              className="action-btn-publish"
-              onClick={handlePublish}
+              className="action-btn-draft"
+              type="text"
+              icon={<ArrowLeftOutlined />}
+              onClick={handleSaveDraft}
               disabled={isFormReadOnly}
             >
-              {isEditingDraft ? "Submit for review" : "Post listing"}
+              {isEditingDraft ? "Update Draft" : "Save Draft"}
             </Button>
+
+            <div className="action-btn-group">
+              <Button
+                type="primary"
+                size="large"
+                className="action-btn-publish"
+                onClick={handlePublish}
+                disabled={isFormReadOnly}
+              >
+                {isEditingDraft ? "Submit for review" : "Post listing"}
+              </Button>
+            </div>
           </div>
-        </div>
         </div>
       </main>
 

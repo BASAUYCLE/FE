@@ -20,13 +20,26 @@
 
 .post-main-content {
     flex: 1;
-    padding: 20px 16px 40px;
+    padding: 16px 12px 32px;
     width: 100%;
+    box-sizing: border-box;
 }
 
-/* Content wrapper - cùng max-width với manage-listings-container */
+@media (min-width: 600px) {
+    .post-main-content {
+        padding: 20px 16px 36px;
+    }
+}
+
+@media (min-width: 900px) {
+    .post-main-content {
+        padding: 24px 20px 40px;
+    }
+}
+
+/* Content wrapper — cùng --page-content-max (1040px) với Feedback, Orders, Account… */
 .post-content-container {
-    max-width: 1200px;
+    max-width: var(--page-content-max);
     margin: 0 auto;
 }
 
@@ -61,12 +74,10 @@
     font-weight: 600;
 }
 
-/* Page Header */
+/* Page Header — full width trong .post-content-container (1040px) */
 .post-header {
     margin-bottom: 1rem;
-    max-width: 900px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 100%;
 }
 
 .post-title {
@@ -83,10 +94,10 @@
     line-height: 1.5;
 }
 
-/* Form Container */
+/* Form Container — full width trong .post-content-container */
 .post-form-container {
-    max-width: 900px;
-    margin: 0.5rem auto 0;
+    max-width: 100%;
+    margin: 0.5rem 0 0;
 }
 
 /* Form Sections - Image 2 Style */
@@ -818,10 +829,10 @@
     background-color: var(--primary-light) !important;
 }
 
-/* Responsive Design */
+/* Responsive Design — padding đồng bộ với Orders / Account / Feedback */
 @media (max-width: 768px) {
     .post-main-content {
-        padding: 1.5rem 1rem;
+        padding: 16px 12px 28px;
     }
 
     .post-title {

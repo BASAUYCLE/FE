@@ -26,7 +26,7 @@ export default function About() {
                 textTransform: "uppercase",
               }}
             >
-              Về BASAUYCLE
+              About BASAUYCLE
             </Typography>
             <Typography
               sx={{
@@ -37,9 +37,7 @@ export default function About() {
                 fontSize: { xs: 14, md: 15 },
               }}
             >
-              Nền tảng mua bán xe đạp đã qua sử dụng được kiểm định kỹ lưỡng,
-              giúp người chơi xe yên tâm giao dịch như trên các hệ thống lớn
-              như HelloBike.
+              BASAUYCLE is a platform specializing in providing and distributing high-quality bicycles, delivering a modern, convenient, and reliable shopping experience for users.
             </Typography>
           </Box>
 
@@ -62,16 +60,16 @@ export default function About() {
                     color: "#111827",
                   }}
                 >
-                  Sứ mệnh
+                  Our Mission
                 </Typography>
                 <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-                  Mang lại trải nghiệm mua bán xe đạp minh bạch, an toàn và
-                  thuận tiện cho cộng đồng đam mê xe đạp tại Việt Nam.
+                  Deliver a transparent, secure, and convenient bicycle
+                  marketplace experience for cycling enthusiasts in Vietnam.
                 </Typography>
                 <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-                  BASAUYCLE kết nối người bán và người mua thông qua hệ thống
-                  kiểm định, đặt cọc và thanh toán an toàn, giúp mỗi chiếc xe
-                  có hành trình mới xứng đáng.
+                  BASAUYCLE connects buyers and sellers through inspection,
+                  deposit, and secure payment workflows, so every bike can
+                  begin its next meaningful journey.
                 </Typography>
               </Box>
             </Grid>
@@ -93,15 +91,15 @@ export default function About() {
                     color: "#111827",
                   }}
                 >
-                  Giá trị cốt lõi
+                  Core Values
                 </Typography>
                 <Typography
                   component="ul"
                   sx={{ pl: 2.5, m: 0, color: "#4b5563", fontSize: 14 }}
                 >
-                  <li>Minh bạch thông tin xe và lịch sử kiểm định.</li>
-                  <li>Thanh toán an toàn thông qua ví và hợp đồng ký quỹ.</li>
-                  <li>Dịch vụ hỗ trợ tận tâm trước và sau khi mua.</li>
+                  <li>Transparent bike information and inspection history.</li>
+                  <li>Secure payment via wallet and escrow agreement.</li>
+                  <li>Dedicated support before and after purchase.</li>
                 </Typography>
               </Box>
             </Grid>

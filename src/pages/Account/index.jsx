@@ -9,13 +9,17 @@ import {
   TextField,
 } from "@mui/material";
 import {
-  EditOutlined,
-  CheckCircleOutlined,
   StarOutlined,
   PlusOutlined,
-  DeleteOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
+import {
+  UserPen,
+  MapPinPlus,
+  Pencil,
+  Trash2,
+  CircleCheckBig,
+} from "lucide-react";
 import {
   message,
   Modal,
@@ -32,6 +36,7 @@ import Footer from "../../components/footer";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import addressService from "../../services/addressService";
+import { confirmCrud } from "../../utils/confirmCrud";
 import "./index.css";
 
 const EMPTY_PROFILE = { fullName: "", email: "", phone: "" };
@@ -96,7 +101,10 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
   }, [open, editingAddress]);
 
   const loadCommunes = (provinceCode) => {
-    if (!provinceCode) { setCommunes([]); return; }
+    if (!provinceCode) {
+      setCommunes([]);
+      return;
+    }
     setLoadingCommunes(true);
     addressService
       .getCommunes(provinceCode)
@@ -115,6 +123,16 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
+    const ok = await confirmCrud({
+      title: editingAddress
+        ? "Lưu địa chỉ giao hàng?"
+        : "Thêm địa chỉ giao hàng?",
+      content: editingAddress
+        ? "Cập nhật địa chỉ này sẽ ảnh hưởng tới các đơn hàng dùng địa chỉ đã lưu."
+        : "Địa chỉ mới có thể được chọn khi mua hàng và thanh toán.",
+      okText: editingAddress ? "Lưu" : "Thêm",
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       const payload = {
@@ -123,7 +141,11 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
         isDefault: values.isDefault ?? false,
       };
       if (editingAddress) {
-        await addressService.updateAddress(userId, editingAddress.addressId, payload);
+        await addressService.updateAddress(
+          userId,
+          editingAddress.addressId,
+          payload,
+        );
         message.success("Address updated successfully!");
         addNotification?.({
           title: "Address updated",
@@ -162,7 +184,16 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
       cancelText="Cancel"
       confirmLoading={saving}
       title={editingAddress ? "Edit address" : "Add new address"}
-      width={500}
+      centered
+      width="min(640px, calc(100vw - 32px))"
+      styles={{
+        body: {
+          maxHeight: "calc(100vh - 240px)",
+          overflowY: "auto",
+          overflowX: "hidden",
+          paddingRight: 6,
+        },
+      }}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         {/* Province */}
@@ -187,12 +218,12 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
         {/* Commune */}
         <Form.Item
           name="communeCode"
-          label="Xã / Phường / Thị trấn"
-          rules={[{ required: true, message: "Vui lòng chọn xã/phường" }]}
+          label="Ward / Commune / Town"
+          rules={[{ required: true, message: "Please select ward/commune" }]}
         >
           <Select
             showSearch
-            placeholder="Chọn xã/phường"
+            placeholder="Select ward/commune"
             loading={loadingCommunes}
             disabled={communes.length === 0}
             optionFilterProp="label"
@@ -214,7 +245,7 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
 
         {/* Is default */}
         <Form.Item name="isDefault" valuePropName="checked">
-          <Checkbox>Đặt làm địa chỉ mặc định</Checkbox>
+          <Checkbox>Set as default address</Checkbox>
         </Form.Item>
       </Form>
     </Modal>
@@ -243,20 +274,28 @@ function AddressSection({ userId }) {
     }
   }, [userId]);
 
-  useEffect(() => { fetchAddresses(); }, [fetchAddresses]);
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
 
-  const openAdd = () => { setEditingAddress(null); setModalOpen(true); };
-  const openEdit = (addr) => { setEditingAddress(addr); setModalOpen(true); };
+  const openAdd = () => {
+    setEditingAddress(null);
+    setModalOpen(true);
+  };
+  const openEdit = (addr) => {
+    setEditingAddress(addr);
+    setModalOpen(true);
+  };
 
   const handleDelete = async (addressId) => {
     try {
       await addressService.deleteAddress(userId, addressId);
       message.success("Address deleted");
-       addNotification?.({
-         title: "Address deleted",
-         message: "A shipping address has been removed from your account.",
-         type: "info",
-       });
+      addNotification?.({
+        title: "Address deleted",
+        message: "A shipping address has been removed from your account.",
+        type: "info",
+      });
       fetchAddresses();
     } catch (err) {
       message.error(err?.message ?? err?.data?.message ?? "Delete failed");
@@ -266,14 +305,21 @@ function AddressSection({ userId }) {
   return (
     <Card className="account-section-card" sx={{ mt: 3 }}>
       <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 2,
+          }}
+        >
           <Typography variant="h6" fontWeight={700} color="#1a1a1a">
             My addresses
           </Typography>
           <Button
             variant="contained"
             className="account-edit-btn"
-            startIcon={<PlusOutlined />}
+            startIcon={<MapPinPlus size={16} />}
             size="small"
             onClick={openAdd}
             sx={{ textTransform: "none", fontSize: 13 }}
@@ -297,7 +343,9 @@ function AddressSection({ userId }) {
             }}
           >
             <EnvironmentOutlined style={{ fontSize: 32, marginBottom: 8 }} />
-            <Typography variant="body2">Chưa có địa chỉ. Hãy thêm địa chỉ đầu tiên!</Typography>
+            <Typography variant="body2">
+              Chưa có địa chỉ. Hãy thêm địa chỉ đầu tiên!
+            </Typography>
           </Box>
         ) : (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
@@ -309,20 +357,36 @@ function AddressSection({ userId }) {
                   alignItems: "flex-start",
                   justifyContent: "space-between",
                   p: 2,
-                  border: addr.isDefault ? "1.5px solid #00ccad" : "1.5px solid #e5e7eb",
+                  border: addr.isDefault
+                    ? "1.5px solid #00ccad"
+                    : "1.5px solid #e5e7eb",
                   borderRadius: 2,
                   backgroundColor: addr.isDefault ? "#f0fdf9" : "#fff",
                   gap: 1,
                 }}
               >
                 <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1,
+                      mb: 0.5,
+                    }}
+                  >
                     <EnvironmentOutlined style={{ color: "#00ccad" }} />
-                    <Typography variant="body2" fontWeight={600} color="#1a1a1a">
-                      {addr.fullAddress ?? `${addr.streetAddress}, ${addr.communeName}, ${addr.provinceName}`}
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      color="#1a1a1a"
+                    >
+                      {addr.fullAddress ??
+                        `${addr.streetAddress}, ${addr.communeName}, ${addr.provinceName}`}
                     </Typography>
                     {addr.isDefault && (
-                      <Tag color="cyan" style={{ fontSize: 11, margin: 0 }}>Default</Tag>
+                      <Tag color="cyan" style={{ fontSize: 11, margin: 0 }}>
+                        Default
+                      </Tag>
                     )}
                   </Box>
                 </Box>
@@ -330,9 +394,14 @@ function AddressSection({ userId }) {
                   <Button
                     size="small"
                     variant="outlined"
-                    startIcon={<EditOutlined />}
+                    startIcon={<Pencil size={14} />}
                     onClick={() => openEdit(addr)}
-                    sx={{ textTransform: "none", fontSize: 12, minWidth: 0, px: 1.5 }}
+                    sx={{
+                      textTransform: "none",
+                      fontSize: 12,
+                      minWidth: 0,
+                      px: 1.5,
+                    }}
                   >
                     Edit
                   </Button>
@@ -347,10 +416,15 @@ function AddressSection({ userId }) {
                       size="small"
                       variant="outlined"
                       color="error"
-                      startIcon={<DeleteOutlined />}
-                      sx={{ textTransform: "none", fontSize: 12, minWidth: 0, px: 1.5 }}
+                      startIcon={<Trash2 size={14} />}
+                      sx={{
+                        textTransform: "none",
+                        fontSize: 12,
+                        minWidth: 0,
+                        px: 1.5,
+                      }}
                     >
-                      Xóa
+                      Delete
                     </Button>
                   </Popconfirm>
                 </Box>
@@ -398,6 +472,12 @@ export default function Account() {
   };
 
   const handleSave = async () => {
+    const ok = await confirmCrud({
+      title: "Lưu thông tin tài khoản?",
+      content: "Cập nhật họ tên, email hoặc số điện thoại trên hồ sơ của bạn.",
+      okText: "Lưu",
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       const result = await updateProfile({
@@ -439,27 +519,51 @@ export default function Account() {
   };
 
   return (
-    <Box component="main" sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}>
+    <Box
+      component="main"
+      className="account-page"
+      sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}
+    >
       <Header />
 
-      <Box sx={{ maxWidth: 800, margin: "0 auto", padding: "32px 24px" }}>
+      <Box className="account-content">
         {/* ── Profile Card ── */}
         <Card className="account-profile-card">
           <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexWrap: "wrap" }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                flexWrap: "wrap",
+              }}
+            >
               <Box sx={{ position: "relative" }}>
                 <Avatar
                   src={user?.avatar ?? user?.imageUrl ?? user?.profileImage}
-                  sx={{ width: 88, height: 88, bgcolor: "#00ccad", fontSize: 32, fontWeight: 600 }}
+                  sx={{
+                    width: 88,
+                    height: 88,
+                    bgcolor: "#00ccad",
+                    fontSize: 32,
+                    fontWeight: 600,
+                  }}
                 >
                   {initials}
                 </Avatar>
                 <Box className="account-avatar-edit" title="Change photo">
-                  <EditOutlined style={{ fontSize: 14, color: "#fff" }} />
+                  <Pencil size={14} color="#fff" />
                 </Box>
               </Box>
               <Box sx={{ flex: 1, minWidth: 200 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mb: 0.5,
+                  }}
+                >
                   <Typography
                     variant="h5"
                     fontWeight={700}
@@ -467,14 +571,11 @@ export default function Account() {
                   >
                     {displayData.fullName?.trim() || "No name set"}
                   </Typography>
-                  <CheckCircleOutlined style={{ color: "#22c55e", fontSize: 20 }} />
+                  <CircleCheckBig size={20} color="#22c55e" />
                 </Box>
-                <Typography variant="body2" color="#6b7280" sx={{ mb: 1.5 }}>
-                  Member since Oct 2023
-                </Typography>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <span className="account-badge account-badge-teal">
-                    <CheckCircleOutlined style={{ marginRight: 4 }} />
+                    <CircleCheckBig size={14} style={{ marginRight: 4 }} />
                     Verified seller
                   </span>
                   <span className="account-badge account-badge-orange">
@@ -487,14 +588,18 @@ export default function Account() {
                 <Button
                   variant="contained"
                   className="account-edit-btn"
-                  startIcon={<EditOutlined />}
+                  startIcon={<UserPen size={16} />}
                   onClick={() => setIsEditing(true)}
                 >
                   Edit profile
                 </Button>
               ) : (
                 <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button variant="outlined" onClick={handleCancel} sx={{ textTransform: "none" }}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleCancel}
+                    sx={{ textTransform: "none" }}
+                  >
                     Cancel
                   </Button>
                   <Button
@@ -515,22 +620,40 @@ export default function Account() {
         {/* ── Personal Information ── */}
         <Card className="account-section-card" sx={{ mt: 3 }}>
           <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={700} color="#1a1a1a" gutterBottom>
+            <Typography
+              variant="h6"
+              fontWeight={700}
+              color="#1a1a1a"
+              gutterBottom
+            >
               Personal information
             </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 2 }}>
+            <Box
+              sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 2 }}
+            >
               {/* Full name */}
               <Box>
                 <Typography variant="body2" color="#6b7280" sx={{ mb: 0.5 }}>
                   Full name
                 </Typography>
                 {isEditing ? (
-                  <TextField fullWidth size="small" value={formData.fullName}
+                  <TextField
+                    fullWidth
+                    size="small"
+                    value={formData.fullName}
                     onChange={(e) => handleChange("fullName", e.target.value)}
-                    placeholder="Enter full name" sx={inputSx} />
+                    placeholder="Enter full name"
+                    sx={inputSx}
+                  />
                 ) : (
-                  <Typography variant="body1"
-                    color={displayValue(displayData.fullName).isEmpty ? "#9ca3af" : "#1a1a1a"}>
+                  <Typography
+                    variant="body1"
+                    color={
+                      displayValue(displayData.fullName).isEmpty
+                        ? "#9ca3af"
+                        : "#1a1a1a"
+                    }
+                  >
                     {displayValue(displayData.fullName).text}
                   </Typography>
                 )}
@@ -542,12 +665,24 @@ export default function Account() {
                   Email
                 </Typography>
                 {isEditing ? (
-                  <TextField fullWidth size="small" type="email" value={formData.email}
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="email"
+                    value={formData.email}
                     onChange={(e) => handleChange("email", e.target.value)}
-                    placeholder="Enter email" sx={inputSx} />
+                    placeholder="Enter email"
+                    sx={inputSx}
+                  />
                 ) : (
-                  <Typography variant="body1"
-                    color={displayValue(displayData.email).isEmpty ? "#9ca3af" : "#1a1a1a"}>
+                  <Typography
+                    variant="body1"
+                    color={
+                      displayValue(displayData.email).isEmpty
+                        ? "#9ca3af"
+                        : "#1a1a1a"
+                    }
+                  >
                     {displayValue(displayData.email).text}
                   </Typography>
                 )}
@@ -556,21 +691,30 @@ export default function Account() {
               {/* Phone */}
               <Box>
                 <Typography variant="body2" color="#6b7280" sx={{ mb: 0.5 }}>
-                  Số điện thoại
+                  Phone Number
                 </Typography>
                 {isEditing ? (
-                  <TextField fullWidth size="small" value={formData.phone}
+                  <TextField
+                    fullWidth
+                    size="small"
+                    value={formData.phone}
                     onChange={(e) => handleChange("phone", e.target.value)}
-                    placeholder="Enter phone number" sx={inputSx} />
+                    placeholder="Enter phone number"
+                    sx={inputSx}
+                  />
                 ) : (
-                  <Typography variant="body1"
-                    color={displayValue(displayData.phone).isEmpty ? "#9ca3af" : "#1a1a1a"}>
+                  <Typography
+                    variant="body1"
+                    color={
+                      displayValue(displayData.phone).isEmpty
+                        ? "#9ca3af"
+                        : "#1a1a1a"
+                    }
+                  >
                     {displayValue(displayData.phone).text}
                   </Typography>
                 )}
               </Box>
-
-
             </Box>
           </CardContent>
         </Card>

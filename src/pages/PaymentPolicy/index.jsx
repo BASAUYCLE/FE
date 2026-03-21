@@ -25,77 +25,74 @@ export default function PaymentPolicy() {
               mb: 4,
             }}
           >
-            Chính sách thanh toán
+            Payment Policy
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Có 3 hình thức thanh toán, khách hàng có thể lựa chọn hình thức
-            thuận tiện và phù hợp với mình nhất:
+            We offer three payment methods. Customers may choose whichever is
+            most convenient:
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}
           >
-            Cách 1: Thanh toán tiền mặt trực tiếp
+            Method 1: Direct cash payment
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Khách hàng mua hàng tại địa điểm kinh doanh của chúng tôi, tại đây
-            khách hàng có thể thanh toán trực tiếp bằng tiền mặt cho nhân viên
-            bán hàng.
+            If you purchase at our store, you can pay directly in cash to our
+            sales staff.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}
           >
-            Cách 2: Thanh toán khi nhận hàng (COD)
+            Method 2: Cash on Delivery (COD)
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Với hình thức này khách hàng xem hàng tại nhà, thanh toán tiền mặt
-            cho nhân viên giao nhận hàng sau khi đã kiểm tra đúng sản phẩm và
-            số lượng theo đơn hàng.
+            With this method, customers check the item upon delivery and then
+            pay in cash after confirming the correct product and quantity.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}
           >
-            Cách 3: Chuyển khoản trước
+            Method 3: Advance bank transfer
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Quý khách chuyển khoản trước, sau đó chúng tôi tiến hành giao hàng
-            theo thỏa thuận hoặc hợp đồng với Quý khách.
+            Customers transfer payment in advance, then we arrange delivery
+            according to the agreed schedule or contract terms.
           </Typography>
           <Typography sx={{ color: "#111827", fontSize: 14, mt: 1 }}>
-            STK: 8666226868888 – Chủ TK: Công ty BASAUYCLE
+            Account No.: 8666226868888 – Account Holder: BASAUYCLE Company
           </Typography>
           <Typography sx={{ color: "#111827", fontSize: 14, mb: 3 }}>
-            Ngân hàng  – Chi nhánh
+            Bank – Branch
           </Typography>
 
           <Typography
             component="h3"
             sx={{ fontSize: 16, fontWeight: 700, mb: 1 }}
           >
-            Lưu ý
+            Notes
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Nội dung chuyển khoản: ghi rõ <strong>Số điện thoại</strong> hoặc{" "}
-            <strong>Số đơn hàng</strong>.
+            - Transfer note must include your <strong>phone number</strong> or{" "}
+            <strong>order number</strong>.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Sau khi chuyển khoản, chúng tôi sẽ liên hệ xác nhận và tiến hành
-            giao hàng.
+            - After transfer, we will contact you for confirmation and proceed
+            with delivery.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Nếu sau thời gian thỏa thuận mà chúng tôi không giao hàng hoặc
-            không phản hồi lại, quý khách có thể gửi khiếu nại trực tiếp về địa
-            chỉ trụ sở.
+            - If we fail to deliver or respond within the agreed timeline,
+            customers may submit a complaint directly to our headquarters.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mt: 1.5 }}>
-            Chúng tôi cam kết kinh doanh minh bạch, hợp pháp, bán hàng chất
-            lượng, có nguồn gốc rõ ràng.
+            We are committed to transparent and lawful business operations, and
+            to providing quality products with clear origin.
           </Typography>
         </Container>
       </Box>

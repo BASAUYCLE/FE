@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Tag, Button, Typography, message } from "antd";
-import { Calendar, Pencil, Eye, CheckCircle, RotateCcw, Send } from "lucide-react";
+import {
+  Calendar,
+  Pencil,
+  Eye,
+  CheckCircle,
+  RotateCcw,
+  Send,
+} from "lucide-react";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
@@ -10,6 +17,7 @@ import {
 import { formatDate } from "../../utils/date";
 import { usePostings } from "../../contexts/PostingContext";
 import postService from "../../services/postService";
+import { confirmCrud } from "../../utils/confirmCrud";
 import "./PostingCard.css";
 
 export default function PostingCard({ posting, onSubmitted }) {
@@ -25,7 +33,14 @@ export default function PostingCard({ posting, onSubmitted }) {
   const isPending = status === POSTING_STATUS.PENDING_REVIEW;
   const isRejected = status === POSTING_STATUS.REJECTED;
 
-  const handleMarkSold = () => {
+  const handleMarkSold = async () => {
+    const ok = await confirmCrud({
+      title: "Đánh dấu đã bán?",
+      content: `Tin "${posting.bikeName ?? "này"}" sẽ chuyển sang trạng thái đã bán.`,
+      okText: "Xác nhận",
+      danger: true,
+    });
+    if (!ok) return;
     updatePostingStatus(posting.id, POSTING_STATUS.SOLD);
   };
 
@@ -130,13 +145,25 @@ export default function PostingCard({ posting, onSubmitted }) {
                   onClick={async () => {
                     const id = posting.id ?? posting.backendPostId;
                     if (!id) return;
+                    const ok = await confirmCrud({
+                      title: "Gửi duyệt tin đăng?",
+                      content: `Tin "${posting.bikeName ?? "này"}" sẽ được gửi cho quản trị / kiểm định xem xét.`,
+                      okText: "Gửi duyệt",
+                    });
+                    if (!ok) return;
                     setSubmitting(true);
                     try {
                       await postService.submitDraft(id);
-                      message.success("Submitted for review. Awaiting admin/inspector approval.");
+                      message.success(
+                        "Submitted for review. Awaiting admin/inspector approval.",
+                      );
                       onSubmitted?.();
                     } catch (err) {
-                      message.error(err?.message ?? err?.data?.message ?? "Submit for review failed.");
+                      message.error(
+                        err?.message ??
+                          err?.data?.message ??
+                          "Submit for review failed.",
+                      );
                     } finally {
                       setSubmitting(false);
                     }

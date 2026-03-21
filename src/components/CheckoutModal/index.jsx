@@ -8,6 +8,7 @@ import { useNotifications } from "../../contexts/useNotifications";
 import addressService from "../../services/addressService";
 import walletService from "../../services/walletService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { confirmCrud } from "../../utils/confirmCrud";
 import { useDepositRate } from "../../hooks/useDepositRate";
 
 /**
@@ -20,7 +21,13 @@ import { useDepositRate } from "../../hooks/useDepositRate";
  *  - numericPrice: number  (raw price for calculations)
  *  - onSuccess   : (order) => void   (optional, called after order created)
  */
-export default function CheckoutModal({ open, onClose, product, numericPrice: priceProp, onSuccess }) {
+export default function CheckoutModal({
+  open,
+  onClose,
+  product,
+  numericPrice: priceProp,
+  onSuccess,
+}) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { addOrder } = useOrders();
@@ -97,6 +104,15 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
       message.error("Insufficient wallet balance. Please top up.");
       return;
     }
+    const payLabel =
+      paymentMethod === "full" ? "toàn bộ" : `đặt cọc (${depositPercent}%)`;
+    const ok = await confirmCrud({
+      title: "Xác nhận đặt hàng?",
+      content: `Thanh toán ${payLabel} ${formatCurrency(amountToPay)} từ ví cho "${product?.name ?? "sản phẩm"}". Địa chỉ giao hàng đã chọn sẽ được dùng cho đơn này.`,
+      okText: "Xác nhận đặt hàng",
+    });
+    if (!ok) return;
+
     setSubmitting(true);
     try {
       const order = await addOrder(product, {
@@ -122,14 +138,16 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
       }
     } catch (err) {
       message.error(
-        err?.message || "Could not create order. Please check your wallet balance.",
+        err?.message ||
+          "Could not create order. Please check your wallet balance.",
       );
     } finally {
       setSubmitting(false);
     }
   };
 
-  const insufficientBalance = walletBalance != null && amountToPay > walletBalance;
+  const insufficientBalance =
+    walletBalance != null && amountToPay > walletBalance;
   const confirmDisabled = submitting || insufficientBalance;
 
   return (
@@ -142,12 +160,18 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
       width={440}
       destroyOnClose
       styles={{
-        body: { padding: 0, maxHeight: "calc(100vh - 120px)", overflowY: "auto" },
+        body: {
+          padding: 0,
+          maxHeight: "calc(100vh - 120px)",
+          overflowY: "auto",
+        },
       }}
     >
       {/* Header */}
       <div style={{ padding: "14px 18px 0" }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>
+        <h3
+          style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}
+        >
           Confirm order
         </h3>
       </div>
@@ -163,27 +187,63 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
               alt={product?.name}
               referrerPolicy="no-referrer"
               style={{
-                width: 56, height: 44, objectFit: "cover", borderRadius: 6,
-                border: "1px solid #e5e7eb", flexShrink: 0,
+                width: 56,
+                height: 44,
+                objectFit: "cover",
+                borderRadius: 6,
+                border: "1px solid #e5e7eb",
+                flexShrink: 0,
               }}
             />
           )}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a1a", marginBottom: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: 13,
+                color: "#1a1a1a",
+                marginBottom: 1,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
               {product?.name}
             </div>
             {product?.brand && (
-              <Tag color="default" style={{ fontSize: 11, lineHeight: "18px", padding: "0 5px", marginBottom: 1 }}>{product.brand}</Tag>
+              <Tag
+                color="default"
+                style={{
+                  fontSize: 11,
+                  lineHeight: "18px",
+                  padding: "0 5px",
+                  marginBottom: 1,
+                }}
+              >
+                {product.brand}
+              </Tag>
             )}
             <div style={{ fontWeight: 700, fontSize: 14, color: "#00ccad" }}>
-              {typeof product?.price === "string" ? product.price : formatCurrency(numericPrice)}
+              {typeof product?.price === "string"
+                ? product.price
+                : formatCurrency(numericPrice)}
             </div>
           </div>
         </div>
 
         {/* Delivery address */}
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, fontSize: 12, color: "#374151", marginBottom: 5 }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontWeight: 600,
+              fontSize: 12,
+              color: "#374151",
+              marginBottom: 5,
+            }}
+          >
             <EnvironmentOutlined style={{ fontSize: 13 }} /> Shipping address
           </label>
           {addressLoading ? (
@@ -210,14 +270,26 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
           ) : (
             <div style={{ color: "#ef4444", fontSize: 12 }}>
               You have no addresses.{" "}
-              <Link to="/account" style={{ color: "#00ccad", fontWeight: 600 }}>Add address</Link>
+              <Link to="/account" style={{ color: "#00ccad", fontWeight: 600 }}>
+                Add address
+              </Link>
             </div>
           )}
         </div>
 
         {/* Payment method */}
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, fontSize: 12, color: "#374151", marginBottom: 5 }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontWeight: 600,
+              fontSize: 12,
+              color: "#374151",
+              marginBottom: 5,
+            }}
+          >
             <WalletOutlined style={{ fontSize: 13 }} /> Payment method
           </label>
           <Radio.Group
@@ -228,27 +300,42 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
             <Radio
               value="full"
               style={{
-                padding: "7px 10px", border: "1px solid #e5e7eb", borderRadius: 8,
-                margin: 0, background: paymentMethod === "full" ? "rgba(0,204,173,0.06)" : "#fff",
+                padding: "7px 10px",
+                border: "1px solid #e5e7eb",
+                borderRadius: 8,
+                margin: 0,
+                background:
+                  paymentMethod === "full" ? "rgba(0,204,173,0.06)" : "#fff",
                 fontSize: 12,
               }}
             >
               <span style={{ fontWeight: 600, fontSize: 12 }}>Pay in full</span>
-              <span style={{ display: "block", fontSize: 11, color: "#6b7280" }}>
+              <span
+                style={{ display: "block", fontSize: 11, color: "#6b7280" }}
+              >
                 Pay {formatCurrency(numericPrice)} in full
               </span>
             </Radio>
             <Radio
               value="deposit"
               style={{
-                padding: "7px 10px", border: "1px solid #e5e7eb", borderRadius: 8,
-                margin: 0, background: paymentMethod === "deposit" ? "rgba(0,204,173,0.06)" : "#fff",
+                padding: "7px 10px",
+                border: "1px solid #e5e7eb",
+                borderRadius: 8,
+                margin: 0,
+                background:
+                  paymentMethod === "deposit" ? "rgba(0,204,173,0.06)" : "#fff",
                 fontSize: 12,
               }}
             >
-              <span style={{ fontWeight: 600, fontSize: 12 }}>Deposit {depositPercent}%</span>
-              <span style={{ display: "block", fontSize: 11, color: "#6b7280" }}>
-                Pay {formatCurrency(depositAmount)} now, {formatCurrency(numericPrice - depositAmount)} later
+              <span style={{ fontWeight: 600, fontSize: 12 }}>
+                Deposit {depositPercent}%
+              </span>
+              <span
+                style={{ display: "block", fontSize: 11, color: "#6b7280" }}
+              >
+                Pay {formatCurrency(depositAmount)} now,{" "}
+                {formatCurrency(numericPrice - depositAmount)} later
               </span>
             </Radio>
           </Radio.Group>
@@ -257,49 +344,116 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
         <Divider style={{ margin: "0 0 10px" }} />
 
         {/* Summary */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6b7280" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            marginBottom: 10,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 12,
+              color: "#6b7280",
+            }}
+          >
             <span>Product price</span>
             <span>{formatCurrency(numericPrice)}</span>
           </div>
           {paymentMethod === "deposit" && (
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, color: "#6b7280" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: 12,
+                color: "#6b7280",
+              }}
+            >
               <span>Deposit ({depositPercent}%)</span>
               <span>{formatCurrency(depositAmount)}</span>
             </div>
           )}
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 14,
+              fontWeight: 700,
+              color: "#1a1a1a",
+            }}
+          >
             <span>Amount to pay</span>
-            <span style={{ color: "#00ccad" }}>{formatCurrency(amountToPay)}</span>
+            <span style={{ color: "#00ccad" }}>
+              {formatCurrency(amountToPay)}
+            </span>
           </div>
         </div>
 
         {/* Wallet balance */}
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "7px 10px", background: "#f0fdf4", borderRadius: 8, marginBottom: 10, border: "1px solid #bbf7d0",
-        }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#166534" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "7px 10px",
+            background: "#f0fdf4",
+            borderRadius: 8,
+            marginBottom: 10,
+            border: "1px solid #bbf7d0",
+          }}
+        >
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#166534",
+            }}
+          >
             <WalletOutlined style={{ fontSize: 13 }} /> Wallet balance
           </span>
           {walletLoading ? (
             <Spin size="small" />
           ) : walletBalance != null ? (
-            <span style={{ fontWeight: 700, fontSize: 13, color: walletBalance >= amountToPay ? "#166534" : "#dc2626" }}>
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: 13,
+                color: walletBalance >= amountToPay ? "#166534" : "#dc2626",
+              }}
+            >
               {formatCurrency(walletBalance)}
             </span>
           ) : (
-            <span style={{ color: "#6b7280", fontSize: 11 }}>Unable to load</span>
+            <span style={{ color: "#6b7280", fontSize: 11 }}>
+              Unable to load
+            </span>
           )}
         </div>
 
         {insufficientBalance && (
-          <div style={{
-            background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6,
-            padding: "6px 10px", marginBottom: 8, color: "#dc2626", fontSize: 11, fontWeight: 500,
-          }}>
-            Insufficient balance. Top up {formatCurrency(amountToPay - walletBalance)}.{" "}
-            <Link to="/wallet" style={{ color: "#00ccad", fontWeight: 600 }}>Top up</Link>
+          <div
+            style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: 6,
+              padding: "6px 10px",
+              marginBottom: 8,
+              color: "#dc2626",
+              fontSize: 11,
+              fontWeight: 500,
+            }}
+          >
+            Insufficient balance. Top up{" "}
+            {formatCurrency(amountToPay - walletBalance)}.{" "}
+            <Link to="/wallet" style={{ color: "#00ccad", fontWeight: 600 }}>
+              Top up
+            </Link>
           </div>
         )}
       </div>
@@ -311,8 +465,15 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
           onClick={() => onClose?.()}
           disabled={submitting}
           style={{
-            flex: 1, padding: "9px 0", border: "1px solid #d1d5db", borderRadius: 8,
-            background: "#fff", fontWeight: 600, fontSize: 13, color: "#475569", cursor: "pointer",
+            flex: 1,
+            padding: "9px 0",
+            border: "1px solid #d1d5db",
+            borderRadius: 8,
+            background: "#fff",
+            fontWeight: 600,
+            fontSize: 13,
+            color: "#475569",
+            cursor: "pointer",
           }}
         >
           Cancel
@@ -322,13 +483,21 @@ export default function CheckoutModal({ open, onClose, product, numericPrice: pr
           onClick={handleConfirm}
           disabled={confirmDisabled}
           style={{
-            flex: 2, padding: "9px 0", border: "none", borderRadius: 8,
+            flex: 2,
+            padding: "9px 0",
+            border: "none",
+            borderRadius: 8,
             background: confirmDisabled ? "#94a3b8" : "#00ccad",
-            fontWeight: 700, fontSize: 13, color: "#fff",
-            cursor: submitting ? "wait" : "pointer", transition: "background 0.2s",
+            fontWeight: 700,
+            fontSize: 13,
+            color: "#fff",
+            cursor: submitting ? "wait" : "pointer",
+            transition: "background 0.2s",
           }}
         >
-          {submitting ? "Processing..." : `Confirm ${paymentMethod === "deposit" ? "deposit" : "payment"}`}
+          {submitting
+            ? "Processing..."
+            : `Confirm ${paymentMethod === "deposit" ? "deposit" : "payment"}`}
         </button>
       </div>
     </Modal>

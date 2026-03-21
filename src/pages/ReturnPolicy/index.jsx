@@ -25,89 +25,81 @@ export default function ReturnPolicy() {
               mb: 4,
             }}
           >
-            Chính sách đổi trả và hoàn tiền
+            Return and Refund Policy
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            1. Điều kiện đổi trả
+            1. Return conditions
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            Quý Khách hàng cần kiểm tra tình trạng hàng hóa và có thể đổi
-            hàng/trả lại hàng ngay tại thời điểm giao/nhận hàng trong những
-            trường hợp sau:
+            Customers should inspect product condition and may request exchange
+            or return at delivery/receipt time in the following cases:
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Hàng không đúng chủng loại, mẫu mã trong đơn hàng đã đặt hoặc như
-            trên website tại thời điểm đặt hàng.
+            - Product type/model does not match the order or website listing at
+            the time of purchase.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Không đủ số lượng, không đủ bộ như trong đơn hàng.
+            - Insufficient quantity or incomplete set compared to the order.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Tình trạng bên ngoài bị ảnh hưởng như rách bao bì, bong tróc, bể
-            vỡ…
+            - Visible external damage such as torn packaging, peeling, cracks,
+            or breakage.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Khách hàng có trách nhiệm trình giấy tờ liên quan chứng minh sự
-            thiếu sót trên để hoàn thành việc hoàn trả/đổi trả hàng hóa.
+            Customers are responsible for providing relevant documents/evidence
+            to complete the return/exchange process.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            2. Quy định về thời gian thông báo và gửi sản phẩm đổi trả
+            2. Time limits for return notification and shipment
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thời gian thông báo đổi trả: trong vòng 48h kể từ khi nhận sản
-            phẩm đối với trường hợp sản phẩm thiếu phụ kiện, quà tặng hoặc bể
-            vỡ.
+            - Return notification time: within 48 hours after receiving the
+            product for missing accessories/gifts or damaged items.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thời gian gửi chuyển trả sản phẩm: trong vòng 14 ngày kể từ khi
-            nhận sản phẩm.
+            - Product return shipment time: within 14 days from receipt date.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Địa điểm đổi trả sản phẩm: Khách hàng có thể mang hàng trực tiếp
-            đến văn phòng/cửa hàng của chúng tôi hoặc chuyển qua đường bưu
-            điện.
+            - Return location: customers may bring products directly to our
+            office/store or send them via postal/courier service.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Trong trường hợp Quý Khách hàng có ý kiến đóng góp/khiếu nại liên
-            quan đến chất lượng sản phẩm, Quý Khách hàng vui lòng liên hệ đường
-            dây chăm sóc khách hàng của chúng tôi.
+            If you have feedback/complaints related to product quality, please
+            contact our customer support hotline.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            3. Hình thức đổi trả
+            3. Return/exchange methods
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Chúng tôi thực hiện đổi hàng hóa đúng loại sản phẩm mà khách hàng
-            đặt đối với sản phẩm giao sai hàng/sai số lượng hoặc khi phát sinh
-            sản phẩm không đạt cam kết.
+            - We exchange products with the correct ordered item in cases of
+            wrong item/quantity delivery or products not meeting commitments.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            - Đổi sản phẩm khác có giá trị tương đương cho khách hàng trong
-            trường hợp sản phẩm khách hàng đã đặt hết hàng nếu khách hàng đồng
-            ý.
+            - We can exchange to another product of equivalent value if the
+            originally ordered product is out of stock and the customer agrees.
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            Trường hợp khách hàng không còn nhu cầu nữa do lỗi hàng hóa hoặc
-            không đồng ý với hàng hóa được đổi lại, công ty sẽ hoàn phí cho
-            khách hàng bằng hình thức chuyển khoản hoặc theo phương thức thỏa
-            thuận với khách hàng trong vòng 07 ngày làm việc kể từ ngày nhận
-            được yêu cầu. Phí chuyển khoản khách hàng sẽ chịu (nếu có).
+            If customers no longer need the product due to product faults or do
+            not accept the exchanged item, we will issue a refund via bank
+            transfer or another agreed method within 07 working days from the
+            request date. Transfer fees (if any) are borne by the customer.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Khi phát sinh chi phí vận chuyển của hàng đổi trả, khách hàng sẽ
-            chịu chi phí này và thanh toán trực tiếp cho bên vận chuyển.
+            Any shipping costs for returned/exchanged items are borne by the
+            customer and paid directly to the carrier.
           </Typography>
         </Container>
       </Box>

@@ -124,7 +124,7 @@ export default function Hero() {
                   textShadow: "0 4px 10px rgba(0,0,0,0.45)"
                 }}
               >
-                CÙNG BẠN LÊN ĐƯỜNG – KHÁM PHÁ HÀNH TRÌNH &amp; TỐC ĐỘ
+                RIDE WITH YOU - EXPLORE THE JOURNEY &amp; SPEED
               </Typography>
             </Box>
           </Box>

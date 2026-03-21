@@ -11,9 +11,8 @@
     /* no outer border */
     border-radius: 0;
     padding: 0;
-    margin: 2rem auto;
-    max-width: 900px;
-    /* Align with form container */
+    margin: 2rem 0;
+    max-width: 100%;
     width: 100%;
 }
 

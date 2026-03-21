@@ -25,21 +25,21 @@ export default function Complaint() {
               mb: 4,
             }}
           >
-            Chính sách xử lý khiếu nại
+            Complaint Handling Policy
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            - Tiếp nhận mọi khiếu nại của khách hàng liên quan đến việc sử dụng
-            dịch vụ của công ty.
+            - We accept all customer complaints related to the use of our
+            services.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            - Tất cả mọi trường hợp bảo hành, quý khách có thể liên hệ với
-            chúng tôi để làm thủ tục bảo hành.
+            - For all warranty-related cases, customers can contact us to
+            complete warranty procedures.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            - Thời gian giải quyết khiếu nại trong thời hạn tối đa là 03 (ba)
-            ngày làm việc kể từ khi nhận được khiếu nại của khách hàng. Trong
-            trường hợp bất khả kháng, hai bên sẽ tự thương lượng.
+            - Complaint resolution time is up to 03 (three) working days from
+            the time we receive the complaint. In force majeure cases, both
+            parties will negotiate a suitable solution.
           </Typography>
         </Container>
       </Box>

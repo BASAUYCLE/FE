@@ -1,18 +1,18 @@
 import { useMemo, useState, useEffect } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Box, Typography, Button } from "@mui/material";
-import { Select } from "antd";
-import { AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
+import { useSearchParams } from "react-router-dom";
+import { Box, Typography } from "@mui/material";
+import { Pagination } from "antd";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { SimpleProductCard } from "../../components/featuredbikes";
-import BikeFilterSidebar from "../../components/filters/BikeFilterSidebar";
+import MarketplaceFilterBar from "../../components/filters/MarketplaceFilterBar";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
+import bicyclesWorkshopImage from "../../assets/bicycles_workshop.jpg";
 import "./index.css";
 
 // Bỏ filter theo loại xe (Bike Type) – chỉ giữ filter theo Brand/Category/Frame/Year/Price
@@ -97,7 +97,8 @@ const DEFAULT_MODEL_YEARS = Array.from({ length: 15 }, (_, i) =>
 const PRICE_MIN = 0;
 const PRICE_MAX = 50000000;
 const PRICE_RANGE_DEFAULT = [PRICE_MIN, PRICE_MAX];
-const PAGE_SIZE = 9;
+// 5 columns * 4 rows = 20 items per page.
+const PAGE_SIZE = 20;
 
 export default function Marketplace() {
   const { user } = useAuth();
@@ -167,8 +168,9 @@ export default function Marketplace() {
   ]);
 
   useEffect(() => {
-    // Hiện tại không dùng typeFromUrl để filter, nhưng giữ effect cho sau này nếu cần
-  }, [typeFromUrl]);
+    const nextCategory = searchParams.get("category") || "all";
+    setCategoryFilter((prev) => (prev === nextCategory ? prev : nextCategory));
+  }, [searchParams]);
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
   const [page, setPage] = useState(1);
@@ -374,7 +376,6 @@ export default function Marketplace() {
   }, [displayedBikes, sortBy]);
 
   const displayedCount = sortedBikes.length;
-  const totalPages = Math.max(1, Math.ceil(displayedCount / PAGE_SIZE));
   const paginatedBikes = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
     return sortedBikes.slice(start, start + PAGE_SIZE);
@@ -394,69 +395,28 @@ export default function Marketplace() {
     setSearchName("");
   };
 
-  const handleMinPriceChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, "");
-    setMinPriceStr(raw);
-    if (raw === "") {
-      setPriceRange((prev) => [PRICE_MIN, prev[1]]);
-      return;
-    }
-    const num = parseInt(raw, 10);
-    if (!Number.isNaN(num)) {
-      setPriceRange((prev) => [Math.min(num, prev[1]), prev[1]]);
-    }
-  };
-
-  const handleMaxPriceChange = (e) => {
-    const raw = e.target.value.replace(/\D/g, "");
-    setMaxPriceStr(raw);
-    if (raw === "") {
-      setPriceRange((prev) => [prev[0], PRICE_MAX]);
-      return;
-    }
-    const num = parseInt(raw, 10);
-    if (!Number.isNaN(num)) {
-      setPriceRange((prev) => [prev[0], Math.max(num, prev[0])]);
-    }
-  };
-
-  const onMinFocus = () => {
-    setMinPriceFocused(true);
-    setMinPriceStr(String(priceRange[0]));
-  };
-
-  const onMaxFocus = () => {
-    setMaxPriceFocused(true);
-    setMaxPriceStr(String(priceRange[1]));
-  };
-
-  const commitMinPrice = () => {
-    setMinPriceFocused(false);
-    const num = minPriceStr === "" ? PRICE_MIN : parseInt(minPriceStr, 10);
-    const clamped = Number.isNaN(num)
-      ? PRICE_MIN
-      : Math.max(PRICE_MIN, Math.min(num, PRICE_MAX, priceRange[1]));
-    setPriceRange((prev) => [clamped, prev[1]]);
-    setMinPriceStr("");
-  };
-
-  const commitMaxPrice = () => {
-    setMaxPriceFocused(false);
-    const num = maxPriceStr === "" ? PRICE_MAX : parseInt(maxPriceStr, 10);
-    const clamped = Number.isNaN(num)
-      ? PRICE_MAX
-      : Math.min(PRICE_MAX, Math.max(num, PRICE_MIN, priceRange[0]));
-    setPriceRange((prev) => [prev[0], clamped]);
-    setMaxPriceStr("");
-  };
-
   return (
     <Box className="marketplace-page">
       <Header />
+      <Box className="marketplace-hero-banner marketplace-hero-banner--fullbleed">
+        <img
+          src={bicyclesWorkshopImage}
+          alt="Bicycles workshop"
+          className="marketplace-hero-banner-image"
+        />
+        <Box className="marketplace-hero-banner-overlay">
+          <Typography
+            component="h1"
+            className="marketplace-hero-banner-title"
+            variant="h3"
+          >
+            Marketplace
+          </Typography>
+        </Box>
+      </Box>
       <Box className="marketplace-layout">
-        {/* Sidebar Filters */}
-        <aside className="marketplace-sidebar">
-          <BikeFilterSidebar
+        <main className="marketplace-main">
+          <MarketplaceFilterBar
             searchName={searchName}
             onSearchNameChange={setSearchName}
             brandFilter={brandFilter}
@@ -480,43 +440,11 @@ export default function Marketplace() {
             onClearFilters={clearFilters}
             priceMin={PRICE_MIN}
             priceMax={PRICE_MAX}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
           />
-        </aside>
-
-        {/* Main Content */}
-        <main className="marketplace-main">
-          <Box className="marketplace-results-header">
-            <Typography className="marketplace-results-title">
-              Search Results ({displayedCount} bikes)
-            </Typography>
-            <Box className="marketplace-results-actions">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="marketplace-sort-select"
-              >
-                <option value="newest">Newest Listings</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-              </select>
-              <Box className="marketplace-view-toggle">
-                <button
-                  type="button"
-                  className={`marketplace-view-btn ${viewMode === "grid" ? "active" : ""}`}
-                  onClick={() => setViewMode("grid")}
-                >
-                  <AppstoreOutlined style={{ fontSize: 18 }} />
-                </button>
-                <button
-                  type="button"
-                  className={`marketplace-view-btn ${viewMode === "list" ? "active" : ""}`}
-                  onClick={() => setViewMode("list")}
-                >
-                  <UnorderedListOutlined style={{ fontSize: 18 }} />
-                </button>
-              </Box>
-            </Box>
-          </Box>
 
           <Box
             className={`marketplace-grid ${viewMode === "list" ? "list" : ""}`}
@@ -544,78 +472,16 @@ export default function Marketplace() {
           </Box>
 
           {displayedCount > 0 && (
-            <Box
-              className="marketplace-pagination-wrap"
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 2,
-                mt: 3,
-                pb: 2,
-              }}
-            >
-              <Typography sx={{ color: "#64748b", fontSize: 14 }}>
-                Showing {(page - 1) * PAGE_SIZE + 1}–
-                {Math.min(page * PAGE_SIZE, displayedCount)} of {displayedCount}{" "}
-                bikes
-              </Typography>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  sx={{ minWidth: 36 }}
-                >
-                  Previous
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(
-                    (n) =>
-                      n === 1 ||
-                      n === totalPages ||
-                      n === page ||
-                      Math.abs(n - page) <= 1,
-                  )
-                  .map((n, idx, arr) => (
-                    <span
-                      key={n}
-                      style={{ display: "inline-flex", alignItems: "center" }}
-                    >
-                      {idx > 0 && arr[idx - 1] !== n - 1 && (
-                        <Typography component="span" sx={{ px: 0.5 }}>
-                          …
-                        </Typography>
-                      )}
-                      <Button
-                        variant={page === n ? "contained" : "outlined"}
-                        size="small"
-                        onClick={() => setPage(n)}
-                        sx={{
-                          minWidth: 36,
-                          ...(page === n && {
-                            backgroundColor: "#00ccad",
-                            color: "#0f172a",
-                            "&:hover": { backgroundColor: "#00b89a" },
-                          }),
-                        }}
-                      >
-                        {n}
-                      </Button>
-                    </span>
-                  ))}
-                <Button
-                  variant="outlined"
-                  size="small"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  sx={{ minWidth: 36 }}
-                >
-                  Next
-                </Button>
-              </Box>
+            <Box className="marketplace-pagination-wrap">
+              <Pagination
+                className="marketplace-pagination"
+                current={page}
+                pageSize={PAGE_SIZE}
+                total={displayedCount}
+                size="small"
+                showSizeChanger={false}
+                onChange={(nextPage) => setPage(nextPage)}
+              />
             </Box>
           )}
         </main>

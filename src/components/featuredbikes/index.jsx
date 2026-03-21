@@ -11,7 +11,6 @@ import { styled } from "@mui/material/styles";
 import {
   ArrowRightOutlined,
   ArrowLeftOutlined,
-  StarFilled,
   HeartOutlined,
   HeartFilled,
 } from "@ant-design/icons";
@@ -22,6 +21,7 @@ import { useWishlist } from "../../contexts/WishlistContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { confirmCrud } from "../../utils/confirmCrud";
 import { message } from "antd";
 import demoBike from "../../assets/bike-logo.png";
 import roadBikeImage from "../../assets/RoadBike.png";
@@ -310,9 +310,9 @@ const CategoryRow = styled(Box)(({ theme }) => ({
 // Card layout giống "XE ĐẠP DÀNH CHO NỮ"
 const SimpleProductCardRoot = styled(Box)(({ theme }) => ({
   backgroundColor: "#ffffff",
-  borderRadius: 12,
+  borderRadius: 16,
   border: "1px solid #e5e7eb",
-  boxShadow: "0 6px 18px rgba(15,23,42,0.06)",
+  boxShadow: "0 10px 26px rgba(15,23,42,0.07)",
   overflow: "hidden",
   cursor: "pointer",
   display: "flex",
@@ -320,8 +320,8 @@ const SimpleProductCardRoot = styled(Box)(({ theme }) => ({
   textDecoration: "none",
   transition: "box-shadow 0.2s ease, transform 0.2s ease",
   "&:hover": {
-    boxShadow: "0 10px 25px rgba(15,23,42,0.12)",
-    transform: "translateY(-3px)",
+    boxShadow: "0 16px 44px rgba(15,23,42,0.16)",
+    transform: "translateY(-4px)",
   },
 }));
 
@@ -404,10 +404,6 @@ function SimpleProductCard({ bike, variant = "grid" }) {
   const { user, isAuthenticated } = useAuth();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
 
-  const rating =
-    typeof bike.rating === "number"
-      ? bike.rating.toFixed(1)
-      : (bike.rating ?? "5.0");
   const soldRaw =
     bike.sold ??
     bike.salesCount ??
@@ -428,7 +424,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
       bike.sellerId == user.user_id ||
       bike.sellerId === user.email);
 
-  const handleFavoriteClick = (e) => {
+  const handleFavoriteClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (isOwnListing) return;
@@ -438,6 +434,13 @@ function SimpleProductCard({ bike, variant = "grid" }) {
       return;
     }
     if (inWishlist) {
+      const ok = await confirmCrud({
+        title: "Xóa khỏi Wishlist?",
+        content: `Gỡ "${bike.name ?? "sản phẩm này"}" khỏi danh sách yêu thích?`,
+        okText: "Xóa",
+        danger: true,
+      });
+      if (!ok) return;
       removeFromWishlist(bike.id);
     } else {
       addToWishlist(bike);
@@ -458,7 +461,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
               rowGap: 1,
               maxHeight: 150,
             }
-          : {}
+          : { minHeight: 330 }
       }
     >
       <SimpleProductImageWrapper
@@ -529,15 +532,11 @@ function SimpleProductCard({ bike, variant = "grid" }) {
         <SimpleProductTitle>{bike.name}</SimpleProductTitle>
         <SimpleProductPrice>{bike.price}</SimpleProductPrice>
         <SimpleProductMetaRow>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-            <StarFilled style={{ color: "#f59e0b", fontSize: 14 }} />
-            <SimpleProductMetaText>{rating}</SimpleProductMetaText>
-          </Box>
           {sold > 0 && (
             <SimpleProductMetaText>Đã bán {sold}</SimpleProductMetaText>
           )}
           <SimpleProductMetaText style={{ color: "#16a34a", fontWeight: 500 }}>
-            Còn hàng
+            In stock
           </SimpleProductMetaText>
         </SimpleProductMetaRow>
       </Box>
@@ -735,7 +734,7 @@ export default function FeaturedBikes() {
             textAlign: "center",
           }}
         >
-          <SectionTitle variant="h2">DANH MỤC SẢN PHẨM</SectionTitle>
+          <SectionTitle variant="h2">PRODUCT CATEGORIES</SectionTitle>
         </SectionHeader>
 
         <CategoryGrid>

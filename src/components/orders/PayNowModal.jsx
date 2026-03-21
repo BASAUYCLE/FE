@@ -8,6 +8,7 @@ import { useNotifications } from "../../contexts/useNotifications";
 import addressService from "../../services/addressService";
 import walletService from "../../services/walletService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { confirmCrud } from "../../utils/confirmCrud";
 import { useDepositRate } from "../../hooks/useDepositRate";
 import {
   ORDER_STATUS,
@@ -89,6 +90,13 @@ export default function PayNowModal({ open, onClose, order }) {
       message.error("Insufficient wallet balance. Please top up.");
       return;
     }
+    const ok = await confirmCrud({
+      title: "Xác nhận thanh toán?",
+      content: `Trừ ${formatCurrency(amountDue)} từ ví cho đơn #${order.orderId} (${order?.bikeName ?? ""}).`,
+      okText: "Thanh toán",
+    });
+    if (!ok) return;
+
     setSubmitting(true);
     try {
       await payRemaining(order.orderId);
@@ -108,7 +116,8 @@ export default function PayNowModal({ open, onClose, order }) {
     }
   };
 
-  const insufficientBalance = walletBalance != null && amountDue > walletBalance;
+  const insufficientBalance =
+    walletBalance != null && amountDue > walletBalance;
   const confirmDisabled = submitting || insufficientBalance;
 
   return (
@@ -121,12 +130,18 @@ export default function PayNowModal({ open, onClose, order }) {
       width={440}
       destroyOnClose
       styles={{
-        body: { padding: 0, maxHeight: "calc(100vh - 120px)", overflowY: "auto" },
+        body: {
+          padding: 0,
+          maxHeight: "calc(100vh - 120px)",
+          overflowY: "auto",
+        },
       }}
     >
       {/* Header */}
       <div style={{ padding: "14px 18px 0" }}>
-        <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}>
+        <h3
+          style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "#1a1a1a" }}
+        >
           Confirm payment
         </h3>
       </div>
@@ -142,39 +157,79 @@ export default function PayNowModal({ open, onClose, order }) {
               alt={order?.bikeName}
               referrerPolicy="no-referrer"
               style={{
-                width: 56, height: 44, objectFit: "cover", borderRadius: 6,
-                border: "1px solid #e5e7eb", flexShrink: 0,
+                width: 56,
+                height: 44,
+                objectFit: "cover",
+                borderRadius: 6,
+                border: "1px solid #e5e7eb",
+                flexShrink: 0,
               }}
             />
           ) : (
-            <div style={{
-              width: 56, height: 44, borderRadius: 6, background: "#f1f5f9",
-              border: "1px solid #e5e7eb", flexShrink: 0,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 10, color: "#94a3b8",
-            }}>
+            <div
+              style={{
+                width: 56,
+                height: 44,
+                borderRadius: 6,
+                background: "#f1f5f9",
+                border: "1px solid #e5e7eb",
+                flexShrink: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 10,
+                color: "#94a3b8",
+              }}
+            >
               No image
             </div>
           )}
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a1a", marginBottom: 3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: 13,
+                color: "#1a1a1a",
+                marginBottom: 3,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
               {order?.bikeName ?? "—"}
             </div>
             <Tag
               color={ORDER_STATUS_TAG_COLOR[order?.status]}
-              style={{ fontSize: 11, lineHeight: "18px", padding: "0 5px", marginBottom: 2 }}
+              style={{
+                fontSize: 11,
+                lineHeight: "18px",
+                padding: "0 5px",
+                marginBottom: 2,
+              }}
             >
               {ORDER_STATUS_LABEL[order?.status] ?? order?.status}
             </Tag>
-                <div style={{ fontSize: 11, color: "#6b7280" }}>
-                  {order?.createdAt ? new Date(order.createdAt).toLocaleDateString("en-US") : ""}
-                </div>
+            <div style={{ fontSize: 11, color: "#6b7280" }}>
+              {order?.createdAt
+                ? new Date(order.createdAt).toLocaleDateString("en-US")
+                : ""}
+            </div>
           </div>
         </div>
 
         {/* Delivery address */}
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, fontSize: 12, color: "#374151", marginBottom: 5 }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontWeight: 600,
+              fontSize: 12,
+              color: "#374151",
+              marginBottom: 5,
+            }}
+          >
             <EnvironmentOutlined style={{ fontSize: 13 }} /> Shipping address
           </label>
           {addressLoading ? (
@@ -201,27 +256,51 @@ export default function PayNowModal({ open, onClose, order }) {
           ) : (
             <div style={{ color: "#ef4444", fontSize: 12 }}>
               You have no addresses.{" "}
-              <Link to="/account" style={{ color: "#00ccad", fontWeight: 600 }}>Add address</Link>
+              <Link to="/account" style={{ color: "#00ccad", fontWeight: 600 }}>
+                Add address
+              </Link>
             </div>
           )}
         </div>
 
         {/* Payment type info */}
         <div style={{ marginBottom: 12 }}>
-          <label style={{ display: "flex", alignItems: "center", gap: 5, fontWeight: 600, fontSize: 12, color: "#374151", marginBottom: 5 }}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontWeight: 600,
+              fontSize: 12,
+              color: "#374151",
+              marginBottom: 5,
+            }}
+          >
             <WalletOutlined style={{ fontSize: 13 }} /> Hình thức thanh toán
           </label>
-          <div style={{
-            padding: "7px 10px", border: "1px solid #e5e7eb", borderRadius: 8,
-            background: "rgba(0,204,173,0.06)", fontSize: 12,
-          }}>
+          <div
+            style={{
+              padding: "7px 10px",
+              border: "1px solid #e5e7eb",
+              borderRadius: 8,
+              background: "rgba(0,204,173,0.06)",
+              fontSize: 12,
+            }}
+          >
             <span style={{ fontWeight: 600, fontSize: 12 }}>
               {isFullPayment ? "Pay remaining amount" : "Pay deposit"}
             </span>
-            <span style={{ display: "block", fontSize: 11, color: "#6b7280", marginTop: 2 }}>
-                  {isFullPayment
-                    ? `Deposit ${depositPercent}% paid, pay remaining ${remainPercent}%`
-                    : `Deposit ${depositPercent}% of order value`}
+            <span
+              style={{
+                display: "block",
+                fontSize: 11,
+                color: "#6b7280",
+                marginTop: 2,
+              }}
+            >
+              {isFullPayment
+                ? `Deposit ${depositPercent}% paid, pay remaining ${remainPercent}%`
+                : `Deposit ${depositPercent}% of order value`}
             </span>
           </div>
         </div>
@@ -229,39 +308,92 @@ export default function PayNowModal({ open, onClose, order }) {
         <Divider style={{ margin: "0 0 10px" }} />
 
         {/* Summary */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 10 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 14, fontWeight: 700, color: "#1a1a1a" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 4,
+            marginBottom: 10,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              fontSize: 14,
+              fontWeight: 700,
+              color: "#1a1a1a",
+            }}
+          >
             <span>Amount to pay</span>
-            <span style={{ color: "#00ccad" }}>{formatCurrency(amountDue)}</span>
+            <span style={{ color: "#00ccad" }}>
+              {formatCurrency(amountDue)}
+            </span>
           </div>
         </div>
 
         {/* Wallet balance */}
-        <div style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center",
-          padding: "7px 10px", background: "#f0fdf4", borderRadius: 8, marginBottom: 10, border: "1px solid #bbf7d0",
-        }}>
-          <span style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 600, color: "#166534" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "7px 10px",
+            background: "#f0fdf4",
+            borderRadius: 8,
+            marginBottom: 10,
+            border: "1px solid #bbf7d0",
+          }}
+        >
+          <span
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#166534",
+            }}
+          >
             <WalletOutlined style={{ fontSize: 13 }} /> Số dư ví
           </span>
           {walletLoading ? (
             <Spin size="small" />
           ) : walletBalance != null ? (
-            <span style={{ fontWeight: 700, fontSize: 13, color: walletBalance >= amountDue ? "#166534" : "#dc2626" }}>
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: 13,
+                color: walletBalance >= amountDue ? "#166534" : "#dc2626",
+              }}
+            >
               {formatCurrency(walletBalance)}
             </span>
           ) : (
-            <span style={{ color: "#6b7280", fontSize: 11 }}>Unable to load</span>
+            <span style={{ color: "#6b7280", fontSize: 11 }}>
+              Unable to load
+            </span>
           )}
         </div>
 
         {insufficientBalance && (
-          <div style={{
-            background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 6,
-            padding: "6px 10px", marginBottom: 8, color: "#dc2626", fontSize: 11, fontWeight: 500,
-          }}>
-            Insufficient balance. Top up {formatCurrency(amountDue - walletBalance)}.{" "}
-            <Link to="/wallet" style={{ color: "#00ccad", fontWeight: 600 }}>Top up</Link>
+          <div
+            style={{
+              background: "#fef2f2",
+              border: "1px solid #fecaca",
+              borderRadius: 6,
+              padding: "6px 10px",
+              marginBottom: 8,
+              color: "#dc2626",
+              fontSize: 11,
+              fontWeight: 500,
+            }}
+          >
+            Insufficient balance. Top up{" "}
+            {formatCurrency(amountDue - walletBalance)}.{" "}
+            <Link to="/wallet" style={{ color: "#00ccad", fontWeight: 600 }}>
+              Top up
+            </Link>
           </div>
         )}
       </div>
@@ -273,8 +405,15 @@ export default function PayNowModal({ open, onClose, order }) {
           onClick={() => onClose?.()}
           disabled={submitting}
           style={{
-            flex: 1, padding: "9px 0", border: "1px solid #d1d5db", borderRadius: 8,
-            background: "#fff", fontWeight: 600, fontSize: 13, color: "#475569", cursor: "pointer",
+            flex: 1,
+            padding: "9px 0",
+            border: "1px solid #d1d5db",
+            borderRadius: 8,
+            background: "#fff",
+            fontWeight: 600,
+            fontSize: 13,
+            color: "#475569",
+            cursor: "pointer",
           }}
         >
           Cancel
@@ -284,10 +423,16 @@ export default function PayNowModal({ open, onClose, order }) {
           onClick={handleConfirm}
           disabled={confirmDisabled}
           style={{
-            flex: 2, padding: "9px 0", border: "none", borderRadius: 8,
+            flex: 2,
+            padding: "9px 0",
+            border: "none",
+            borderRadius: 8,
             background: confirmDisabled ? "#94a3b8" : "#00ccad",
-            fontWeight: 700, fontSize: 13, color: "#fff",
-            cursor: submitting ? "wait" : "pointer", transition: "background 0.2s",
+            fontWeight: 700,
+            fontSize: 13,
+            color: "#fff",
+            cursor: submitting ? "wait" : "pointer",
+            transition: "background 0.2s",
           }}
         >
           {submitting ? "Processing..." : "Confirm payment"}

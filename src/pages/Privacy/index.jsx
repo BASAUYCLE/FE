@@ -25,179 +25,173 @@ export default function Privacy() {
               mb: 4,
             }}
           >
-            CHÍNH SÁCH BẢO MẬT THÔNG TIN
+            PRIVACY POLICY
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            Chào mừng Quý khách đến với Hệ thống Cửa Hàng Bán Lẻ Xe Đạp Chuyên
-            Nghiệp Hàng Đầu Việt Nam – BASAUYCLE.
+            Welcome to BASAUYCLE, one of Vietnam's leading professional bicycle
+            retail systems.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Bằng việc truy cập website, mua hàng hoặc sử dụng dịch vụ của
-            BASAUYCLE, Quý khách đồng ý với các điều khoản được nêu trong Chính
-            sách bảo mật này. Chúng tôi cam kết bảo vệ sự riêng tư và sử dụng dữ
-            liệu của Quý khách một cách minh bạch, an toàn nhằm mang lại trải
-            nghiệm tốt nhất. BASAUYCLE hiểu rằng Dữ liệu cá nhân là tài sản
-            quan trọng của Quý khách.
+            By accessing our website, making purchases, or using BASAUYCLE
+            services, you agree to the terms in this Privacy Policy. We are
+            committed to protecting your privacy and using your data
+            transparently and securely to provide the best experience.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
           >
-            I. LOẠI DỮ LIỆU THU THẬP VÀ PHƯƠNG THỨC XỬ LÝ
+            I. DATA TYPES COLLECTED AND PROCESSING METHODS
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            Để đảm bảo quy trình giao hàng chuyên nghiệp và chế độ bảo hành hậu
-            mãi dài lâu, chúng tôi có thể thu thập các loại dữ liệu sau:
+            To ensure professional delivery and long-term warranty/after-sales
+            services, we may collect the following data:
           </Typography>
 
           <Typography sx={{ fontWeight: 600, mt: 1, mb: 0.5 }}>
-            1. Các loại dữ liệu được thu thập
+            1. Collected data categories
           </Typography>
           <Typography sx={{ fontWeight: 500, mb: 0.5 }}>
-            a. Dữ liệu cá nhân cơ bản:
+            a. Basic personal data:
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thông tin định danh: Họ và tên, giới tính, ngày sinh.
+            - Identity information: full name, gender, date of birth.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thông tin liên lạc: Số điện thoại, địa chỉ email, địa chỉ
-            thường trú/tạm trú (để giao hàng).
+            - Contact information: phone number, email address, and delivery
+            address.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thông tin đơn hàng: Loại xe đạp, mẫu mã, màu sắc, số khung xe
-            (Serial Number), phụ kiện đi kèm, ngày mua hàng, giá trị đơn hàng.
+            - Order information: bicycle type, model, color, frame serial
+            number, accessories, purchase date, and order value.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1.5 }}>
-            - Thông tin tương tác: Lịch sử chat tư vấn, khiếu nại, phản hồi về
-            chất lượng xe hoặc dịch vụ.
+            - Interaction information: consultation chat history, complaints,
+            and feedback about product/service quality.
           </Typography>
 
           <Typography sx={{ fontWeight: 500, mb: 0.5 }}>
-            b. Dữ liệu kỹ thuật (khi truy cập Website):
+            b. Technical data (when visiting the website):
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Địa chỉ IP, loại trình duyệt, thời gian truy cập.
+            - IP address, browser type, and access time.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            - Cookies: Chúng tôi sử dụng Cookies để ghi nhớ sở thích của Quý
-            khách, giúp cá nhân hóa trải nghiệm duyệt web và đề xuất các mẫu xe
-            phù hợp. Quý khách có thể tùy chỉnh tắt Cookies trên trình duyệt,
-            nhưng điều này có thể ảnh hưởng đến một số tính năng của website.
+            - Cookies: we use cookies to remember preferences, personalize your
+            browsing experience, and recommend relevant bike models. You may
+            disable cookies in your browser, but some website features may be
+            affected.
           </Typography>
 
           <Typography sx={{ fontWeight: 600, mt: 1, mb: 0.5 }}>
-            2. Mục đích thu thập và xử lý dữ liệu
+            2. Purpose of data collection and processing
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            BASAUYCLE sử dụng thông tin của Quý khách cho các mục đích chính
-            đáng sau:
+            BASAUYCLE uses your information for the following legitimate
+            purposes:
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thực hiện đơn hàng và Giao nhận: xử lý đơn đặt hàng, xác nhận
-            thanh toán và tiến hành giao hàng toàn quốc, bao gồm dịch vụ giao
-            nhanh nội thành.
+            - Order fulfillment and delivery: process orders, confirm payment,
+            and deliver nationwide, including inner-city express delivery.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Bảo hành và Hậu mãi: lưu trữ thông tin mua hàng để kích hoạt chế
-            độ bảo hành, nhắc lịch bảo dưỡng định kỳ, hỗ trợ kỹ thuật khi cần.
+            - Warranty and after-sales: store purchase data to activate
+            warranty, remind periodic maintenance, and provide technical support.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Tư vấn chuyên nghiệp: tư vấn loại xe, kích thước, cấu hình phù
-            hợp với nhu cầu và thể trạng của Quý khách.
+            - Professional consultation: recommend bike type, size, and setup
+            suitable for your needs and body profile.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Tiếp thị và Khuyến mãi (nếu được đồng ý): gửi thông tin về mẫu xe
-            mới, chương trình giảm giá, quà tặng qua email hoặc tin nhắn.
+            - Marketing and promotions (with consent): send information about
+            new models, discounts, and gifts via email/SMS.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Cải thiện dịch vụ: phân tích dữ liệu để nâng cao chất lượng sản
-            phẩm và dịch vụ.
+            - Service improvement: analyze data to improve product and service
+            quality.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            - Tuân thủ pháp luật: cung cấp thông tin khi có yêu cầu hợp pháp từ
-            cơ quan nhà nước có thẩm quyền.
+            - Legal compliance: provide information when lawfully required by
+            competent authorities.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
           >
-            II. ĐỐI TƯỢNG ĐƯỢC TIẾP CẬN THÔNG TIN
+            II. PARTIES THAT MAY ACCESS INFORMATION
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            Chúng tôi cam kết không bán, trao đổi thông tin cá nhân của Quý
-            khách cho bên thứ ba vì mục đích thương mại. Thông tin chỉ được
-            chia sẻ trong các trường hợp:
+            We do not sell or trade your personal information to third parties
+            for commercial purposes. Information is only shared in cases such as:
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Đối tác vận chuyển, đối tác thanh toán, đối tác kỹ thuật trong
-            phạm vi cần thiết để cung cấp dịch vụ.
+            - Shipping, payment, and technical partners, only within necessary
+            scope for service delivery.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            - Cơ quan pháp luật khi có yêu cầu theo quy định.
+            - Legal authorities when requested under applicable law.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
           >
-            III. LƯU TRỮ VÀ BẢO MẬT THÔNG TIN
+            III. DATA STORAGE AND SECURITY
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Thời gian lưu trữ: trong suốt quá trình sử dụng dịch vụ và thời
-            gian hiệu lực bảo hành (tới 6 năm hoặc theo quy định kế toán/thuế).
+            - Retention period: throughout service usage and warranty validity
+            (up to 6 years or as required by accounting/tax regulations).
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            - Cam kết bảo mật: sử dụng SSL, tường lửa, phân quyền truy cập và
-            các biện pháp an ninh phù hợp. Quý khách cũng cần tự bảo vệ tài
-            khoản của mình.
+            - Security commitment: use SSL, firewalls, access controls, and
+            appropriate safeguards. Customers should also protect their account.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
           >
-            IV. QUYỀN VÀ NGHĨA VỤ CỦA QUÝ KHÁCH
+            IV. YOUR RIGHTS AND OBLIGATIONS
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Quyền truy cập, chỉnh sửa, yêu cầu xóa dữ liệu cá nhân (trừ phần
-            phải lưu theo luật).
+            - Right to access, edit, and request deletion of personal data
+            (except data required by law to be retained).
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Quyền rút lại sự đồng ý nhận thông tin tiếp thị.
+            - Right to withdraw consent for marketing communications.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            - Nghĩa vụ cung cấp thông tin chính xác, tôn trọng bản quyền nội
-            dung và thông báo cho BASAUYCLE nếu phát hiện vi phạm bảo mật.
+            - Obligation to provide accurate information, respect content
+            copyright, and notify BASAUYCLE of any security violation.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
           >
-            V. BẢN QUYỀN VÀ THAY ĐỔI CHÍNH SÁCH
+            V. COPYRIGHT AND POLICY UPDATES
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Mọi nội dung trên website (logo, hình ảnh, bài viết, slogan…) đều
-            thuộc sở hữu của BASAUYCLE hoặc đối tác và được bảo hộ bản quyền.
+            - All website content (logos, images, articles, slogans, etc.) is
+            owned by BASAUYCLE or its partners and protected by copyright.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            - BASAUYCLE có quyền điều chỉnh Chính sách bảo mật và sẽ cập nhật
-            phiên bản mới nhất trên website.
+            - BASAUYCLE may update this Privacy Policy and publish the latest
+            version on the website.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 18, fontWeight: 700, mb: 1.5 }}
           >
-            VI. LIÊN HỆ VỚI CHÚNG TÔI
+            VI. CONTACT US
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            Nếu Quý khách có bất kỳ thắc mắc, khiếu nại hoặc muốn thực hiện các
-            quyền liên quan đến bảo mật thông tin, vui lòng liên hệ bộ phận Chăm
-            sóc khách hàng của BASAUYCLE.
+            If you have any questions, complaints, or requests related to data
+            privacy rights, please contact BASAUYCLE Customer Support.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
             - Hotline (24/7): 0386.868.986
@@ -206,8 +200,8 @@ export default function Privacy() {
             - Email: @gmail.com
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Chúng tôi sẽ nỗ lực phản hồi yêu cầu của Quý khách trong thời gian
-            sớm nhất (thông thường trong vòng 48 giờ làm việc).
+            We will do our best to respond as soon as possible (typically
+            within 48 working hours).
           </Typography>
         </Container>
       </Box>

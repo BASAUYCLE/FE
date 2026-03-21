@@ -12,6 +12,7 @@ import "./index.css";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { useAuth } from "../../contexts/AuthContext";
 import CheckoutModal from "../CheckoutModal";
+import { confirmCrud } from "../../utils/confirmCrud";
 
 export default function BikeCard({ bike }) {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function BikeCard({ bike }) {
       bike.sellerId == user.user_id ||
       bike.sellerId === user.email);
 
-  const handleFavoriteClick = (e) => {
+  const handleFavoriteClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
     if (isOwnListing) return;
@@ -40,6 +41,13 @@ export default function BikeCard({ bike }) {
       return;
     }
     if (inWishlist) {
+      const ok = await confirmCrud({
+        title: "Remove from wishlist?",
+        content: `Remove "${bike.name ?? "this item"}" from your wishlist?`,
+        okText: "Remove",
+        danger: true,
+      });
+      if (!ok) return;
       removeFromWishlist(bike.id);
     } else {
       addToWishlist(bike);

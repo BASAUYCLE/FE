@@ -25,48 +25,45 @@ export default function Shipping() {
               mb: 4,
             }}
           >
-            Phương thức vận chuyển
+            Shipping Methods
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            1. Khách hàng nội thành
+            1. Inner-city customers
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Đối với khách hàng trong khu vực nội thành (theo phạm vi BASAUYCLE
-            hỗ trợ), xe sẽ được{" "}
-            <strong>nhân viên cửa hàng giao trực tiếp</strong> tới địa chỉ bạn
-            cung cấp. Thời gian giao hàng sẽ được hẹn trước để bạn thuận tiện
-            sắp xếp.
+            For customers in supported inner-city areas, bikes are delivered{" "}
+            <strong>directly by store staff</strong> to your provided address.
+            Delivery time will be scheduled in advance for your convenience.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            2. Khách hàng ngoại thành và các tỉnh lân cận
+            2. Suburban and nearby provinces
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Với khách hàng ở ngoại thành hoặc các tỉnh khu vực lân cận, BASAUYCLE
-            có thể sử dụng{" "}
-            <strong>dịch vụ vận chuyển bằng xe khách hoặc đơn vị giao nhận phù hợp</strong>{" "}
-            để đảm bảo xe đến tay bạn nhanh chóng và an toàn. Thông tin chuyến
-            xe và thời gian nhận hàng sẽ được thông báo rõ ràng.
+            For suburban customers and nearby provinces, BASAUYCLE may use{" "}
+            <strong>bus cargo or suitable logistics partners</strong> to ensure
+            fast and safe delivery. Shipment details and delivery schedule will
+            be clearly communicated.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            3. Khách hàng toàn quốc
+            3. Nationwide customers
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Đối với khách hàng ở xa, BASAUYCLE hợp tác với{" "}
-            <strong>các đơn vị vận chuyển toàn quốc</strong> để giao xe đến tận
-            nơi với chi phí hợp lý. Xe sẽ được đóng gói cẩn thận, kèm hướng dẫn
-            lắp ráp cơ bản (nếu cần) để bạn có thể sử dụng ngay khi nhận hàng.
+            For long-distance customers, BASAUYCLE partners with{" "}
+            <strong>nationwide shipping providers</strong> to deliver bikes at
+            reasonable cost. Bikes are carefully packaged and include basic
+            assembly instructions (if needed) for immediate use after delivery.
           </Typography>
         </Container>
       </Box>

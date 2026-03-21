@@ -154,7 +154,7 @@ export default function PendingOrderCard({ order }) {
                 onClick={() => setFeedbackOpen(true)}
                 style={{ fontWeight: 500 }}
               >
-                Đánh giá người bán
+                Rate Seller
               </Button>
             </div>
           </div>

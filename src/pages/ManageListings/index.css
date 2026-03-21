@@ -7,11 +7,24 @@
 
 .manage-listings-main {
   flex: 1;
-  padding: 20px 16px 40px;
+  padding: 16px 12px 32px;
+  box-sizing: border-box;
+}
+
+@media (min-width: 600px) {
+  .manage-listings-main {
+    padding: 20px 16px 36px;
+  }
+}
+
+@media (min-width: 900px) {
+  .manage-listings-main {
+    padding: 24px 20px 40px;
+  }
 }
 
 .manage-listings-container {
-  max-width: var(--container-max);
+  max-width: var(--page-content-max);
   margin: 0 auto;
 }
 
@@ -43,16 +56,16 @@
 }
 
 .manage-listings-btn-post {
-  background: #0d9488 !important;
-  border-color: #0d9488 !important;
+  background: #00ccad !important;
+  border-color: #00ccad !important;
   color: #fff !important;
   font-weight: 600;
   border-radius: 8px;
 }
 
 .manage-listings-btn-post:hover {
-  background: #0f766e !important;
-  border-color: #0f766e !important;
+  background: #00b894 !important;
+  border-color: #00b894 !important;
   color: #fff !important;
 }
 
@@ -186,15 +199,15 @@
 
 .manage-listings-pagination {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
+  gap: 10px;
+  padding: 12px 16px 18px;
   border-top: 1px solid #f1f5f9;
   background: #fff;
 }
 
-.manage-listings-pagination .ant-space {
-  flex-wrap: wrap;
+.manage-listings-pagination .ant-pagination {
+  display: flex;
+  justify-content: center;
 }

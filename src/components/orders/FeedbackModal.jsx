@@ -50,7 +50,7 @@ export default function FeedbackModal({ open, onClose, order }) {
   const handleSubmit = async () => {
     if (!order?.orderId) return;
     if (!rating) {
-      message.warning("Vui lòng chọn số sao đánh giá.");
+      message.warning("Please select a rating.");
       return;
     }
     setLoading(true);
@@ -59,18 +59,18 @@ export default function FeedbackModal({ open, onClose, order }) {
       try {
         await feedbackService.createFeedback(order.orderId, payload);
       } catch (err) {
-        // Nếu feedback đã tồn tại thì chuyển sang update
+        // Fallback to update when feedback already exists.
         if (err?.message?.toString?.().includes("FEEDBACK_ALREADY_EXISTS")) {
           await feedbackService.updateFeedback(order.orderId, payload);
         } else {
           throw err;
         }
       }
-      message.success("Gửi đánh giá thành công!");
+      message.success("Review submitted successfully.");
       onClose?.();
     } catch (error) {
       message.error(
-        error?.message || "Không thể gửi đánh giá. Vui lòng thử lại.",
+        error?.message || "Unable to submit your review. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -79,12 +79,16 @@ export default function FeedbackModal({ open, onClose, order }) {
 
   return (
     <Modal
-      title="Đánh giá người bán"
+      title="Rate Seller"
       open={open}
       onCancel={() => !loading && onClose?.()}
       onOk={handleSubmit}
-      okText="Gửi đánh giá"
+      okText="Submit Review"
+      cancelText="Cancel"
       confirmLoading={loading && initialLoaded}
+      centered
+      width={560}
+      styles={{ body: { maxHeight: "60vh", overflowY: "auto" } }}
       destroyOnClose
     >
       <div style={{ marginBottom: 16 }}>
@@ -95,7 +99,7 @@ export default function FeedbackModal({ open, onClose, order }) {
             marginBottom: 4,
           }}
         >
-          Đơn hàng #{order?.orderId} – {order?.bikeName}
+          Order #{order?.orderId} - {order?.bikeName}
         </div>
         <Rate
           value={rating}
@@ -105,7 +109,7 @@ export default function FeedbackModal({ open, onClose, order }) {
       </div>
       <TextArea
         rows={4}
-        placeholder="Chia sẻ trải nghiệm mua hàng của bạn (tùy chọn)"
+        placeholder="Share your buying experience (optional)"
         value={comment}
         onChange={(e) => setComment(e.target.value)}
       />

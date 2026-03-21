@@ -1,10 +1,67 @@
 /* Trang quản lý tài khoản (gộp UserDetail + SetProfile) */
+.account-page {
+  background: #f6f8fa;
+}
+
+.account-content {
+  max-width: var(--page-content-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 16px 12px 28px;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  border-radius: 24px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+@media (min-width: 600px) {
+  .account-content {
+    padding: 20px 16px 32px;
+  }
+}
+
+@media (min-width: 900px) {
+  .account-content {
+    padding: 24px 20px 36px;
+  }
+}
+
 .account-profile-card,
 .account-section-card {
   background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 22px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account-profile-card:hover,
+.account-section-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.account-content .MuiButton-contained {
+  background-color: #00ccad !important;
+  border-color: #00ccad !important;
+  color: #ffffff !important;
+}
+
+.account-content .MuiButton-contained:hover {
+  background-color: #00b894 !important;
+  border-color: #00b894 !important;
+}
+
+.account-content .MuiButton-outlined {
+  border-color: #00ccad !important;
+  color: #0f766e !important;
+}
+
+.account-content .MuiButton-outlined:hover {
+  border-color: #00b894 !important;
+  background-color: rgba(0, 204, 173, 0.08) !important;
 }
 
 .account-profile-card {
@@ -15,8 +72,8 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: #00ccad;
   display: flex;
@@ -24,18 +81,19 @@
   justify-content: center;
   border: 2px solid #fff;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.2s;
 }
 
 .account-avatar-edit:hover {
   background: #00b89a;
+  transform: scale(1.05);
 }
 
 .account-badge {
   display: inline-flex;
   align-items: center;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
 }
@@ -55,14 +113,22 @@
   background-color: #00ccad !important;
   color: #0f172a !important;
   font-weight: 700 !important;
-  border-radius: 8px !important;
+  border-radius: 12px !important;
   padding: 10px 20px !important;
   text-transform: none !important;
+  box-shadow: 0 6px 16px rgba(0, 204, 173, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .account-edit-btn:hover,
 .account-save-btn:hover {
   background-color: #00b89a !important;
+  box-shadow: 0 8px 18px rgba(0, 204, 173, 0.22);
+  transform: translateY(-1px);
+}
+
+.account-content .MuiButton-outlined {
+  border-radius: 10px !important;
 }
 
 .account-section-card a {

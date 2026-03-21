@@ -110,6 +110,18 @@
   margin-bottom: 40px;
 }
 
+/* Top layout columns */
+.wallet-top-grid {
+  align-items: stretch;
+}
+
+.wallet-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  height: 100%;
+}
+
 /* Card */
 .wallet-card {
   background: white;
@@ -240,26 +252,28 @@
 
 /* Payment Methods */
 .wallet-payment-section {
-  margin-bottom: 28px;
+  margin-bottom: 0;
 }
 
 .wallet-payment-methods {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
 .wallet-payment-method {
-  padding: 18px 12px;
+  padding: 18px 16px;
   border: 2px solid #e5e7eb;
   background: white;
   border-radius: 10px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 16px;
   cursor: pointer;
   transition: all 0.2s;
+  text-align: left;
 }
 
 .wallet-payment-method:hover {
@@ -286,17 +300,66 @@
   font-size: 13px;
   font-weight: 500;
   color: #374151;
-  text-align: center;
+}
+
+.wallet-payment-method-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-payment-method-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wallet-payment-method-title {
+  font-size: 14px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.wallet-payment-method-desc {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.wallet-radio-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  background: #ffffff;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.wallet-radio-dot.active {
+  border-color: #14b8a6;
+}
+
+.wallet-radio-dot.active::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #14b8a6;
+  transform: translate(-50%, -50%);
 }
 
 /* Buttons */
 .wallet-btn-primary {
   width: 100%;
   padding: 14px 24px;
-  background: #14b8a6;
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
   color: white;
   border: none;
-  border-radius: 10px;
+  border-radius: 14px;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -305,10 +368,11 @@
   justify-content: center;
   gap: 8px;
   transition: background-color 0.2s;
+  box-shadow: 0 18px 40px rgba(13, 148, 136, 0.22);
 }
 
 .wallet-btn-primary:hover {
-  background: #0d9488;
+  background: linear-gradient(135deg, #0ea5a5 0%, #0d9488 100%);
 }
 
 .wallet-btn-primary svg {
@@ -343,11 +407,90 @@
   stroke-width: 2;
 }
 
+/* Topup Card (Add Funds) */
+.wallet-topup-card {
+  border-radius: 16px;
+}
+
+.wallet-topup-card.wallet-card {
+  background: rgba(94, 234, 212, 0.14);
+  border: 1px solid rgba(94, 234, 212, 0.36);
+  box-shadow: 0 16px 40px rgba(13, 148, 136, 0.10);
+}
+
+.wallet-topup-card.wallet-card .ant-card-body {
+  padding: 24px;
+}
+
+.wallet-topup-header {
+  margin-bottom: 22px;
+}
+
+.wallet-topup-title {
+  font-size: 18px;
+  font-weight: 900;
+  color: #0f766e;
+  margin-bottom: 6px;
+}
+
+.wallet-topup-hint {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #5eead4;
+}
+
+/* Quick amount pills */
+.wallet-quick-amounts-big {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin: 8px 0 18px;
+}
+
+.wallet-quick-amount-btn {
+  padding: 0 14px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  font-weight: 900 !important;
+  border: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  box-shadow: 0 6px 18px rgba(15, 118, 110, 0.06);
+}
+
+.wallet-quick-amount-btn:hover {
+  border-color: #14b8a6 !important;
+  color: #14b8a6 !important;
+  background: #f0fdfa !important;
+}
+
+.wallet-quick-amount-btn.active {
+  border-color: #0f766e !important;
+  background: #0f766e !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 40px rgba(15, 118, 110, 0.28);
+}
+
 /* Right Column */
 .wallet-right-column {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  height: 100%;
+}
+
+/* Make left/topup card height align with right history card */
+.wallet-banner-card {
+  flex: 0 0 auto;
+}
+
+.wallet-topup-card.wallet-card {
+  flex: 1 1 auto;
+}
+
+.wallet-history-card.wallet-card {
+  flex: 1 1 auto;
 }
 
 /* Secure Card */
@@ -396,18 +539,49 @@
 
 /* Banner Card */
 .wallet-banner-card {
-  background: #1e293b;
-  border: none;
+  /* Use VNPay background asset */
+  background-color: #0b1220;
+  background-image: url("../../assets/vnpay.svg");
+  /* Keep the entire SVG visible (no cropping) */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  border: 1px solid rgba(255, 255, 255, 0.10);
   position: relative;
   overflow: hidden;
   min-height: 240px;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
+  border-radius: 16px;
+}
+
+.wallet-banner-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Keep text + icon readable on top of the SVG background */
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.60) 0%,
+    rgba(0, 0, 0, 0.38) 100%
+  );
+  z-index: 1;
 }
 
 .wallet-banner-content {
   position: relative;
   z-index: 2;
+  padding: 10px 10px 0 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.wallet-hero-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
 .wallet-banner-title {
@@ -433,6 +607,9 @@
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wallet-btn-banner:hover {
@@ -447,11 +624,173 @@
   height: 300px;
   background: radial-gradient(circle, rgba(20, 184, 166, 0.15) 0%, transparent 70%);
   border-radius: 50%;
+  z-index: 0;
+}
+
+.wallet-hero-label {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #5eead4;
+  margin-top: 2px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 3;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.wallet-hero-balance {
+  font-size: 34px;
+  font-weight: 900;
+  color: #e5e7eb;
+  line-height: 1.1;
+  margin-bottom: 0px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  white-space: nowrap;
+  flex-wrap: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.wallet-balance-wrap {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.wallet-balance-value {
+  display: inline-block;
+  transition: opacity 0.15s ease;
+}
+
+.wallet-balance-value--hidden {
+  opacity: 0;
+}
+
+.wallet-balance-mask {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: inline-block;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.wallet-balance-mask--shown {
+  opacity: 1;
+}
+
+.wallet-eye-btn-balance {
+  /* Keep eye icon aligned with the number baseline row */
+  flex: 0 0 auto;
+}
+
+.wallet-eye-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(94, 234, 212, 0.35);
+  background: rgba(94, 234, 212, 0.10);
+  color: #5eead4;
+  cursor: pointer;
+  transition: transform 0.15s, background-color 0.15s, border-color 0.15s;
+}
+
+.wallet-eye-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(94, 234, 212, 0.60);
+  background: rgba(94, 234, 212, 0.16);
+}
+
+.wallet-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wallet-account-avatar {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #5eead4 !important;
+  border: 1px solid rgba(94, 234, 212, 0.28);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+.wallet-account-name {
+  font-weight: 900;
+  color: #5eead4;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+}
+
+.wallet-hero-vnd {
+  font-size: 13px;
+  font-weight: 900;
+  margin-left: 8px;
+  opacity: 0.95;
+  color: #5eead4;
+}
+
+.wallet-hero-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: auto;
+  padding: 0 6px 4px 0;
+}
+
+.wallet-encrypted-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+/* VN Pay alert (Add Funds) */
+.wallet-vnpay-alert {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(94, 234, 212, 0.14);
+  border: 1px solid rgba(94, 234, 212, 0.36);
+  color: #0f766e;
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 /* Transaction History */
 .wallet-history-card {
-  padding: 32px;
+  padding: 24px;
+}
+
+.wallet-history-card .ant-pagination {
+  display: flex;
+  justify-content: center;
+}
+
+.wallet-history-card .ant-pagination-item,
+.wallet-history-card .ant-pagination-prev,
+.wallet-history-card .ant-pagination-next {
+  margin: 0 4px;
 }
 
 .wallet-history-header {
@@ -464,6 +803,44 @@
 .wallet-history-actions {
   display: flex;
   gap: 12px;
+}
+
+.wallet-transaction-scroll {
+  max-height: none;
+}
+
+.wallet-page .ant-table {
+  background: transparent;
+}
+
+.wallet-page .ant-table-thead > tr > th {
+  text-align: left;
+  padding: 10px 10px !important;
+  font-size: 12px !important;
+  font-weight: 900 !important;
+  color: #94a3b8 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+
+.wallet-page .ant-table-tbody > tr > td {
+  padding: 14px 10px !important;
+  font-size: 14px !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.wallet-cell-ellipsis {
+  display: inline-block;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wallet-page .ant-table-tbody > tr:hover > td {
+  background: #f9fafb !important;
 }
 
 /* Table */
@@ -547,6 +924,11 @@
 .wallet-status-badge.processing {
   background: #fef3c7;
   color: #d97706;
+}
+
+.wallet-status-badge.failed {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 /* Pagination */
