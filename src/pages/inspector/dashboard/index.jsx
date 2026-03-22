@@ -3,11 +3,9 @@ import InspectorLayout from "../../../components/layout/InspectorLayout";
 import StatCard from "../../../components/inspector/shared";
 import InspectionQueueTable from "../../../components/inspector/InspectionQueueTable";
 import { inspectionService } from "../../../services";
-import {
-  FileCheck,
-  CheckCircle2,
-  AlertTriangle,
-} from "lucide-react";
+import disputeService from "../../../services/disputeService";
+import { FileCheck, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 import "./index.css";
 
 /** Map API /inspection/pending item to table row shape */
@@ -27,8 +25,8 @@ function mapPendingToInspection(item) {
 
 export default function InspectorDashboard() {
   const [pendingList, setPendingList] = useState([]);
-  const [disputesCount, setDisputesCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [disputesCount, setDisputesCount] = useState(0);
 
   const fetchPending = useCallback(async () => {
     try {
@@ -45,8 +43,9 @@ export default function InspectorDashboard() {
 
   const fetchDisputes = useCallback(async () => {
     try {
-      const res = await inspectionService.getDisputes();
-      const list = Array.isArray(res?.result) ? res.result : [];
+      const res = await disputeService.getInspectorMyDisputes();
+      const raw = res?.result ?? res?.data ?? res;
+      const list = Array.isArray(raw) ? raw : [];
       setDisputesCount(list.length);
     } catch {
       setDisputesCount(0);
@@ -79,9 +78,13 @@ export default function InspectorDashboard() {
       tone: "green",
     },
     {
-      label: "Active Disputes",
+      label: "Disputes",
       value: String(disputesCount),
-      trend: "Action Required",
+      trend: (
+        <Link to="/inspector/disputes" style={{ color: "inherit" }}>
+          Open Dispute Center →
+        </Link>
+      ),
       trendType: "warn",
       icon: <AlertTriangle />,
       tone: "orange",
@@ -94,7 +97,10 @@ export default function InspectorDashboard() {
         <div className="inspector-dashboard">
           <div className="inspector-content">
             <header className="inspector-welcome">
-              <p>Welcome back! You have {pendingCount} new inspections scheduled for today.</p>
+              <p>
+                Welcome back! You have {pendingCount} new inspections scheduled
+                for today.
+              </p>
             </header>
 
             <section className="admin-stats">
@@ -103,10 +109,7 @@ export default function InspectorDashboard() {
               ))}
             </section>
 
-            <InspectionQueueTable
-              inspections={pendingList}
-              loading={loading}
-            />
+            <InspectionQueueTable inspections={pendingList} loading={loading} />
           </div>
         </div>
       </div>

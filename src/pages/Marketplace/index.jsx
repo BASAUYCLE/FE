@@ -48,11 +48,7 @@ function postingToBike(p) {
     p.brand?.brandName ??
     null;
   const category =
-    p.category ??
-    p.categoryName ??
-    p.bicycleType ??
-    p.categoryLabel ??
-    null;
+    p.category ?? p.categoryName ?? p.bicycleType ?? p.categoryLabel ?? null;
   const frameSize = p.frameSize ?? p.size ?? null;
   const modelYear = p.modelYear ?? p.model_year ?? null;
   return {
@@ -76,6 +72,8 @@ function postingToBike(p) {
     frameSize,
     modelYear,
     sellerId: p.sellerId ?? p.seller_id ?? null,
+    status,
+    postStatus: status,
   };
 }
 
@@ -226,13 +224,13 @@ export default function Marketplace() {
         const brandList = Array.isArray(brandsRaw)
           ? brandsRaw
           : Array.isArray(brandsRaw?.result)
-          ? brandsRaw.result
-          : [];
+            ? brandsRaw.result
+            : [];
         const categoryList = Array.isArray(categoriesRaw)
           ? categoriesRaw
           : Array.isArray(categoriesRaw?.result)
-          ? categoriesRaw.result
-          : [];
+            ? categoriesRaw.result
+            : [];
 
         const meta = metaRes?.data ?? metaRes?.result ?? metaRes;
 
@@ -282,9 +280,7 @@ export default function Marketplace() {
               { value: "all", label: "All Years" },
               ...meta.modelYears.map((y) => {
                 const v =
-                  typeof y === "object"
-                    ? y.value ?? y.year ?? y.label
-                    : y;
+                  typeof y === "object" ? (y.value ?? y.year ?? y.label) : y;
                 const str = String(v);
                 return { value: str, label: str };
               }),
@@ -360,15 +356,9 @@ export default function Marketplace() {
   const sortedBikes = useMemo(() => {
     const list = [...displayedBikes];
     if (sortBy === "price-low") {
-      list.sort(
-        (a, b) =>
-          Number(a.rawPrice ?? 0) - Number(b.rawPrice ?? 0),
-      );
+      list.sort((a, b) => Number(a.rawPrice ?? 0) - Number(b.rawPrice ?? 0));
     } else if (sortBy === "price-high") {
-      list.sort(
-        (a, b) =>
-          Number(b.rawPrice ?? 0) - Number(a.rawPrice ?? 0),
-      );
+      list.sort((a, b) => Number(b.rawPrice ?? 0) - Number(a.rawPrice ?? 0));
     } else {
       // "newest" – giữ nguyên thứ tự (đã là mới nhất từ API)
     }
@@ -384,7 +374,13 @@ export default function Marketplace() {
   // Reset về trang 1 khi filter thay đổi đáng kể
   useEffect(() => {
     setPage(1);
-  }, [brandFilter, categoryFilter, frameSizeFilter, modelYearFilter, priceRange]);
+  }, [
+    brandFilter,
+    categoryFilter,
+    frameSizeFilter,
+    modelYearFilter,
+    priceRange,
+  ]);
 
   const clearFilters = () => {
     setPriceRange(PRICE_RANGE_DEFAULT);

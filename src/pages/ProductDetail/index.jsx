@@ -30,11 +30,14 @@ import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import adminPostService from "../../services/adminPostService";
 import postService from "../../services/postService";
+import disputeService from "../../services/disputeService";
+import orderService from "../../services/orderService";
 import { confirmCrud } from "../../utils/confirmCrud";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
 } from "../../constants/postingStatus";
+import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
 import "./index.css";
@@ -108,6 +111,15 @@ function postingToProduct(p) {
     urls.length >= 6
       ? urls.slice(0, 6)
       : [...urls, ...Array(6 - urls.length).fill(urls[0] || defaultBikeImage)];
+  const st = String(p.status ?? "").toUpperCase();
+  const badge =
+    st === "AVAILABLE"
+      ? "VERIFIED LISTING"
+      : st === "ADMIN_APPROVED"
+        ? "PENDING"
+        : st === "PROCESSING" || st === "DEPOSITED"
+          ? "ORDER IN PROGRESS"
+          : "LISTED";
   return {
     id: p.id,
     name: p.bikeName || "Untitled",
@@ -117,12 +129,7 @@ function postingToProduct(p) {
     image: images[0],
     images,
     category: p.category || "BIKE",
-    badge:
-      p.status === "AVAILABLE"
-        ? "VERIFIED LISTING"
-        : p.status === "ADMIN_APPROVED"
-          ? "PENDING"
-          : "LISTED",
+    badge,
     brand: p.brand ?? null,
     specs: {
       brand: p.brand ?? undefined,
@@ -146,6 +153,8 @@ function postingToProduct(p) {
       shippingEst: "—",
     },
     sellerId: p.sellerId ?? null,
+    status: p.status,
+    postStatus: p.status,
     description:
       p.description && String(p.description).trim()
         ? String(p.description).trim()
@@ -174,6 +183,7 @@ export default function ProductDetail() {
   // Luôn gọi API GET /posts/:id để lấy đúng ảnh member upload (không dùng mã giả / mock khi có id)
   const [fetchedPosting, setFetchedPosting] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [activeDisputeIdForPost, setActiveDisputeIdForPost] = useState(null);
 
   useEffect(() => {
     if (!id) return;
@@ -191,6 +201,58 @@ export default function ProductDetail() {
       .catch(() => setFetchedPosting(null))
       .finally(() => setLoadingDetail(false));
   }, [id]);
+
+  useEffect(() => {
+    if (!isLoggedIn || !id) {
+      setActiveDisputeIdForPost(null);
+      return;
+    }
+    const postId = Number(id);
+    if (!Number.isFinite(postId) || postId < 1) {
+      setActiveDisputeIdForPost(null);
+      return;
+    }
+    let cancelled = false;
+    const terminal = new Set([
+      DISPUTE_STATUS.RESOLVED,
+      DISPUTE_STATUS.REJECTED,
+    ]);
+    (async () => {
+      try {
+        const res = await disputeService.getMyDisputes();
+        const list = res?.result ?? res?.data ?? res;
+        if (!Array.isArray(list) || list.length === 0) {
+          if (!cancelled) setActiveDisputeIdForPost(null);
+          return;
+        }
+        const candidates = list.filter(
+          (d) =>
+            d?.disputeId != null &&
+            d?.orderId != null &&
+            d?.status &&
+            !terminal.has(String(d.status).toUpperCase()),
+        );
+        for (const d of candidates) {
+          try {
+            const oRes = await orderService.getById(d.orderId);
+            const o = oRes?.result ?? oRes?.data ?? oRes;
+            if (Number(o?.postId ?? o?.post_id) === postId) {
+              if (!cancelled) setActiveDisputeIdForPost(d.disputeId);
+              return;
+            }
+          } catch {
+            /* skip */
+          }
+        }
+        if (!cancelled) setActiveDisputeIdForPost(null);
+      } catch {
+        if (!cancelled) setActiveDisputeIdForPost(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isLoggedIn, id]);
 
   // Posting: ưu tiên dữ liệu từ API (ảnh member upload); chỉ dùng state/context khi đang loading; mock chỉ khi API lỗi
   const postingFromState = locationState?.posting;
@@ -225,6 +287,12 @@ export default function ProductDetail() {
       product.sellerId === user.email);
 
   const postingStatus = posting?.status ?? null;
+  const postingStatusUpper = String(postingStatus ?? "").toUpperCase();
+  /** BE: PROCESSING = đã có order (giao hàng / tranh chấp); DEPOSITED = đã cọc; SOLD = đã bán — không cho mua thêm */
+  const purchaseBlockedByStatus =
+    postingStatusUpper === POSTING_STATUS.PROCESSING ||
+    postingStatusUpper === POSTING_STATUS.DEPOSITED ||
+    postingStatusUpper === POSTING_STATUS.SOLD;
   const canAdminApproveReject =
     isAdminView && postingStatus === POSTING_STATUS.PENDING;
 
@@ -529,6 +597,12 @@ export default function ProductDetail() {
                 <Button
                   size="small"
                   onClick={handleWishlistClick}
+                  disabled={purchaseBlockedByStatus && !inWishlist}
+                  title={
+                    purchaseBlockedByStatus && !inWishlist
+                      ? "Không thể thêm wishlist khi tin đang giao dịch"
+                      : undefined
+                  }
                   sx={{ minWidth: 0, p: 0.5 }}
                 >
                   {inWishlist ? (
@@ -636,6 +710,45 @@ export default function ProductDetail() {
                   )}
                 </Box>
               </>
+            ) : purchaseBlockedByStatus ? (
+              <Box
+                sx={{
+                  mb: 3,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: "#fff7ed",
+                  border: "1px solid #fed7aa",
+                }}
+              >
+                <Typography fontWeight={700} color="#9a3412" sx={{ mb: 0.5 }}>
+                  Không thể mua lúc này
+                </Typography>
+                <Typography variant="body2" color="#7c2d12">
+                  Tin đang có đơn đang xử lý hoặc tranh chấp (trạng thái trên hệ
+                  thống: không mở bán thêm cho tới khi đơn kết thúc).
+                </Typography>
+                {activeDisputeIdForPost != null && (
+                  <Button
+                    variant="outlined"
+                    component={Link}
+                    to={`/my-disputes/${activeDisputeIdForPost}`}
+                    fullWidth
+                    sx={{
+                      mt: 2,
+                      borderColor: "#ea580c",
+                      color: "#9a3412",
+                      fontWeight: 700,
+                      py: 1.25,
+                      "&:hover": {
+                        borderColor: "#c2410c",
+                        bgcolor: "rgba(234, 88, 12, 0.06)",
+                      },
+                    }}
+                  >
+                    Xem chi tiết tranh chấp
+                  </Button>
+                )}
+              </Box>
             ) : (
               <Button
                 variant="contained"

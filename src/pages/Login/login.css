@@ -1,4 +1,4 @@
-﻿/* Auth pages: Login & Register - full-screen bike background, centered white form */
+/* Auth pages: Login & Register - full-screen bike background, centered white form */
 
 .auth-page {
   min-height: 100vh;
@@ -549,7 +549,7 @@
   }
 }
 
-/* ── Immersive auth: full-viewport video + centered card ─────────────── */
+/* ── Immersive auth: mint-cyan gradient + vector geometry + card ─────── */
 .auth-page.auth-page--immersive {
   min-height: 100vh;
   min-height: 100dvh;
@@ -576,27 +576,40 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  background: #0f172a;
+  /* Mint–jade trái → ngọc #00CCAD phải; điểm giữa để chuyển màu mượt */
+  background-color: #00ccad;
+  background-image: linear-gradient(
+    90deg,
+    #a3ffec 0%,
+    #52e8d4 42%,
+    #1ad4b8 72%,
+    #00ccad 100%
+  );
 }
 
-.auth-immersive__video {
+.auth-immersive__bg::before {
+  content: "";
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  background-image: url("../../assets/auth-login-bg-pattern.svg");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  /* Họa tiết trắng tinh, ánh sáng đồng đều trên cả nền sáng và đậm */
+  opacity: 0.64;
   pointer-events: none;
 }
 
 .auth-immersive__scrim {
   position: absolute;
   inset: 0;
+  /* Lớp phủ rất nhẹ: cân bằng sáng ngang khung, không che gradient */
   background: linear-gradient(
-    135deg,
-    rgba(15, 23, 42, 0.72) 0%,
-    rgba(15, 23, 42, 0.45) 45%,
-    rgba(20, 184, 166, 0.22) 100%
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 38%,
+    transparent 62%,
+    rgba(0, 0, 0, 0.03) 100%
   );
   pointer-events: none;
 }
@@ -608,7 +621,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px 20px 24px;
+  padding: 30px 32px 48px;
   min-height: 0;
 }
 
@@ -641,16 +654,29 @@
   max-width: min(92vw, 600px);
   max-height: min(96vh, 1100px);
   padding: 36px 36px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.auth-immersive--register .auth-page__logo.auth-immersive__logo {
+  align-self: center;
 }
 
 /* Register: ô nhập to hơn */
 .auth-immersive--register .auth-immersive__title {
   font-size: 28px;
+  text-align: center;
 }
 
 .auth-immersive--register .auth-immersive__lead {
   font-size: 15px;
   margin-bottom: 24px !important;
+  text-align: center;
+}
+
+.auth-immersive--register .auth-card__subtitle {
+  text-align: center;
 }
 
 .auth-immersive--register .auth-form--immersive .ant-form-item-label > label {
@@ -830,6 +856,188 @@
 
   .auth-immersive--register .auth-immersive__title {
     font-size: 24px;
+  }
+}
+
+/* Login: split trong immersive — thẻ bo tròn lớn, form trái + ảnh phải */
+.auth-immersive__card.auth-card--split {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  max-width: min(1250px, 96vw);
+  width: 100%;
+  min-height: min(640px, 90vh);
+  padding: 0;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow:
+    0 28px 56px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset;
+  background: #fff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.auth-immersive__card.auth-card--split .auth-card__left {
+  flex: 1 1 50%;
+  min-width: 0;
+  max-width: 50%;
+  padding: 52px 48px 52px;
+  border-radius: 0;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.auth-immersive__card.auth-card--split .auth-page__logo.auth-immersive__logo {
+  align-self: center;
+}
+
+.auth-immersive__card.auth-card--split .auth-immersive__title {
+  font-size: 36px;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-align: center;
+}
+
+.auth-immersive__card.auth-card--split .auth-immersive__lead {
+  text-align: center;
+}
+
+.auth-immersive__card.auth-card--split .auth-card__subtitle {
+  text-align: center;
+}
+
+.auth-immersive__card.auth-card--split .auth-card__right {
+  flex: 1 1 50%;
+  min-width: 0;
+  min-height: 520px;
+  border-radius: 0;
+}
+
+.auth-immersive__card.auth-card--split .auth-card__video-wrap {
+  border-radius: 0;
+}
+
+.auth-card__login-hero {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Ô nhập + nút Sign in dạng pill (chỉ khối login split) */
+/* Email: ô input trần có .auth-form__input trên chính thẻ input */
+.auth-immersive__card.auth-card--split input.auth-form__input.ant-input::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.auth-immersive__card.auth-card--split
+  .auth-form__input.ant-input-password
+  input.ant-input::placeholder {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.auth-immersive__card.auth-card--split input.auth-form__input.ant-input {
+  height: 50px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.auth-immersive__card.auth-card--split input.auth-form__input.ant-input:focus {
+  border-color: #00ccad;
+  box-shadow: 0 0 0 3px rgba(0, 204, 173, 0.2);
+}
+
+/* Password: chỉ bọc ngoài (affix) có viền/nền — input bên trong trong suốt, tránh “2 ô” */
+.auth-immersive__card.auth-card--split
+  .auth-form__input.ant-input-affix-wrapper.ant-input-password {
+  padding: 0 14px 0 18px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  box-shadow: none;
+  min-height: 50px;
+}
+
+.auth-immersive__card.auth-card--split
+  .auth-form__input.ant-input-affix-wrapper.ant-input-password:focus-within,
+.auth-immersive__card.auth-card--split
+  .auth-form__input.ant-input-affix-wrapper.ant-input-password.ant-input-affix-wrapper-focused {
+  border-color: #00ccad;
+  box-shadow: 0 0 0 3px rgba(0, 204, 173, 0.2);
+}
+
+.auth-immersive__card.auth-card--split
+  .auth-form__input.ant-input-affix-wrapper.ant-input-password
+  input.ant-input {
+  height: 48px;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0;
+}
+
+.auth-immersive__card.auth-card--split
+  .auth-form__input.ant-input-affix-wrapper.ant-input-password
+  input.ant-input:focus {
+  box-shadow: none !important;
+}
+
+.auth-immersive__card.auth-card--split .auth-immersive__btn-primary {
+  border-radius: 999px;
+  min-height: 52px;
+  font-size: 16px;
+  box-shadow: 0 10px 28px rgba(0, 204, 173, 0.4);
+}
+
+.auth-immersive__card.auth-card--split .auth-immersive__switch {
+  border-top-color: #e2e8f0;
+}
+
+@media (max-width: 768px) {
+  .auth-immersive__layout {
+    padding: 32px 20px 36px;
+  }
+
+  .auth-immersive__card.auth-card--split {
+    flex-direction: column;
+    max-width: min(560px, 96vw);
+    min-height: 0;
+    border-radius: 28px;
+  }
+
+  .auth-immersive__card.auth-card--split .auth-card__left {
+    flex: none;
+    max-width: none;
+    padding: 36px 28px 40px;
+  }
+
+  .auth-immersive__card.auth-card--split .auth-card__right {
+    flex: none;
+    min-height: 240px;
+    max-height: 300px;
+    order: -1;
+  }
+
+  .auth-immersive__card.auth-card--split .auth-immersive__title {
+    font-size: 30px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-immersive__card.auth-card--split {
+    padding: 0;
+    border-radius: 22px;
+  }
+
+  .auth-immersive__card.auth-card--split .auth-immersive__title {
+    font-size: 26px;
   }
 }
 

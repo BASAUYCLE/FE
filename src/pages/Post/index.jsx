@@ -1016,23 +1016,23 @@ export default function PostBike() {
     }
 
     const publishTitle = isEditingDraft
-      ? "Gửi tin để duyệt?"
+      ? "Submit listing for review?"
       : editId
-        ? "Cập nhật tin đăng?"
-        : "Đăng tin lên Marketplace?";
+        ? "Update listing?"
+        : "Post listing to Marketplace?";
     const feeHint =
       !editId || isEditingDraft
-        ? ` Phí đăng tin (cấu hình hiện tại): ${formatCurrency(listingFeeVnd)} — sẽ trừ ví khi hệ thống áp dụng phí.`
+        ? ` Listing fee (current setting): ${formatCurrency(listingFeeVnd)} — will be deducted from your wallet when the fee applies.`
         : "";
     const publishContent = isEditingDraft
-      ? `Tin sẽ chuyển sang chờ duyệt. Bạn không chỉnh sửa được cho đến khi có kết quả.${feeHint}`
+      ? `Your listing will move to pending review. You will not be able to edit until there is a decision.${feeHint}`
       : editId
-        ? `Thông tin tin đăng sẽ được cập nhật trên hệ thống.${feeHint}`
-        : `Tin đăng sẽ được tạo và đăng tải lên hệ thống.${feeHint}`;
+        ? `Your listing details will be updated in the system.${feeHint}`
+        : `Your listing will be created and published to the system.${feeHint}`;
     const confirmed = await confirmCrud({
       title: publishTitle,
       content: publishContent,
-      okText: "Tiếp tục",
+      okText: "Continue",
     });
     if (!confirmed) return;
 
@@ -1458,16 +1458,18 @@ export default function PostBike() {
 
           {!isFormReadOnly && (
             <Alert
+              className="post-listing-fee-alert"
               type="info"
               showIcon
-              style={{ marginBottom: 20, textAlign: "left" }}
-              message="Phí đăng tin (member)"
+              message="Listing fee (member)"
               description={
                 <>
-                  Khi tin được đăng/hiển thị, hệ thống có thể trừ{" "}
-                  <strong>{formatCurrency(listingFeeVnd)}</strong> từ ví điện tử
-                  của bạn (theo cấu hình admin, đồng bộ với trang quản trị). Vui
-                  lòng đảm bảo số dư đủ hoặc nạp thêm trước khi đăng bài.
+                  When your listing is published or goes live, the system may
+                  deduct{" "}
+                  <strong>{formatCurrency(listingFeeVnd)}</strong> from your
+                  wallet (per admin configuration, synced with the admin panel).
+                  Please ensure you have enough balance or add funds before
+                  posting.
                 </>
               }
             />

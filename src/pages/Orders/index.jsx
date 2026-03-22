@@ -8,12 +8,14 @@ import { ORDER_STATUS } from "../../constants/orderStatus";
 import "./index.css";
 
 const STATUS_TABS = [
-  { key: "all",                        label: "All" },
-  { key: ORDER_STATUS.DEPOSITED,       label: "Awaiting payment" },
-  { key: ORDER_STATUS.PAID,            label: "Awaiting shipment" },
-  { key: ORDER_STATUS.SHIPPING,        label: "Shipping" },
-  { key: ORDER_STATUS.COMPLETED,       label: "Completed" },
-  { key: ORDER_STATUS.CANCELLED,       label: "Cancelled" },
+  { key: "all", label: "All" },
+  { key: ORDER_STATUS.DEPOSITED, label: "Awaiting payment" },
+  { key: ORDER_STATUS.PAID, label: "Awaiting shipment" },
+  { key: ORDER_STATUS.SHIPPING, label: "Shipping" },
+  { key: ORDER_STATUS.DELIVERED, label: "Delivered" },
+  { key: ORDER_STATUS.DISPUTED, label: "Disputed" },
+  { key: ORDER_STATUS.COMPLETED, label: "Completed" },
+  { key: ORDER_STATUS.CANCELLED, label: "Cancelled" },
 ];
 
 export default function OrdersPage() {
@@ -26,17 +28,16 @@ export default function OrdersPage() {
   }, [orders, activeTab]);
 
   const tabs = STATUS_TABS.map((t) => {
-    const count = t.key === "all"
-      ? orders.length
-      : orders.filter((o) => o.status === t.key).length;
+    const count =
+      t.key === "all"
+        ? orders.length
+        : orders.filter((o) => o.status === t.key).length;
     return {
       key: t.key,
       label: (
         <span>
           {t.label}
-          {count > 0 && (
-            <span className="orders-tab-badge">{count}</span>
-          )}
+          {count > 0 && <span className="orders-tab-badge">{count}</span>}
         </span>
       ),
       children: (

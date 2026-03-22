@@ -94,6 +94,32 @@
     line-height: 1.5;
 }
 
+/* Listing fee info — brand jade #00CCAD (thay mặc định xanh info của Ant Design) */
+.post-content-container .post-listing-fee-alert.ant-alert {
+    margin-bottom: 20px;
+    text-align: left;
+    --ant-color-info: #00ccad;
+    --ant-color-info-bg: rgba(0, 204, 173, 0.1);
+    --ant-color-info-border: #00ccad;
+}
+
+.post-content-container .post-listing-fee-alert.ant-alert-info {
+    background-color: rgba(0, 204, 173, 0.1);
+    border: 1px solid #00ccad;
+}
+
+.post-content-container .post-listing-fee-alert.ant-alert-info .ant-alert-icon {
+    color: #00ccad;
+}
+
+.post-content-container .post-listing-fee-alert.ant-alert-info .ant-alert-message {
+    color: #0f172a;
+}
+
+.post-content-container .post-listing-fee-alert.ant-alert-info .ant-alert-description {
+    color: #475569;
+}
+
 /* Form Container — full width trong .post-content-container */
 .post-form-container {
     max-width: 100%;

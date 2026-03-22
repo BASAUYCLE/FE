@@ -38,6 +38,7 @@ import {
   ShoppingCart,
   DollarSign,
   ClipboardList,
+  AlertTriangle,
 } from "lucide-react";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
@@ -315,6 +316,11 @@ function getMenuItemsForRole(role, user) {
       icon: <CreditCard size={18} />,
     },
     { label: "My Orders", path: "/orders", icon: <ShoppingCart size={18} /> },
+    {
+      label: "My Disputes",
+      path: "/my-disputes",
+      icon: <AlertTriangle size={18} />,
+    },
     { label: "My Sales", path: "/my-sales", icon: <DollarSign size={18} /> },
     {
       label: "Manage Listings",

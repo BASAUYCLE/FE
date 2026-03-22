@@ -1,19 +1,18 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Form, Input, Checkbox, Upload, App } from "antd";
+import { Form, Input, Checkbox, Upload, message } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import bikeLogo from "../../assets/bike-logo.png";
-import authBgVideo from "../../assets/Video 2.mp4";
+import loginHeroImage from "../../assets/xedap_login.png";
 import { useAuth } from "../../contexts/AuthContext";
 import "../Login/login.css";
 import "../Register/index.css";
 
 /**
- * Full-viewport video background + centered card for login / register.
+ * Full-viewport static background + card for login / register.
  * Route /login ↔ /register toggles form content.
  */
 export default function AuthPage() {
-  const { message } = App.useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const { login, register, loading } = useAuth();
@@ -186,34 +185,24 @@ export default function AuthPage() {
       className={`auth-page auth-page--immersive${isSignup ? " auth-immersive--register" : ""}`}
     >
       <div className="auth-immersive__bg" aria-hidden="true">
-        <video
-          className="auth-immersive__video"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        >
-          <source src={authBgVideo} type="video/mp4" />
-        </video>
         <div className="auth-immersive__scrim" />
       </div>
 
       <div className="auth-immersive__layout">
-        <div className="auth-immersive__card">
-          <Link
-            to="/"
-            className="auth-page__logo auth-page__logo--inline auth-immersive__logo"
-          >
-            <img
-              src={bikeLogo}
-              alt="BASAUYCLE"
-              className="auth-page__logo-icon"
-            />
-            <span className="auth-page__logo-text">BASAUYCLE</span>
-          </Link>
+        {isSignup ? (
+          <div className="auth-immersive__card">
+            <Link
+              to="/"
+              className="auth-page__logo auth-page__logo--inline auth-immersive__logo"
+            >
+              <img
+                src={bikeLogo}
+                alt="BASAUYCLE"
+                className="auth-page__logo-icon"
+              />
+              <span className="auth-page__logo-text">BASAUYCLE</span>
+            </Link>
 
-          {isSignup ? (
             <>
               <h1 className="auth-immersive__title">Create account</h1>
               <p className="auth-card__subtitle auth-immersive__lead">
@@ -442,8 +431,35 @@ export default function AuthPage() {
                 </Form.Item>
               </Form>
             </>
-          ) : (
-            <>
+
+          <div className="auth-immersive__switch">
+            <p>
+              Already have an account?{" "}
+              <button
+                type="button"
+                className="auth-immersive__switch-btn"
+                onClick={goLogin}
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        </div>
+        ) : (
+          <div className="auth-immersive__card auth-card--split">
+            <div className="auth-card__left">
+              <Link
+                to="/"
+                className="auth-page__logo auth-page__logo--inline auth-immersive__logo"
+              >
+                <img
+                  src={bikeLogo}
+                  alt="BASAUYCLE"
+                  className="auth-page__logo-icon"
+                />
+                <span className="auth-page__logo-text">BASAUYCLE</span>
+              </Link>
+
               <h1 className="auth-immersive__title">Sign in</h1>
               <p className="auth-card__subtitle auth-immersive__lead">
                 Use your email and password to continue.
@@ -521,48 +537,33 @@ export default function AuthPage() {
                 By signing in you agree to our <Link to="#">Terms</Link> and{" "}
                 <Link to="#">Privacy</Link>.
               </p>
-            </>
-          )}
 
-          <div className="auth-immersive__switch">
-            {isSignup ? (
-              <p>
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  className="auth-immersive__switch-btn"
-                  onClick={goLogin}
-                >
-                  Sign in
-                </button>
-              </p>
-            ) : (
-              <p>
-                New to BASAUYCLE?{" "}
-                <button
-                  type="button"
-                  className="auth-immersive__switch-btn"
-                  onClick={goRegister}
-                >
-                  Create account
-                </button>
-              </p>
-            )}
+              <div className="auth-immersive__switch">
+                <p>
+                  New to BASAUYCLE?{" "}
+                  <button
+                    type="button"
+                    className="auth-immersive__switch-btn"
+                    onClick={goRegister}
+                  >
+                    Create account
+                  </button>
+                </p>
+              </div>
+            </div>
+
+            <div className="auth-card__right">
+              <div className="auth-card__video-wrap">
+                <img
+                  src={loginHeroImage}
+                  alt="BASAUYCLE"
+                  className="auth-card__video auth-card__login-hero"
+                />
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
-
-      <footer className="auth-page__footer auth-page__footer--immersive">
-        <Link to="#">Support</Link>
-        <span className="auth-page__footer-sep">·</span>
-        <Link to="#">Privacy Policy</Link>
-        <span className="auth-page__footer-sep">·</span>
-        <Link to="#">Terms of Service</Link>
-        <span className="auth-page__footer-sep">·</span>
-        <Link to="#">Cookie Settings</Link>
-        <span className="auth-page__footer-sep">·</span>
-        <span className="auth-page__footer-lang">VN</span>
-      </footer>
     </div>
   );
 }

@@ -2,6 +2,8 @@
 export const POSTING_STATUS = {
   PENDING: "PENDING",
   ADMIN_APPROVED: "ADMIN_APPROVED",
+  /** Đơn đang thực hiện (đã thanh toán / cọc) — gồm giao hàng hoặc tranh chấp; không cho mua thêm */
+  PROCESSING: "PROCESSING",
   AVAILABLE: "AVAILABLE",
   REJECTED: "REJECTED",
   ACTIVE: "ACTIVE",
@@ -17,6 +19,7 @@ export const POSTING_STATUS = {
 export const POSTING_STATUS_LABEL = {
   [POSTING_STATUS.PENDING]: "Pending",
   [POSTING_STATUS.ADMIN_APPROVED]: "Admin Approved",
+  [POSTING_STATUS.PROCESSING]: "In transaction",
   [POSTING_STATUS.AVAILABLE]: "Available",
   [POSTING_STATUS.REJECTED]: "Rejected",
   [POSTING_STATUS.ACTIVE]: "Active",
@@ -45,6 +48,7 @@ export const POSTING_STATUS_LABEL_VI = {
 export const POSTING_STATUS_TAG_COLOR = {
   [POSTING_STATUS.PENDING]: "blue",
   [POSTING_STATUS.ADMIN_APPROVED]: "cyan",
+  [POSTING_STATUS.PROCESSING]: "orange",
   [POSTING_STATUS.AVAILABLE]: "green",
   [POSTING_STATUS.REJECTED]: "red",
   [POSTING_STATUS.ACTIVE]: "green",

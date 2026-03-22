@@ -16,10 +16,6 @@ const inspectionService = {
   getInspectionReport: (postId) =>
     axiosInstance.get(ENDPOINTS.REPORT(postId)),
 
-  // GET /inspection/disputes - Danh sách tranh chấp
-  getDisputes: (params = {}) =>
-    axiosInstance.get(ENDPOINTS.DISPUTES, { params }),
-
   // GET /inspection/completed - Danh sách kiểm định đã hoàn thành
   getCompletedInspections: (params = {}) =>
     axiosInstance.get(ENDPOINTS.COMPLETED, { params }),

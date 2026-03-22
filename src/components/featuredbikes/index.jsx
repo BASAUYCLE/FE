@@ -22,6 +22,7 @@ import { POSTING_STATUS } from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { confirmCrud } from "../../utils/confirmCrud";
+import { isProductBlockedForWishlist } from "../../utils/postAvailability";
 import { message } from "antd";
 import demoBike from "../../assets/bike-logo.png";
 import roadBikeImage from "../../assets/RoadBike.png";
@@ -57,6 +58,8 @@ function postingToBike(p) {
     brand = rawName.trim().split(" ")[0];
   }
 
+  const status = p.status ?? p.postStatus;
+
   return {
     id: p.id,
     name: rawName || "Untitled",
@@ -74,6 +77,8 @@ function postingToBike(p) {
           : "NEW ARRIVAL",
     specs: {},
     sellerId: p.sellerId ?? p.seller_id ?? null,
+    status,
+    postStatus: status,
   };
 }
 
@@ -416,6 +421,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
 
   const isLoggedIn = isAuthenticated?.() ?? !!user;
   const inWishlist = isInWishlist(bike.id);
+  const wishlistAddBlocked = isProductBlockedForWishlist(bike);
   const isOwnListing =
     bike.sellerId != null &&
     user &&
@@ -491,6 +497,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
         {!isOwnListing && (
           <IconButton
             onClick={handleFavoriteClick}
+            disabled={wishlistAddBlocked && !inWishlist}
             sx={{
               position: "absolute",
               top: 8,

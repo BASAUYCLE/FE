@@ -7,6 +7,7 @@ export const ADMIN_NAV_LINKS = [
   { label: "Revenue", href: "/admin-revenue" },
   { label: "Inspections", href: "/admin-inspection-reports" },
   { label: "Transactions", href: "/admin-transactions" },
+  { label: "Disputes", href: "/admin-disputes" },
   { label: "Reports", href: "/admin-reports" },
   { label: "Config", href: "/admin-config" },
 ];
@@ -21,6 +22,7 @@ const PATH_TO_ACTIVE_LABEL = {
   "/admin-revenue": "Revenue",
   "/admin-inspection-reports": "Inspections",
   "/admin-transactions": "Transactions",
+  "/admin-disputes": "Disputes",
   "/admin-reports": "Reports",
   "/admin-config": "Config",
 };

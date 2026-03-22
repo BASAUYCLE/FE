@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
-import { Modal, Rate, Input, message } from "antd";
+import { Modal, Rate, Input, message, Alert } from "antd";
 import { feedbackService } from "../../services";
+import { ORDER_STATUS } from "../../constants/orderStatus";
 
 const { TextArea } = Input;
 
-export default function FeedbackModal({ open, onClose, order }) {
+function isOrderNotCompletedError(err) {
+  const m = String(err?.message ?? err?.data?.message ?? "").toLowerCase();
+  return (
+    m.includes("order_not_completed") ||
+    m.includes("1063") ||
+    m.includes("must be completed") ||
+    m.includes("completed before leaving feedback")
+  );
+}
+
+export default function FeedbackModal({ open, onClose, order, onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [rating, setRating] = useState(5);
@@ -67,23 +78,37 @@ export default function FeedbackModal({ open, onClose, order }) {
         }
       }
       message.success("Review submitted successfully.");
+      onSuccess?.();
       onClose?.();
     } catch (error) {
-      message.error(
-        error?.message || "Unable to submit your review. Please try again.",
-      );
+      if (isOrderNotCompletedError(error)) {
+        message.warning({
+          content:
+            "Hệ thống chỉ nhận đánh giá khi đơn ở trạng thái Completed (thường sau thời gian không tranh chấp). Vui lòng chờ hoặc mở lại từ Đơn hàng của tôi và bấm Gửi lại.",
+          duration: 8,
+        });
+      } else {
+        message.error(
+          error?.message || "Unable to submit your review. Please try again.",
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  const isDelivered = order?.status === ORDER_STATUS.DELIVERED;
+  const modalTitle = isDelivered
+    ? "Complete order & rate seller"
+    : "Rate Seller";
+
   return (
     <Modal
-      title="Rate Seller"
+      title={modalTitle}
       open={open}
       onCancel={() => !loading && onClose?.()}
       onOk={handleSubmit}
-      okText="Submit Review"
+      okText={isDelivered ? "Submit review" : "Submit Review"}
       cancelText="Cancel"
       confirmLoading={loading && initialLoaded}
       centered
@@ -91,6 +116,15 @@ export default function FeedbackModal({ open, onClose, order }) {
       styles={{ body: { maxHeight: "60vh", overflowY: "auto" } }}
       destroyOnClose
     >
+      {isDelivered && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 14 }}
+          message="Đơn đang giao nhận xong (Delivered)"
+          description="Đánh giá chỉ được lưu khi đơn chuyển sang Completed (hệ thống tự cập nhật sau cửa sổ tranh chấp nếu bạn không khiếu nại). Bạn có thể điền sẵn và bấm Gửi — nếu đơn đã Completed, gửi sẽ thành công; nếu chưa, hãy thử lại sau."
+        />
+      )}
       <div style={{ marginBottom: 16 }}>
         <div
           style={{
@@ -116,4 +150,3 @@ export default function FeedbackModal({ open, onClose, order }) {
     </Modal>
   );
 }
-

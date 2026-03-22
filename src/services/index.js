@@ -9,6 +9,7 @@ export { default as paymentService } from "./paymentService";
 export { default as postService } from "./postService";
 export { default as adminPostService } from "./adminPostService";
 export { default as orderService } from "./orderService";
+export { default as disputeService } from "./disputeService";
 export { default as adminService } from "./adminService";
 export { default as inspectionService } from "./inspectionService";
 export { default as walletService } from "./walletService";

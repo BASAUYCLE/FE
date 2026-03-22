@@ -15,16 +15,17 @@ const OrderContext = createContext(null);
 
 /**
  * Map BE OrderStatus (string) → FE ORDER_STATUS constant.
- * BE statuses: DEPOSITED | PAID | SHIPPING | COMPLETED | CANCELLED
  */
 function mapStatus(raw) {
   const s = (raw || "").toString().toUpperCase();
-  if (s === "DEPOSITED")  return ORDER_STATUS.DEPOSITED;
-  if (s === "PAID")       return ORDER_STATUS.PAID;
-  if (s === "SHIPPING")   return ORDER_STATUS.SHIPPING;
-  if (s === "COMPLETED")  return ORDER_STATUS.COMPLETED;
-  if (s === "CANCELLED")  return ORDER_STATUS.CANCELLED;
-  return ORDER_STATUS.DEPOSITED; // safe default
+  if (s === "DEPOSITED") return ORDER_STATUS.DEPOSITED;
+  if (s === "PAID") return ORDER_STATUS.PAID;
+  if (s === "SHIPPING") return ORDER_STATUS.SHIPPING;
+  if (s === "DELIVERED") return ORDER_STATUS.DELIVERED;
+  if (s === "DISPUTED") return ORDER_STATUS.DISPUTED;
+  if (s === "COMPLETED") return ORDER_STATUS.COMPLETED;
+  if (s === "CANCELLED") return ORDER_STATUS.CANCELLED;
+  return ORDER_STATUS.DEPOSITED;
 }
 
 /**
@@ -32,14 +33,14 @@ function mapStatus(raw) {
  */
 function extractImage(row) {
   if (row.thumbnailUrl) return row.thumbnailUrl;
-  if (row.imageUrl)     return row.imageUrl;
-  if (row.image)        return row.image;
-  if (row.image_url)    return row.image_url;
+  if (row.imageUrl) return row.imageUrl;
+  if (row.image) return row.image;
+  if (row.image_url) return row.image_url;
 
   const post = row.post ?? row.postInfo ?? null;
   if (post) {
     if (post.thumbnailUrl) return post.thumbnailUrl;
-    if (post.imageUrl)     return post.imageUrl;
+    if (post.imageUrl) return post.imageUrl;
     const postImgs = post.images ?? post.bicycleImages ?? [];
     if (Array.isArray(postImgs) && postImgs.length > 0) {
       const t = postImgs.find((i) => i?.isThumbnail) ?? postImgs[0];
@@ -107,7 +108,7 @@ function normalizeOrder(row) {
   const rawId = row.orderId ?? row.id ?? row.order_id ?? row.bookingId;
   const postId = row.postId ?? row.post_id ?? row.bikeId ?? row.productId;
 
-  const totalPrice   = Number(row.totalPrice   ?? row.total_price   ?? 0);
+  const totalPrice = Number(row.totalPrice ?? row.total_price ?? 0);
   const depositAmount = Number(row.depositAmount ?? row.deposit_amount ?? 0);
   const status = mapStatus(row.orderStatus ?? row.status);
 
@@ -120,25 +121,27 @@ function normalizeOrder(row) {
   // PAID/SHIPPING/COMPLETED/CANCELLED → amountDue = 0
 
   return {
-    id:      rawId != null ? String(rawId) : null,
+    id: rawId != null ? String(rawId) : null,
     orderId: rawId != null ? String(rawId) : "",
-    bikeId:  postId ?? null,
+    bikeId: postId ?? null,
     bikeName:
       row.postTitle ?? row.post_title ?? row.bikeName ?? row.productName ?? "—",
-    image:   extractImage(row),
+    image: extractImage(row),
     shippingAddress: buildShippingAddress(row),
     status,
     totalPrice,
     depositAmount,
     amountDue,
     // Shipping info
-    shippingMethod:        row.shippingMethod        ?? row.shipping_method         ?? null,
-    shippingTrackingNumber: row.shippingTrackingNumber ?? row.shipping_tracking_number ?? null,
-    proofImage:            row.proofImage            ?? row.proof_image             ?? null,
-    shippedAt:             row.shippedAt             ?? row.shipped_at              ?? null,
+    shippingMethod: row.shippingMethod ?? row.shipping_method ?? null,
+    shippingTrackingNumber:
+      row.shippingTrackingNumber ?? row.shipping_tracking_number ?? null,
+    proofImage: row.proofImage ?? row.proof_image ?? null,
+    shippedAt: row.shippedAt ?? row.shipped_at ?? null,
+    deliveredAt: row.deliveredAt ?? row.delivered_at ?? null,
     // Timestamps
-    expiresAt:  row.expiresAt  ?? "",
-    createdAt:  row.createdAt  ?? row.created_at  ?? "",
+    expiresAt: row.expiresAt ?? "",
+    createdAt: row.createdAt ?? row.created_at ?? "",
   };
 }
 
@@ -172,8 +175,8 @@ async function enrichImages(orders) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function OrderProvider({ children }) {
-  const [orders, setOrders]   = useState([]);   // buyer's orders
-  const [sales,  setSales]    = useState([]);   // seller's sales
+  const [orders, setOrders] = useState([]); // buyer's orders
+  const [sales, setSales] = useState([]); // seller's sales
   const { user } = useAuth();
 
   const hasUser = !!(
@@ -183,11 +186,16 @@ export function OrderProvider({ children }) {
 
   /** Fetch buyer orders */
   const fetchOrders = useCallback(async () => {
-    if (!hasUser) { setOrders([]); return; }
+    if (!hasUser) {
+      setOrders([]);
+      return;
+    }
     try {
       const res = await orderService.getMyOrders();
       const raw = res?.result ?? res?.data ?? res?.content ?? res;
-      const list = Array.isArray(raw) ? raw : raw?.orders ?? raw?.content ?? [];
+      const list = Array.isArray(raw)
+        ? raw
+        : (raw?.orders ?? raw?.content ?? []);
       const normalized = list.map(normalizeOrder).filter(Boolean);
       const enriched = await enrichImages(normalized);
       setOrders(enriched);
@@ -200,11 +208,16 @@ export function OrderProvider({ children }) {
 
   /** Fetch seller sales */
   const fetchSales = useCallback(async () => {
-    if (!hasUser) { setSales([]); return; }
+    if (!hasUser) {
+      setSales([]);
+      return;
+    }
     try {
       const res = await orderService.getMySales();
       const raw = res?.result ?? res?.data ?? res?.content ?? res;
-      const list = Array.isArray(raw) ? raw : raw?.orders ?? raw?.content ?? [];
+      const list = Array.isArray(raw)
+        ? raw
+        : (raw?.orders ?? raw?.content ?? []);
       const normalized = list.map(normalizeOrder).filter(Boolean);
       const enriched = await enrichImages(normalized);
       setSales(enriched);
@@ -215,7 +228,10 @@ export function OrderProvider({ children }) {
     }
   }, [hasUser]);
 
-  useEffect(() => { fetchOrders(); fetchSales(); }, [fetchOrders, fetchSales]);
+  useEffect(() => {
+    fetchOrders();
+    fetchSales();
+  }, [fetchOrders, fetchSales]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -223,11 +239,11 @@ export function OrderProvider({ children }) {
   const addOrder = useCallback(async (product, options = {}) => {
     if (!product?.id) return null;
     const res = await orderService.createOrder({
-      postId:    product.id,
+      postId: product.id,
       addressId: options.addressId ?? null,
-      payFull:   !!options.payFull,
+      payFull: !!options.payFull,
     });
-    const data  = res?.result ?? res?.data ?? res;
+    const data = res?.result ?? res?.data ?? res;
     let order = normalizeOrder(data);
 
     // Nếu BE không trả ảnh trong order mới, dùng luôn ảnh & tên từ product hiện tại
@@ -260,14 +276,19 @@ export function OrderProvider({ children }) {
     await orderService.payRemaining(orderId);
     setOrders((prev) =>
       prev.map((o) =>
-        o.orderId === orderId ? { ...o, status: ORDER_STATUS.PAID, amountDue: 0 } : o,
+        o.orderId === orderId
+          ? { ...o, status: ORDER_STATUS.PAID, amountDue: 0 }
+          : o,
       ),
     );
   }, []);
 
   /** B4: Seller xác nhận giao hàng */
   const confirmShipping = useCallback(
-    async (orderId, { shippingMethod, shippingTrackingNumber, proofImageFile }) => {
+    async (
+      orderId,
+      { shippingMethod, shippingTrackingNumber, proofImageFile },
+    ) => {
       const res = await orderService.confirmShipping(orderId, {
         shippingMethod,
         shippingTrackingNumber,
@@ -277,10 +298,10 @@ export function OrderProvider({ children }) {
       const patch = updated
         ? {
             status: ORDER_STATUS.SHIPPING,
-            shippingMethod:         updated.shippingMethod,
+            shippingMethod: updated.shippingMethod,
             shippingTrackingNumber: updated.shippingTrackingNumber,
-            proofImage:             updated.proofImage,
-            shippedAt:              updated.shippedAt,
+            proofImage: updated.proofImage,
+            shippedAt: updated.shippedAt,
           }
         : { status: ORDER_STATUS.SHIPPING };
       setSales((prev) =>
@@ -290,30 +311,43 @@ export function OrderProvider({ children }) {
     [],
   );
 
-  /** B5: Buyer xác nhận nhận hàng */
+  /** B5: Buyer xác nhận nhận hàng → BE đặt DELIVERED (sau đó scheduler có thể COMPLETED). */
   const confirmDelivery = useCallback(async (orderId) => {
-    await orderService.confirmDelivery(orderId);
+    const res = await orderService.confirmDelivery(orderId);
+    const updated = normalizeOrder(res?.result ?? res?.data ?? res);
+    const patch = updated
+      ? {
+          status: updated.status ?? ORDER_STATUS.DELIVERED,
+          deliveredAt: updated.deliveredAt ?? null,
+        }
+      : { status: ORDER_STATUS.DELIVERED };
     setOrders((prev) =>
-      prev.map((o) =>
-        o.orderId === orderId ? { ...o, status: ORDER_STATUS.COMPLETED } : o,
-      ),
+      prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
+    );
+    setSales((prev) =>
+      prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
     );
   }, []);
 
   /** B6/B7: Hủy đơn (buyer hoặc seller) */
-  const cancelOrder = useCallback(async (orderId, { isSeller = false } = {}) => {
-    await orderService.cancelOrder(orderId);
-    const cancel = (o) =>
-      o.orderId === orderId ? { ...o, status: ORDER_STATUS.CANCELLED } : o;
-    if (isSeller) setSales ((prev) => prev.map(cancel));
-    else          setOrders((prev) => prev.map(cancel));
-  }, []);
+  const cancelOrder = useCallback(
+    async (orderId, { isSeller = false } = {}) => {
+      await orderService.cancelOrder(orderId);
+      const cancel = (o) =>
+        o.orderId === orderId ? { ...o, status: ORDER_STATUS.CANCELLED } : o;
+      if (isSeller) setSales((prev) => prev.map(cancel));
+      else setOrders((prev) => prev.map(cancel));
+    },
+    [],
+  );
 
   // ── Legacy compat ─────────────────────────────────────────────────────────
   const markOrderAsPaid = useCallback((orderId) => {
     setOrders((prev) =>
       prev.map((o) =>
-        o.orderId === orderId ? { ...o, status: ORDER_STATUS.PAID, amountDue: 0 } : o,
+        o.orderId === orderId
+          ? { ...o, status: ORDER_STATUS.PAID, amountDue: 0 }
+          : o,
       ),
     );
   }, []);
@@ -335,16 +369,26 @@ export function OrderProvider({ children }) {
       markOrderAsPaid,
       getOrderByOrderId,
       refreshOrders: fetchOrders,
-      refreshSales:  fetchSales,
+      refreshSales: fetchSales,
     }),
     [
-      orders, sales,
-      addOrder, payRemaining, confirmShipping, confirmDelivery, cancelOrder,
-      markOrderAsPaid, getOrderByOrderId, fetchOrders, fetchSales,
+      orders,
+      sales,
+      addOrder,
+      payRemaining,
+      confirmShipping,
+      confirmDelivery,
+      cancelOrder,
+      markOrderAsPaid,
+      getOrderByOrderId,
+      fetchOrders,
+      fetchSales,
     ],
   );
 
-  return <OrderContext.Provider value={value}>{children}</OrderContext.Provider>;
+  return (
+    <OrderContext.Provider value={value}>{children}</OrderContext.Provider>
+  );
 }
 
 export function useOrders() {

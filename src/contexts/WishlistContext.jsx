@@ -10,6 +10,7 @@ import { message } from "antd";
 import { useAuth } from "./AuthContext";
 import { wishlistService } from "../services";
 import { formatCurrency } from "../utils/formatCurrency";
+import { isProductBlockedForWishlist } from "../utils/postAvailability";
 
 const WishlistContext = createContext(null);
 const STORAGE_KEY_PREFIX = "basauycle-wishlist";
@@ -68,10 +69,7 @@ export function WishlistProvider({ children }) {
       const thumb =
         post?.images?.find((i) => i?.isThumbnail) ?? post?.images?.[0];
       const imageUrl =
-        thumb?.imageUrl ??
-        thumb?.image_url ??
-        item.image ??
-        item.thumbnailUrl;
+        thumb?.imageUrl ?? thumb?.image_url ?? item.image ?? item.thumbnailUrl;
 
       const name =
         post?.bicycleName ??
@@ -192,13 +190,26 @@ export function WishlistProvider({ children }) {
         typeof product === "object" && product !== null
           ? product
           : { id: postId, postId };
+      if (isProductBlockedForWishlist(productObj)) {
+        message.warning(
+          "Không thể thêm vào wishlist: tin đang có giao dịch hoặc đã bán.",
+        );
+        return;
+      }
       if (!useWishlistApi) {
         setWishlist((prev) => {
           if (
-            prev.some((p) => (p.id ?? p.postId) === postId || String(p.id ?? p.postId) === String(postId))
+            prev.some(
+              (p) =>
+                (p.id ?? p.postId) === postId ||
+                String(p.id ?? p.postId) === String(postId),
+            )
           )
             return prev;
-          const next = [...prev, { ...productObj, id: postId, postId, addedAt: Date.now() }];
+          const next = [
+            ...prev,
+            { ...productObj, id: postId, postId, addedAt: Date.now() },
+          ];
           saveWishlistToStorage(userId, next);
           return next;
         });
@@ -211,14 +222,22 @@ export function WishlistProvider({ children }) {
         setWishlist(list);
         saveWishlistToStorage(userId, list);
       } catch (err) {
-        const msg = err?.message ?? err?.data?.message ?? "Could not add to wishlist.";
+        const msg =
+          err?.message ?? err?.data?.message ?? "Could not add to wishlist.";
         message.error(msg);
         setWishlist((prev) => {
           if (
-            prev.some((p) => (p.id ?? p.postId) === postId || String(p.id ?? p.postId) === String(postId))
+            prev.some(
+              (p) =>
+                (p.id ?? p.postId) === postId ||
+                String(p.id ?? p.postId) === String(postId),
+            )
           )
             return prev;
-          const next = [...prev, { ...productObj, id: postId, postId, addedAt: Date.now() }];
+          const next = [
+            ...prev,
+            { ...productObj, id: postId, postId, addedAt: Date.now() },
+          ];
           saveWishlistToStorage(userId, next);
           return next;
         });
@@ -231,7 +250,10 @@ export function WishlistProvider({ children }) {
     async (productId) => {
       if (!authenticated) return;
       const postId = productId != null ? Number(productId) : NaN;
-      const matchId = (p) => (p.postId ?? p.id) === productId || (p.postId ?? p.id) === postId || String(p.postId ?? p.id) === String(productId);
+      const matchId = (p) =>
+        (p.postId ?? p.id) === productId ||
+        (p.postId ?? p.id) === postId ||
+        String(p.postId ?? p.id) === String(productId);
       if (!useWishlistApi) {
         setWishlist((prev) => {
           const next = prev.filter((p) => !matchId(p));
@@ -264,7 +286,9 @@ export function WishlistProvider({ children }) {
       const id = Number(productId);
       return wishlist.some((p) => {
         const pid = p.postId ?? p.id;
-        return pid === productId || pid === id || String(pid) === String(productId);
+        return (
+          pid === productId || pid === id || String(pid) === String(productId)
+        );
       });
     },
     [wishlist],

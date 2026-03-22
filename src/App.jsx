@@ -37,6 +37,8 @@ const Marketplace = lazy(() => import("./pages/Marketplace"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Orders = lazy(() => import("./pages/Orders"));
+const MyDisputes = lazy(() => import("./pages/MyDisputes"));
+const MyDisputeDetail = lazy(() => import("./pages/MyDisputes/DisputeDetail"));
 const MySales = lazy(() => import("./pages/MySales"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const AdminDashboard = lazy(() => import("./pages/admin/dashboard"));
@@ -52,12 +54,19 @@ const AdminInspectionReports = lazy(
 );
 const AdminTransactions = lazy(() => import("./pages/admin/transaction"));
 const AdminConfig = lazy(() => import("./pages/admin/config"));
+const AdminDisputes = lazy(() => import("./pages/admin/disputes"));
+const AdminDisputeDetail = lazy(
+  () => import("./pages/admin/disputes/DisputeDetail"),
+);
 const InspectorDashboard = lazy(() => import("./pages/inspector/dashboard"));
 const InspectorDetail = lazy(() => import("./pages/inspector/detail"));
 const InspectorDetailsList = lazy(
   () => import("./pages/inspector/details-list"),
 );
 const InspectorDisputes = lazy(() => import("./pages/inspector/disputes"));
+const InspectorDisputeDetail = lazy(
+  () => import("./pages/inspector/disputes/DisputeDetail"),
+);
 const UserFeedbackPage = lazy(() => import("./pages/UserFeedback"));
 
 const muiTheme = createTheme({
@@ -204,6 +213,22 @@ function App() {
                             }
                           />
                           <Route
+                            path="/my-disputes/:disputeId"
+                            element={
+                              <ProtectedRoute>
+                                <MyDisputeDetail />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
+                            path="/my-disputes"
+                            element={
+                              <ProtectedRoute>
+                                <MyDisputes />
+                              </ProtectedRoute>
+                            }
+                          />
+                          <Route
                             path="/my-sales"
                             element={
                               <ProtectedRoute>
@@ -253,12 +278,24 @@ function App() {
                             element={<AdminConfig />}
                           />
                           <Route
+                            path="/admin-disputes/:disputeId"
+                            element={<AdminDisputeDetail />}
+                          />
+                          <Route
+                            path="/admin-disputes"
+                            element={<AdminDisputes />}
+                          />
+                          <Route
                             path="/inspector"
                             element={<InspectorDashboard />}
                           />
                           <Route
                             path="/inspector/details"
                             element={<InspectorDetailsList />}
+                          />
+                          <Route
+                            path="/inspector/disputes/:disputeId"
+                            element={<InspectorDisputeDetail />}
                           />
                           <Route
                             path="/inspector/disputes"

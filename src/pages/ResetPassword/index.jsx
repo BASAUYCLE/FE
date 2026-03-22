@@ -6,7 +6,6 @@ import authService from "../../services/authService";
 import "../Login/login.css";
 import "../ForgotPassword/index.css";
 import "./index.css";
-
 import authVideo from "../../assets/Video 2.mp4";
 
 export default function ResetPassword() {

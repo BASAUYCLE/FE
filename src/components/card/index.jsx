@@ -13,6 +13,7 @@ import { useWishlist } from "../../contexts/WishlistContext";
 import { useAuth } from "../../contexts/AuthContext";
 import CheckoutModal from "../CheckoutModal";
 import { confirmCrud } from "../../utils/confirmCrud";
+import { isProductBlockedForWishlist } from "../../utils/postAvailability";
 
 export default function BikeCard({ bike }) {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function BikeCard({ bike }) {
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const isLoggedIn = isAuthenticated?.() ?? !!user;
   const inWishlist = isInWishlist(bike.id);
+  const wishlistAddBlocked = isProductBlockedForWishlist(bike);
 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
@@ -138,6 +140,7 @@ export default function BikeCard({ bike }) {
                 type="text"
                 icon={inWishlist ? <HeartFilled /> : <HeartOutlined />}
                 className={`bike-card-favorite ${inWishlist ? "in-wishlist" : ""}`}
+                disabled={wishlistAddBlocked && !inWishlist}
                 aria-label={
                   inWishlist ? "Remove from favorites" : "Add to favorites"
                 }

@@ -1,7 +1,20 @@
-import { useState } from "react";
-import { Card, Tag, Button, Typography, Popconfirm, message, Tooltip } from "antd";
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  Card,
+  Tag,
+  Button,
+  Typography,
+  Popconfirm,
+  message,
+  Tooltip,
+} from "antd";
 import ProductPreviewModal from "../ProductPreviewModal";
-import { CheckCircleOutlined, CloseCircleOutlined, TruckOutlined } from "@ant-design/icons";
+import {
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  TruckOutlined,
+} from "@ant-design/icons";
 import {
   ORDER_STATUS,
   ORDER_STATUS_LABEL,
@@ -11,16 +24,41 @@ import { formatCurrency } from "../../utils/formatCurrency";
 import { useOrders } from "../../contexts/OrderContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import ConfirmShippingModal from "./ConfirmShippingModal";
+import disputeService from "../../services/disputeService";
+import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import "./PendingOrderCard.css";
 
 export default function SaleCard({ order }) {
-  const { cancelOrder } = useOrders();
+  const { cancelOrder, refreshSales } = useOrders();
   const [shipModalOpen, setShipModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [activeDispute, setActiveDispute] = useState(null);
   const { addNotification } = useNotifications();
 
   const status = order.status ?? ORDER_STATUS.PAID;
+
+  useEffect(() => {
+    if (status !== ORDER_STATUS.DISPUTED) {
+      setActiveDispute(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await disputeService.getMyDisputes();
+        const raw = res?.result ?? res?.data ?? res;
+        const arr = Array.isArray(raw) ? raw : [];
+        const d = arr.find((x) => String(x.orderId) === String(order.orderId));
+        if (!cancelled) setActiveDispute(d ?? null);
+      } catch {
+        if (!cancelled) setActiveDispute(null);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [status, order.orderId]);
 
   const handleCancel = async () => {
     setLoading(true);
@@ -48,7 +86,12 @@ export default function SaleCard({ order }) {
               type="primary"
               size="small"
               onClick={() => setShipModalOpen(true)}
-              style={{ backgroundColor: "#3b82f6", border: "none", fontWeight: 600, color: "#fff" }}
+              style={{
+                backgroundColor: "#3b82f6",
+                border: "none",
+                fontWeight: 600,
+                color: "#fff",
+              }}
             >
               <TruckOutlined /> Ship
             </Button>
@@ -60,9 +103,14 @@ export default function SaleCard({ order }) {
               cancelText="No"
               okButtonProps={{ danger: true }}
             >
-              <Button size="small" danger loading={loading} style={{ marginTop: 4 }}>
-<CloseCircleOutlined /> Cancel
-            </Button>
+              <Button
+                size="small"
+                danger
+                loading={loading}
+                style={{ marginTop: 4 }}
+              >
+                <CloseCircleOutlined /> Cancel
+              </Button>
             </Popconfirm>
           </div>
         );
@@ -92,10 +140,59 @@ export default function SaleCard({ order }) {
           </div>
         );
 
+      case ORDER_STATUS.DELIVERED:
+        return (
+          <div className="poc-actions">
+            <Button
+              size="small"
+              disabled
+              style={{ color: "#0891b2", fontWeight: 600 }}
+            >
+              Delivered to buyer
+            </Button>
+          </div>
+        );
+
+      case ORDER_STATUS.DISPUTED:
+        return (
+          <div className="poc-actions poc-actions-stack">
+            <Link
+              to={`/my-disputes?orderId=${encodeURIComponent(order.orderId)}`}
+            >
+              <Button size="small" type="primary" style={{ fontWeight: 600 }}>
+                Dispute details
+              </Button>
+            </Link>
+            {activeDispute?.status === DISPUTE_STATUS.RETURN_SHIPPED && (
+              <Button
+                size="small"
+                style={{ marginTop: 6 }}
+                onClick={async () => {
+                  try {
+                    await disputeService.confirmReturnReceipt(
+                      activeDispute.disputeId,
+                    );
+                    message.success("Return receipt confirmed.");
+                    refreshSales?.();
+                  } catch (e) {
+                    message.error(e?.message || "Could not confirm.");
+                  }
+                }}
+              >
+                Confirm return received
+              </Button>
+            )}
+          </div>
+        );
+
       case ORDER_STATUS.COMPLETED:
         return (
           <div className="poc-actions">
-            <Button size="small" disabled style={{ color: "#16a34a", fontWeight: 600 }}>
+            <Button
+              size="small"
+              disabled
+              style={{ color: "#16a34a", fontWeight: 600 }}
+            >
               <CheckCircleOutlined /> Completed
             </Button>
           </div>
@@ -137,9 +234,15 @@ export default function SaleCard({ order }) {
             title={order.bikeId ? "View product" : undefined}
           >
             {order.image ? (
-              <img src={order.image} alt={order.bikeName} referrerPolicy="no-referrer" />
+              <img
+                src={order.image}
+                alt={order.bikeName}
+                referrerPolicy="no-referrer"
+              />
             ) : (
-              <div className="pending-order-card-image-placeholder">No image</div>
+              <div className="pending-order-card-image-placeholder">
+                No image
+              </div>
             )}
           </div>
 
@@ -152,19 +255,26 @@ export default function SaleCard({ order }) {
               level={5}
               className="pending-order-card-title"
               onClick={() => order.bikeId && setPreviewOpen(true)}
-              style={{ cursor: order.bikeId ? "pointer" : "default", margin: 0 }}
+              style={{
+                cursor: order.bikeId ? "pointer" : "default",
+                margin: 0,
+              }}
             >
               {order.bikeName}
             </Typography.Title>
             <Typography.Text type="secondary" className="pending-order-card-id">
-              {order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-US") : ""}
+              {order.createdAt
+                ? new Date(order.createdAt).toLocaleDateString("en-US")
+                : ""}
             </Typography.Text>
           </div>
 
           {/* Right */}
           <div className="poc-right">
             <div className="poc-amount-label">Total</div>
-            <div className={`poc-amount ${isCompleted ? "poc-amount-done" : ""} ${isCancelled ? "poc-amount-cancelled" : ""}`}>
+            <div
+              className={`poc-amount ${isCompleted ? "poc-amount-done" : ""} ${isCancelled ? "poc-amount-cancelled" : ""}`}
+            >
               {formatCurrency(order.totalPrice ?? 0)}
             </div>
             {renderActions()}

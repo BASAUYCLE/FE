@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" shape-rendering="geometricPrecision">
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Concentric rings — left (thin, precise) -->
+    <g stroke="rgba(255,255,255,0.42)" stroke-width="0.85">
+      <circle cx="100" cy="420" r="480" />
+      <circle cx="100" cy="420" r="400" />
+      <circle cx="100" cy="420" r="320" />
+      <circle cx="100" cy="420" r="240" />
+      <circle cx="100" cy="420" r="160" />
+      <circle cx="100" cy="420" r="100" />
+      <circle cx="100" cy="420" r="48" />
+    </g>
+    <!-- Concentric rings — upper right -->
+    <g stroke="rgba(255,255,255,0.38)" stroke-width="0.8">
+      <circle cx="1620" cy="200" r="300" />
+      <circle cx="1620" cy="200" r="220" />
+      <circle cx="1620" cy="200" r="145" />
+      <circle cx="1620" cy="200" r="75" />
+    </g>
+    <!-- Concentric rings — lower right -->
+    <g stroke="rgba(255,255,255,0.32)" stroke-width="0.75">
+      <circle cx="1780" cy="1000" r="420" />
+      <circle cx="1780" cy="1000" r="310" />
+      <circle cx="1780" cy="1000" r="200" />
+      <circle cx="1780" cy="1000" r="95" />
+    </g>
+    <!-- Mid composition — elliptical rings -->
+    <g stroke="rgba(255,255,255,0.26)" stroke-width="0.7">
+      <ellipse cx="980" cy="500" rx="460" ry="340" transform="rotate(-6 980 500)" />
+      <ellipse cx="980" cy="500" rx="360" ry="265" transform="rotate(-6 980 500)" />
+      <ellipse cx="980" cy="500" rx="260" ry="190" transform="rotate(-6 980 500)" />
+    </g>
+    <!-- Architectural curves: parabolic / structural sweeps -->
+    <g stroke="rgba(255,255,255,0.34)" stroke-width="0.9">
+      <path d="M -80 320 C 420 180 900 140 1400 260 S 1880 420 2000 380" />
+      <path d="M -60 480 C 380 360 820 300 1280 400 S 1820 520 1980 460" />
+      <path d="M 40 720 C 520 600 980 640 1460 560 S 1920 480 2040 520" />
+      <path d="M 120 960 C 560 820 1040 880 1520 780 S 1880 680 2000 740" />
+    </g>
+    <!-- Cantilever / facade-like vertical arcs -->
+    <g stroke="rgba(255,255,255,0.22)" stroke-width="0.65">
+      <path d="M 720 0 Q 680 280 720 560 T 720 1080" />
+      <path d="M 1240 0 Q 1280 320 1240 600 T 1240 1080" />
+      <path d="M 480 0 Q 520 400 480 720 T 480 1080" />
+    </g>
+    <!-- Top corner arcs -->
+    <g stroke="rgba(255,255,255,0.28)" stroke-width="0.72">
+      <path d="M -20 80 A 400 400 0 0 1 360 -40" />
+      <path d="M 40 200 A 300 300 0 0 1 320 20" />
+    </g>
+    <!-- Flowing S-curves -->
+    <g stroke="rgba(255,255,255,0.3)" stroke-width="0.82">
+      <path d="M 380 0 C 480 280 320 620 460 1080" />
+      <path d="M 1340 0 C 1220 340 1420 700 1300 1080" />
+    </g>
+    <!-- Chain links — horizontal segments -->
+    <g stroke="rgba(255,255,255,0.4)" stroke-width="0.78">
+      <rect x="240" y="528" width="48" height="24" rx="12" ry="12" />
+      <rect x="292" y="528" width="48" height="24" rx="12" ry="12" />
+      <rect x="344" y="528" width="48" height="24" rx="12" ry="12" />
+      <rect x="396" y="528" width="48" height="24" rx="12" ry="12" />
+      <rect x="448" y="528" width="48" height="24" rx="12" ry="12" />
+      <rect x="500" y="528" width="48" height="24" rx="12" ry="12" />
+      <rect x="552" y="528" width="48" height="24" rx="12" ry="12" />
+    </g>
+    <g stroke="rgba(255,255,255,0.3)" stroke-width="0.72" transform="rotate(-14 920 640)">
+      <rect x="780" y="618" width="42" height="20" rx="10" ry="10" />
+      <rect x="826" y="618" width="42" height="20" rx="10" ry="10" />
+      <rect x="872" y="618" width="42" height="20" rx="10" ry="10" />
+      <rect x="918" y="618" width="42" height="20" rx="10" ry="10" />
+      <rect x="964" y="618" width="42" height="20" rx="10" ry="10" />
+    </g>
+    <g stroke="rgba(255,255,255,0.26)" stroke-width="0.7" transform="rotate(22 1420 380)">
+      <rect x="1280" y="360" width="38" height="18" rx="9" ry="9" />
+      <rect x="1322" y="360" width="38" height="18" rx="9" ry="9" />
+      <rect x="1364" y="360" width="38" height="18" rx="9" ry="9" />
+      <rect x="1406" y="360" width="38" height="18" rx="9" ry="9" />
+    </g>
+    <!-- Secondary small rings -->
+    <g stroke="rgba(255,255,255,0.24)" stroke-width="0.6">
+      <circle cx="620" cy="160" r="88" />
+      <circle cx="620" cy="160" r="52" />
+      <circle cx="1120" cy="900" r="112" />
+      <circle cx="1120" cy="900" r="64" />
+      <circle cx="300" cy="920" r="128" />
+      <circle cx="300" cy="920" r="72" />
+    </g>
+    <!-- Fine structural grid — very light -->
+    <g stroke="rgba(255,255,255,0.12)" stroke-width="0.5">
+      <path d="M 0 240 L 1920 100" />
+      <path d="M 0 400 L 1920 260" />
+      <path d="M 0 560 L 1920 420" />
+      <path d="M 0 720 L 1920 580" />
+      <path d="M 0 880 L 1920 740" />
+    </g>
+  </g>
+</svg>

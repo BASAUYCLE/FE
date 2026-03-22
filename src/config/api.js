@@ -85,9 +85,24 @@ export const API_ENDPOINTS = {
   INSPECTION: {
     PENDING: "/inspection/pending",
     SUBMIT: (postId) => `/inspection/${postId}/submit`,
-    DISPUTES: "/inspection/disputes",
     COMPLETED: "/inspection/completed",
     REPORT: (postId) => `/inspection/${postId}/report`,
+  },
+
+  /** Disputes – BE: DisputeController @ /disputes */
+  DISPUTES: {
+    BASE: "/disputes",
+    BY_ID: (id) => `/disputes/${id}`,
+    MY_DISPUTES: "/disputes/my-disputes",
+    /** INSPECTOR — danh sách dispute (bài đăng inspector đã kiểm định) */
+    INSPECTOR_MY_DISPUTES: "/disputes/inspector/my-disputes",
+    INSPECTOR_NOTE: (id) => `/disputes/${id}/inspector-note`,
+    /** ADMIN — toàn bộ dispute (không lọc theo user) */
+    ADMIN_ALL: "/disputes/admin/all",
+    ADMIN_APPROVE: (id) => `/disputes/admin/${id}/approve`,
+    ADMIN_REJECT: (id) => `/disputes/admin/${id}/reject`,
+    SHIPPING_INFO: (id) => `/disputes/${id}/shipping-info`,
+    CONFIRM_RETURN: (id) => `/disputes/${id}/confirm-return-receipt`,
   },
 
   BRANDS: {
