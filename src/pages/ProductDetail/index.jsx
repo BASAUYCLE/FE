@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
-import { ADMIN_NAV_LINKS, getAdminActiveLink } from "../../config/adminNav";
+import AdminLayout from "../../components/layout/AdminLayout";
+import InspectorLayout from "../../components/layout/InspectorLayout";
 import {
   Box,
   Typography,
@@ -40,6 +41,7 @@ import {
 import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
+import "../inspector/common/shared.css";
 import "./index.css";
 
 /** Map API GET /posts/:id response to posting shape (full images + content so admin sees same as member) */
@@ -165,7 +167,7 @@ function postingToProduct(p) {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { pathname, state: locationState } = useLocation();
+  const { state: locationState } = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { getPostingById } = usePostings();
   const { isInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
@@ -364,28 +366,35 @@ export default function ProductDetail() {
   };
 
   if (loadingDetail && id) {
+    const loadingBody = (
+      <Box sx={{ textAlign: "center", py: 8 }}>
+        <Typography variant="h6" color="text.secondary">
+          Loading listing…
+        </Typography>
+      </Box>
+    );
+    if (isStaffView) {
+      return isAdminView ? (
+        <AdminLayout>
+          <div className="admin-dashboard-page">
+            <div className="admin-dashboard">{loadingBody}</div>
+          </div>
+        </AdminLayout>
+      ) : (
+        <InspectorLayout>
+          <div className="inspector-page">
+            <div className="inspector-dashboard">{loadingBody}</div>
+          </div>
+        </InspectorLayout>
+      );
+    }
     return (
       <Box sx={{ minHeight: "100vh", bgcolor: "#f9fafa" }}>
-        {isStaffView ? (
-          <Header
-            navLinks={ADMIN_NAV_LINKS}
-            activeLink={getAdminActiveLink(pathname)}
-            navVariant="pill"
-            showSearch={false}
-            showWishlistIcon={false}
-            showAvatar
-            showSellButton={false}
-            showLogin={false}
-          />
-        ) : (
-          <Header />
-        )}
+        <Header />
         <Box
           sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}
         >
-          <Typography variant="h6" color="text.secondary">
-            Loading listing…
-          </Typography>
+          {loadingBody}
         </Box>
       </Box>
     );
@@ -400,32 +409,54 @@ export default function ProductDetail() {
     !isStaffView;
 
   if (!product || isDraftHidden) {
+    const notFoundBody = (
+      <Box
+        sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}
+      >
+        <Typography variant="h5" gutterBottom>
+          Product not found
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {isDraftHidden
+            ? "This listing is a draft and is not visible."
+            : null}
+        </Typography>
+        <Button
+          variant="contained"
+          onClick={() => navigate(isStaffView ? (isAdminView ? "/admin-dashboard" : "/inspector") : "/")}
+          sx={{
+            bgcolor: "#00ccad",
+            color: "#0f172a",
+            "&:hover": { bgcolor: "#00b89a" },
+          }}
+        >
+          {isStaffView
+            ? isAdminView
+              ? "Back to dashboard"
+              : "Back to inspector"
+            : "Back to Home"}
+        </Button>
+      </Box>
+    );
+    if (isStaffView) {
+      return isAdminView ? (
+        <AdminLayout>
+          <div className="admin-dashboard-page">
+            <div className="admin-dashboard">{notFoundBody}</div>
+          </div>
+        </AdminLayout>
+      ) : (
+        <InspectorLayout>
+          <div className="inspector-page">
+            <div className="inspector-dashboard">{notFoundBody}</div>
+          </div>
+        </InspectorLayout>
+      );
+    }
     return (
       <Box sx={{ minHeight: "100vh", bgcolor: "#f9fafa" }}>
         <Header />
-        <Box
-          sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}
-        >
-          <Typography variant="h5" gutterBottom>
-            Product not found
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {isDraftHidden
-              ? "This listing is a draft and is not visible."
-              : null}
-          </Typography>
-          <Button
-            variant="contained"
-            onClick={() => navigate("/")}
-            sx={{
-              bgcolor: "#00ccad",
-              color: "#0f172a",
-              "&:hover": { bgcolor: "#00b89a" },
-            }}
-          >
-            Back to Home
-          </Button>
-        </Box>
+        {notFoundBody}
       </Box>
     );
   }
@@ -453,18 +484,33 @@ export default function ProductDetail() {
   };
 
   const breadcrumbs = isStaffView
-    ? [
-        { label: "HOME", href: "/" },
-        { label: "ADMIN", href: "/admin-dashboard" },
-        {
-          label: "LISTING",
-          href: "/admin-listings",
-        },
-        {
-          label: product.name?.toUpperCase().replace(/\s+/g, " ") || "PRODUCT",
-          href: null,
-        },
-      ]
+    ? role === "ADMIN"
+      ? [
+          { label: "HOME", href: "/" },
+          { label: "ADMIN", href: "/admin-dashboard" },
+          {
+            label: "LISTING",
+            href: "/admin-listings",
+          },
+          {
+            label:
+              product.name?.toUpperCase().replace(/\s+/g, " ") || "PRODUCT",
+            href: null,
+          },
+        ]
+      : [
+          { label: "HOME", href: "/" },
+          { label: "INSPECTOR", href: "/inspector" },
+          {
+            label: "INSPECTION",
+            href: "/inspector/details",
+          },
+          {
+            label:
+              product.name?.toUpperCase().replace(/\s+/g, " ") || "PRODUCT",
+            href: null,
+          },
+        ]
     : [
         { label: "HOME", href: "/" },
         {
@@ -477,22 +523,9 @@ export default function ProductDetail() {
         },
       ];
 
-  return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#f9fafa" }}>
-      {isStaffView ? (
-        <Header
-          navLinks={ADMIN_NAV_LINKS}
-          activeLink={getAdminActiveLink(pathname)}
-          navVariant="pill"
-          showSearch={false}
-          showWishlistIcon={false}
-          showAvatar
-          showSellButton={false}
-          showLogin={false}
-        />
-      ) : (
-        <Header />
-      )}
+  const mainColumn = (
+    <>
+      {!isStaffView && <Header />}
 
       <Box sx={{ maxWidth: 1320, margin: "0 auto", p: 3 }}>
         <Breadcrumbs sx={{ mb: 3, fontSize: 12 }}>
@@ -1243,30 +1276,50 @@ export default function ProductDetail() {
         onSuccess={() => navigate("/orders")}
       />
 
-      <Footer
-        marketplaceLinks={[
-          { label: "All Bikes", href: "#" },
-          { label: "Mountain Bikes", href: "#" },
-          { label: "Road Bikes", href: "#" },
-          { label: "Accessories", href: "#" },
-        ]}
-        servicesLinks={[
-          { label: "Help Center", href: "#" },
-          { label: "Safety Tips", href: "#" },
-          { label: "Shipping Info", href: "#" },
-          { label: "Trust & Safety", href: "#" },
-        ]}
-        companyLinks={[
-          { label: "Terms of Service", href: "#" },
-          { label: "Privacy Policy", href: "#" },
-          { label: "Cookie Settings", href: "#" },
-        ]}
-        bottomLinks={[
-          { label: "Privacy Policy", href: "#" },
-          { label: "Terms of Service", href: "#" },
-          { label: "Cookie Settings", href: "#" },
-        ]}
-      />
-    </Box>
+      {!isStaffView && (
+        <Footer
+          marketplaceLinks={[
+            { label: "All Bikes", href: "#" },
+            { label: "Mountain Bikes", href: "#" },
+            { label: "Road Bikes", href: "#" },
+            { label: "Accessories", href: "#" },
+          ]}
+          servicesLinks={[
+            { label: "Help Center", href: "#" },
+            { label: "Safety Tips", href: "#" },
+            { label: "Shipping Info", href: "#" },
+            { label: "Trust & Safety", href: "#" },
+          ]}
+          companyLinks={[
+            { label: "Terms of Service", href: "#" },
+            { label: "Privacy Policy", href: "#" },
+            { label: "Cookie Settings", href: "#" },
+          ]}
+          bottomLinks={[
+            { label: "Privacy Policy", href: "#" },
+            { label: "Terms of Service", href: "#" },
+            { label: "Cookie Settings", href: "#" },
+          ]}
+        />
+      )}
+    </>
+  );
+
+  return isStaffView ? (
+    isAdminView ? (
+      <AdminLayout>
+        <div className="admin-dashboard-page">
+          <div className="admin-dashboard">{mainColumn}</div>
+        </div>
+      </AdminLayout>
+    ) : (
+      <InspectorLayout>
+        <div className="inspector-page">
+          <div className="inspector-dashboard">{mainColumn}</div>
+        </div>
+      </InspectorLayout>
+    )
+  ) : (
+    <Box sx={{ minHeight: "100vh", bgcolor: "#f9fafa" }}>{mainColumn}</Box>
   );
 }

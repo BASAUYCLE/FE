@@ -210,12 +210,6 @@ export default function PendingOrderCard({ order }) {
             <div className="poc-amount">
               {formatCurrency(order.totalPrice ?? 0)}
             </div>
-            <Typography.Text
-              type="secondary"
-              style={{ fontSize: 11, display: "block", marginBottom: 8 }}
-            >
-              Choose to finish & rate, or open a dispute (if allowed).
-            </Typography.Text>
             <div className="poc-actions poc-delivered-actions">
               <Button
                 type="primary"

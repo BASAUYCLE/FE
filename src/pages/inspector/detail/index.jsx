@@ -487,7 +487,7 @@ export default function InspectorDetail() {
         okButtonProps={{
           className: confirmAction === "reject" ? "inspector-confirm-modal-ok-reject" : "inspector-confirm-modal-ok-complete",
         }}
-        destroyOnClose
+        destroyOnHidden
         width={480}
       >
         <p className="inspection-confirm-modal-text">
@@ -505,7 +505,7 @@ export default function InspectorDetail() {
         okText="Submit & Notify Member"
         cancelText="Cancel"
         okButtonProps={{ className: "inspector-reject-modal-ok", loading: submitLoading }}
-        destroyOnClose
+        destroyOnHidden
       >
         <p style={{ marginBottom: 8, color: "#64748b" }}>
           Enter the reason for rejection. This will be sent to the member&apos;s notifications.
@@ -527,7 +527,7 @@ export default function InspectorDetail() {
         okText="Submit result"
         cancelText="Cancel"
         okButtonProps={{ loading: submitLoading }}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 12 }}>
           <label style={{ display: "block", marginBottom: 4, fontWeight: 500 }}>Overall condition</label>

@@ -677,6 +677,12 @@
   position: relative;
   display: inline-block;
   white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Khi số dư ngắn (vd. 0 đồng), vùng số vẫn phải rộng đủ cho mặt nạ •••••••• (absolute không chiếm chỗ trong flow). */
+.wallet-balance-wrap--masked {
+  min-width: 11ch;
 }
 
 .wallet-balance-value {

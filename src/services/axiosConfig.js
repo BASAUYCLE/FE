@@ -31,11 +31,17 @@ axiosInstance.interceptors.request.use(
 // Lấy thông báo lỗi từ response backend (API dùng message/msg/error khác nhau)
 function getErrorMessage(data) {
   if (!data || typeof data !== "object") return null;
-  const msg = data.message ?? data.msg ?? data.error;
-  if (typeof msg === "string") return msg;
+  const msg =
+    data.message ??
+    data.msg ??
+    data.detail ??
+    data.title ??
+    (typeof data.error === "string" ? data.error : null);
+  if (typeof msg === "string" && msg.trim()) return msg;
   const inner = data.result ?? data.data;
   if (inner && typeof inner === "object") {
-    const innerMsg = inner.message ?? inner.msg ?? inner.error;
+    const innerMsg =
+      inner.message ?? inner.msg ?? inner.error ?? inner.detail;
     if (typeof innerMsg === "string") return innerMsg;
   }
   return null;

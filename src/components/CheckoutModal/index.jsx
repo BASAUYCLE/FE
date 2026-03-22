@@ -118,6 +118,8 @@ export default function CheckoutModal({
       const order = await addOrder(product, {
         payFull: paymentMethod === "full",
         addressId: selectedAddressId,
+        expectedDepositAmount:
+          paymentMethod === "deposit" ? depositAmount : undefined,
       });
       if (order?.orderId) {
         message.success("Order placed successfully!");
@@ -158,7 +160,7 @@ export default function CheckoutModal({
       footer={null}
       centered
       width={440}
-      destroyOnClose
+      destroyOnHidden
       styles={{
         body: {
           padding: 0,

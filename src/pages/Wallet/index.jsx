@@ -341,7 +341,11 @@ const MyWallet = () => {
                     </div>
                     <div className="wallet-hero-label">ACCOUNT BALANCE</div>
                     <div className="wallet-hero-balance">
-                      <span className="wallet-balance-wrap">
+                      <span
+                        className={`wallet-balance-wrap ${
+                          showBalance ? "" : "wallet-balance-wrap--masked"
+                        }`}
+                      >
                         <span
                           className={`wallet-balance-value ${
                             showBalance ? "" : "wallet-balance-value--hidden"

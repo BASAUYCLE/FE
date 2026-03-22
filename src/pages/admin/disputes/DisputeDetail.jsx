@@ -225,10 +225,14 @@ export default function AdminDisputeDetailPage() {
     );
   }
 
+  const inspectorNoteRaw =
+    detail?.inspectorNote ?? detail?.inspector_note ?? "";
+  const hasInspectorNote = hasNonEmptyText(inspectorNoteRaw);
+  /** Chỉ sau khi inspector gửi ghi chú (BE chuyển sang REVIEWING) admin mới được quyết định. */
   const canModerate =
     detail &&
-    (detail.status === DISPUTE_STATUS.OPEN ||
-      detail.status === DISPUTE_STATUS.REVIEWING);
+    detail.status === DISPUTE_STATUS.REVIEWING &&
+    hasInspectorNote;
 
   const orderStatusLabel =
     order?.orderStatus != null
@@ -538,15 +542,16 @@ export default function AdminDisputeDetailPage() {
                   >
                     Inspector note
                   </Typography.Title>
-                  {hasNonEmptyText(detail.inspectorNote) ? (
+                  {hasInspectorNote ? (
                     <Typography.Paragraph
                       style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}
                     >
-                      {detail.inspectorNote}
+                      {inspectorNoteRaw}
                     </Typography.Paragraph>
                   ) : (
                     <Typography.Text type="secondary">
-                      None yet.
+                      None yet — inspector must submit a note before admin can
+                      decide.
                     </Typography.Text>
                   )}
 
@@ -585,6 +590,26 @@ export default function AdminDisputeDetailPage() {
                       {detail.trackingCode}
                     </p>
                   )}
+
+                  {detail.status === DISPUTE_STATUS.OPEN && (
+                    <Alert
+                      type="info"
+                      showIcon
+                      style={{ marginTop: 16 }}
+                      message="Waiting for inspector"
+                      description="This dispute is still OPEN. The inspector must write a note first; then it moves to Reviewing and you can approve or reject."
+                    />
+                  )}
+                  {detail.status === DISPUTE_STATUS.REVIEWING &&
+                    !hasInspectorNote && (
+                      <Alert
+                        type="warning"
+                        showIcon
+                        style={{ marginTop: 16 }}
+                        message="Inspector note required"
+                        description="Status is Reviewing but no inspector note is stored. Approve and Reject stay disabled until a note is present."
+                      />
+                    )}
 
                   <Space style={{ marginTop: 20 }} wrap>
                     <Popconfirm

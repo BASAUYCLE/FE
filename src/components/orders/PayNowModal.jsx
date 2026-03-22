@@ -128,7 +128,7 @@ export default function PayNowModal({ open, onClose, order }) {
       footer={null}
       centered
       width={440}
-      destroyOnClose
+      destroyOnHidden
       styles={{
         body: {
           padding: 0,

@@ -44,8 +44,21 @@ const disputeService = {
   updateShippingInfo: (disputeId, payload) =>
     axiosInstance.put(E.SHIPPING_INFO(disputeId), payload),
 
-  confirmReturnReceipt: (disputeId) =>
-    axiosInstance.put(E.CONFIRM_RETURN(disputeId)),
+  /**
+   * Seller xác nhận đã nhận hàng trả.
+   * BE: PUT {path} — không body (disputeId đủ trong URL).
+   */
+  confirmReturnReceipt: async (disputeId) => {
+    const path = E.CONFIRM_RETURN(disputeId);
+    try {
+      return await axiosInstance.put(path);
+    } catch (e) {
+      if (e?.status === 405) {
+        return await axiosInstance.post(path);
+      }
+      throw e;
+    }
+  },
 };
 
 export default disputeService;

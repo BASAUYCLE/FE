@@ -92,7 +92,8 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
       footer={null}
       centered
       width={560}
-      destroyOnClose
+      destroyOnHidden
+      zIndex={1300}
       styles={{ body: { padding: 0, maxHeight: "72vh", overflowY: "auto" } }}
     >
       {/* Header */}

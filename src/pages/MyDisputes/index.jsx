@@ -8,7 +8,7 @@ import {
   Modal,
   Form,
   Input,
-  message,
+  App,
 } from "antd";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
@@ -17,10 +17,13 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useOrders } from "../../contexts/OrderContext";
 import disputeService from "../../services/disputeService";
 import { DISPUTE_STATUS } from "../../constants/disputeStatus";
+import ReturnShippingReceiptFormItem from "../../components/disputes/ReturnShippingReceiptUpload";
+import { resolveShippingReceiptUrl } from "../../utils/returnShippingReceiptUpload";
 import "../Orders/index.css";
 import "./index.css";
 
 export default function MyDisputesPage() {
+  const { message } = App.useApp();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshOrders, refreshSales } = useOrders();
@@ -76,10 +79,18 @@ export default function MyDisputesPage() {
     try {
       const v = await form.validateFields();
       setShipLoading(true);
+      let shippingReceiptUrl;
+      try {
+        shippingReceiptUrl = await resolveShippingReceiptUrl(v.shippingReceipt);
+      } catch (upErr) {
+        message.error(upErr?.message || "Upload ảnh thất bại.");
+        setShipLoading(false);
+        return;
+      }
       await disputeService.updateShippingInfo(d.disputeId, {
         shippingProvider: v.shippingProvider,
         trackingCode: v.trackingCode,
-        shippingReceiptUrl: v.shippingReceiptUrl || undefined,
+        shippingReceiptUrl,
       });
       message.success("Return shipping info saved.");
       setShipModal({ open: false, dispute: null });
@@ -184,7 +195,16 @@ export default function MyDisputesPage() {
         onCancel={() => setShipModal({ open: false, dispute: null })}
         onOk={submitShipping}
         confirmLoading={shipLoading}
-        destroyOnClose
+        destroyOnHidden
+        centered
+        zIndex={1300}
+        styles={{
+          body: {
+            maxHeight: "min(70vh, 520px)",
+            overflowY: "auto",
+            paddingTop: 8,
+          },
+        }}
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -201,12 +221,7 @@ export default function MyDisputesPage() {
           >
             <Input />
           </Form.Item>
-          <Form.Item
-            name="shippingReceiptUrl"
-            label="Receipt / proof URL (optional)"
-          >
-            <Input placeholder="https://..." />
-          </Form.Item>
+          <ReturnShippingReceiptFormItem />
         </Form>
       </Modal>
 

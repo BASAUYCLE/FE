@@ -48,7 +48,7 @@ export default function OpenDisputeModal({ open, onClose, order, onSuccess }) {
       onOk={handleOk}
       okText="Submit"
       confirmLoading={loading}
-      destroyOnClose
+      destroyOnHidden
       width={480}
     >
       <p style={{ marginBottom: 12, color: "#64748b", fontSize: 13 }}>

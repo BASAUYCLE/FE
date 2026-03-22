@@ -114,7 +114,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
       centered
       width={560}
       styles={{ body: { maxHeight: "60vh", overflowY: "auto" } }}
-      destroyOnClose
+      destroyOnHidden
     >
       {isDelivered && (
         <Alert

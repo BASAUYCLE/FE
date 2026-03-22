@@ -8,6 +8,7 @@ import {
   ClipboardList,
   Tags,
   Receipt,
+  Gavel,
   FileBarChart2,
   Settings,
   ChevronRight,
@@ -26,6 +27,7 @@ const ADMIN_ICON_MAP = {
   Inspections: <ClipboardList size={18} />,
   Categories: <Tags size={18} />,
   Transactions: <Receipt size={18} />,
+  Disputes: <Gavel size={18} />,
   Reports: <FileBarChart2 size={18} />,
   Config: <Settings size={18} />,
 };

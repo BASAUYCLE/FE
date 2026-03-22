@@ -155,7 +155,7 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
       footer={null}
       width={900}
       centered
-      destroyOnClose
+      destroyOnHidden
       className="product-preview-modal"
       styles={{ body: { padding: 0 } }}
       title={null}

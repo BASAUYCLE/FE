@@ -15,16 +15,28 @@ const OrderContext = createContext(null);
 
 /**
  * Map BE OrderStatus (string) → FE ORDER_STATUS constant.
+ * BE có thể trả snake_case, alias (IN_TRANSIT, SHIPPED, …), hoặc enum khác tên.
  */
 function mapStatus(raw) {
-  const s = (raw || "").toString().toUpperCase();
-  if (s === "DEPOSITED") return ORDER_STATUS.DEPOSITED;
-  if (s === "PAID") return ORDER_STATUS.PAID;
-  if (s === "SHIPPING") return ORDER_STATUS.SHIPPING;
-  if (s === "DELIVERED") return ORDER_STATUS.DELIVERED;
-  if (s === "DISPUTED") return ORDER_STATUS.DISPUTED;
-  if (s === "COMPLETED") return ORDER_STATUS.COMPLETED;
-  if (s === "CANCELLED") return ORDER_STATUS.CANCELLED;
+  const s = (raw || "").toString().trim().toUpperCase().replace(/-/g, "_");
+  const aliases = {
+    DEPOSITED: ORDER_STATUS.DEPOSITED,
+    PAID: ORDER_STATUS.PAID,
+    SHIPPING: ORDER_STATUS.SHIPPING,
+    IN_TRANSIT: ORDER_STATUS.SHIPPING,
+    INTRANSIT: ORDER_STATUS.SHIPPING,
+    SHIPPED: ORDER_STATUS.SHIPPING,
+    OUT_FOR_DELIVERY: ORDER_STATUS.SHIPPING,
+    DELIVERED: ORDER_STATUS.DELIVERED,
+    DISPUTED: ORDER_STATUS.DISPUTED,
+    DISPUTE: ORDER_STATUS.DISPUTED,
+    COMPLETED: ORDER_STATUS.COMPLETED,
+    COMPLETE: ORDER_STATUS.COMPLETED,
+    CANCELLED: ORDER_STATUS.CANCELLED,
+    CANCELED: ORDER_STATUS.CANCELLED,
+  };
+  if (aliases[s]) return aliases[s];
+  if (Object.values(ORDER_STATUS).includes(s)) return s;
   return ORDER_STATUS.DEPOSITED;
 }
 
@@ -110,7 +122,21 @@ function normalizeOrder(row) {
 
   const totalPrice = Number(row.totalPrice ?? row.total_price ?? 0);
   const depositAmount = Number(row.depositAmount ?? row.deposit_amount ?? 0);
-  const status = mapStatus(row.orderStatus ?? row.status);
+  const rawStatus =
+    row.orderStatus ??
+    row.order_status ??
+    row.status ??
+    row.orderState ??
+    row.order_state;
+  let status = mapStatus(rawStatus);
+
+  /**
+   * Đơn đặt cọc: sau khi đã có tiền cọc (depositAmount > 0), không chờ tab "Awaiting payment"
+   * — chuyển sang PAID (Awaiting shipment) để seller được Ship; phần còn lại xử lý khi giao/COD theo BE.
+   */
+  if (status === ORDER_STATUS.DEPOSITED && depositAmount > 0) {
+    status = ORDER_STATUS.PAID;
+  }
 
   // amountDue: số tiền cần trả tiếp theo
   let amountDue = 0;
@@ -238,12 +264,23 @@ export function OrderProvider({ children }) {
   /** B1/B2: Tạo order mới (cọc hoặc full) */
   const addOrder = useCallback(async (product, options = {}) => {
     if (!product?.id) return null;
+    const payFull = !!options.payFull;
     const res = await orderService.createOrder({
       postId: product.id,
       addressId: options.addressId ?? null,
-      payFull: !!options.payFull,
+      payFull,
     });
-    const data = res?.result ?? res?.data ?? res;
+    let data = res?.result ?? res?.data ?? res;
+    if (data && typeof data === "object" && !payFull) {
+      const d = Number(data.depositAmount ?? data.deposit_amount ?? 0);
+      if (
+        (d <= 0 || Number.isNaN(d)) &&
+        typeof options.expectedDepositAmount === "number" &&
+        options.expectedDepositAmount > 0
+      ) {
+        data = { ...data, depositAmount: options.expectedDepositAmount };
+      }
+    }
     let order = normalizeOrder(data);
 
     // Nếu BE không trả ảnh trong order mới, dùng luôn ảnh & tên từ product hiện tại

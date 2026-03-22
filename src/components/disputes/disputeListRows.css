@@ -55,9 +55,19 @@
   font-weight: 500;
   font-size: 14px;
   color: #0f172a;
+  word-break: break-word;
+}
+
+.my-dispute-row__post-link {
+  color: #0d9488;
+  font-weight: 600;
+  font-size: 13px;
+  margin-left: 4px;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.my-dispute-row__post-link:hover {
+  text-decoration: underline;
 }
 
 .my-dispute-row__parties {

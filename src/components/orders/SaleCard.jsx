@@ -6,7 +6,7 @@ import {
   Button,
   Typography,
   Popconfirm,
-  message,
+  App,
   Tooltip,
 } from "antd";
 import ProductPreviewModal from "../ProductPreviewModal";
@@ -29,6 +29,7 @@ import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import "./PendingOrderCard.css";
 
 export default function SaleCard({ order }) {
+  const { message } = App.useApp();
   const { cancelOrder, refreshSales } = useOrders();
   const [shipModalOpen, setShipModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -49,7 +50,13 @@ export default function SaleCard({ order }) {
         const res = await disputeService.getMyDisputes();
         const raw = res?.result ?? res?.data ?? res;
         const arr = Array.isArray(raw) ? raw : [];
-        const d = arr.find((x) => String(x.orderId) === String(order.orderId));
+        const matches = arr.filter((x) => {
+          const oid = x?.orderId ?? x?.order_id;
+          return String(oid) === String(order.orderId);
+        });
+        const d = matches.sort(
+          (a, b) => Number(b?.disputeId ?? 0) - Number(a?.disputeId ?? 0),
+        )[0];
         if (!cancelled) setActiveDispute(d ?? null);
       } catch {
         if (!cancelled) setActiveDispute(null);

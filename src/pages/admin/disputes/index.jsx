@@ -73,8 +73,9 @@ export default function AdminDisputesPage() {
           </Button>
         </div>
         <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-          All disputes on the platform. Open a row to review and approve or
-          reject.
+          All disputes on the platform. You can open any case to view details;
+          approve or reject is only available after the inspector has submitted
+          a note (status Reviewing).
         </Typography.Paragraph>
 
         {listLoading ? (

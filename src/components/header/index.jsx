@@ -82,6 +82,10 @@ const NavLinks = styled(Box)(({ theme }) => ({
   fontSize: 14,
 }));
 
+/** Cùng gradient với StyledAppBar — dùng cho hàng nav pill (admin/inspector) để chữ sáng không bị trắng trên nền trắng */
+const HEADER_TEAL_GRADIENT =
+  "linear-gradient(90deg, #00c9b7 0%, #00e6c3 45%, #00b894 100%)";
+
 const NavBarRow = styled(Box)(({ theme }) => ({
   width: "100%",
   backgroundColor: "#ffffff",
@@ -644,7 +648,17 @@ export default function Header({
       </StyledToolbar>
 
       {navLinks.length > 0 && (
-        <NavBarRow>
+        <NavBarRow
+          sx={
+            navVariant === "pill"
+              ? {
+                  background: HEADER_TEAL_GRADIENT,
+                  borderTop: "none",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.12)",
+                }
+              : undefined
+          }
+        >
           <Box
             sx={{
               maxWidth: 1320,
@@ -665,20 +679,24 @@ export default function Header({
                   {link.label}
                 </NavLink>
               ))}
-              <NavLink
-                to="/about"
-                active={pathname === "/about"}
-                variant={navVariant}
-              >
-                About
-              </NavLink>
-              <NavLink
-                to="/post"
-                active={pathname === "/post"}
-                variant={navVariant}
-              >
-                Post
-              </NavLink>
+              {navVariant !== "pill" && (
+                <>
+                  <NavLink
+                    to="/about"
+                    active={pathname === "/about"}
+                    variant={navVariant}
+                  >
+                    About
+                  </NavLink>
+                  <NavLink
+                    to="/post"
+                    active={pathname === "/post"}
+                    variant={navVariant}
+                  >
+                    Post
+                  </NavLink>
+                </>
+              )}
             </NavLinks>
           </Box>
         </NavBarRow>

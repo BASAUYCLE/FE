@@ -524,7 +524,7 @@ export default function UserManagement() {
         onCancel={() => setViewIdCardUser(null)}
         footer={null}
         width={720}
-        destroyOnClose
+        destroyOnHidden
       >
         <div className="cccd-modal-content">
           <div className="cccd-modal-row">
@@ -585,7 +585,7 @@ export default function UserManagement() {
         okType="danger"
         cancelText="Cancel"
         okButtonProps={{ loading: verifyingId === userToReject?.id }}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 16 }}>
           <p style={{ marginBottom: 8, color: "#64748b" }}>
@@ -625,7 +625,7 @@ export default function UserManagement() {
         okType="primary"
         cancelText="Cancel"
         okButtonProps={{ loading: verifyingId === userToHide?.id }}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ marginBottom: 16 }}>
           <p style={{ marginBottom: 8, color: "#64748b" }}>
