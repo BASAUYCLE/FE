@@ -21,6 +21,8 @@ import { formatDate } from "../../../utils/date";
 import { useConfirmCrud } from "../../../utils/confirmCrud";
 import "./index.css";
 
+const PAGE_SIZE = 10;
+
 function getThumbnailUrl(item) {
   const list = item?.images ?? [];
   const thumb = list.find((i) => i?.isThumbnail);
@@ -37,6 +39,7 @@ export default function ListingApproval() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectPostId, setRejectPostId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [page, setPage] = useState(1);
 
   const fetchPending = useCallback(async () => {
     try {
@@ -126,6 +129,12 @@ export default function ListingApproval() {
   };
 
   const pendingCount = listings.length;
+  const totalPages = Math.max(1, Math.ceil(listings.length / PAGE_SIZE));
+  const pageListings = listings.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [listings.length]);
 
   return (
     <AdminLayout>
@@ -213,7 +222,7 @@ export default function ListingApproval() {
                   </div>
                 </div>
               ) : (
-                listings.map((row, idx) => {
+                pageListings.map((row, idx) => {
                   const thumb = getThumbnailUrl(row);
                   const status = row.postStatus ?? "PENDING";
                   return (
@@ -290,7 +299,33 @@ export default function ListingApproval() {
             </div>
 
             <div className="queue-footer">
-              <span>Showing {listings.length} pending result(s)</span>
+              <span>
+                Showing {pageListings.length} / {listings.length} pending
+                result(s)
+              </span>
+              {totalPages > 1 && (
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    type="button"
+                    className="admin-tx-page-btn"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    ‹
+                  </button>
+                  <span style={{ color: "#64748b", fontSize: 13 }}>
+                    Page {page}/{totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="admin-tx-page-btn"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

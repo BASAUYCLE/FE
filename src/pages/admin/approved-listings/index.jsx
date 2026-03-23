@@ -1,17 +1,14 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
-import {
-  Search,
-  Eye,
-  MoreHorizontal,
-  Filter,
-} from "lucide-react";
+import { Search, Eye, MoreHorizontal, Filter } from "lucide-react";
 import { POSTING_STATUS_LABEL } from "../../../constants/postingStatus";
 import adminPostService from "../../../services/adminPostService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import "../dashboard/index.css";
 import "./index.css";
+
+const PAGE_SIZE = 10;
 
 export default function AdminApprovedListings() {
   const [search, setSearch] = useState("");
@@ -20,6 +17,7 @@ export default function AdminApprovedListings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewId, setPreviewId] = useState(null);
+  const [page, setPage] = useState(1);
 
   /** Chuẩn hóa 1 post từ BE → row UI */
   const normalizePost = (row) => {
@@ -110,6 +108,13 @@ export default function AdminApprovedListings() {
     });
   }, [listings, search, categoryFilter, statusFilter]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, categoryFilter, statusFilter, listings.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const categories = useMemo(() => {
     const set = new Set(listings.map((r) => r.category).filter(Boolean));
     return ["all", ...Array.from(set)];
@@ -117,9 +122,7 @@ export default function AdminApprovedListings() {
 
   const statusOptions = useMemo(() => {
     const set = new Set(
-      listings
-        .map((r) => String(r.status ?? "").toUpperCase())
-        .filter(Boolean),
+      listings.map((r) => String(r.status ?? "").toUpperCase()).filter(Boolean),
     );
     return ["all", ...Array.from(set)];
   }, [listings]);
@@ -130,7 +133,9 @@ export default function AdminApprovedListings() {
         <div className="admin-dashboard">
           <div className="admin-content">
             <header className="admin-topbar">
-              <h1 className="admin-page-title">Tổng hợp bài đăng Marketplace</h1>
+              <h1 className="admin-page-title">
+                Tổng hợp bài đăng Marketplace
+              </h1>
               <p className="admin-page-subtitle">
                 Danh sách toàn bộ bài đăng trên hệ thống marketplace, bao gồm
                 mọi trạng thái.
@@ -199,10 +204,10 @@ export default function AdminApprovedListings() {
                 </div>
                 {loading ? (
                   <div className="admin-table-empty">Loading listings...</div>
-                ) : filtered.length === 0 ? (
+                ) : pageRows.length === 0 ? (
                   <div className="admin-table-empty">No listings.</div>
                 ) : (
-                  filtered.map((row, idx) => (
+                  pageRows.map((row, idx) => (
                     <div
                       className="admin-table-row"
                       key={row?.id ?? `listing-${idx}`}
@@ -242,7 +247,9 @@ export default function AdminApprovedListings() {
                             .toLowerCase()
                             .replace(/[^a-z0-9_-]/g, "-")}`}
                         >
-                          {POSTING_STATUS_LABEL[row.status] || row.status || "—"}
+                          {POSTING_STATUS_LABEL[row.status] ||
+                            row.status ||
+                            "—"}
                         </span>
                       </div>
                       <div className="admin-actions">
@@ -268,6 +275,31 @@ export default function AdminApprovedListings() {
                   ))
                 )}
               </div>
+              {totalPages > 1 && (
+                <div className="admin-tx-pagination" style={{ marginTop: 12 }}>
+                  <span style={{ color: "#64748b", fontSize: 13 }}>
+                    {filtered.length} listing(s) · Page {page}/{totalPages}
+                  </span>
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      type="button"
+                      className="admin-tx-page-btn"
+                      disabled={page === 1}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      className="admin-tx-page-btn"
+                      disabled={page === totalPages}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      ›
+                    </button>
+                  </div>
+                </div>
+              )}
             </section>
           </div>
         </div>

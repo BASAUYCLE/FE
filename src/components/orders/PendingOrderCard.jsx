@@ -35,7 +35,7 @@ import {
 import "./PendingOrderCard.css";
 
 export default function PendingOrderCard({ order }) {
-  const { cancelOrder, confirmDelivery, refreshOrders } = useOrders();
+  const { cancelOrder, confirmDelivery, completeOrder, refreshOrders } = useOrders();
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [disputeModalOpen, setDisputeModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -74,6 +74,23 @@ export default function PendingOrderCard({ order }) {
       });
     } catch {
       message.error("Could not confirm delivery. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteOrder = async () => {
+    setLoading(true);
+    try {
+      await completeOrder(order.orderId);
+      message.success("Order confirmed successfully!");
+      addNotification?.({
+        title: "Order completed",
+        message: `You completed order #${order.orderId}.`,
+        type: "success",
+      });
+    } catch {
+      message.error("Could not complete order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -211,21 +228,29 @@ export default function PendingOrderCard({ order }) {
               {formatCurrency(order.totalPrice ?? 0)}
             </div>
             <div className="poc-actions poc-delivered-actions">
-              <Button
-                type="primary"
-                size="small"
-                onClick={() => setFeedbackOpen(true)}
-                style={{
-                  backgroundColor: "#16a34a",
-                  border: "none",
-                  fontWeight: 600,
-                  color: "#fff",
-                }}
+              <Popconfirm
+                title="Xác nhận đơn hàng?"
+                description="Hành động này sẽ chuyển đơn hàng sang trạng thái Completed và bạn có thể đánh giá."
+                onConfirm={handleCompleteOrder}
+                okText="Xác nhận"
+                cancelText="Hủy"
               >
-                Complete order
-              </Button>
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={loading}
+                  style={{
+                    backgroundColor: "#16a34a",
+                    border: "none",
+                    fontWeight: 600,
+                    color: "#fff",
+                  }}
+                >
+                  Xác nhận đơn hàng
+                </Button>
+              </Popconfirm>
               {canBuyerOpenDispute(order) &&
-              isLikelyInsideDisputeWindow(order) ? (
+                isLikelyInsideDisputeWindow(order) ? (
                 <Button
                   size="small"
                   danger
@@ -329,8 +354,7 @@ export default function PendingOrderCard({ order }) {
       <FeedbackModal
         open={
           feedbackOpen &&
-          (status === ORDER_STATUS.COMPLETED ||
-            status === ORDER_STATUS.DELIVERED)
+          status === ORDER_STATUS.COMPLETED
         }
         onClose={() => setFeedbackOpen(false)}
         order={order}

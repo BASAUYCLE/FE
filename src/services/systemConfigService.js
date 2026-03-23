@@ -2,25 +2,40 @@ import axiosInstance from "./axiosConfig";
 import { API_ENDPOINTS } from "../config/api";
 
 const E = API_ENDPOINTS.SYSTEM_CONFIG;
+const LEGACY_SYSTEM_CONFIG_BASE = "/system-config";
 
 const systemConfigService = {
-  /** GET /system-config — lấy tất cả config */
-  getAll: () => axiosInstance.get(E.LIST),
+  /** GET config list (ưu tiên /admin/config, fallback /system-config) */
+  getAll: async () => {
+    try {
+      return await axiosInstance.get(E.LIST);
+    } catch (err) {
+      const status = err?.status ?? 0;
+      if (status === 403 || status === 404) {
+        return axiosInstance.get(LEGACY_SYSTEM_CONFIG_BASE);
+      }
+      throw err;
+    }
+  },
 
-  /** GET /system-config/{key} — lấy giá trị theo key */
-  getByKey: (key) => axiosInstance.get(E.BY_KEY(key)),
+  /** GET config theo key (ưu tiên /admin/config/{key}, fallback /system-config/{key}) */
+  getByKey: async (key) => {
+    try {
+      return await axiosInstance.get(E.BY_KEY(key));
+    } catch (err) {
+      const status = err?.status ?? 0;
+      if (status === 403 || status === 404) {
+        return axiosInstance.get(`${LEGACY_SYSTEM_CONFIG_BASE}/${key}`);
+      }
+      throw err;
+    }
+  },
 
   /**
-   * PUT /system-config/{key} — cập nhật giá trị theo key
-   * Payload linh hoạt vì BE có thể dùng configValue/value/config_value.
+   * PUT /admin/config/{key} — cập nhật giá trị theo key
    */
   updateByKey: (key, value) =>
-    axiosInstance.put(E.BY_KEY(key), {
-      configKey: key,
-      configValue: value,
-      value,
-      config_value: value,
-    }),
+    axiosInstance.put(E.BY_KEY(key), { configValue: value }),
 };
 
 export default systemConfigService;

@@ -19,6 +19,8 @@ export default function AdminDisputesPage() {
 
   const [listLoading, setListLoading] = useState(true);
   const [rows, setRows] = useState([]);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const loadList = useCallback(async () => {
     setListLoading(true);
@@ -37,6 +39,13 @@ export default function AdminDisputesPage() {
   useEffect(() => {
     if (isAdmin) loadList();
   }, [isAdmin, loadList]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows.length]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (!isAdmin) {
     return (
@@ -86,7 +95,7 @@ export default function AdminDisputesPage() {
           <Empty description="No disputes." />
         ) : (
           <div className="my-disputes-list--bars">
-            {rows.map((d) => (
+            {pageRows.map((d) => (
               <DisputeSummaryRow
                 key={d.disputeId}
                 dispute={d}
@@ -100,6 +109,37 @@ export default function AdminDisputesPage() {
                 }
               />
             ))}
+            {totalPages > 1 && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  marginTop: 12,
+                }}
+              >
+                <span style={{ color: "#64748b", fontSize: 13 }}>
+                  {rows.length} disputes · Page {page}/{totalPages}
+                </span>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button
+                    type="button"
+                    className="admin-tx-page-btn"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    className="admin-tx-page-btn"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

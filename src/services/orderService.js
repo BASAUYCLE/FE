@@ -38,6 +38,9 @@ const orderService = {
   // PUT /orders/{id}/confirm-delivery — B5: Buyer xác nhận nhận hàng
   confirmDelivery: (orderId) => axiosInstance.put(E.CONFIRM_DELIVERY(orderId)),
 
+  // PUT /orders/{id}/complete — Complete the order explicitly
+  completeOrder: (orderId) => axiosInstance.put(E.COMPLETE(orderId)),
+
   // PUT /orders/{id}/cancel — B6/B7: Hủy đơn (buyer mất cọc / seller hoàn tiền)
   cancelOrder: (orderId) => axiosInstance.put(E.CANCEL(orderId)),
 };

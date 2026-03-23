@@ -130,8 +130,8 @@ export const API_ENDPOINTS = {
 
   // System Configuration
   SYSTEM_CONFIG: {
-    LIST: "/system-config",
-    BY_KEY: (key) => `/system-config/${key}`,
+    LIST: "/admin/config",
+    BY_KEY: (key) => `/admin/config/${key}`,
   },
 
   // Orders (escrow between buyer/seller)
@@ -143,6 +143,7 @@ export const API_ENDPOINTS = {
     PAY_REMAINING: (orderId) => `/orders/${orderId}/pay`,
     CONFIRM_SHIPPING: (orderId) => `/orders/${orderId}/shipping`,
     CONFIRM_DELIVERY: (orderId) => `/orders/${orderId}/confirm-delivery`,
+    COMPLETE: (orderId) => `/orders/${orderId}/complete`,
     CANCEL: (orderId) => `/orders/${orderId}/cancel`,
   },
 

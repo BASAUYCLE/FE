@@ -334,12 +334,12 @@ export function OrderProvider({ children }) {
       const updated = normalizeOrder(res?.result ?? res?.data ?? res);
       const patch = updated
         ? {
-            status: ORDER_STATUS.SHIPPING,
-            shippingMethod: updated.shippingMethod,
-            shippingTrackingNumber: updated.shippingTrackingNumber,
-            proofImage: updated.proofImage,
-            shippedAt: updated.shippedAt,
-          }
+          status: ORDER_STATUS.SHIPPING,
+          shippingMethod: updated.shippingMethod,
+          shippingTrackingNumber: updated.shippingTrackingNumber,
+          proofImage: updated.proofImage,
+          shippedAt: updated.shippedAt,
+        }
         : { status: ORDER_STATUS.SHIPPING };
       setSales((prev) =>
         prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
@@ -354,10 +354,27 @@ export function OrderProvider({ children }) {
     const updated = normalizeOrder(res?.result ?? res?.data ?? res);
     const patch = updated
       ? {
-          status: updated.status ?? ORDER_STATUS.DELIVERED,
-          deliveredAt: updated.deliveredAt ?? null,
-        }
+        status: updated.status ?? ORDER_STATUS.DELIVERED,
+        deliveredAt: updated.deliveredAt ?? null,
+      }
       : { status: ORDER_STATUS.DELIVERED };
+    setOrders((prev) =>
+      prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
+    );
+    setSales((prev) =>
+      prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
+    );
+  }, []);
+
+  /** Buyer completes the ordered explicitly */
+  const completeOrder = useCallback(async (orderId) => {
+    const res = await orderService.completeOrder(orderId);
+    const updated = normalizeOrder(res?.result ?? res?.data ?? res);
+    const patch = updated
+      ? {
+        status: updated.status ?? ORDER_STATUS.COMPLETED,
+      }
+      : { status: ORDER_STATUS.COMPLETED };
     setOrders((prev) =>
       prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
     );
@@ -402,6 +419,7 @@ export function OrderProvider({ children }) {
       payRemaining,
       confirmShipping,
       confirmDelivery,
+      completeOrder,
       cancelOrder,
       markOrderAsPaid,
       getOrderByOrderId,
@@ -415,6 +433,7 @@ export function OrderProvider({ children }) {
       payRemaining,
       confirmShipping,
       confirmDelivery,
+      completeOrder,
       cancelOrder,
       markOrderAsPaid,
       getOrderByOrderId,

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tag } from "antd";
 import { Search, Filter, Eye, Upload, Play } from "lucide-react";
@@ -7,7 +7,7 @@ import {
   INSPECTION_STATUS_TAG_COLOR,
 } from "../../../constants/inspectionStatus";
 
-const PAGE_SIZE = 4;
+const PAGE_SIZE = 10;
 
 function formatRequestedDate(iso) {
   return new Date(iso).toLocaleString("en-US", {
@@ -44,6 +44,14 @@ export default function InspectionQueueTable({
   const totalPages = Math.ceil(filteredInspections.length / PAGE_SIZE) || 1;
   const start = (page - 1) * PAGE_SIZE;
   const pageItems = filteredInspections.slice(start, start + PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [inspections.length]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   return (
     <section className="admin-card inspector-queue-card">
@@ -92,7 +100,10 @@ export default function InspectionQueueTable({
           </div>
         ) : (
           pageItems.map((item, idx) => (
-            <div key={item?.id ?? item?.postId ?? `inspector-${idx}`} className="admin-table-row inspector-table-row">
+            <div
+              key={item?.id ?? item?.postId ?? `inspector-${idx}`}
+              className="admin-table-row inspector-table-row"
+            >
               <div>
                 <div className="inspector-bike-cell">
                   <img src={item.bicycleImage} alt={item.bicycleName} />

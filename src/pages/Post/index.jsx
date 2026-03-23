@@ -23,6 +23,8 @@ import systemConfigService from "../../services/systemConfigService";
 import {
   POSTING_FEE_FALLBACK_VND,
   parsePostingFeeVnd,
+  readCachedPostingFeeVnd,
+  writeCachedPostingFeeVnd,
 } from "../../constants/postingFee";
 import "./index.css";
 
@@ -212,10 +214,17 @@ export default function PostBike() {
     systemConfigService
       .getByKey("POSTING_FEE")
       .then((res) => {
-        if (!cancelled) setListingFeeVnd(parsePostingFeeVnd(res));
+        if (!cancelled) {
+          const fee = parsePostingFeeVnd(res);
+          setListingFeeVnd(fee);
+          writeCachedPostingFeeVnd(fee);
+        }
       })
       .catch(() => {
-        if (!cancelled) setListingFeeVnd(POSTING_FEE_FALLBACK_VND);
+        if (!cancelled) {
+          const cached = readCachedPostingFeeVnd();
+          setListingFeeVnd(cached ?? POSTING_FEE_FALLBACK_VND);
+        }
       });
     return () => {
       cancelled = true;
@@ -1465,11 +1474,10 @@ export default function PostBike() {
               description={
                 <>
                   When your listing is published or goes live, the system may
-                  deduct{" "}
-                  <strong>{formatCurrency(listingFeeVnd)}</strong> from your
-                  wallet (per admin configuration, synced with the admin panel).
-                  Please ensure you have enough balance or add funds before
-                  posting.
+                  deduct <strong>{formatCurrency(listingFeeVnd)}</strong> from
+                  your wallet (per admin configuration, synced with the admin
+                  panel). Please ensure you have enough balance or add funds
+                  before posting.
                 </>
               }
             />

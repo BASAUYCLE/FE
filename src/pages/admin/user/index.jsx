@@ -50,6 +50,8 @@ const statsConfig = [
   },
 ];
 
+const PAGE_SIZE = 10;
+
 function normalizeUser(row) {
   const id = row.id ?? row.userId ?? row.user_id;
   const name =
@@ -126,6 +128,7 @@ export default function UserManagement() {
   const [userToHide, setUserToHide] = useState(null);
   const [hideReason, setHideReason] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [page, setPage] = useState(1);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -341,6 +344,16 @@ export default function UserManagement() {
           return u.status === statusFilter;
         });
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, statusFilter, users.length]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const pageUsers = filteredUsers.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE,
+  );
+
   return (
     <AdminLayout>
       <div className="user-management-page">
@@ -427,7 +440,7 @@ export default function UserManagement() {
                   </div>
                 </div>
               ) : (
-                filteredUsers.map((user) => (
+                pageUsers.map((user) => (
                   <div
                     className="user-table-row"
                     key={user.id ?? user.displayId}
@@ -511,8 +524,32 @@ export default function UserManagement() {
             </div>
             <div className="user-table-footer">
               <span>
-                Showing {filteredUsers.length} / {memberUsers.length} member(s)
+                Showing {pageUsers.length} / {filteredUsers.length} filtered
+                member(s)
               </span>
+              {totalPages > 1 && (
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <button
+                    type="button"
+                    className="admin-tx-page-btn"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    ‹
+                  </button>
+                  <span style={{ color: "#64748b", fontSize: 13 }}>
+                    Page {page}/{totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="admin-tx-page-btn"
+                    disabled={page === totalPages}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
             </div>
           </section>
         </main>

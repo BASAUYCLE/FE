@@ -97,10 +97,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
     }
   };
 
-  const isDelivered = order?.status === ORDER_STATUS.DELIVERED;
-  const modalTitle = isDelivered
-    ? "Complete order & rate seller"
-    : "Rate Seller";
+  const modalTitle = "Rate Seller";
 
   return (
     <Modal
@@ -108,7 +105,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
       open={open}
       onCancel={() => !loading && onClose?.()}
       onOk={handleSubmit}
-      okText={isDelivered ? "Submit review" : "Submit Review"}
+      okText="Submit Review"
       cancelText="Cancel"
       confirmLoading={loading && initialLoaded}
       centered
@@ -116,15 +113,6 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
       styles={{ body: { maxHeight: "60vh", overflowY: "auto" } }}
       destroyOnHidden
     >
-      {isDelivered && (
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginBottom: 14 }}
-          message="Đơn đang giao nhận xong (Delivered)"
-          description="Đánh giá chỉ được lưu khi đơn chuyển sang Completed (hệ thống tự cập nhật sau cửa sổ tranh chấp nếu bạn không khiếu nại). Bạn có thể điền sẵn và bấm Gửi — nếu đơn đã Completed, gửi sẽ thành công; nếu chưa, hãy thử lại sau."
-        />
-      )}
       <div style={{ marginBottom: 16 }}>
         <div
           style={{

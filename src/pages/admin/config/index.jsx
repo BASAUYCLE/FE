@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import systemConfigService from "../../../services/systemConfigService";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { writeCachedPostingFeeVnd } from "../../../constants/postingFee";
 import {
   Settings,
   Save,
@@ -55,7 +56,14 @@ export default function AdminConfig() {
     setError("");
     setSuccess("");
     try {
-      const [depRes, feeRes, autoRes, disputeRes, closeUnshippedRes, refundShippedRes] = await Promise.allSettled([
+      const [
+        depRes,
+        feeRes,
+        autoRes,
+        disputeRes,
+        closeUnshippedRes,
+        refundShippedRes,
+      ] = await Promise.allSettled([
         systemConfigService.getByKey("DEPOSIT_RATE"),
         systemConfigService.getByKey("POSTING_FEE"),
         systemConfigService.getByKey("AUTO_CONFIRM_DAYS"),
@@ -77,7 +85,10 @@ export default function AdminConfig() {
       if (feeRes.status === "fulfilled") {
         const strVal = toConfigValueString(unwrap(feeRes.value));
         const n = parseNumber(strVal);
-        if (!isNaN(n) && n >= 0) setPostingFee(n);
+        if (!isNaN(n) && n >= 0) {
+          setPostingFee(n);
+          writeCachedPostingFeeVnd(n);
+        }
       }
 
       if (autoRes.status === "fulfilled") {
@@ -161,7 +172,10 @@ export default function AdminConfig() {
         systemConfigService.updateByKey("DEPOSIT_RATE", depValueToSave),
         systemConfigService.updateByKey("POSTING_FEE", feeValueToSave),
         systemConfigService.updateByKey("AUTO_CONFIRM_DAYS", autoValueToSave),
-        systemConfigService.updateByKey("DISPUTE_WINDOW_DAYS", disputeValueToSave),
+        systemConfigService.updateByKey(
+          "DISPUTE_WINDOW_DAYS",
+          disputeValueToSave,
+        ),
         systemConfigService.updateByKey(
           "AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS",
           closeUnshippedValueToSave,
@@ -172,6 +186,7 @@ export default function AdminConfig() {
         ),
       ]);
 
+      writeCachedPostingFeeVnd(preview.postingFee);
       setSuccess("Saved successfully.");
     } catch (e) {
       setError(e?.message ?? "Save failed.");
@@ -197,8 +212,8 @@ export default function AdminConfig() {
                   System config
                 </h1>
                 <p className="admin-page-subtitle">
-                  Cấu hình tỉ lệ đặt cọc, phí đăng bài, dispute window và các mốc tự
-                  động xử lý dispute.
+                  Cấu hình tỉ lệ đặt cọc, phí đăng bài, dispute window và các
+                  mốc tự động xử lý dispute.
                 </p>
               </div>
               <div className="admin-config-actions">
@@ -319,7 +334,9 @@ export default function AdminConfig() {
               <div className="admin-card admin-config-card">
                 <div className="admin-card-header">
                   <div>
-                    <div className="admin-card-title">Dispute window (ngày)</div>
+                    <div className="admin-card-title">
+                      Dispute window (ngày)
+                    </div>
                   </div>
                 </div>
                 <div className="admin-config-body">
@@ -357,7 +374,9 @@ export default function AdminConfig() {
                       min={0}
                       step={1}
                       disabled={loading || saving}
-                      onChange={(e) => setAutoCloseUnshippedDays(e.target.value)}
+                      onChange={(e) =>
+                        setAutoCloseUnshippedDays(e.target.value)
+                      }
                     />
                   </label>
                   <div className="admin-config-help">
