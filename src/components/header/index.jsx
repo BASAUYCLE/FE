@@ -47,6 +47,7 @@ import { useNotifications } from "../../contexts/useNotifications";
 import { confirmCrud } from "../../utils/confirmCrud";
 import { getNavLinksForRole, getActiveLink } from "../../config/headerConfig";
 import { formatDateTime } from "../../utils/date";
+import { getAvatarSrc } from "../../utils/avatar";
 import "./index.css";
 
 const StyledAppBar = styled(AppBar)(() => ({
@@ -586,7 +587,7 @@ export default function Header({
             {showAvatar && (
               <>
                 <Avatar
-                  src={user?.avatar ?? user?.imageUrl ?? user?.profileImage}
+                  src={getAvatarSrc(user) || undefined}
                   onClick={handleUserMenuOpen}
                   aria-controls={openUserMenu ? "user-menu" : undefined}
                   aria-haspopup="true"

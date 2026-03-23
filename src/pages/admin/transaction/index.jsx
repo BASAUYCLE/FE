@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
-import { Search, ArrowDownCircle, ArrowUpCircle, TrendingUp, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import axiosInstance from "../../../services/axiosConfig";
-import { formatCurrency } from "../../../utils/formatCurrency";
 import "../dashboard/index.css";
 import "./index.css";
 
@@ -56,8 +55,6 @@ const getTxType = (tx) =>
 
 const getTxStatus = (tx) =>
   tx.status ?? tx.transactionStatus ?? null;
-
-const isMoneyIn = (type) => type === "TOP_UP" || type === "REFUND";
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -225,26 +222,6 @@ export default function TransactionManagement() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageItems  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // ─── Stats ──────────────────────────────────────────────────────────────────
-  const stats = useMemo(() => {
-    const success = allTx.filter(
-      (tx) => (getTxStatus(tx) ?? "") !== "FAILED",
-    );
-    const totalIn  = success
-      .filter((tx) => isMoneyIn(getTxType(tx)))
-      .reduce((s, tx) => s + Math.abs(tx.amount ?? 0), 0);
-    const totalOut = success
-      .filter((tx) => !isMoneyIn(getTxType(tx)))
-      .reduce((s, tx) => s + Math.abs(tx.amount ?? 0), 0);
-    const topUpCount    = success.filter((tx) => getTxType(tx) === "TOP_UP").length;
-    const depositCount  = success.filter((tx) => getTxType(tx) === "DEPOSIT").length;
-    const purchaseCount = success.filter((tx) => getTxType(tx) === "PURCHASE").length;
-    const members = new Set(
-      allTx.map((tx) => tx.userId ?? tx.accountId ?? tx.userEmail).filter(Boolean),
-    ).size;
-    return { totalIn, totalOut, topUpCount, depositCount, purchaseCount, members };
-  }, [allTx]);
-
   return (
     <AdminLayout>
       <div className="admin-dashboard-page admin-tx-page">
@@ -262,49 +239,6 @@ export default function TransactionManagement() {
                 </p>
               </div>
             </header>
-
-            {/* Stats */}
-            <section className="admin-stats" style={{ gridTemplateColumns: "repeat(4,1fr)" }}>
-              <div className="admin-card admin-stat-card">
-                <div className="admin-stat-top">
-                  <div className="admin-stat-icon green"><ArrowDownCircle /></div>
-                  <span className="admin-stat-trend up">money in</span>
-                </div>
-                <div className="admin-stat-title">Total in</div>
-                <div className="admin-stat-value">{formatCurrency(stats.totalIn)}</div>
-              </div>
-
-              <div className="admin-card admin-stat-card">
-                <div className="admin-stat-top">
-                  <div className="admin-stat-icon" style={{ background: "#fef3c7", color: "#d97706" }}>
-                    <ArrowUpCircle />
-                  </div>
-                  <span className="admin-stat-trend" style={{ color: "#d97706" }}>tiền ra</span>
-                </div>
-                <div className="admin-stat-title">Tổng tiền ra</div>
-                <div className="admin-stat-value">{formatCurrency(stats.totalOut)}</div>
-              </div>
-
-              <div className="admin-card admin-stat-card">
-                <div className="admin-stat-top">
-                  <div className="admin-stat-icon indigo"><TrendingUp /></div>
-                  <span className="admin-stat-trend up">{stats.topUpCount} top up · {stats.depositCount} deposit · {stats.purchaseCount} purchase</span>
-                </div>
-                <div className="admin-stat-title">Successful transactions</div>
-                <div className="admin-stat-value">
-                  {allTx.filter((tx) => (getTxStatus(tx) ?? "") !== "FAILED").length}
-                </div>
-              </div>
-
-              <div className="admin-card admin-stat-card">
-                <div className="admin-stat-top">
-                  <div className="admin-stat-icon blue"><Users /></div>
-                  <span className="admin-stat-trend up">members</span>
-                </div>
-                <div className="admin-stat-title">Members with transactions</div>
-                <div className="admin-stat-value">{stats.members || allTx.length}</div>
-              </div>
-            </section>
 
             {/* Filters */}
             <div className="admin-card admin-tx-filters">
@@ -362,7 +296,6 @@ export default function TransactionManagement() {
                   <div>Type</div>
                   <div>Description</div>
                   <div>Date & time</div>
-                  <div style={{ textAlign: "right" }}>Amount</div>
                   <div>Status</div>
                 </div>
 
@@ -374,10 +307,6 @@ export default function TransactionManagement() {
                   pageItems.map((tx, idx) => {
                     const type   = getTxType(tx);
                     const status = getTxStatus(tx);
-                    const moneyIn = isMoneyIn(type);
-                    const isFailed = status === "FAILED";
-                    const amtColor = isFailed ? "#94a3b8" : moneyIn ? "#10b981" : "#ef4444";
-                    const amtPrefix = isFailed ? "" : moneyIn ? "+" : "−";
                     const statusCfg = TX_STATUS_CONFIG[status] ?? { label: status ?? "—", bg: "#f1f5f9", color: "#64748b" };
                     const typeColor = TX_TYPE_COLOR[type] ?? "#64748b";
                     const member = tx.userName ?? tx.userFullName ?? tx.fullName ?? tx.email ?? tx.userEmail ?? "—";
@@ -418,11 +347,6 @@ export default function TransactionManagement() {
                                 hour: "2-digit", minute: "2-digit",
                               })
                             : "—"}
-                        </div>
-
-                        {/* Số tiền */}
-                        <div style={{ textAlign: "right", fontWeight: 700, color: amtColor }}>
-                          {amtPrefix}{formatCurrency(Math.abs(tx.amount ?? 0))}
                         </div>
 
                         {/* Trạng thái */}

@@ -34,6 +34,7 @@ import postService from "../../services/postService";
 import disputeService from "../../services/disputeService";
 import orderService from "../../services/orderService";
 import { confirmCrud } from "../../utils/confirmCrud";
+import { getAvatarSrc, getAvatarInitial } from "../../utils/avatar";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
@@ -98,6 +99,20 @@ function mapApiPostToPosting(row) {
     rejectionReason: row.rejectionReason ?? row.rejection_reason ?? null,
     sellerId: row.sellerId ?? row.seller_id,
     sellerName: row.sellerFullName ?? row.seller_name ?? row.sellerName,
+    sellerAvatar: getAvatarSrc(
+      row,
+      row?.sellerAvatar,
+      row?.sellerAvatarUrl,
+      row?.seller_avatar,
+      row?.seller_avatar_url,
+      row?.seller?.avatar,
+      row?.seller?.avatarUrl,
+      row?.seller?.avatar_url,
+      row?.seller?.profileImageUrl,
+      row?.seller?.imageUrl,
+      row?.user?.avatarUrl,
+      row?.user?.avatar_url,
+    ),
     sellerLocation: row.sellerLocation ?? row.seller_address,
     views: row.views,
     createdAt: row.createdAt ?? row.created_at,
@@ -149,6 +164,7 @@ function postingToProduct(p) {
     },
     seller: {
       name: p.sellerName ?? "Seller",
+      avatarUrl: p.sellerAvatar ?? null,
       rating: "—",
       reviews: 0,
       location: p.sellerLocation ?? "—",
@@ -297,6 +313,10 @@ export default function ProductDetail() {
     postingStatusUpper === POSTING_STATUS.SOLD;
   const canAdminApproveReject =
     isAdminView && postingStatus === POSTING_STATUS.PENDING;
+  const sellerAvatarSrc =
+    product?.seller?.avatarUrl ||
+    (isOwnListing ? getAvatarSrc(user) : "") ||
+    undefined;
 
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -813,13 +833,14 @@ export default function ProductDetail() {
                 }}
               >
                 <Avatar
+                  src={sellerAvatarSrc}
                   sx={{
                     bgcolor: isStaffView ? "#64748b" : "#00ccad",
                     width: 48,
                     height: 48,
                   }}
                 >
-                  {product.seller.name?.[0]}
+                  {getAvatarInitial({ name: product.seller.name })}
                 </Avatar>
                 <Box>
                   <Typography variant="body2" color="#6b7280" sx={{ mb: 0.25 }}>

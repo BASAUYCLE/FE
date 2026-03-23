@@ -89,6 +89,11 @@
   transform: scale(1.05);
 }
 
+.account-avatar-edit--disabled {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
 .account-badge {
   display: inline-flex;
   align-items: center;

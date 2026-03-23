@@ -2,6 +2,7 @@ import { NavLink, Link, useNavigate } from "react-router-dom";
 import { INSPECTOR_NAV_LINKS } from "../../config/inspectorNav";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
+import { getAvatarSrc } from "../../utils/avatar";
 import "./SidebarLayout.css";
 
 function getInitials(name) {
@@ -23,6 +24,7 @@ export default function InspectorLayout({ children }) {
 
   const displayName =
     user?.fullName ?? user?.name ?? user?.email ?? "Inspector";
+  const avatarUrl = getAvatarSrc(user);
 
   return (
     <div className="app-sidebar-layout">
@@ -51,7 +53,19 @@ export default function InspectorLayout({ children }) {
           ))}
         </nav>
         <div className="app-sidebar-account">
-          <div className="app-sidebar-account-avatar">
+          <div
+            className="app-sidebar-account-avatar"
+            style={
+              avatarUrl
+                ? {
+                    backgroundImage: `url(${avatarUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    color: "transparent",
+                  }
+                : undefined
+            }
+          >
             {getInitials(displayName)}
           </div>
           <div className="app-sidebar-account-name">{displayName}</div>

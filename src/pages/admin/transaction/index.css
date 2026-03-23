@@ -92,7 +92,7 @@
 
 .admin-tx-row {
   display: grid;
-  grid-template-columns: 2fr 1.4fr 2fr 1.6fr 1.4fr 1.2fr;
+  grid-template-columns: 2fr 1.4fr 2.4fr 1.6fr 1.2fr;
   align-items: center;
   padding: 12px 20px;
   gap: 12px;
@@ -227,11 +227,11 @@
 /* ── Stats responsive ────────────────────────────────── */
 @media (max-width: 960px) {
   .admin-tx-row {
-    grid-template-columns: 1.5fr 1fr 1.2fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
   }
 
   .admin-tx-row > :nth-child(3),
-  .admin-tx-row > :nth-child(6) {
+  .admin-tx-row > :nth-child(5) {
     display: none;
   }
 }

@@ -2,7 +2,6 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import {
   Search,
-  CheckCircle2,
   Eye,
   MoreHorizontal,
   Filter,
@@ -17,20 +16,10 @@ import "./index.css";
 export default function AdminApprovedListings() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewId, setPreviewId] = useState(null);
-
-  /** Lấy chữ cái đầu để hiển thị avatar (admin/inspector) */
-  const getInitials = (name) => {
-    if (!name || typeof name !== "string") return "?";
-    const parts = name.trim().split(/\s+/).filter(Boolean);
-    if (parts.length >= 2)
-      return (parts[0][0] + parts[parts.length - 1][0])
-        .toUpperCase()
-        .slice(0, 2);
-    return (parts[0]?.slice(0, 2) ?? "?").toUpperCase();
-  };
 
   /** Chuẩn hóa 1 post từ BE → row UI */
   const normalizePost = (row) => {
@@ -78,12 +67,18 @@ export default function AdminApprovedListings() {
   const fetchListings = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminPostService.getPostsByStatus("ADMIN_APPROVED");
+      const res = await adminPostService.getAllPosts();
       const raw = res?.result ?? res?.data ?? res?.content ?? res;
       const list = Array.isArray(raw)
         ? raw
         : (raw?.content ?? raw?.posts ?? raw?.data ?? []);
-      setListings(list.map(normalizePost));
+      const normalized = list.map(normalizePost);
+      normalized.sort((a, b) => {
+        const ta = new Date(a.inspectedAt ?? 0).getTime();
+        const tb = new Date(b.inspectedAt ?? 0).getTime();
+        return tb - ta;
+      });
+      setListings(normalized);
     } catch (err) {
       console.warn("AdminApprovedListings: fetch failed", err?.message);
       setListings([]);
@@ -108,12 +103,24 @@ export default function AdminApprovedListings() {
         categoryFilter === "all" ||
         (row.category &&
           row.category.toLowerCase() === categoryFilter.toLowerCase());
-      return matchSearch && matchCategory;
+      const matchStatus =
+        statusFilter === "all" ||
+        String(row.status ?? "").toUpperCase() === statusFilter;
+      return matchSearch && matchCategory && matchStatus;
     });
-  }, [listings, search, categoryFilter]);
+  }, [listings, search, categoryFilter, statusFilter]);
 
   const categories = useMemo(() => {
     const set = new Set(listings.map((r) => r.category).filter(Boolean));
+    return ["all", ...Array.from(set)];
+  }, [listings]);
+
+  const statusOptions = useMemo(() => {
+    const set = new Set(
+      listings
+        .map((r) => String(r.status ?? "").toUpperCase())
+        .filter(Boolean),
+    );
     return ["all", ...Array.from(set)];
   }, [listings]);
 
@@ -123,14 +130,30 @@ export default function AdminApprovedListings() {
         <div className="admin-dashboard">
           <div className="admin-content">
             <header className="admin-topbar">
-              <h1 className="admin-page-title">Bài đăng đã duyệt</h1>
+              <h1 className="admin-page-title">Tổng hợp bài đăng Marketplace</h1>
               <p className="admin-page-subtitle">
-                Các bài post đã được Admin duyệt, đang chờ kiểm định trước khi
-                lên sàn.
+                Danh sách toàn bộ bài đăng trên hệ thống marketplace, bao gồm
+                mọi trạng thái.
               </p>
             </header>
 
             <section className="admin-card admin-table-card">
+              <div className="admin-status-filter-bar">
+                {statusOptions.map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    className={`admin-status-filter-btn ${
+                      statusFilter === status ? "active" : ""
+                    }`}
+                    onClick={() => setStatusFilter(status)}
+                  >
+                    {status === "all"
+                      ? "All status"
+                      : (POSTING_STATUS_LABEL[status] ?? status)}
+                  </button>
+                ))}
+              </div>
               <div className="admin-card-header">
                 <div className="admin-approved-filters">
                   <div className="admin-search-wrap">
@@ -170,8 +193,7 @@ export default function AdminApprovedListings() {
                   <div>Seller</div>
                   <div>Category</div>
                   <div>Price</div>
-                  <div>Ngày duyệt</div>
-                  <div>Người duyệt</div>
+                  <div>Updated at</div>
                   <div>Status</div>
                   <div>Actions</div>
                 </div>
@@ -183,7 +205,7 @@ export default function AdminApprovedListings() {
                   filtered.map((row, idx) => (
                     <div
                       className="admin-table-row"
-                      key={row?.id ?? `approved-${idx}`}
+                      key={row?.id ?? `listing-${idx}`}
                     >
                       <div
                         className="admin-approved-listing-cell admin-row-link"
@@ -213,28 +235,14 @@ export default function AdminApprovedListings() {
                           : "—"}
                       </div>
                       <div>
-                        {row.approvedBy ? (
-                          <div
-                            className="admin-account-cell"
-                            title={row.approvedBy}
-                          >
-                            <span className="admin-account-avatar">
-                              {getInitials(row.approvedBy)}
-                            </span>
-                            <span className="admin-account-name">
-                              {row.approvedBy}
-                            </span>
-                          </div>
-                        ) : (
-                          "—"
-                        )}
-                      </div>
-                      <div>
                         <span
-                          className={`admin-status ${row.status?.toLowerCase?.() ?? "verified"}`}
+                          className={`admin-status-chip admin-status-chip--${String(
+                            row.status ?? "",
+                          )
+                            .toLowerCase()
+                            .replace(/[^a-z0-9_-]/g, "-")}`}
                         >
-                          <CheckCircle2 size={12} />{" "}
-                          {POSTING_STATUS_LABEL[row.status] || row.status}
+                          {POSTING_STATUS_LABEL[row.status] || row.status || "—"}
                         </span>
                       </div>
                       <div className="admin-actions">

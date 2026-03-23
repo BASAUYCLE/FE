@@ -16,6 +16,7 @@ import {
 import { ADMIN_NAV_LINKS } from "../../config/adminNav";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
+import { getAvatarSrc } from "../../utils/avatar";
 import "./SidebarLayout.css";
 
 const ADMIN_ICON_MAP = {
@@ -50,6 +51,7 @@ export default function AdminLayout({ children }) {
   };
 
   const displayName = user?.fullName ?? user?.name ?? user?.email ?? "Admin";
+  const avatarUrl = getAvatarSrc(user);
 
   return (
     <div className="app-sidebar-layout">
@@ -82,7 +84,19 @@ export default function AdminLayout({ children }) {
           ))}
         </nav>
         <div className="app-sidebar-account">
-          <div className="app-sidebar-account-avatar">
+          <div
+            className="app-sidebar-account-avatar"
+            style={
+              avatarUrl
+                ? {
+                    backgroundImage: `url(${avatarUrl})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    color: "transparent",
+                  }
+                : undefined
+            }
+          >
             {getInitials(displayName)}
           </div>
           <div className="app-sidebar-account-name">{displayName}</div>

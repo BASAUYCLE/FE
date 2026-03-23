@@ -16,11 +16,13 @@ import {
 import { Share2, UserPlus, Star } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import { useAuth } from "../../contexts/AuthContext";
 import userService from "../../services/userService";
 import postService from "../../services/postService";
 import { feedbackService } from "../../services";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { POSTING_STATUS } from "../../constants/postingStatus";
+import { getAvatarSrc } from "../../utils/avatar";
 import feedbackBannerImage from "../../assets/banner_feedback.png";
 import "../Orders/index.css";
 
@@ -99,6 +101,7 @@ function toNumberOrNull(value) {
 
 export default function UserFeedbackPage() {
   const { userId } = useParams();
+  const { user: currentUser } = useAuth();
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [listings, setListings] = useState([]);
@@ -285,15 +288,16 @@ export default function UserFeedbackPage() {
     "BASAUYCLE Member";
 
   const avatarUrl = pickFirstValue(
-    user?.avatar,
-    user?.avatarUrl,
-    user?.avatar_url,
-    user?.profileImageUrl,
-    user?.profileImage,
-    user?.imageUrl,
-    user?.image_url,
+    currentUser &&
+      String(currentUser?.id ?? currentUser?.userId ?? "") === String(userId)
+      ? getAvatarSrc(currentUser)
+      : null,
+    getAvatarSrc(user),
     ratingSummary?.sellerAvatar,
     ratingSummary?.sellerAvatarUrl,
+    ratingSummary?.avatar,
+    ratingSummary?.avatarUrl,
+    ratingSummary?.avatar_url,
   );
 
   const lastActiveRaw = pickFirstValue(
@@ -1143,6 +1147,19 @@ export default function UserFeedbackPage() {
                           }}
                         >
                           <Avatar
+                            src={
+                              getAvatarSrc(
+                                fb,
+                                fb?.buyerAvatar,
+                                fb?.buyerAvatarUrl,
+                                fb?.buyer_avatar,
+                                fb?.buyer_avatar_url,
+                                fb?.reviewerAvatar,
+                                fb?.reviewerAvatarUrl,
+                                fb?.reviewer_avatar,
+                                fb?.reviewer_avatar_url,
+                              ) || undefined
+                            }
                             sx={{
                               width: 40,
                               height: 40,

@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { message } from "antd";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import {
   Search,
@@ -9,10 +11,10 @@ import {
   XCircle,
   Clock,
 } from "lucide-react";
-import axiosInstance from "../../../services/axiosConfig";
 import adminPostService from "../../../services/adminPostService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
+import { useAuth } from "../../../contexts/AuthContext";
 import "../dashboard/index.css";
 import "./index.css";
 
@@ -36,17 +38,7 @@ const INSPECTED_STATUSES = [
   "REJECTED",
   "HIDDEN",
 ];
-
-/** Lấy chữ cái đầu để hiển thị avatar (inspector) */
-function getInitials(name) {
-  if (!name || typeof name !== "string") return "?";
-  const trimmed = name.trim();
-  if (trimmed === "—") return "—";
-  const parts = trimmed.split(/\s+/).filter(Boolean);
-  if (parts.length >= 2)
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase().slice(0, 2);
-  return (parts[0]?.slice(0, 2) ?? "?").toUpperCase();
-}
+const INSPECTOR_PENDING_STATUS = "ADMIN_APPROVED";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -56,8 +48,7 @@ function parseList(res) {
   if (Array.isArray(raw?.content)) return raw.content;
   if (Array.isArray(raw?.reports)) return raw.reports;
   if (Array.isArray(raw?.data)) return raw.data;
-  if (raw && typeof raw === "object") return [raw];
-  return null;
+  return [];
 }
 
 function normalizeReport(row) {
@@ -85,7 +76,22 @@ function normalizeReport(row) {
       null,
     seller: row.sellerFullName ?? row.sellerName ?? row.seller ?? "—",
     inspector:
-      row.inspectorName ?? row.inspectorFullName ?? row.inspector ?? "—",
+      row.inspectorName ??
+      row.inspectorFullName ??
+      row.inspector?.fullName ??
+      row.inspector?.name ??
+      row.inspectedByName ??
+      row.inspectedBy ??
+      row.reviewerName ??
+      row.reviewer ??
+      row.inspector ??
+      "—",
+    inspectorEmail:
+      row.inspectorEmail ??
+      row.inspector?.email ??
+      row.reviewerEmail ??
+      row.inspectedByEmail ??
+      "—",
     inspectedAt:
       row.inspectedAt ??
       row.completedAt ??
@@ -100,137 +106,138 @@ function normalizeReport(row) {
   };
 }
 
+function normalizeFromPost(post, historyByPostId) {
+  const postId = post?.postId ?? post?.id ?? null;
+  const postStatus = String(post?.postStatus ?? post?.status ?? "").toUpperCase();
+  const history = postId != null ? historyByPostId.get(String(postId)) : null;
+
+  const isInspected = INSPECTED_STATUSES.includes(postStatus);
+  const status = isInspected ? (postStatus === "REJECTED" ? "REJECTED" : "APPROVED") : "PENDING";
+
+  return normalizeReport({
+    reportId: history?.reportId,
+    postId,
+    bicycleName: post?.bicycleName ?? post?.title ?? post?.postTitle,
+    sellerFullName: post?.sellerFullName ?? post?.sellerName ?? post?.seller?.fullName,
+    images: post?.images,
+    thumbnailUrl:
+      post?.thumbnailUrl ??
+      post?.thumbnail ??
+      post?.imageUrl ??
+      post?.images?.find?.((i) => i?.isThumbnail)?.imageUrl ??
+      post?.images?.[0]?.imageUrl,
+    price: post?.price ?? post?.salePrice,
+    inspectorName:
+      history?.inspectorName ??
+      history?.inspectorFullName ??
+      history?.inspector?.fullName ??
+      history?.inspector?.name ??
+      history?.inspectedByName ??
+      post?.inspectorName ??
+      post?.inspectedByName ??
+      post?.inspectedBy ??
+      post?.reviewerName ??
+      null,
+    inspectorEmail:
+      history?.inspectorEmail ??
+      history?.inspector?.email ??
+      history?.reviewerEmail ??
+      post?.inspectorEmail ??
+      post?.reviewerEmail ??
+      null,
+    inspectedAt:
+      history?.createdAt ??
+      history?.inspectedAt ??
+      post?.updatedAt ??
+      post?.createdAt ??
+      null,
+    overallCondition: history?.overallCondition ?? null,
+    notes: history?.notes ?? null,
+    result: history?.result ?? (isInspected ? (postStatus === "REJECTED" ? "FAIL" : "PASS") : null),
+    status,
+    postStatus,
+  });
+}
+
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminInspectionReports() {
+  const navigate = useNavigate();
+  const { user, isAuthenticated } = useAuth();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [expanded, setExpanded] = useState(null);
   const [previewId, setPreviewId] = useState(null);
 
-  // ── Fetch strategy ────────────────────────────────────────────────────────
-
-  /** Chiến lược 1: admin endpoint tổng hợp */
-  /** Chiến lược 1: thử trực tiếp các admin/inspection endpoint */
-  const tryDirectEndpoints = useCallback(async () => {
-    const URLS = [
-      "/admin/inspection/reports",
-      "/admin/inspections",
-      "/inspection/completed", // inspector endpoint – admin có thể gọi được
-      "/inspection/reports",
-    ];
-    for (const url of URLS) {
-      try {
-        const res = await axiosInstance.get(url);
-        const list = parseList(res);
-        if (list && list.length > 0) {
-          console.info(`AdminReports: ✓ ${url} → ${list.length}`);
-          return list.map(normalizeReport);
-        }
-      } catch (err) {
-        const s = err?.status ?? 0;
-        if (s !== 404 && s !== 403)
-          console.warn(`AdminReports: ${url} →`, err?.message);
+  const handleViewInspectorDetails = useCallback(
+    (postId) => {
+      if (!isAuthenticated?.()) {
+        message.warning("Please sign in first.");
+        navigate("/login");
+        return;
       }
-    }
-    return null;
-  }, []);
-
-  /** Chiến lược 2: getAllPosts → per-post report fetch */
-  const fetchPerPost = useCallback(async () => {
-    // a) Lấy tất cả posts (1 lần duy nhất)
-    let allPosts = [];
-    try {
-      const res = await adminPostService.getAllPosts();
-      const raw = res?.result ?? res?.data ?? res;
-      allPosts = Array.isArray(raw)
-        ? raw
-        : Array.isArray(raw?.content)
-          ? raw.content
-          : Array.isArray(raw?.data)
-            ? raw.data
-            : [];
-    } catch {
-      // getAllPosts thất bại → thử từng status
-      const settled = await Promise.allSettled(
-        INSPECTED_STATUSES.map((s) => adminPostService.getPostsByStatus(s)),
-      );
-      allPosts = settled
-        .filter((r) => r.status === "fulfilled")
-        .flatMap((r) => {
-          const raw = r.value?.result ?? r.value?.data ?? r.value;
-          return Array.isArray(raw) ? raw : (raw?.content ?? raw?.data ?? []);
-        });
-    }
-
-    // Chỉ giữ các post đã qua kiểm định
-    const inspectedPosts = allPosts.filter((p) => {
-      const st = p.postStatus ?? p.status ?? "";
-      return INSPECTED_STATUSES.includes(st);
-    });
-
-    if (!inspectedPosts.length) return [];
-
-    // b) Với mỗi post, thử lấy inspection report; nếu không có → dùng dữ liệu post làm minimal report
-    const reportResults = await Promise.allSettled(
-      inspectedPosts.map(async (p) => {
-        const pid = p.postId ?? p.id;
-        if (!pid) return null;
-
-        const postStatus = p.postStatus ?? p.status ?? "";
-        const baseInfo = {
-          postId: pid,
-          bicycleName: p.bicycleName ?? p.title,
-          sellerFullName: p.sellerFullName ?? p.sellerName,
-          thumbnailUrl:
-            (p.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ??
-            p.images?.[0]?.imageUrl ??
-            p.thumbnailUrl ??
-            p.thumbnail ??
-            p.imageUrl,
-          price: p.price ?? p.salePrice,
-          status: postStatus === "REJECTED" ? "REJECTED" : "APPROVED",
-          result: postStatus === "REJECTED" ? "FAIL" : "PASS",
-          inspectedAt: p.updatedAt ?? p.inspectedAt ?? p.createdAt,
-        };
-
-        // Thử lấy full report
-        for (const url of [
-          `/inspection/${pid}/report`,
-          `/admin/inspection/${pid}`,
-          `/inspection/${pid}`,
-        ]) {
-          try {
-            const res = await axiosInstance.get(url);
-            const raw = res?.result ?? res?.data ?? res;
-            if (raw && typeof raw === "object") {
-              return normalizeReport({ ...baseInfo, ...raw });
-            }
-          } catch {
-            // thử URL tiếp
-          }
-        }
-
-        // Không lấy được report → dùng minimal từ post
-        return normalizeReport(baseInfo);
-      }),
-    );
-
-    return reportResults
-      .filter((r) => r.status === "fulfilled" && r.value !== null)
-      .map((r) => r.value);
-  }, []);
+      const role = String(
+        user?.role ?? user?.userRole ?? user?.user_role ?? "",
+      ).toUpperCase();
+      if (role !== "ADMIN" && role !== "INSPECTOR") {
+        message.error("You are not allowed to view inspector details.");
+        navigate("/unauthorized");
+        return;
+      }
+      if (postId) {
+        navigate(`/inspector/${postId}`);
+        return;
+      }
+      navigate("/inspector/details");
+    },
+    [isAuthenticated, navigate, user],
+  );
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      let list = await tryDirectEndpoints();
-      if (!list || list.length === 0) {
-        console.info("AdminReports: fallback → per-post fetch");
-        list = await fetchPerPost();
-      }
+      const [allPostsRes, historyRes] = await Promise.all([
+        adminPostService.getAllPosts(),
+        adminPostService.getApprovalHistory(),
+      ]);
+
+      const allPosts = parseList(allPostsRes);
+      const historyRows = parseList(historyRes);
+
+      const historyByPostId = new Map();
+      historyRows.forEach((row) => {
+        const candidatePostIds = [
+          row?.postId,
+          row?.bicyclePostId,
+          row?.post?.postId,
+          row?.post?.id,
+        ].filter((v) => v != null);
+        if (!candidatePostIds.length) return;
+        const key = String(candidatePostIds[0]);
+        const prev = historyByPostId.get(key);
+        const prevTs = new Date(
+          prev?.createdAt ?? prev?.inspectedAt ?? prev?.updatedAt ?? 0,
+        ).getTime();
+        const curTs = new Date(row?.createdAt ?? 0).getTime();
+        if (!prev || curTs >= prevTs) {
+          historyByPostId.set(key, row);
+        }
+      });
+
+      const list = allPosts
+        .filter((post) => {
+          const st = String(post?.postStatus ?? post?.status ?? "").toUpperCase();
+          return st === INSPECTOR_PENDING_STATUS || INSPECTED_STATUSES.includes(st);
+        })
+        .map((post) => normalizeFromPost(post, historyByPostId))
+        .filter((row) => {
+          if (row.status !== "APPROVED") return true;
+          const hasName = row.inspector && row.inspector !== "—";
+          const hasEmail = row.inspectorEmail && row.inspectorEmail !== "—";
+          return hasName || hasEmail;
+        });
+
       // Sắp xếp mới nhất trước
       list.sort(
         (a, b) => new Date(b.inspectedAt ?? 0) - new Date(a.inspectedAt ?? 0),
@@ -242,7 +249,7 @@ export default function AdminInspectionReports() {
     } finally {
       setLoading(false);
     }
-  }, [tryDirectEndpoints, fetchPerPost]);
+  }, []);
 
   useEffect(() => {
     fetchAll();
@@ -282,8 +289,8 @@ export default function AdminInspectionReports() {
               <div>
                 <h1 className="admin-page-title">Inspection history</h1>
                 <p className="admin-page-subtitle">
-                  All listings inspected by inspectors · {reports.length}{" "}
-                  reports
+                  Bao gồm bài đã duyệt và chưa duyệt bởi inspector ·{" "}
+                  {reports.length} reports
                 </p>
               </div>
             </header>
@@ -382,7 +389,6 @@ export default function AdminInspectionReports() {
                       STATUS_CONFIG[row.status] ?? STATUS_CONFIG.PENDING;
                     const resultCfg = RESULT_CONFIG[row.result];
                     const Icon = statusCfg.icon;
-                    const isExpanded = expanded === (row.postId ?? row.id);
 
                     return (
                       <div key={row.id ?? idx}>
@@ -424,18 +430,10 @@ export default function AdminInspectionReports() {
 
                           {/* Inspector */}
                           <div className="admin-ir-inspector">
-                            {row.inspector && row.inspector !== "—" ? (
-                              <div
-                                className="admin-account-cell"
-                                title={row.inspector}
-                              >
-                                <span className="admin-account-avatar">
-                                  {getInitials(row.inspector)}
-                                </span>
-                                <span className="admin-account-name">
-                                  {row.inspector}
-                                </span>
-                              </div>
+                            {row.inspectorEmail && row.inspectorEmail !== "—" ? (
+                              <span className="admin-ir-inspector-email">
+                                {row.inspectorEmail}
+                              </span>
                             ) : (
                               "—"
                             )}
@@ -484,34 +482,18 @@ export default function AdminInspectionReports() {
                             >
                               <Icon size={12} /> {statusCfg.label}
                             </span>
-                            {row.notes && (
-                              <button
-                                type="button"
-                                className="admin-ir-expand-btn"
-                                title="View inspector notes"
-                                onClick={() =>
-                                  setExpanded(
-                                    isExpanded ? null : (row.postId ?? row.id),
-                                  )
-                                }
-                              >
-                                <Eye size={14} />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              className="admin-ir-expand-btn"
+                              title="View inspector details"
+                              onClick={() =>
+                                handleViewInspectorDetails(row.postId ?? row.id)
+                              }
+                            >
+                              <Eye size={14} />
+                            </button>
                           </div>
                         </div>
-
-                        {/* Notes row (expand) */}
-                        {isExpanded && row.notes && (
-                          <div className="admin-ir-notes-row">
-                            <span className="admin-ir-notes-label">
-                              Inspector notes:
-                            </span>
-                            <span className="admin-ir-notes-text">
-                              {row.notes}
-                            </span>
-                          </div>
-                        )}
                       </div>
                     );
                   })

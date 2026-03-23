@@ -35,12 +35,7 @@ export default function Footer() {
           <h3 className="app-footer-title">Store System</h3>
           <div className="app-footer-stores">
             <div className="app-footer-store">
-              <strong>BASAUYCLE 1</strong>
-              <span></span>
-              <span></span>
-            </div>
-            <div className="app-footer-store">
-              <strong>BASAUYCLE 2</strong>
+              <strong>BASAUYCLE </strong>
               <span></span>
               <span></span>
             </div>

@@ -46,16 +46,22 @@ export default function AdminConfig() {
   const [depositPercent, setDepositPercent] = useState(10);
   const [postingFee, setPostingFee] = useState(50_000);
   const [autoConfirmDays, setAutoConfirmDays] = useState(7);
+  const [disputeWindowDays, setDisputeWindowDays] = useState(3);
+  const [autoCloseUnshippedDays, setAutoCloseUnshippedDays] = useState(7);
+  const [autoRefundShippedDays, setAutoRefundShippedDays] = useState(10);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     setSuccess("");
     try {
-      const [depRes, feeRes, autoRes] = await Promise.allSettled([
+      const [depRes, feeRes, autoRes, disputeRes, closeUnshippedRes, refundShippedRes] = await Promise.allSettled([
         systemConfigService.getByKey("DEPOSIT_RATE"),
         systemConfigService.getByKey("POSTING_FEE"),
         systemConfigService.getByKey("AUTO_CONFIRM_DAYS"),
+        systemConfigService.getByKey("DISPUTE_WINDOW_DAYS"),
+        systemConfigService.getByKey("AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS"),
+        systemConfigService.getByKey("AUTO_REFUND_SHIPPED_DISPUTE_DAYS"),
       ]);
 
       if (depRes.status === "fulfilled") {
@@ -79,6 +85,24 @@ export default function AdminConfig() {
         const n = parseNumber(strVal);
         if (!isNaN(n) && n >= 0) setAutoConfirmDays(Math.round(n));
       }
+
+      if (disputeRes.status === "fulfilled") {
+        const strVal = toConfigValueString(unwrap(disputeRes.value));
+        const n = parseNumber(strVal);
+        if (!isNaN(n) && n >= 0) setDisputeWindowDays(Math.round(n));
+      }
+
+      if (closeUnshippedRes.status === "fulfilled") {
+        const strVal = toConfigValueString(unwrap(closeUnshippedRes.value));
+        const n = parseNumber(strVal);
+        if (!isNaN(n) && n >= 0) setAutoCloseUnshippedDays(Math.round(n));
+      }
+
+      if (refundShippedRes.status === "fulfilled") {
+        const strVal = toConfigValueString(unwrap(refundShippedRes.value));
+        const n = parseNumber(strVal);
+        if (!isNaN(n) && n >= 0) setAutoRefundShippedDays(Math.round(n));
+      }
     } catch (e) {
       setError(e?.message ?? "Load config failed.");
     } finally {
@@ -94,13 +118,32 @@ export default function AdminConfig() {
     const rate = Math.max(0, Math.min(100, Number(depositPercent) || 0));
     const fee = Number(postingFee) || 0;
     const days = Math.max(0, Math.round(Number(autoConfirmDays) || 0));
+    const disputeDays = Math.max(0, Math.round(Number(disputeWindowDays) || 0));
+    const closeUnshippedDays = Math.max(
+      0,
+      Math.round(Number(autoCloseUnshippedDays) || 0),
+    );
+    const refundShippedDays = Math.max(
+      0,
+      Math.round(Number(autoRefundShippedDays) || 0),
+    );
     return {
       depositPercent: rate,
       depositRate: rate / 100,
       postingFee: fee,
       autoConfirmDays: days,
+      disputeWindowDays: disputeDays,
+      autoCloseUnshippedDays: closeUnshippedDays,
+      autoRefundShippedDays: refundShippedDays,
     };
-  }, [depositPercent, postingFee, autoConfirmDays]);
+  }, [
+    depositPercent,
+    postingFee,
+    autoConfirmDays,
+    disputeWindowDays,
+    autoCloseUnshippedDays,
+    autoRefundShippedDays,
+  ]);
 
   const saveAll = useCallback(async () => {
     setSaving(true);
@@ -110,11 +153,23 @@ export default function AdminConfig() {
       const depValueToSave = String(preview.depositPercent); // save as percent (10)
       const feeValueToSave = String(preview.postingFee);
       const autoValueToSave = String(preview.autoConfirmDays);
+      const disputeValueToSave = String(preview.disputeWindowDays);
+      const closeUnshippedValueToSave = String(preview.autoCloseUnshippedDays);
+      const refundShippedValueToSave = String(preview.autoRefundShippedDays);
 
       await Promise.all([
         systemConfigService.updateByKey("DEPOSIT_RATE", depValueToSave),
         systemConfigService.updateByKey("POSTING_FEE", feeValueToSave),
         systemConfigService.updateByKey("AUTO_CONFIRM_DAYS", autoValueToSave),
+        systemConfigService.updateByKey("DISPUTE_WINDOW_DAYS", disputeValueToSave),
+        systemConfigService.updateByKey(
+          "AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS",
+          closeUnshippedValueToSave,
+        ),
+        systemConfigService.updateByKey(
+          "AUTO_REFUND_SHIPPED_DISPUTE_DAYS",
+          refundShippedValueToSave,
+        ),
       ]);
 
       setSuccess("Saved successfully.");
@@ -142,7 +197,8 @@ export default function AdminConfig() {
                   System config
                 </h1>
                 <p className="admin-page-subtitle">
-                  Cấu hình tỉ lệ đặt cọc, phí đăng bài và auto-confirm đơn hàng.
+                  Cấu hình tỉ lệ đặt cọc, phí đăng bài, dispute window và các mốc tự
+                  động xử lý dispute.
                 </p>
               </div>
               <div className="admin-config-actions">
@@ -256,6 +312,84 @@ export default function AdminConfig() {
                   <div className="admin-config-help">
                     Tự động confirm sau {preview.autoConfirmDays} ngày kể từ lúc
                     “nhận đơn/đã giao”.
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-card admin-config-card">
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">Dispute window (ngày)</div>
+                  </div>
+                </div>
+                <div className="admin-config-body">
+                  <label className="admin-config-field">
+                    <input
+                      type="number"
+                      className="admin-config-input"
+                      value={disputeWindowDays}
+                      min={0}
+                      step={1}
+                      disabled={loading || saving}
+                      onChange={(e) => setDisputeWindowDays(e.target.value)}
+                    />
+                  </label>
+                  <div className="admin-config-help">
+                    DISPUTE_WINDOW_DAYS = {preview.disputeWindowDays} day(s)
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-card admin-config-card">
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">
+                      Auto-close unshipped dispute (ngày)
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-config-body">
+                  <label className="admin-config-field">
+                    <input
+                      type="number"
+                      className="admin-config-input"
+                      value={autoCloseUnshippedDays}
+                      min={0}
+                      step={1}
+                      disabled={loading || saving}
+                      onChange={(e) => setAutoCloseUnshippedDays(e.target.value)}
+                    />
+                  </label>
+                  <div className="admin-config-help">
+                    AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS ={" "}
+                    {preview.autoCloseUnshippedDays} day(s)
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-card admin-config-card">
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">
+                      Auto-refund shipped dispute (ngày)
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-config-body">
+                  <label className="admin-config-field">
+                    <input
+                      type="number"
+                      className="admin-config-input"
+                      value={autoRefundShippedDays}
+                      min={0}
+                      step={1}
+                      disabled={loading || saving}
+                      onChange={(e) => setAutoRefundShippedDays(e.target.value)}
+                    />
+                  </label>
+                  <div className="admin-config-help">
+                    AUTO_REFUND_SHIPPED_DISPUTE_DAYS ={" "}
+                    {preview.autoRefundShippedDays} day(s)
                   </div>
                 </div>
               </div>

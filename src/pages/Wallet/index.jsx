@@ -22,6 +22,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import { walletService, transactionService } from "../../services";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { confirmCrud } from "../../utils/confirmCrud";
+import { getAvatarSrc } from "../../utils/avatar";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import "./index.css";
@@ -42,12 +43,7 @@ const MyWallet = () => {
     userDisplayName && typeof userDisplayName === "string"
       ? userDisplayName.trim().charAt(0).toUpperCase()
       : "U";
-  const userAvatarUrl =
-    user?.avatarUrl ??
-    user?.avatar_url ??
-    user?.imageUrl ??
-    user?.image_url ??
-    null;
+  const userAvatarUrl = getAvatarSrc(user) || null;
 
   // Lấy thông tin ví và lịch sử giao dịch
   const fetchWalletData = async () => {
@@ -127,6 +123,27 @@ const MyWallet = () => {
   const getTxType = (record) =>
     record.transactionType ?? record.transaction_type ?? record.type ?? null;
 
+  const getTransactionDescription = (record) =>
+    String(record?.description ?? record?.transactionDescription ?? record?.note ?? "")
+      .trim();
+
+  const inferMoneyInFromDescription = (record) => {
+    const desc = getTransactionDescription(record).toLowerCase();
+    if (!desc) return null;
+
+    const moneyOutHints =
+      /trừ|thanh toán|mua|purchase|payment|phí|fee|withdraw|rút|đặt cọc|deposit cho đơn|order/i;
+    const moneyInHints =
+      /nạp|top[\s-]?up|refund|hoàn tiền|cộng|bonus|nhận tiền|credit/i;
+
+    const isOut = moneyOutHints.test(desc);
+    const isIn = moneyInHints.test(desc);
+
+    if (isOut && !isIn) return false;
+    if (isIn && !isOut) return true;
+    return null;
+  };
+
   // Số tiền thay đổi (dương: cộng vào ví, âm: trừ khỏi ví)
   const getSignedAmount = (record) => {
     const status = record.status ?? record.transactionStatus;
@@ -137,14 +154,19 @@ const MyWallet = () => {
     const raw = Number(record.amount ?? 0);
     if (!raw) return 0;
 
+    // Ưu tiên suy chiều tiền theo cột description từ dto.Transactions
+    const moneyInByDescription = inferMoneyInFromDescription(record);
+    if (moneyInByDescription != null) {
+      return moneyInByDescription ? Math.abs(raw) : -Math.abs(raw);
+    }
+
     const txTypeKey = (() => {
       const t = getTxType(record);
       return t ? String(t).toUpperCase() : null;
     })();
 
-    // Deduce direction from BE transactionType (DB) instead of description keywords.
-    const moneyInTypes = ["TOP_UP", "DEPOSIT", "REFUND"];
-    const moneyOutTypes = ["PURCHASE", "POSTING_FEE"];
+    const moneyInTypes = ["TOP_UP", "REFUND"];
+    const moneyOutTypes = ["DEPOSIT", "PURCHASE", "POSTING_FEE"];
 
     const moneyIn =
       txTypeKey && moneyInTypes.includes(txTypeKey)
@@ -230,41 +252,16 @@ const MyWallet = () => {
       width: 130,
     },
     {
-      title: "Amount",
-      dataIndex: "amount",
-      key: "amount",
-      render: (amount, record) => {
-        const status = record.status ?? record.transactionStatus;
-        const statusKey = status ? String(status).toUpperCase() : null;
-        const isFailed = statusKey === "FAILED";
-        const raw = Number(amount ?? 0);
-
-        const txTypeKey = (() => {
-          const t = getTxType(record);
-          return t ? String(t).toUpperCase() : null;
-        })();
-
-        const moneyInTypes = ["TOP_UP", "DEPOSIT", "REFUND"];
-        const moneyOutTypes = ["PURCHASE", "POSTING_FEE"];
-
-        const moneyIn =
-          txTypeKey && moneyInTypes.includes(txTypeKey)
-            ? true
-            : txTypeKey && moneyOutTypes.includes(txTypeKey)
-              ? false
-              : raw > 0;
-
-        const prefix = isFailed || raw === 0 ? "" : moneyIn ? "+" : "−";
-        const color = isFailed ? "#94a3b8" : moneyIn ? "#10b981" : "#ef4444";
-
-        return (
-          <span style={{ color, fontWeight: 700, fontSize: 14 }}>
-            {prefix}
-            {formatCurrency(Math.abs(raw))}
-          </span>
-        );
+      title: "Description",
+      key: "description",
+      render: (_, record) => {
+        const description = getTransactionDescription(record);
+        if (description) {
+          return <span style={{ fontWeight: 500 }}>{description}</span>;
+        }
+        return "—";
       },
-      width: 150,
+      width: 320,
     },
     {
       title: "Status",
@@ -341,11 +338,7 @@ const MyWallet = () => {
                     </div>
                     <div className="wallet-hero-label">ACCOUNT BALANCE</div>
                     <div className="wallet-hero-balance">
-                      <span
-                        className={`wallet-balance-wrap ${
-                          showBalance ? "" : "wallet-balance-wrap--masked"
-                        }`}
-                      >
+                      <span className="wallet-balance-wrap">
                         <span
                           className={`wallet-balance-value ${
                             showBalance ? "" : "wallet-balance-value--hidden"
@@ -491,7 +484,7 @@ const MyWallet = () => {
                         pageSizeOptions: [5, 10, 20],
                         position: ["bottomCenter"],
                       }}
-                      scroll={{ x: 800 }}
+                      scroll={{ x: 1100 }}
                     />
                   ) : (
                     <div

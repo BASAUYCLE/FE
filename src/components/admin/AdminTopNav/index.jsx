@@ -8,7 +8,6 @@ const NAV_ITEMS = [
   { id: "listings", label: "Listings", to: "/admin-listings" },
   { id: "categories", label: "Categories", to: "/admin-categories" },
   { id: "transactions", label: "Transactions", to: "/admin-transactions" },
-  { id: "reports", label: "Reports", to: "/admin-reports" },
 ];
 
 export default function AdminTopNav() {

@@ -72,6 +72,17 @@ const userService = {
     }),
 
   // ===== AVATAR/FILE =====
+  // POST /users/myinfo/avatar - Upload avatar người dùng hiện tại
+  uploadMyAvatar: (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return axiosInstance.post(
+      USER.MY_INFO_AVATAR,
+      formData,
+      formDataOptions(formData),
+    );
+  },
+
   // POST /api/upload/image - Upload avatar
   uploadAvatar: (file) => {
     const formData = new FormData();

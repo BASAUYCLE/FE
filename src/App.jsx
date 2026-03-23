@@ -42,7 +42,6 @@ const MyDisputeDetail = lazy(() => import("./pages/MyDisputes/DisputeDetail"));
 const MySales = lazy(() => import("./pages/MySales"));
 const Unauthorized = lazy(() => import("./pages/Unauthorized"));
 const AdminDashboard = lazy(() => import("./pages/admin/dashboard"));
-const AdminReports = lazy(() => import("./pages/admin/reports"));
 const AdminUsers = lazy(() => import("./pages/admin/user"));
 const AdminListings = lazy(() => import("./pages/admin/listing"));
 const AdminApprovedListings = lazy(
@@ -246,7 +245,7 @@ function App() {
                           />
                           <Route
                             path="/admin-reports"
-                            element={<AdminReports />}
+                            element={<Navigate to="/admin-dashboard" replace />}
                           />
                           <Route path="/admin-users" element={<AdminUsers />} />
                           <Route

@@ -268,6 +268,31 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshProfile = async () => {
+    try {
+      const profileRes = await userService.getProfile();
+      const data = profileRes?.data ?? profileRes?.result ?? profileRes;
+      const profileUser =
+        data?.user ??
+        data?.userInfo ??
+        (data?.id || data?.email ? data : null);
+      if (profileUser && typeof profileUser === "object") {
+        const normalized = normalizeUser(profileUser);
+        setUser(normalized);
+        sessionStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalized));
+        return { success: true, data: normalized };
+      }
+      return { success: false, message: "Profile data not found." };
+    } catch (error) {
+      const msg =
+        error?.message ??
+        error?.data?.message ??
+        error?.data?.msg ??
+        "Failed to refresh profile.";
+      return { success: false, message: msg };
+    }
+  };
+
   const changePassword = async (passwordData) => {
     try {
       setLoading(true);
@@ -323,6 +348,7 @@ export const AuthProvider = ({ children }) => {
       loginWithSession,
       register,
       updateProfile,
+      refreshProfile,
       changePassword,
       logout,
       isAuthenticated,

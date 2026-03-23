@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Typography,
@@ -36,7 +36,9 @@ import Footer from "../../components/footer";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import addressService from "../../services/addressService";
+import { userService } from "../../services";
 import { confirmCrud } from "../../utils/confirmCrud";
+import { getAvatarSrc } from "../../utils/avatar";
 import "./index.css";
 
 const EMPTY_PROFILE = { fullName: "", email: "", phone: "" };
@@ -55,6 +57,11 @@ function displayValue(value, placeholder = "Not set") {
   const v = value?.trim?.() ?? value;
   const isEmpty = v === "" || v == null;
   return { text: isEmpty ? placeholder : v, isEmpty };
+}
+
+function pickAvatarUrl(user) {
+  if (!user || typeof user !== "object") return "";
+  return getAvatarSrc(user);
 }
 
 // ─── Address Modal ───────────────────────────────────────────────────────────
@@ -447,15 +454,23 @@ function AddressSection({ userId }) {
 
 // ─── Main Account Page ────────────────────────────────────────────────────────
 export default function Account() {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, refreshProfile } = useAuth();
   const { addNotification } = useNotifications();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(() => getInitialFormData(user));
   const [saving, setSaving] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(() => pickAvatarUrl(user));
+  const avatarInputRef = useRef(null);
 
   useEffect(() => {
     if (!isEditing) setFormData(getInitialFormData(user));
   }, [user?.id, user?.email]);
+
+  useEffect(() => {
+    const nextAvatar = pickAvatarUrl(user);
+    setAvatarPreview(nextAvatar || "");
+  }, [user]);
 
   const displayData = useMemo(
     () => (isEditing ? formData : getInitialFormData(user || formData)),
@@ -474,16 +489,14 @@ export default function Account() {
   const handleSave = async () => {
     const ok = await confirmCrud({
       title: "Lưu thông tin tài khoản?",
-      content: "Cập nhật họ tên, email hoặc số điện thoại trên hồ sơ của bạn.",
+      content: "Cập nhật số điện thoại trên hồ sơ của bạn.",
       okText: "Lưu",
     });
     if (!ok) return;
     setSaving(true);
     try {
       const result = await updateProfile({
-        fullName: formData.fullName,
         phoneNumber: formData.phone,
-        email: formData.email,
       });
       if (result?.success !== false) {
         message.success("Profile updated successfully.");
@@ -513,9 +526,67 @@ export default function Account() {
     .toUpperCase();
 
   const userId = user?.id ?? user?.userId;
+  const avatarSrc = avatarPreview || pickAvatarUrl(user);
 
   const inputSx = {
     "& .MuiOutlinedInput-root": { borderRadius: 2, backgroundColor: "#fff" },
+  };
+
+  const handleAvatarEditClick = () => {
+    if (avatarUploading) return;
+    avatarInputRef.current?.click();
+  };
+
+  const handleAvatarFileChange = async (event) => {
+    const file = event.target?.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      message.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      message.error("Image is too large. Maximum size is 5MB.");
+      return;
+    }
+
+    const ok = await confirmCrud({
+      title: "Đổi ảnh đại diện?",
+      content:
+        "Anh moi se duoc cap nhat cho tai khoan cua ban va hien thi tren he thong.",
+      okText: "Upload",
+    });
+    if (!ok) return;
+
+    setAvatarUploading(true);
+    try {
+      const res = await userService.uploadMyAvatar(file);
+      const payload = res?.result ?? res?.data ?? res;
+      const uploadedUrl =
+        payload?.avatar ??
+        payload?.avatarUrl ??
+        payload?.avatar_url ??
+        payload?.imageUrl ??
+        payload?.url ??
+        "";
+
+      // Nếu BE chưa trả URL ngay, dùng local preview để phản hồi tức thời.
+      setAvatarPreview(uploadedUrl || URL.createObjectURL(file));
+      await refreshProfile?.();
+      message.success("Avatar updated successfully.");
+      addNotification?.({
+        title: "Avatar updated",
+        message: "Your profile photo has been changed.",
+        type: "success",
+      });
+    } catch (err) {
+      const msg =
+        err?.message ?? err?.data?.message ?? "Upload avatar failed. Please try again.";
+      message.error(msg);
+    } finally {
+      setAvatarUploading(false);
+    }
   };
 
   return (
@@ -540,7 +611,7 @@ export default function Account() {
             >
               <Box sx={{ position: "relative" }}>
                 <Avatar
-                  src={user?.avatar ?? user?.imageUrl ?? user?.profileImage}
+                  src={avatarSrc || undefined}
                   sx={{
                     width: 88,
                     height: 88,
@@ -551,9 +622,29 @@ export default function Account() {
                 >
                   {initials}
                 </Avatar>
-                <Box className="account-avatar-edit" title="Change photo">
+                <Box
+                  className={`account-avatar-edit ${avatarUploading ? "account-avatar-edit--disabled" : ""}`}
+                  title={avatarUploading ? "Uploading..." : "Change photo"}
+                  onClick={handleAvatarEditClick}
+                  role="button"
+                  aria-label="Change photo"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleAvatarEditClick();
+                    }
+                  }}
+                >
                   <Pencil size={14} color="#fff" />
                 </Box>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handleAvatarFileChange}
+                />
               </Box>
               <Box sx={{ flex: 1, minWidth: 200 }}>
                 <Box
@@ -636,27 +727,16 @@ export default function Account() {
                 <Typography variant="body2" color="#6b7280" sx={{ mb: 0.5 }}>
                   Full name
                 </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    size="small"
-                    value={formData.fullName}
-                    onChange={(e) => handleChange("fullName", e.target.value)}
-                    placeholder="Enter full name"
-                    sx={inputSx}
-                  />
-                ) : (
-                  <Typography
-                    variant="body1"
-                    color={
-                      displayValue(displayData.fullName).isEmpty
-                        ? "#9ca3af"
-                        : "#1a1a1a"
-                    }
-                  >
-                    {displayValue(displayData.fullName).text}
-                  </Typography>
-                )}
+                <Typography
+                  variant="body1"
+                  color={
+                    displayValue(displayData.fullName).isEmpty
+                      ? "#9ca3af"
+                      : "#1a1a1a"
+                  }
+                >
+                  {displayValue(displayData.fullName).text}
+                </Typography>
               </Box>
 
               {/* Email */}
@@ -664,28 +744,16 @@ export default function Account() {
                 <Typography variant="body2" color="#6b7280" sx={{ mb: 0.5 }}>
                   Email
                 </Typography>
-                {isEditing ? (
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange("email", e.target.value)}
-                    placeholder="Enter email"
-                    sx={inputSx}
-                  />
-                ) : (
-                  <Typography
-                    variant="body1"
-                    color={
-                      displayValue(displayData.email).isEmpty
-                        ? "#9ca3af"
-                        : "#1a1a1a"
-                    }
-                  >
-                    {displayValue(displayData.email).text}
-                  </Typography>
-                )}
+                <Typography
+                  variant="body1"
+                  color={
+                    displayValue(displayData.email).isEmpty
+                      ? "#9ca3af"
+                      : "#1a1a1a"
+                  }
+                >
+                  {displayValue(displayData.email).text}
+                </Typography>
               </Box>
 
               {/* Phone */}

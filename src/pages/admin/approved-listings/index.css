@@ -56,8 +56,33 @@
   font-weight: 600;
 }
 
+.admin-status-filter-bar {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 8px 4px 14px;
+}
+
+.admin-status-filter-btn {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #334155;
+  border-radius: 12px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-status-filter-btn.active {
+  background: #dcfce7;
+  border-color: #86efac;
+  color: #166534;
+}
+
 .admin-approved-table.admin-table .admin-table-row {
-  grid-template-columns: 2fr 1.2fr 1fr 1.2fr 1fr 1.2fr 1.2fr 0.6fr;
+  grid-template-columns: 2.1fr 1.1fr 1fr 1.1fr 1fr 1fr 0.7fr;
 }
 
 .admin-approved-listing-cell {
@@ -98,6 +123,54 @@
   color: #0f172a;
 }
 
+.admin-status-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.admin-status-chip--pending,
+.admin-status-chip--pending_review {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.admin-status-chip--admin_approved,
+.admin-status-chip--verified {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.admin-status-chip--available,
+.admin-status-chip--active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-status-chip--deposited,
+.admin-status-chip--processing {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.admin-status-chip--rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-status-chip--sold,
+.admin-status-chip--hidden,
+.admin-status-chip--expired,
+.admin-status-chip--drafted {
+  background: #e5e7eb;
+  color: #374151;
+}
+
 .admin-status {
   display: inline-flex;
   align-items: center;
@@ -132,13 +205,84 @@
   font-size: 14px;
 }
 
+.admin-approval-history-card {
+  margin-top: 16px;
+}
+
+.admin-approval-history-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-approval-history-table.admin-table .admin-table-row {
+  grid-template-columns: 2fr 1.2fr 1.4fr 0.8fr 1.2fr;
+}
+
+.admin-history-post-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-history-post-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-history-post-id {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.admin-history-email {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-history-result {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.admin-history-result.pass {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.admin-history-result.fail {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 @media (max-width: 900px) {
   .admin-approved-table.admin-table .admin-table-row {
-    grid-template-columns: 1.5fr 1fr 0.6fr;
+    grid-template-columns: 1.5fr 1fr 0.8fr;
   }
   .admin-approved-table.admin-table .admin-table-row > div:nth-child(2),
-  .admin-approved-table.admin-table .admin-table-row > div:nth-child(4),
-  .admin-approved-table.admin-table .admin-table-row > div:nth-child(5) {
+  .admin-approved-table.admin-table .admin-table-row > div:nth-child(4) {
+    display: none;
+  }
+
+  .admin-approval-history-table.admin-table .admin-table-row {
+    grid-template-columns: 1.4fr 1fr 0.8fr;
+  }
+
+  .admin-approval-history-table.admin-table .admin-table-row > div:nth-child(3),
+  .admin-approval-history-table.admin-table .admin-table-row > div:nth-child(5) {
     display: none;
   }
 }

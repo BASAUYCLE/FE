@@ -19,10 +19,11 @@ export const API_ENDPOINTS = {
     RESET_PASSWORD: '/auth/reset-password',
     CHANGE_PASSWORD: '/auth/change-password',
   },
-  
+
   // User – BE: /users/myinfo, /users, /users/{userId}, /users/email/{email}
   USER: {
     MY_INFO: '/users/myinfo',
+    MY_INFO_AVATAR: '/users/myinfo/avatar',
     UPDATE_MY_INFO: '/users/myinfo',
     LIST: '/users',
     BY_ID: (id) => `/users/${id}`,
@@ -34,7 +35,7 @@ export const API_ENDPOINTS = {
     WISHLIST: '/api/users/wishlist',
     WISHLIST_ITEM: (id) => `/api/users/wishlist/${id}`,
   },
-  
+
   // Upload
   UPLOAD: {
     IMAGE: '/api/upload/image',          // POST - Upload hình ảnh
@@ -76,6 +77,7 @@ export const API_ENDPOINTS = {
     LIST: "/admin/posts",
     BY_STATUS: (status) => `/admin/posts/status/${status}`,
     PENDING: "/admin/posts/pending",
+    APPROVAL_HISTORY: "/admin/posts/approval-history",
     APPROVE: (postId) => `/admin/posts/${postId}/approve`,
     REJECT: (postId) => `/admin/posts/${postId}/reject`,
     HIDE: (postId) => `/admin/posts/${postId}/hide`,
@@ -174,7 +176,7 @@ export const API_ENDPOINTS = {
     GROUPSETS: "/metadata/groupsets",
     BRAKE_TYPES: "/metadata/brake-types",
   },
-  
+
   // Xe đạp (backend sẽ implement)
   BIKES: {
     LIST: '/api/bikes',
@@ -187,7 +189,7 @@ export const API_ENDPOINTS = {
     DELETE: (id) => `/api/bikes/${id}`,
     AVAILABILITY: (id) => `/api/bikes/${id}/availability`,
   },
-  
+
   // Đặt chỗ (backend sẽ implement)
   BOOKINGS: {
     CREATE: '/api/bookings',
@@ -209,7 +211,7 @@ export const API_ENDPOINTS = {
     REFUND: (id) => `/api/payments/${id}/refund`,
     METHODS: '/api/payments/methods',
   },
-  
+
   /** Admin users – BE: GET /admin/users, GET /admin/users/pending, POST /admin/users/verify */
   ADMIN: {
     USERS: '/admin/users',
