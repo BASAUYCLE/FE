@@ -8,11 +8,9 @@ import { postService, inspectionService } from "../../../services";
 import {
   OVERALL_CONDITION,
   OVERALL_CONDITION_LABEL,
+  POSTING_STATUS_LABEL,
 } from "../../../constants/postingStatus";
 import {
-  Download,
-  Printer,
-  Send,
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
@@ -63,7 +61,9 @@ export default function InspectorDetail() {
         inspectionImages: (postFromApi.images ?? []).map((i) => i?.imageUrl).filter(Boolean),
         owner: postFromApi.sellerFullName ?? postFromApi.sellerName,
         updatedAt: postFromApi.updatedAt ?? new Date().toISOString().slice(0, 10),
-        reportStatus: "DRAFT",
+        reportStatus: String(
+          postFromApi.postStatus ?? postFromApi.post_status ?? postFromApi.status ?? "PENDING",
+        ).toUpperCase(),
         categoryName: postFromApi.categoryName ?? "—",
         modelYear: postFromApi.modelYear ?? "—",
         size: postFromApi.size ?? "—",
@@ -231,18 +231,6 @@ export default function InspectorDetail() {
     navigate("/inspector");
   };
 
-  const handleDownloadPdf = () => {
-    message.info("Download PDF (API can be wired later.)");
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleSendApproval = () => {
-    message.success("Sent for approval. (API can be wired later.)");
-  };
-
   if (postIdNum && postLoading) {
     return (
       <InspectorLayout>
@@ -266,7 +254,8 @@ export default function InspectorDetail() {
     );
   }
 
-  const statusLabel = report.reportStatus === "APPROVED" ? "Approved" : report.reportStatus === "PENDING_APPROVAL" ? "Pending approval" : report.reportStatus;
+  const statusLabel =
+    POSTING_STATUS_LABEL[report.reportStatus] ?? report.reportStatus;
 
   return (
     <InspectorLayout>
@@ -286,20 +275,6 @@ export default function InspectorDetail() {
               <p className="inspection-report-meta">
                 ID: {report.reportId} · Updated: {report.updatedAt}
               </p>
-            </div>
-            <div className="inspection-report-actions-top">
-              <button type="button" className="inspection-btn-secondary" onClick={handleDownloadPdf}>
-                <Download size={16} />
-                Download PDF
-              </button>
-              <button type="button" className="inspection-btn-secondary" onClick={handlePrint}>
-                <Printer size={16} />
-                Print report
-              </button>
-              <button type="button" className="inspection-btn-primary" onClick={handleSendApproval}>
-                <Send size={16} />
-                Send for approval
-              </button>
             </div>
           </div>
 
@@ -367,74 +342,6 @@ export default function InspectorDetail() {
             </div>
 
             <div className="inspection-report-right">
-              <div className="admin-card inspection-report-card">
-                <h3 className="inspection-report-card-title">Technical inspection checklist</h3>
-                <div className="inspection-report-completion-row">
-                  <span className="inspection-report-completion">Completed: </span>
-                  <input
-                    type="number"
-                    className="inspection-report-completion-input"
-                    min={0}
-                    max={100}
-                    value={completionPercent}
-                    onChange={(e) => {
-                      const v = e.target.value === "" ? 0 : parseInt(e.target.value, 10);
-                      if (!Number.isNaN(v)) setCompletionPercent(Math.min(100, Math.max(0, v)));
-                    }}
-                    onBlur={(e) => {
-                      const v = e.target.value === "" ? 0 : parseInt(e.target.value, 10);
-                      setCompletionPercent(Number.isNaN(v) ? 0 : Math.min(100, Math.max(0, v)));
-                    }}
-                  />
-                  <span className="inspection-report-completion">%</span>
-                </div>
-                <div className="inspection-checklist">
-                  {checklist.map((group, gIdx) => (
-                    <div key={gIdx} className="inspection-checklist-group">
-                      <h4 className="inspection-checklist-category">{group.category}</h4>
-                      {group.items.map((item, iIdx) => (
-                        <div key={iIdx} className="inspection-checklist-item">
-                          <span className="inspection-checklist-icon">
-                            {renderStatusIcon(item.status)}
-                          </span>
-                          <div className="inspection-checklist-content">
-                            <span className="inspection-checklist-item-title">{item.title}</span>
-                            <textarea
-                              className="inspection-checklist-desc-input"
-                              placeholder="Enter findings / description..."
-                              value={item.description ?? ""}
-                              onChange={(e) => updateChecklistItem(gIdx, iIdx, "description", e.target.value)}
-                              rows={2}
-                            />
-                            <div className="inspection-checklist-status-row">
-                              <select
-                                className="inspection-checklist-status-select"
-                                value={item.status ?? ""}
-                                onChange={(e) => updateChecklistItem(gIdx, iIdx, "status", e.target.value)}
-                              >
-                                <option value="">Select status</option>
-                                {CHECKLIST_STATUS_OPTIONS.map((opt) => (
-                                  <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </option>
-                                ))}
-                              </select>
-                              <input
-                                type="text"
-                                className="inspection-checklist-label-input"
-                                placeholder="e.g. 95%"
-                                value={item.statusLabel ?? ""}
-                                onChange={(e) => updateChecklistItem(gIdx, iIdx, "statusLabel", e.target.value)}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               <div className="admin-card inspection-report-card">
                 <h3 className="inspection-report-card-title">Inspector&apos;s notes</h3>
                 <textarea

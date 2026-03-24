@@ -220,7 +220,10 @@ export function PostingProvider({ children }) {
       .filter(Boolean);
     const price = row.price;
     const postStatus =
-      row.postStatus ?? row.post_status ?? POSTING_STATUS.PENDING;
+      row.postStatus ??
+      row.post_status ??
+      row.status ??
+      POSTING_STATUS.PENDING;
     const sellerIdRow = row.sellerId ?? row.seller_id;
     return buildPosting(
       {
