@@ -134,11 +134,10 @@ export default function AdminApprovedListings() {
           <div className="admin-content">
             <header className="admin-topbar">
               <h1 className="admin-page-title">
-                Tổng hợp bài đăng Marketplace
+                Marketplace listing overview
               </h1>
               <p className="admin-page-subtitle">
-                Danh sách toàn bộ bài đăng trên hệ thống marketplace, bao gồm
-                mọi trạng thái.
+                Full list of marketplace listings across all statuses.
               </p>
             </header>
 
@@ -235,7 +234,7 @@ export default function AdminApprovedListings() {
                       <div>
                         {row.inspectedAt
                           ? new Date(row.inspectedAt).toLocaleDateString(
-                              "vi-VN",
+                              "en-US",
                             )
                           : "—"}
                       </div>
@@ -256,8 +255,8 @@ export default function AdminApprovedListings() {
                         <button
                           type="button"
                           className="admin-actions-button"
-                          title="Xem chi tiết"
-                          aria-label="Xem"
+                          title="View details"
+                          aria-label="View"
                           onClick={() => row.id && setPreviewId(row.id)}
                         >
                           <Eye size={16} />
@@ -265,8 +264,8 @@ export default function AdminApprovedListings() {
                         <button
                           type="button"
                           className="admin-actions-button"
-                          title="Thêm"
-                          aria-label="Thêm"
+                          title="More"
+                          aria-label="More"
                         >
                           <MoreHorizontal size={16} />
                         </button>

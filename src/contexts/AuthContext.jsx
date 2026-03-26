@@ -19,7 +19,7 @@ function normalizeUser(userObj) {
   return { ...userObj, role: String(role).toUpperCase() };
 }
 
-/** Thông báo thân thiện khi đăng nhập sai (BE hay trả "Unauthenticated", v.v.) */
+/** Friendly message for wrong login credentials. */
 function loginWrongCredentialsMessage(rawMsg, status) {
   if (status !== 401) return rawMsg;
   const s = String(rawMsg || "")
@@ -33,7 +33,7 @@ function loginWrongCredentialsMessage(rawMsg, status) {
     s.includes("bad credentials") ||
     s.includes("full authentication is required")
   ) {
-    return "Sai mật khẩu hoặc email đăng nhập.";
+    return "Incorrect email or password.";
   }
   return rawMsg;
 }
@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }) => {
       }
       return {
         success: false,
-        message: "Sai mật khẩu hoặc email đăng nhập.",
+        message: "Incorrect email or password.",
       };
     } catch (error) {
       const rawMsg =

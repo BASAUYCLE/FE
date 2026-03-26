@@ -19,6 +19,7 @@ import adminService from "../../../services/adminService";
 import axiosInstance from "../../../services/axiosConfig";
 import systemConfigService from "../../../services/systemConfigService";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { getAvatarSrc } from "../../../utils/avatar";
 import "./index.css";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -163,6 +164,7 @@ export default function AdminDashboard() {
           role: u.role ?? u.userRole ?? "USER",
           status: u.status ?? u.accountStatus ?? "ACTIVE",
           date: u.createdAt ?? null,
+          avatarUrl: getAvatarSrc(u),
         })),
       );
     } catch (err) {
@@ -292,7 +294,7 @@ export default function AdminDashboard() {
                       key={c.label}
                       className="admin-card admin-stat-card dash-stat-clickable"
                       onClick={() => navigate(c.href)}
-                      title={`Đến ${c.label}`}
+                      title={`Go to ${c.label}`}
                     >
                       <div className="admin-stat-top">
                         <div className={`admin-stat-icon ${c.tone}`}>
@@ -462,8 +464,17 @@ export default function AdminDashboard() {
                           <div
                             className="dash-user-avatar"
                             style={{
-                              background: `${roleColor}18`,
-                              color: roleColor,
+                              ...(u.avatarUrl
+                                ? {
+                                    backgroundImage: `url(${u.avatarUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                    color: "transparent",
+                                  }
+                                : {
+                                    background: `${roleColor}18`,
+                                    color: roleColor,
+                                  }),
                             }}
                           >
                             {(u.name[0] ?? "?").toUpperCase()}

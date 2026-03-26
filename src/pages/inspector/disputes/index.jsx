@@ -27,7 +27,7 @@ export default function InspectorDisputes() {
       setRows(list);
     } catch (e) {
       setRows([]);
-      message.error(e?.message || "Không tải được danh sách tranh chấp.");
+      message.error(e?.message || "Could not load dispute list.");
     } finally {
       setListLoading(false);
     }
@@ -67,14 +67,14 @@ export default function InspectorDisputes() {
                 onClick={loadList}
                 loading={listLoading}
               >
-                Làm mới danh sách
+                Refresh list
               </Button>
             </div>
 
             <Typography.Paragraph type="secondary" style={{ marginBottom: 16 }}>
-              Các tranh chấp thuộc bài đăng bạn đã kiểm định. Chọn{" "}
-              <strong>View details</strong> để xem đầy đủ và gửi ghi chú cho
-              admin.
+              Disputes for listings you inspected. Choose{" "}
+              <strong>View details</strong> to see full information and submit
+              notes for admin.
             </Typography.Paragraph>
 
             {listLoading ? (
@@ -82,7 +82,7 @@ export default function InspectorDisputes() {
                 <Spin />
               </div>
             ) : rows.length === 0 ? (
-              <Empty description="Không có tranh chấp nào." />
+              <Empty description="No disputes found." />
             ) : (
               <div className="my-disputes-list--bars">
                 {pageRows.map((d) => (

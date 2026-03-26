@@ -26,13 +26,13 @@ const Unauthorized = () => {
         <h1 className="unauthorized-title">Access denied</h1>
         
         <p className="unauthorized-message">
-          Bạn không có quyền truy cập vào trang này.
+          You do not have permission to access this page.
           Please contact the administrator if you believe this is an error.
         </p>
         
         <div className="unauthorized-actions">
           <Link to="/" className="btn-primary">
-            Về trang chủ
+            Back to Home
           </Link>
           <Link to="/login" className="btn-secondary">
             Log in again

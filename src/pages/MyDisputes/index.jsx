@@ -83,7 +83,7 @@ export default function MyDisputesPage() {
       try {
         shippingReceiptUrl = await resolveShippingReceiptUrl(v.shippingReceipt);
       } catch (upErr) {
-        message.error(upErr?.message || "Upload ảnh thất bại.");
+        message.error(upErr?.message || "Image upload failed.");
         setShipLoading(false);
         return;
       }

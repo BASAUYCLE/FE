@@ -92,7 +92,7 @@ function buildChartData(posts, period, postingFee) {
   const maxCount = Math.max(...entries.map(([, arr]) => arr.length), 1);
 
   // Label: ngày/tháng hoặc T2…CN
-  const dayLabels = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return entries.map(([key, arr]) => {
     const d = new Date(key);
     const label =
@@ -213,9 +213,9 @@ export default function AdminRevenue() {
             {/* Header */}
             <header className="admin-topbar admin-revenue-topbar">
               <div>
-                <h1 className="admin-page-title">Doanh thu đăng bài</h1>
+                <h1 className="admin-page-title">Listing revenue</h1>
                 <p className="admin-page-subtitle">
-                  Phí đăng tin: {formatCurrency(postingFee)} / bài · Tổng bài đã đăng: {totalAllPosts}
+                  Listing fee: {formatCurrency(postingFee)} / post · Total posted listings: {totalAllPosts}
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -251,7 +251,7 @@ export default function AdminRevenue() {
                   <div className="admin-stat-icon green"><DollarSign /></div>
                   <span className="admin-stat-trend up">{periodLabel}</span>
                 </div>
-                <div className="admin-stat-title">Doanh thu kỳ</div>
+                <div className="admin-stat-title">Revenue in period</div>
                 <div className="admin-stat-value">
                   {loading ? "…" : formatCurrency(totalRevenue)}
                 </div>
@@ -261,9 +261,9 @@ export default function AdminRevenue() {
               <div className="admin-card admin-stat-card">
                 <div className="admin-stat-top">
                   <div className="admin-stat-icon indigo"><FileText /></div>
-                  <span className="admin-stat-trend up">bài đăng</span>
+                  <span className="admin-stat-trend up">posts</span>
                 </div>
-                <div className="admin-stat-title">Bài đăng trong kỳ</div>
+                <div className="admin-stat-title">Posts in period</div>
                 <div className="admin-stat-value">
                   {loading ? "…" : periodPosts.length.toLocaleString()}
                 </div>
@@ -275,7 +275,7 @@ export default function AdminRevenue() {
                   <div className="admin-stat-icon blue"><TrendingUp /></div>
                   <span className="admin-stat-trend up">SystemConfig</span>
                 </div>
-                <div className="admin-stat-title">Phí / bài đăng</div>
+                <div className="admin-stat-title">Fee / post</div>
                 <div className="admin-stat-value">{formatCurrency(postingFee)}</div>
               </div>
             </section>
@@ -284,7 +284,7 @@ export default function AdminRevenue() {
             <section className="admin-card">
               <div className="admin-card-header">
                 <div>
-                  <div className="admin-card-title">Biểu đồ bài đăng</div>
+                  <div className="admin-card-title">Posting chart</div>
                   <div className="admin-card-subtitle">{periodLabel}</div>
                 </div>
               </div>
@@ -297,7 +297,7 @@ export default function AdminRevenue() {
                     >
                       {bar.count > 0 && (
                         <span className={`admin-chart-tooltip ${i === chartData.length - 1 ? "show" : ""}`}>
-                          {bar.count} bài · {bar.amount}
+                          {bar.count} posts · {bar.amount}
                         </span>
                       )}
                     </div>
@@ -315,26 +315,26 @@ export default function AdminRevenue() {
             <section className="admin-card admin-table-card">
               <div className="admin-card-header">
                 <div>
-                  <div className="admin-card-title">Lịch sử đăng bài trong kỳ</div>
+                  <div className="admin-card-title">Posting history in period</div>
                   <div className="admin-card-subtitle">
-                    {recentPosts.length} bài gần nhất · Phí mỗi bài: {formatCurrency(postingFee)}
+                    {recentPosts.length} most recent posts · Fee per post: {formatCurrency(postingFee)}
                   </div>
                 </div>
               </div>
 
               <div className="admin-table admin-revenue-table">
                 <div className="admin-table-row admin-table-header">
-                  <div>Tiêu đề bài đăng</div>
-                  <div>Người bán</div>
-                  <div>Ngày đăng</div>
-                  <div>Trạng thái</div>
-                  <div>Phí đăng bài</div>
+                  <div>Listing title</div>
+                  <div>Seller</div>
+                  <div>Posted date</div>
+                  <div>Status</div>
+                  <div>Posting fee</div>
                 </div>
 
                 {loading ? (
-                  <div className="admin-table-empty">Đang tải...</div>
+                  <div className="admin-table-empty">Loading...</div>
                 ) : recentPosts.length === 0 ? (
-                  <div className="admin-table-empty">Chưa có bài đăng nào trong kỳ này.</div>
+                  <div className="admin-table-empty">No postings in this period yet.</div>
                 ) : (
                   recentPosts.map((row, idx) => (
                     <div className="admin-table-row" key={row.id ?? idx}>
@@ -342,7 +342,7 @@ export default function AdminRevenue() {
                       <div>{row.seller}</div>
                       <div className="admin-rev-date">
                         {row.date
-                          ? new Date(row.date).toLocaleString("vi-VN", {
+                          ? new Date(row.date).toLocaleString("en-US", {
                               day: "2-digit", month: "2-digit", year: "numeric",
                               hour: "2-digit", minute: "2-digit",
                             })

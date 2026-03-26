@@ -35,9 +35,9 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
     }
 
     const ok = await confirmCrud({
-      title: "Xác nhận đã gửi hàng?",
-      content: `Đơn #${order.orderId}: bạn xác nhận thông tin vận chuyển và mã vận đơn là chính xác? Hành động này sẽ thông báo cho người mua.`,
-      okText: "Xác nhận gửi hàng",
+      title: "Confirm shipment?",
+      content: `Order #${order.orderId}: do you confirm the shipping info and tracking number are correct? This will notify the buyer.`,
+      okText: "Confirm shipment",
     });
     if (!ok) return;
 

@@ -83,9 +83,9 @@ const MyWallet = () => {
 
     const amt = parseInt(values.amount, 10);
     const ok = await confirmCrud({
-      title: "Xác nhận nạp tiền vào ví?",
-      content: `Bạn sẽ được chuyển tới cổng VNPay để thanh toán ${formatCurrency(amt)}. Tiếp tục?`,
-      okText: "Nạp tiền",
+      title: "Confirm wallet top-up?",
+      content: `You will be redirected to VNPay to complete a payment of ${formatCurrency(amt)}. Continue?`,
+      okText: "Top up",
     });
     if (!ok) return;
 
@@ -238,8 +238,17 @@ const MyWallet = () => {
       title: "Date",
       dataIndex: "createdAt",
       key: "date",
-      render: (date) => (date ? new Date(date).toLocaleString("en-US") : "—"),
-      width: 170,
+      render: (date) =>
+        date
+          ? new Date(date).toLocaleString("en-US", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "—",
+      width: 112,
     },
     {
       title: "Type",
@@ -249,7 +258,7 @@ const MyWallet = () => {
         const txTypeKey = txTypeRaw ? String(txTypeRaw).toUpperCase() : null;
         return TX_TYPE_LABEL[txTypeKey] ?? txTypeRaw ?? "—";
       },
-      width: 130,
+      width: 92,
     },
     {
       title: "Description",
@@ -261,7 +270,7 @@ const MyWallet = () => {
         }
         return "—";
       },
-      width: 320,
+      width: 190,
     },
     {
       title: "Status",
@@ -279,7 +288,7 @@ const MyWallet = () => {
           </span>
         );
       },
-      width: 130,
+      width: 92,
     },
     {
       title: "Current balance",
@@ -288,7 +297,7 @@ const MyWallet = () => {
         record.currentBalance != null
           ? formatCurrency(record.currentBalance)
           : "—",
-      width: 180,
+      width: 138,
     },
   ];
 
@@ -386,41 +395,43 @@ const MyWallet = () => {
                   </div>
 
                   <Form form={form} onFinish={handleTopUp} layout="vertical">
-                    <Form.Item
-                      label="AMOUNT (VND)"
-                      name="amount"
-                      rules={[
-                        { required: true, message: "Please enter amount" },
-                        {
-                          pattern: /^[0-9]+$/,
-                          message: "Amount must be a positive integer",
-                        },
-                        {
-                          validator: (_, value) => {
-                            if (value && value < 10000) {
-                              return Promise.reject(
-                                new Error("Minimum amount is 10,000 VND"),
-                              );
-                            }
-                            if (value && value > 100000000) {
-                              return Promise.reject(
-                                new Error("Maximum amount is 100,000,000 VND"),
-                              );
-                            }
-                            return Promise.resolve();
-                          },
-                        },
-                      ]}
-                    >
+                    <Form.Item label="AMOUNT (VND)">
                       <div className="wallet-input-wrapper">
-                        <Input
-                          className="wallet-input"
-                          placeholder="Enter amount"
-                          type="number"
-                          min="10000"
-                          step="10000"
-                          size="large"
-                        />
+                        <Form.Item
+                          name="amount"
+                          noStyle
+                          rules={[
+                            { required: true, message: "Please enter amount" },
+                            {
+                              pattern: /^[0-9]+$/,
+                              message: "Amount must be a positive integer",
+                            },
+                            {
+                              validator: (_, value) => {
+                                if (value && value < 10000) {
+                                  return Promise.reject(
+                                    new Error("Minimum amount is 10,000 VND"),
+                                  );
+                                }
+                                if (value && value > 100000000) {
+                                  return Promise.reject(
+                                    new Error("Maximum amount is 100,000,000 VND"),
+                                  );
+                                }
+                                return Promise.resolve();
+                              },
+                            },
+                          ]}
+                        >
+                          <Input
+                            className="wallet-input"
+                            placeholder="Enter amount"
+                            type="number"
+                            min="10000"
+                            step="10000"
+                            size="large"
+                          />
+                        </Form.Item>
                         <span className="wallet-input-suffix">VND</span>
                       </div>
                     </Form.Item>
@@ -484,7 +495,7 @@ const MyWallet = () => {
                         pageSizeOptions: [5, 10, 20],
                         position: ["bottomCenter"],
                       }}
-                      scroll={{ x: 1100 }}
+                      scroll={{ x: 620 }}
                     />
                   ) : (
                     <div

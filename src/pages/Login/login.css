@@ -651,12 +651,20 @@
 }
 
 .auth-page--immersive.auth-immersive--register .auth-immersive__card {
-  max-width: min(92vw, 600px);
-  max-height: min(96vh, 1100px);
-  padding: 36px 36px 32px;
+  max-width: min(94vw, 760px);
+  max-height: none;
+  padding: 20px 24px 14px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  overflow: visible;
+}
+
+/* Register: prefer page scrolling over hidden inner-scroll at high zoom */
+.auth-page--immersive.auth-immersive--register .auth-immersive__layout {
+  align-items: flex-start;
+  padding-top: 22px;
+  padding-bottom: 28px;
 }
 
 .auth-immersive--register .auth-page__logo.auth-immersive__logo {
@@ -665,13 +673,13 @@
 
 /* Register: ô nhập to hơn */
 .auth-immersive--register .auth-immersive__title {
-  font-size: 28px;
+  font-size: 24px;
   text-align: center;
 }
 
 .auth-immersive--register .auth-immersive__lead {
-  font-size: 15px;
-  margin-bottom: 24px !important;
+  font-size: 14px;
+  margin-bottom: 12px !important;
   text-align: center;
 }
 
@@ -680,37 +688,37 @@
 }
 
 .auth-immersive--register .auth-form--immersive .ant-form-item-label > label {
-  font-size: 15px;
+  font-size: 13px;
 }
 
 .auth-immersive--register .auth-form__input.ant-input,
 .auth-immersive--register .auth-form__input.ant-input-password input {
-  height: 54px;
-  padding: 0 18px;
-  font-size: 15px;
-  border-radius: 12px;
+  height: 44px;
+  padding: 0 14px;
+  font-size: 14px;
+  border-radius: 10px;
 }
 
 .auth-immersive--register .auth-form__input.ant-input-affix-wrapper {
-  padding: 0 14px 0 18px;
-  border-radius: 12px;
-  min-height: 54px;
+  padding: 0 10px 0 14px;
+  border-radius: 10px;
+  min-height: 44px;
 }
 
 .auth-immersive--register .auth-form__input.ant-input-affix-wrapper .ant-input {
-  height: 52px;
-  padding: 0 10px 0 0;
-  font-size: 15px;
+  height: 42px;
+  padding: 0 8px 0 0;
+  font-size: 14px;
 }
 
 .auth-immersive--register .auth-immersive__btn-primary {
-  min-height: 52px;
-  font-size: 16px;
-  border-radius: 14px;
+  min-height: 44px;
+  font-size: 14px;
+  border-radius: 10px;
 }
 
 .auth-immersive--register .cccd-upload-section .ant-upload.ant-upload-select-picture-card {
-  height: 156px;
+  height: 92px;
 }
 
 .auth-immersive__title {

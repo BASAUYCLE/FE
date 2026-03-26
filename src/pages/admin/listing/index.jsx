@@ -62,9 +62,9 @@ export default function ListingApproval() {
   const handleApprove = async (postId, row) => {
     const name = row?.bicycleName ?? "—";
     const ok = await askConfirm({
-      title: "Xác nhận phê duyệt tin?",
-      content: `Tin "${name}" sẽ chuyển sang bước kiểm định (Inspector). Hành động này sẽ áp dụng ngay.`,
-      okText: "Phê duyệt",
+      title: "Confirm listing approval?",
+      content: `Listing "${name}" will move to the inspection step (Inspector). This action takes effect immediately.`,
+      okText: "Approve",
     });
     if (!ok) return;
     try {
@@ -84,9 +84,9 @@ export default function ListingApproval() {
   const openRejectModal = async (postId, row) => {
     const name = row?.bicycleName ?? "—";
     const ok = await askConfirm({
-      title: "Từ chối tin đăng?",
-      content: `Bạn sắp từ chối tin "${name}". Ở bước tiếp theo cần nhập lý do (hiển thị cho người bán).`,
-      okText: "Tiếp tục",
+      title: "Reject this listing?",
+      content: `You are about to reject listing "${name}". In the next step, enter a reason visible to the seller.`,
+      okText: "Continue",
       danger: true,
     });
     if (!ok) return;
@@ -103,9 +103,9 @@ export default function ListingApproval() {
     }
     if (!rejectPostId) return;
     const ok = await askConfirm({
-      title: "Gửi từ chối?",
-      content: `Xác nhận từ chối tin #${rejectPostId} với lý do đã nhập? Thao tác thường không hoàn tác.`,
-      okText: "Gửi từ chối",
+      title: "Submit rejection?",
+      content: `Confirm rejecting listing #${rejectPostId} with the entered reason? This action is usually irreversible.`,
+      okText: "Submit rejection",
       danger: true,
     });
     if (!ok) return;

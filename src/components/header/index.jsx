@@ -542,11 +542,10 @@ export default function Header({
               >
                 <Badge
                   badgeContent={isLoggedIn ? wishlist.length : 0}
+                  color="error"
                   showZero={false}
                   sx={{
                     "& .MuiBadge-badge": {
-                      bgcolor: "#00ccad",
-                      color: "#0f172a",
                       fontWeight: 700,
                     },
                   }}
@@ -790,9 +789,9 @@ export default function Header({
                     onClick={async (e) => {
                       e.stopPropagation();
                       const ok = await confirmCrud({
-                        title: "Xóa khỏi Wishlist?",
-                        content: `Gỡ "${bike.name ?? "mục này"}" khỏi danh sách yêu thích?`,
-                        okText: "Xóa",
+                        title: "Remove from wishlist?",
+                        content: `Remove "${bike.name ?? "this item"}" from your wishlist?`,
+                        okText: "Remove",
                         danger: true,
                       });
                       if (!ok) return;
@@ -876,7 +875,7 @@ export default function Header({
                 style={{ fontSize: 40, color: "#e5e7eb", marginBottom: 12 }}
               />
               <Typography color="#6b7280" variant="body2">
-                Chưa có thông báo
+                No notifications yet
               </Typography>
             </Box>
           ) : (

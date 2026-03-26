@@ -371,14 +371,14 @@ const SimpleProductMetaText = styled("span")({
 });
 
 const STATIC_FALLBACK_CATEGORIES = [
-  { key: "female", label: "Xe Đạp Nữ" },
-  { key: "mtb", label: "Xe Đạp Địa Hình" },
-  { key: "road", label: "Xe Đạp Đua" },
-  { key: "city", label: "Xe Đạp Phố" },
+  { key: "female", label: "Women's Bike" },
+  { key: "mtb", label: "Mountain Bike" },
+  { key: "road", label: "Road Bike" },
+  { key: "city", label: "City Bike" },
   { key: "fixed", label: "Fixed Gear" },
-  { key: "student", label: "Xe Đạp Học Sinh" },
-  { key: "folding", label: "Xe Đạp Gấp" },
-  { key: "ebike", label: "Trợ Lực Điện" },
+  { key: "student", label: "Student Bike" },
+  { key: "folding", label: "Folding Bike" },
+  { key: "ebike", label: "E-Bike" },
 ];
 
 const CATEGORY_KEYS = ["road", "mountain", "gravel", "city", "ebike", "others"];
@@ -435,15 +435,15 @@ function SimpleProductCard({ bike, variant = "grid" }) {
     e.stopPropagation();
     if (isOwnListing) return;
     if (!isLoggedIn) {
-      message.info("Vui lòng đăng nhập để dùng Wishlist");
+      message.info("Please sign in to use Wishlist.");
       navigate("/login");
       return;
     }
     if (inWishlist) {
       const ok = await confirmCrud({
-        title: "Xóa khỏi Wishlist?",
-        content: `Gỡ "${bike.name ?? "sản phẩm này"}" khỏi danh sách yêu thích?`,
-        okText: "Xóa",
+        title: "Remove from wishlist?",
+        content: `Remove "${bike.name ?? "this item"}" from your wishlist?`,
+        okText: "Remove",
         danger: true,
       });
       if (!ok) return;

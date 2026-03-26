@@ -72,11 +72,11 @@ export default function AuthPage() {
           navigate(from || "/", { replace: true });
         }
       } else {
-        message.error(result.message || "Đăng nhập thất bại.");
+        message.error(result.message || "Login failed.");
       }
     } catch (error) {
       if (error.status === 401) {
-        message.error("Sai mật khẩu hoặc email đăng nhập.");
+        message.error("Incorrect email or password.");
       } else if (error.status === 403) {
         message.error("Account not activated. Please check your email!");
       } else {
@@ -215,124 +215,131 @@ export default function AuthPage() {
                 onFinish={onRegisterFinish}
                 layout="vertical"
                 requiredMark={false}
-                className="auth-form auth-form--immersive"
+                className="auth-form auth-form--immersive auth-form--register-compact"
               >
-                <Form.Item
-                  name="username"
-                  label="Full name"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your name!",
-                    },
-                    {
-                      min: 3,
-                      message: "Name must have at least 3 characters!",
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Your name"
-                    className="auth-form__input"
-                    size="large"
-                    disabled={busy}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="email"
-                  label="Email"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your email!",
-                    },
-                    { type: "email", message: "Invalid email!" },
-                  ]}
-                >
-                  <Input
-                    placeholder="you@example.com"
-                    className="auth-form__input"
-                    size="large"
-                    disabled={busy}
-                    autoComplete="email"
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="phone"
-                  label="Phone"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your phone number!",
-                    },
-                    {
-                      pattern: /^[0-9]{10,11}$/,
-                      message: "Invalid phone number!",
-                    },
-                  ]}
-                >
-                  <Input
-                    placeholder="Phone number"
-                    className="auth-form__input"
-                    size="large"
-                    disabled={busy}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="password"
-                  label="Password"
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please enter your password!",
-                    },
-                    {
-                      min: 6,
-                      message: "Password must have at least 6 characters!",
-                    },
-                  ]}
-                >
-                  <Input.Password
-                    placeholder="Password"
-                    className="auth-form__input"
-                    size="large"
-                    disabled={busy}
-                    autoComplete="new-password"
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  name="confirmPassword"
-                  label="Confirm password"
-                  dependencies={["password"]}
-                  rules={[
-                    {
-                      required: true,
-                      message: "Please confirm your password!",
-                    },
-                    ({ getFieldValue }) => ({
-                      validator(_, value) {
-                        if (!value || getFieldValue("password") === value) {
-                          return Promise.resolve();
-                        }
-                        return Promise.reject(
-                          new Error("Passwords do not match!"),
-                        );
+                <div className="register-grid">
+                  <Form.Item
+                    name="username"
+                    label="Full name"
+                    className="register-grid__item"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter your name!",
                       },
-                    }),
-                  ]}
-                >
-                  <Input.Password
-                    placeholder="Confirm password"
-                    className="auth-form__input"
-                    size="large"
-                    disabled={busy}
-                    autoComplete="new-password"
-                  />
-                </Form.Item>
+                      {
+                        min: 3,
+                        message: "Name must have at least 3 characters!",
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Your name"
+                      className="auth-form__input"
+                      size="large"
+                      disabled={busy}
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="email"
+                    label="Email"
+                    className="register-grid__item"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter your email!",
+                      },
+                      { type: "email", message: "Invalid email!" },
+                    ]}
+                  >
+                    <Input
+                      placeholder="you@example.com"
+                      className="auth-form__input"
+                      size="large"
+                      disabled={busy}
+                      autoComplete="email"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="password"
+                    label="Password"
+                    className="register-grid__item"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter your password!",
+                      },
+                      {
+                        min: 6,
+                        message: "Password must have at least 6 characters!",
+                      },
+                    ]}
+                  >
+                    <Input.Password
+                      placeholder="Password"
+                      className="auth-form__input"
+                      size="large"
+                      disabled={busy}
+                      autoComplete="new-password"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="confirmPassword"
+                    label="Confirm password"
+                    className="register-grid__item"
+                    dependencies={["password"]}
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please confirm your password!",
+                      },
+                      ({ getFieldValue }) => ({
+                        validator(_, value) {
+                          if (!value || getFieldValue("password") === value) {
+                            return Promise.resolve();
+                          }
+                          return Promise.reject(
+                            new Error("Passwords do not match!"),
+                          );
+                        },
+                      }),
+                    ]}
+                  >
+                    <Input.Password
+                      placeholder="Confirm password"
+                      className="auth-form__input"
+                      size="large"
+                      disabled={busy}
+                      autoComplete="new-password"
+                    />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="phone"
+                    label="Phone"
+                    className="register-grid__item register-grid__item--full"
+                    rules={[
+                      {
+                        required: true,
+                        message: "Please enter your phone number!",
+                      },
+                      {
+                        pattern: /^[0-9]{10,11}$/,
+                        message: "Invalid phone number!",
+                      },
+                    ]}
+                  >
+                    <Input
+                      placeholder="Phone number"
+                      className="auth-form__input"
+                      size="large"
+                      disabled={busy}
+                    />
+                  </Form.Item>
+                </div>
 
                 <div className="cccd-upload-section">
                   <h3 className="cccd-upload-title">
@@ -342,53 +349,55 @@ export default function AuthPage() {
                     Upload front and back of your National ID Card.
                   </p>
 
-                  <Form.Item label="Front side" required>
-                    <Upload
-                      name="cccdFront"
-                      listType="picture-card"
-                      fileList={cccdFrontFileList}
-                      maxCount={1}
-                      beforeUpload={(file) => beforeUpload(file, "front")}
-                      onRemove={() => handleRemove("front")}
-                      disabled={busy}
-                      accept="image/*"
-                      showUploadList={{
-                        showPreviewIcon: true,
-                        showRemoveIcon: true,
-                      }}
-                    >
-                      {cccdFrontFileList.length === 0 && (
-                        <div className="upload-content">
-                          <UploadOutlined />
-                          <div className="upload-text">Front side</div>
-                        </div>
-                      )}
-                    </Upload>
-                  </Form.Item>
+                  <div className="cccd-upload-grid">
+                    <Form.Item label="Front side" required>
+                      <Upload
+                        name="cccdFront"
+                        listType="picture-card"
+                        fileList={cccdFrontFileList}
+                        maxCount={1}
+                        beforeUpload={(file) => beforeUpload(file, "front")}
+                        onRemove={() => handleRemove("front")}
+                        disabled={busy}
+                        accept="image/*"
+                        showUploadList={{
+                          showPreviewIcon: true,
+                          showRemoveIcon: true,
+                        }}
+                      >
+                        {cccdFrontFileList.length === 0 && (
+                          <div className="upload-content">
+                            <UploadOutlined />
+                            <div className="upload-text">Front side</div>
+                          </div>
+                        )}
+                      </Upload>
+                    </Form.Item>
 
-                  <Form.Item label="Back side" required>
-                    <Upload
-                      name="cccdBack"
-                      listType="picture-card"
-                      fileList={cccdBackFileList}
-                      maxCount={1}
-                      beforeUpload={(file) => beforeUpload(file, "back")}
-                      onRemove={() => handleRemove("back")}
-                      disabled={busy}
-                      accept="image/*"
-                      showUploadList={{
-                        showPreviewIcon: true,
-                        showRemoveIcon: true,
-                      }}
-                    >
-                      {cccdBackFileList.length === 0 && (
-                        <div className="upload-content">
-                          <UploadOutlined />
-                          <div className="upload-text">Back side</div>
-                        </div>
-                      )}
-                    </Upload>
-                  </Form.Item>
+                    <Form.Item label="Back side" required>
+                      <Upload
+                        name="cccdBack"
+                        listType="picture-card"
+                        fileList={cccdBackFileList}
+                        maxCount={1}
+                        beforeUpload={(file) => beforeUpload(file, "back")}
+                        onRemove={() => handleRemove("back")}
+                        disabled={busy}
+                        accept="image/*"
+                        showUploadList={{
+                          showPreviewIcon: true,
+                          showRemoveIcon: true,
+                        }}
+                      >
+                        {cccdBackFileList.length === 0 && (
+                          <div className="upload-content">
+                            <UploadOutlined />
+                            <div className="upload-text">Back side</div>
+                          </div>
+                        )}
+                      </Upload>
+                    </Form.Item>
+                  </div>
                 </div>
 
                 <Form.Item
@@ -432,19 +441,19 @@ export default function AuthPage() {
               </Form>
             </>
 
-          <div className="auth-immersive__switch">
-            <p>
-              Already have an account?{" "}
-              <button
-                type="button"
-                className="auth-immersive__switch-btn"
-                onClick={goLogin}
-              >
-                Sign in
-              </button>
-            </p>
+            <div className="auth-immersive__switch">
+              <p>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  className="auth-immersive__switch-btn"
+                  onClick={goLogin}
+                >
+                  Sign in
+                </button>
+              </p>
+            </div>
           </div>
-        </div>
         ) : (
           <div className="auth-immersive__card auth-card--split">
             <div className="auth-card__left">

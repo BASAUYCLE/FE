@@ -47,7 +47,7 @@ export default function DisputeSummaryRow({ dispute, highlight, actions }) {
                   className="my-dispute-row__post-link"
                   to={`/product/${postId}`}
                 >
-                  Xem bài đăng
+                  View listing
                 </Link>
               </>
             ) : null}

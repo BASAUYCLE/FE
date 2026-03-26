@@ -13,7 +13,7 @@ import { Rate, Empty, Tabs, Tag, Image, Tooltip } from "antd";
 import {
   InfoCircleOutlined,
 } from "@ant-design/icons";
-import { Share2, UserPlus, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { useAuth } from "../../contexts/AuthContext";
@@ -307,28 +307,6 @@ export default function UserFeedbackPage() {
     user?.updated_at,
     ratingSummary?.lastActiveAt,
   );
-  const responseRateRaw = pickFirstValue(
-    user?.responseRate,
-    user?.response_rate,
-    user?.responseRatio,
-    user?.response_ratio,
-    ratingSummary?.responseRate,
-    ratingSummary?.response_ratio,
-    ratingSummary?.responseRatio,
-  );
-  const followerRaw = pickFirstValue(
-    user?.followerCount,
-    user?.followCount,
-    user?.followersCount,
-    user?.followers,
-    user?.totalFollowers,
-    user?.totalFollower,
-    user?.total_follower,
-    ratingSummary?.followerCount,
-    ratingSummary?.followCount,
-    ratingSummary?.followersCount,
-    ratingSummary?.followers,
-  );
   const locationText = pickFirstValue(
     user?.location,
     user?.address,
@@ -340,14 +318,6 @@ export default function UserFeedbackPage() {
   );
 
   const activityText = formatRelativeTime(lastActiveRaw); // không ??
-  const responseRateText =
-    responseRateRaw == null
-      ? null
-      : String(responseRateRaw).includes("%")
-        ? String(responseRateRaw)
-        : `${responseRateRaw}%`;
-  const followerText =
-    followerRaw == null ? null : Number(followerRaw).toLocaleString("vi-VN");
   const displayLocation = locationText ?? "Bien Hoa City, Dong Nai";
 
   const avatarLetter = displayName?.[0]?.toUpperCase?.() ?? "?";
@@ -393,9 +363,9 @@ export default function UserFeedbackPage() {
     stats.count === 0
       ? "No ratings yet"
       : Number(stats.avg) >= 4.5
-        ? "Rất hài lòng"
+        ? "Very satisfied"
         : Number(stats.avg) >= 3.5
-          ? "Hài lòng"
+          ? "Satisfied"
           : "Not satisfied";
 
   return (
@@ -486,37 +456,6 @@ export default function UserFeedbackPage() {
                   >
                     Active {activityText}
                   </Box>
-                  <Box
-                    sx={{
-                      px: 1.1,
-                      py: 0.4,
-                      borderRadius: 999,
-                      backgroundColor: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                      color: "#64748b",
-                      fontSize: 13,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Response rate: {responseRateText}
-                  </Box>
-                  <Box
-                    sx={{
-                      px: 1.1,
-                      py: 0.4,
-                      borderRadius: 999,
-                      backgroundColor: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                      color: "#64748b",
-                      fontSize: 13,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    Followers:{" "}
-                    <Box component="span" sx={{ textDecoration: "underline", textUnderlineOffset: 2 }}>
-                      {followerText}
-                    </Box>
-                  </Box>
                 </Box>
 
                 <Box
@@ -540,46 +479,6 @@ export default function UserFeedbackPage() {
 
                 </Box>
 
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1.25, mt: 1.25, flexWrap: "wrap" }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Share2 size={15} />}
-                    sx={{
-                      borderRadius: 999,
-                      borderColor: "#cbd5e1",
-                      color: "#0f172a",
-                      textTransform: "none",
-                      px: 1.75,
-                      py: 0.5,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      minWidth: 0,
-                      "&:hover": { borderColor: "#94a3b8", backgroundColor: "#f8fafc" },
-                    }}
-                  >
-                    Share
-                  </Button>
-
-                  <Button
-                    variant="outlined"
-                    startIcon={<UserPlus size={15} />}
-                    sx={{
-                      borderRadius: 999,
-                      borderColor: "#cbd5e1",
-                      color: "#0f172a",
-                      backgroundColor: "#ffffff",
-                      textTransform: "none",
-                      px: 1.75,
-                      py: 0.5,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      minWidth: 0,
-                      "&:hover": { borderColor: "#94a3b8", backgroundColor: "#f8fafc" },
-                    }}
-                  >
-                    Follow
-                  </Button>
-                </Box>
               </Box>
             </Box>
           </CardContent>
@@ -770,7 +669,7 @@ export default function UserFeedbackPage() {
                                   },
                                 }}
                               >
-                                Xem thêm tin đăng
+                                View more listings
                               </Button>
                             </Box>
                           )}
@@ -931,7 +830,7 @@ export default function UserFeedbackPage() {
                                   },
                                 }}
                               >
-                                Xem thêm tin đăng
+                                View more listings
                               </Button>
                             </Box>
                           )}
@@ -1199,7 +1098,7 @@ export default function UserFeedbackPage() {
                                 {(fb.createdAt || fb.date)
                                   ? new Date(
                                       fb.createdAt ?? fb.date,
-                                    ).toLocaleDateString("vi-VN")
+                                    ).toLocaleDateString("en-US")
                                   : ""}
                               </Typography>
                             </Box>

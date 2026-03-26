@@ -333,7 +333,7 @@ export default function ProductDetail() {
 
   const openCheckout = () => {
     if (!isLoggedIn) {
-      message.info("Vui lòng đăng nhập để mua hàng");
+      message.info("Please sign in to purchase");
       navigate("/login");
       return;
     }
@@ -598,7 +598,7 @@ export default function ProductDetail() {
                   bgcolor: "rgba(255,255,255,0.9)",
                   "&:hover": { bgcolor: "#fff" },
                 }}
-                aria-label="Xem ảnh phóng to"
+                aria-label="View enlarged image"
               >
                 <ZoomInOutlined />
               </IconButton>
@@ -653,7 +653,7 @@ export default function ProductDetail() {
                   disabled={purchaseBlockedByStatus && !inWishlist}
                   title={
                     purchaseBlockedByStatus && !inWishlist
-                      ? "Không thể thêm wishlist khi tin đang giao dịch"
+                      ? "Cannot add to wishlist while this listing is in transaction"
                       : undefined
                   }
                   sx={{ minWidth: 0, p: 0.5 }}
@@ -774,11 +774,11 @@ export default function ProductDetail() {
                 }}
               >
                 <Typography fontWeight={700} color="#9a3412" sx={{ mb: 0.5 }}>
-                  Không thể mua lúc này
+                  Purchase unavailable right now
                 </Typography>
                 <Typography variant="body2" color="#7c2d12">
-                  Tin đang có đơn đang xử lý hoặc tranh chấp (trạng thái trên hệ
-                  thống: không mở bán thêm cho tới khi đơn kết thúc).
+                  This listing currently has an active order or dispute (it is not
+                  available for additional purchases until the current order is completed).
                 </Typography>
                 {activeDisputeIdForPost != null && (
                   <Button
@@ -798,7 +798,7 @@ export default function ProductDetail() {
                       },
                     }}
                   >
-                    Xem chi tiết tranh chấp
+                    View dispute details
                   </Button>
                 )}
               </Box>

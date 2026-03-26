@@ -37,22 +37,22 @@ function hasNonEmptyText(v) {
   return v != null && String(v).trim() !== "";
 }
 
-/** Mô tả kết quả / giai đoạn xử lý admin theo trạng thái (BE DisputeStatus). */
+/** Admin outcome summary by status (BE DisputeStatus). */
 function adminOutcomeSummary(status) {
   const s = String(status ?? "").toUpperCase();
   switch (s) {
     case DISPUTE_STATUS.OPEN:
-      return "Chưa có quyết định từ admin.";
+      return "No decision from admin yet.";
     case DISPUTE_STATUS.REVIEWING:
-      return "Admin đang xem xét vụ việc.";
+      return "Admin is reviewing this case.";
     case DISPUTE_STATUS.APPROVED:
-      return "Admin đã chấp thuận khiếu nại (cho phép trả hàng).";
+      return "Admin approved the dispute (item return allowed).";
     case DISPUTE_STATUS.RETURN_SHIPPED:
-      return "Đã chấp thuận — người mua đã gửi trả hàng; chờ người bán xác nhận nhận hàng.";
+      return "Approved — buyer has shipped the return; waiting for seller confirmation.";
     case DISPUTE_STATUS.RESOLVED:
-      return "Vụ việc đã được giải quyết (đóng case).";
+      return "Case has been resolved (closed).";
     case DISPUTE_STATUS.REJECTED:
-      return "Admin đã từ chối khiếu nại.";
+      return "Admin rejected the dispute.";
     default:
       return "—";
   }
@@ -202,7 +202,7 @@ export default function DisputeDetailPage() {
       try {
         shippingReceiptUrl = await resolveShippingReceiptUrl(v.shippingReceipt);
       } catch (upErr) {
-        message.error(upErr?.message || "Upload ảnh thất bại.");
+        message.error(upErr?.message || "Image upload failed.");
         setShipLoading(false);
         return;
       }
@@ -433,7 +433,7 @@ export default function DisputeDetailPage() {
                         fontWeight: 600,
                       }}
                     >
-                      Ghi chú kiểm định viên
+                      Inspector notes
                     </Typography.Title>
                     {hasNonEmptyText(dispute.inspectorNote) ? (
                       <Typography.Paragraph
@@ -443,7 +443,7 @@ export default function DisputeDetailPage() {
                       </Typography.Paragraph>
                     ) : (
                       <Typography.Text type="secondary">
-                        Chưa có ghi chú từ kiểm định viên.
+                        No notes from inspector yet.
                       </Typography.Text>
                     )}
 
@@ -457,7 +457,7 @@ export default function DisputeDetailPage() {
                         fontWeight: 600,
                       }}
                     >
-                      Kết quả xử lý từ admin
+                      Admin resolution
                     </Typography.Title>
                     <Typography.Paragraph
                       strong
@@ -470,7 +470,7 @@ export default function DisputeDetailPage() {
                         style={{ marginBottom: 8, whiteSpace: "pre-wrap" }}
                       >
                         <Typography.Text strong>
-                          Ghi chú / lý do từ admin:{" "}
+                          Admin note / reason:{" "}
                         </Typography.Text>
                         {dispute.adminNote}
                       </Typography.Paragraph>
@@ -485,14 +485,14 @@ export default function DisputeDetailPage() {
                           type="secondary"
                           style={{ display: "block", marginBottom: 8 }}
                         >
-                          Không có ghi chú bổ sung từ admin.
+                          No additional notes from admin.
                         </Typography.Text>
                       )
                     )}
                     {dispute.resolvedAt != null &&
                       dispute.resolvedAt !== "" && (
                         <Typography.Text type="secondary">
-                          Thời điểm kết thúc:{" "}
+                          Closed at:{" "}
                           {formatDateTime(dispute.resolvedAt)}
                         </Typography.Text>
                       )}

@@ -212,8 +212,8 @@ export default function AdminConfig() {
                   System config
                 </h1>
                 <p className="admin-page-subtitle">
-                  Cấu hình tỉ lệ đặt cọc, phí đăng bài, dispute window và các
-                  mốc tự động xử lý dispute.
+                  Configure deposit rate, posting fee, dispute window, and
+                  automated dispute timelines.
                 </p>
               </div>
               <div className="admin-config-actions">
@@ -257,7 +257,7 @@ export default function AdminConfig() {
               <div className="admin-card admin-config-card">
                 <div className="admin-card-header">
                   <div>
-                    <div className="admin-card-title">Tỉ lệ đặt cọc</div>
+                    <div className="admin-card-title">Deposit rate</div>
                   </div>
                 </div>
                 <div className="admin-config-body">
@@ -283,7 +283,7 @@ export default function AdminConfig() {
               <div className="admin-card admin-config-card">
                 <div className="admin-card-header">
                   <div>
-                    <div className="admin-card-title">Phí đăng bài</div>
+                    <div className="admin-card-title">Posting fee</div>
                   </div>
                 </div>
                 <div className="admin-config-body">
@@ -308,7 +308,7 @@ export default function AdminConfig() {
                 <div className="admin-card-header">
                   <div>
                     <div className="admin-card-title">
-                      Auto-confirm đơn hàng
+                      Auto-confirm order
                     </div>
                   </div>
                 </div>
@@ -325,8 +325,8 @@ export default function AdminConfig() {
                     />
                   </label>
                   <div className="admin-config-help">
-                    Tự động confirm sau {preview.autoConfirmDays} ngày kể từ lúc
-                    “nhận đơn/đã giao”.
+                    Automatically confirms after {preview.autoConfirmDays} day(s)
+                    from order delivery/receipt.
                   </div>
                 </div>
               </div>
@@ -335,7 +335,7 @@ export default function AdminConfig() {
                 <div className="admin-card-header">
                   <div>
                     <div className="admin-card-title">
-                      Dispute window (ngày)
+                      Dispute window (days)
                     </div>
                   </div>
                 </div>
@@ -361,7 +361,7 @@ export default function AdminConfig() {
                 <div className="admin-card-header">
                   <div>
                     <div className="admin-card-title">
-                      Auto-close unshipped dispute (ngày)
+                      Auto-close unshipped dispute (days)
                     </div>
                   </div>
                 </div>
@@ -390,7 +390,7 @@ export default function AdminConfig() {
                 <div className="admin-card-header">
                   <div>
                     <div className="admin-card-title">
-                      Auto-refund shipped dispute (ngày)
+                      Auto-refund shipped dispute (days)
                     </div>
                   </div>
                 </div>
@@ -415,7 +415,7 @@ export default function AdminConfig() {
             </section>
 
             {loading && (
-              <div className="admin-table-empty">Đang tải cấu hình...</div>
+              <div className="admin-table-empty">Loading configuration...</div>
             )}
           </div>
         </div>

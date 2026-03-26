@@ -105,11 +105,11 @@ export default function CheckoutModal({
       return;
     }
     const payLabel =
-      paymentMethod === "full" ? "toàn bộ" : `đặt cọc (${depositPercent}%)`;
+      paymentMethod === "full" ? "in full" : `deposit (${depositPercent}%)`;
     const ok = await confirmCrud({
-      title: "Xác nhận đặt hàng?",
-      content: `Thanh toán ${payLabel} ${formatCurrency(amountToPay)} từ ví cho "${product?.name ?? "sản phẩm"}". Địa chỉ giao hàng đã chọn sẽ được dùng cho đơn này.`,
-      okText: "Xác nhận đặt hàng",
+      title: "Confirm order?",
+      content: `Pay ${payLabel} ${formatCurrency(amountToPay)} from your wallet for "${product?.name ?? "this product"}". The selected shipping address will be used for this order.`,
+      okText: "Confirm order",
     });
     if (!ok) return;
 

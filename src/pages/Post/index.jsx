@@ -81,12 +81,12 @@ export default function PostBike() {
     "XXL (61 - 63) / 191 - 198 cm",
   ];
   const DEFAULT_REQUIRED_PHOTO_KEYS = [
-    { key: "driveSide", label: "Drive Side", labelVi: "Bên phải" },
-    { key: "nonDrive", label: "Non-Drive", labelVi: "Bên trái" },
-    { key: "cockpit", label: "Cockpit", labelVi: "Tay lái" },
-    { key: "drivetrain", label: "Drivetrain", labelVi: "Bộ đề" },
-    { key: "frontBrake", label: "Front Brake", labelVi: "Phanh trước" },
-    { key: "rearBrake", label: "Rear Brake", labelVi: "Phanh sau" },
+    { key: "driveSide", label: "Drive Side", labelVi: "Drive Side" },
+    { key: "nonDrive", label: "Non-Drive", labelVi: "Non-Drive" },
+    { key: "cockpit", label: "Cockpit", labelVi: "Cockpit" },
+    { key: "drivetrain", label: "Drivetrain", labelVi: "Drivetrain" },
+    { key: "frontBrake", label: "Front Brake", labelVi: "Front Brake" },
+    { key: "rearBrake", label: "Rear Brake", labelVi: "Rear Brake" },
   ];
   const IMAGE_TYPE_BY_SLOT = {
     driveSide: "OVERALL_DRIVE_SIDE",
@@ -98,52 +98,52 @@ export default function PostBike() {
   };
   const DEFAULT_GROUPSET_OPTIONS = [
     {
-      label: "Shimano Road (Phổ biến nhất cho Giant, Merida, Trek)",
+      label: "Shimano Road (Most common for Giant, Merida, Trek)",
       options: [
         {
           value: "Shimano 105",
-          label: "Shimano 105 (Chuẩn mực cho Giant/Merida)",
+          label: "Shimano 105 (Popular standard for Giant/Merida)",
         },
         {
           value: "Shimano Ultegra",
-          label: "Shimano Ultegra (Phổ biến trên Trek/Specialized)",
+          label: "Shimano Ultegra (Common on Trek/Specialized)",
         },
         {
           value: "Shimano Dura-Ace",
-          label: "Shimano Dura-Ace (Dòng cao cấp nhất)",
+          label: "Shimano Dura-Ace (Top-tier line)",
         },
-        { value: "Shimano Tiagra", label: "Shimano Tiagra (Dòng tầm trung)" },
-        { value: "Shimano Sora", label: "Shimano Sora (Dòng giá rẻ)" },
+        { value: "Shimano Tiagra", label: "Shimano Tiagra (Mid-range line)" },
+        { value: "Shimano Sora", label: "Shimano Sora (Entry-level line)" },
       ],
     },
     {
-      label: "SRAM (Thường gặp trên Specialized, Trek đời mới)",
+      label: "SRAM (Often found on newer Specialized and Trek models)",
       options: [
         {
           value: "SRAM Red eTap AXS",
-          label: "SRAM Red eTap AXS (Cao cấp Specialized S-Works)",
+          label: "SRAM Red eTap AXS (Premium, common on Specialized S-Works)",
         },
         { value: "SRAM Force eTap AXS", label: "SRAM Force eTap AXS" },
         { value: "SRAM Rival", label: "SRAM Rival" },
       ],
     },
     {
-      label: "Campagnolo (Đặc thù cho Pinarello)",
+      label: "Campagnolo (Commonly paired with Pinarello)",
       options: [
         {
           value: "Campagnolo Super Record",
-          label: "Campagnolo Super Record (Chuẩn bài cho Pinarello)",
+          label: "Campagnolo Super Record (Signature setup for Pinarello)",
         },
         { value: "Campagnolo Chorus", label: "Campagnolo Chorus" },
         { value: "Campagnolo Record", label: "Campagnolo Record" },
       ],
     },
     {
-      label: "Shimano MTB (Cho dòng địa hình Giant, Trek, Merida)",
+      label: "Shimano MTB (For mountain lines of Giant, Trek, Merida)",
       options: [
         {
           value: "Shimano Deore XT",
-          label: "Shimano Deore XT (Huyền thoại MTB)",
+          label: "Shimano Deore XT (Legendary MTB groupset)",
         },
         { value: "Shimano Deore", label: "Shimano Deore" },
         { value: "Shimano Alivio", label: "Shimano Alivio" },
@@ -153,17 +153,17 @@ export default function PostBike() {
   const DEFAULT_BRAKE_TYPE_OPTIONS = [
     {
       value: "Rim Brake",
-      label: "Phanh vành (Phổ biến Giant/Merida đời cũ, Pinarello)",
+      label: "Rim Brake (Common on older Giant/Merida and Pinarello)",
     },
     {
       value: "Disc Brake (Hydraulic)",
-      label: "Phanh đĩa dầu (Tiêu chuẩn mới cho Trek/Specialized/Giant)",
+      label: "Hydraulic Disc Brake (Modern standard for Trek/Specialized/Giant)",
     },
     {
       value: "Disc Brake (Mechanical)",
-      label: "Phanh đĩa cơ (Xe Giant/Merida giá rẻ)",
+      label: "Mechanical Disc Brake (Common on budget Giant/Merida models)",
     },
-    { value: "V-Brake", label: "Phanh V (Xe City/MTB đời cũ)" },
+    { value: "V-Brake", label: "V-Brake (Older City/MTB bikes)" },
   ];
 
   const [sizeOptions, setSizeOptions] = useState(DEFAULT_SIZE_OPTIONS);
@@ -694,7 +694,7 @@ export default function PostBike() {
     }
     const isLt5M = file.size / 1024 / 1024 < 5;
     if (!isLt5M) {
-      message.error("Ảnh phải nhỏ hơn 5MB.");
+      message.error("Image must be smaller than 5MB.");
       return Upload.LIST_IGNORE;
     }
     setRequiredPhotos((prev) => ({

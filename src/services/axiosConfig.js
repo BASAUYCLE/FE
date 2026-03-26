@@ -55,7 +55,7 @@ function isAuthLoginRequest(config) {
   return u.includes("auth/login");
 }
 
-const LOGIN_WRONG_CREDENTIALS_MSG = "Sai mật khẩu hoặc email đăng nhập.";
+const LOGIN_WRONG_CREDENTIALS_MSG = "Incorrect email or password.";
 
 function messageFor401LoginRequest(backendMsg) {
   const s = String(backendMsg || "")
@@ -102,7 +102,7 @@ axiosInstance.interceptors.response.use(
         ? messageFor401LoginRequest(rawBackend || message)
         : rawBackend ||
           message ||
-          "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+          "Your session has expired. Please sign in again.";
       return Promise.reject({
         status: 401,
         message: msg401,

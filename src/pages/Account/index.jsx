@@ -9,7 +9,6 @@ import {
   TextField,
 } from "@mui/material";
 import {
-  StarOutlined,
   PlusOutlined,
   EnvironmentOutlined,
 } from "@ant-design/icons";
@@ -132,12 +131,12 @@ function AddressModal({ open, onClose, onSaved, userId, editingAddress }) {
     const values = await form.validateFields();
     const ok = await confirmCrud({
       title: editingAddress
-        ? "Lưu địa chỉ giao hàng?"
-        : "Thêm địa chỉ giao hàng?",
+        ? "Save shipping address?"
+        : "Add shipping address?",
       content: editingAddress
-        ? "Cập nhật địa chỉ này sẽ ảnh hưởng tới các đơn hàng dùng địa chỉ đã lưu."
-        : "Địa chỉ mới có thể được chọn khi mua hàng và thanh toán.",
-      okText: editingAddress ? "Lưu" : "Thêm",
+        ? "Updating this address may affect orders that use your saved address."
+        : "This address can be selected during checkout.",
+      okText: editingAddress ? "Save" : "Add",
     });
     if (!ok) return;
     setSaving(true);
@@ -351,7 +350,7 @@ function AddressSection({ userId }) {
           >
             <EnvironmentOutlined style={{ fontSize: 32, marginBottom: 8 }} />
             <Typography variant="body2">
-              Chưa có địa chỉ. Hãy thêm địa chỉ đầu tiên!
+              No address yet. Add your first shipping address!
             </Typography>
           </Box>
         ) : (
@@ -488,9 +487,9 @@ export default function Account() {
 
   const handleSave = async () => {
     const ok = await confirmCrud({
-      title: "Lưu thông tin tài khoản?",
-      content: "Cập nhật số điện thoại trên hồ sơ của bạn.",
-      okText: "Lưu",
+      title: "Save account information?",
+      content: "Update your phone number on your profile.",
+      okText: "Save",
     });
     if (!ok) return;
     setSaving(true);
@@ -552,9 +551,9 @@ export default function Account() {
     }
 
     const ok = await confirmCrud({
-      title: "Đổi ảnh đại diện?",
+      title: "Change profile photo?",
       content:
-        "Anh moi se duoc cap nhat cho tai khoan cua ban va hien thi tren he thong.",
+        "Your new photo will be updated on your account and displayed across the platform.",
       okText: "Upload",
     });
     if (!ok) return;
@@ -663,16 +662,6 @@ export default function Account() {
                     {displayData.fullName?.trim() || "No name set"}
                   </Typography>
                   <CircleCheckBig size={20} color="#22c55e" />
-                </Box>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  <span className="account-badge account-badge-teal">
-                    <CircleCheckBig size={14} style={{ marginRight: 4 }} />
-                    Verified seller
-                  </span>
-                  <span className="account-badge account-badge-orange">
-                    <StarOutlined style={{ marginRight: 4 }} />
-                    4.9 rating
-                  </span>
                 </Box>
               </Box>
               {!isEditing ? (

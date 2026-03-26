@@ -12,17 +12,14 @@ import {
   Modal,
   message,
   Tooltip,
-  Switch,
   Pagination,
 } from "antd";
 import {
   Search,
   Plus,
   Pencil,
-  Rocket,
   Trash2,
   MoreVertical,
-  RotateCcw,
   Send,
 } from "lucide-react";
 import Header from "../../components/header";
@@ -87,7 +84,6 @@ export default function ManageListings() {
     name: "",
   });
   const [deleting, setDeleting] = useState(false);
-  const [hideDrafts, setHideDrafts] = useState(false);
   const [submittingDraftId, setSubmittingDraftId] = useState(null);
 
   const sellerId = user?.userId ?? user?.user_id ?? user?.id ?? null;
@@ -141,13 +137,11 @@ export default function ManageListings() {
       });
     }
     if (activeTab === TAB_KEYS.ALL) {
-      if (hideDrafts)
-        list = list.filter((p) => p.status !== POSTING_STATUS.DRAFTED);
     } else {
       list = list.filter((p) => p.status === activeTab);
     }
     return list;
-  }, [postings, activeTab, hideDrafts]);
+  }, [postings, activeTab]);
 
   const filteredBySearch = useMemo(() => {
     if (!searchText.trim()) return filteredByTab;
@@ -176,24 +170,13 @@ export default function ManageListings() {
     if (posting) setDeleteModal({ open: true, id, name: posting.bikeName });
   };
 
-  const handleRelist = (record) => {
-    updatePostingStatus(record.id, POSTING_STATUS.ACTIVE);
-    addNotification({
-      title: "Listing relisted",
-      message: `"${record.bikeName}" has been relisted and is now available.`,
-      type: "success",
-      status: "Available",
-    });
-    message.success("Listing has been relisted.");
-  };
-
   const handleSubmitDraft = async (record) => {
     const id = record.id ?? record.backendPostId;
     if (!id) return;
     const ok = await confirmCrud({
-      title: "Gửi duyệt tin đăng?",
-      content: `Tin "${record.bikeName ?? "này"}" sẽ được gửi cho quản trị / kiểm định xem xét.`,
-      okText: "Gửi duyệt",
+      title: "Submit this listing for review?",
+      content: `Listing "${record.bikeName ?? "this item"}" will be sent to admin/inspector for review.`,
+      okText: "Submit",
     });
     if (!ok) return;
     setSubmittingDraftId(id);
@@ -361,27 +344,6 @@ export default function ManageListings() {
                 },
               ]
             : []),
-          ...(record.status === POSTING_STATUS.AVAILABLE
-            ? [
-                {
-                  key: "promote",
-                  icon: <Rocket size={14} />,
-                  label: "Promote",
-                  onClick: () =>
-                    message.info("Promote feature is under development"),
-                },
-              ]
-            : []),
-          ...(isSold
-            ? [
-                {
-                  key: "relist",
-                  icon: <RotateCcw size={14} />,
-                  label: "Relist",
-                  onClick: () => handleRelist(record),
-                },
-              ]
-            : []),
           {
             key: "delete",
             icon: <Trash2 size={14} />,
@@ -414,29 +376,9 @@ export default function ManageListings() {
                   onClick={() => handleSubmitDraft(record)}
                   title="Submit for review"
                 >
-                  Gửi duyệt
+                  Submit
                 </Button>
               </Tooltip>
-            )}
-            {record.status === POSTING_STATUS.AVAILABLE && (
-              <Button
-                type="text"
-                size="small"
-                icon={<Rocket size={14} />}
-                onClick={() =>
-                  message.info("Promote feature is under development")
-                }
-                title="Promote"
-              />
-            )}
-            {isSold && (
-              <Button
-                type="text"
-                size="small"
-                icon={<RotateCcw size={14} />}
-                onClick={() => handleRelist(record)}
-                title="Relist"
-              />
             )}
             <Dropdown
               menu={{
@@ -531,14 +473,6 @@ export default function ManageListings() {
               allowClear
               className="manage-listings-search"
             />
-            <Space align="center" className="manage-listings-hide-drafts">
-              <Typography.Text type="secondary">Hide draft</Typography.Text>
-              <Switch
-                checked={hideDrafts}
-                onChange={setHideDrafts}
-                size="small"
-              />
-            </Space>
           </div>
 
           <div className="manage-listings-table-wrap">
@@ -554,11 +488,6 @@ export default function ManageListings() {
             />
             {filteredBySearch.length > 0 && (
               <div className="manage-listings-pagination">
-                <Typography.Text type="secondary">
-                  Showing {(page - 1) * pageSize + 1}–
-                  {Math.min(page * pageSize, filteredBySearch.length)} of{" "}
-                  {filteredBySearch.length} listing(s)
-                </Typography.Text>
                 <Pagination
                   current={page}
                   pageSize={pageSize}

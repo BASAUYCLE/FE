@@ -17,7 +17,7 @@ import {
 } from "../../constants/orderStatus";
 
 /**
- * Popup thanh toán cho đơn hàng đã tồn tại (thay thế trang /payment?orderId=X).
+ * Payment modal for an existing order (replaces /payment?orderId=X page).
  *
  * Props:
  *  - open     : boolean
@@ -39,7 +39,7 @@ export default function PayNowModal({ open, onClose, order }) {
 
   const userId = user?.userId ?? user?.user_id ?? user?.id ?? null;
   const amountDue = order?.amountDue ?? 0;
-  // DEPOSITED = đã cọc, cần trả phần còn lại
+  // DEPOSITED = deposit paid, remaining amount due
   const isFullPayment = order?.status === ORDER_STATUS.DEPOSITED;
   const remainPercent = 100 - depositPercent;
 
@@ -91,16 +91,16 @@ export default function PayNowModal({ open, onClose, order }) {
       return;
     }
     const ok = await confirmCrud({
-      title: "Xác nhận thanh toán?",
-      content: `Trừ ${formatCurrency(amountDue)} từ ví cho đơn #${order.orderId} (${order?.bikeName ?? ""}).`,
-      okText: "Thanh toán",
+      title: "Confirm payment?",
+      content: `Deduct ${formatCurrency(amountDue)} from your wallet for order #${order.orderId} (${order?.bikeName ?? ""}).`,
+      okText: "Pay now",
     });
     if (!ok) return;
 
     setSubmitting(true);
     try {
       await payRemaining(order.orderId);
-      message.success("Thanh toán thành công!");
+      message.success("Payment successful!");
       addNotification?.({
         title: "Payment successful",
         message: `You have paid the remaining amount for order #${order.orderId}.`,
@@ -276,7 +276,7 @@ export default function PayNowModal({ open, onClose, order }) {
               marginBottom: 5,
             }}
           >
-            <WalletOutlined style={{ fontSize: 13 }} /> Hình thức thanh toán
+            <WalletOutlined style={{ fontSize: 13 }} /> Payment method
           </label>
           <div
             style={{
@@ -355,7 +355,7 @@ export default function PayNowModal({ open, onClose, order }) {
               color: "#166534",
             }}
           >
-            <WalletOutlined style={{ fontSize: 13 }} /> Số dư ví
+            <WalletOutlined style={{ fontSize: 13 }} /> Wallet balance
           </span>
           {walletLoading ? (
             <Spin size="small" />

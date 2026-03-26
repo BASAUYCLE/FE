@@ -4,11 +4,14 @@ import AdminLayout from "../../../components/layout/AdminLayout";
 import { message, Modal, Dropdown, Input } from "antd";
 import userService from "../../../services/userService";
 import { confirmCrud } from "../../../utils/confirmCrud";
+import { getAvatarSrc } from "../../../utils/avatar";
 import {
   ChevronDown,
   Search,
   ShieldCheck,
   UserCheck,
+  UserMinus,
+  UserX,
   Users,
 } from "lucide-react";
 
@@ -38,19 +41,30 @@ const statsConfig = [
     key: "rejected",
     label: "Rejected",
     tone: "gray",
-    icon: <Users />,
+    icon: <UserX />,
     filter: "Rejected",
   },
   {
     key: "hidden",
     label: "Hidden",
     tone: "orange",
-    icon: <Users />,
+    icon: <UserMinus />,
     filter: "Hidden",
   },
 ];
 
 const PAGE_SIZE = 10;
+
+function formatJoinedDate(value) {
+  if (value == null || value === "") return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
+}
 
 function normalizeUser(row) {
   const id = row.id ?? row.userId ?? row.user_id;
@@ -83,11 +97,19 @@ function normalizeUser(row) {
   } else if (rawStatus === "HIDDEN") {
     status = "Hidden";
   }
-  const joined =
-    row.joined ?? row.createdAt ?? row.created_at ?? row.user_created_at ?? "—";
+  const joinedRaw =
+    row.updated_at ??
+    row.updatedAt ??
+    row.user_updated_at ??
+    row.joined ??
+    row.createdAt ??
+    row.created_at ??
+    row.user_created_at ??
+    null;
   const cccdFront =
     row.cccd_front ?? row.cccdFront ?? row.cccd_front_url ?? null;
   const cccdBack = row.cccd_back ?? row.cccdBack ?? row.cccd_back_url ?? null;
+  const avatarUrl = getAvatarSrc(row);
   return {
     id,
     name:
@@ -98,17 +120,9 @@ function normalizeUser(row) {
           : String(id),
     email,
     role: String(role).toUpperCase(),
-    joined:
-      typeof joined === "string"
-        ? joined
-        : joined
-          ? new Date(joined).toLocaleDateString("en-US", {
-              month: "short",
-              day: "2-digit",
-              year: "numeric",
-            })
-          : "—",
+    joined: formatJoinedDate(joinedRaw),
     status,
+    avatarUrl,
     cccdFront: cccdFront && typeof cccdFront === "string" ? cccdFront : null,
     cccdBack: cccdBack && typeof cccdBack === "string" ? cccdBack : null,
   };
@@ -204,9 +218,9 @@ export default function UserManagement() {
       return;
     }
     const ok = await confirmCrud({
-      title: "Từ chối và gửi thông báo?",
-      content: `Tài khoản ${user.email} sẽ bị từ chối theo lý do đã nhập. Thao tác này thường không hoàn tác.`,
-      okText: "Gửi từ chối",
+      title: "Reject and send notification?",
+      content: `Account ${user.email} will be rejected based on the provided reason. This action is usually irreversible.`,
+      okText: "Send rejection",
       danger: true,
     });
     if (!ok) return;
@@ -251,9 +265,9 @@ export default function UserManagement() {
       return;
     }
     const ok = await confirmCrud({
-      title: "Khóa / ẩn tài khoản?",
-      content: `Người dùng ${user.email} sẽ không thể đăng nhập. Email thông báo sẽ được gửi.`,
-      okText: "Xác nhận khóa",
+      title: "Hide account?",
+      content: `User ${user.email} will not be able to sign in. A notification email will be sent.`,
+      okText: "Confirm hide",
       danger: true,
     });
     if (!ok) return;
@@ -446,7 +460,21 @@ export default function UserManagement() {
                     key={user.id ?? user.displayId}
                   >
                     <div className="user-cell">
-                      <div className="user-avatar">{(user.name || "?")[0]}</div>
+                      <div
+                        className="user-avatar"
+                        style={
+                          user.avatarUrl
+                            ? {
+                                backgroundImage: `url(${user.avatarUrl})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                color: "transparent",
+                              }
+                            : undefined
+                        }
+                      >
+                        {(user.name || "?")[0]}
+                      </div>
                       <div>
                         <div className="user-name">{user.name}</div>
                         {user.displayId && (
@@ -472,17 +500,6 @@ export default function UserManagement() {
                               label: "Active",
                               onClick: () =>
                                 user.status === "Pending" && handleVerify(user),
-                            },
-                            {
-                              key: "Pending",
-                              label: "Pending",
-                              onClick: () => {},
-                            },
-                            {
-                              key: "Hidden",
-                              label: "Hide Account",
-                              onClick: () =>
-                                user.status !== "Hidden" && handleHide(user),
                             },
                             {
                               key: "Rejected",
@@ -634,7 +651,7 @@ export default function UserManagement() {
             account will be deleted. They can register again later.
           </p>
         </div>
-        <div>
+        <div style={{ marginBottom: 18 }}>
           <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
             Rejection Reason <span style={{ color: "#ef4444" }}>*</span>
           </label>
@@ -674,7 +691,7 @@ export default function UserManagement() {
             be deleted.
           </p>
         </div>
-        <div>
+        <div style={{ marginBottom: 18 }}>
           <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
             Hide Reason <span style={{ color: "#ef4444" }}>*</span>
           </label>

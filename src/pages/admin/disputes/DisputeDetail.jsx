@@ -41,17 +41,17 @@ function adminOutcomeSummary(status) {
   const s = String(status ?? "").toUpperCase();
   switch (s) {
     case DISPUTE_STATUS.OPEN:
-      return "Chưa có quyết định từ admin.";
+      return "No decision from admin yet.";
     case DISPUTE_STATUS.REVIEWING:
-      return "Admin đang xem xét vụ việc.";
+      return "Admin is reviewing this case.";
     case DISPUTE_STATUS.APPROVED:
-      return "Admin đã chấp thuận khiếu nại (cho phép trả hàng).";
+      return "Admin approved the dispute (item return allowed).";
     case DISPUTE_STATUS.RETURN_SHIPPED:
-      return "Đã chấp thuận — người mua đã gửi trả hàng; chờ người bán xác nhận.";
+      return "Approved - buyer shipped the return; waiting for seller confirmation.";
     case DISPUTE_STATUS.RESOLVED:
-      return "Vụ việc đã được giải quyết.";
+      return "Case has been resolved.";
     case DISPUTE_STATUS.REJECTED:
-      return "Admin đã từ chối khiếu nại.";
+      return "Admin rejected the dispute.";
     default:
       return "—";
   }

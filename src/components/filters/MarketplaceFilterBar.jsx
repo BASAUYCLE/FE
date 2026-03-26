@@ -241,7 +241,6 @@ export default function MarketplaceFilterBar({
       value: "newest",
       label: (
         <span className="mp-sort-option">
-          <Sparkles size={12} />
           <span>Newest Listings</span>
         </span>
       ),
@@ -461,7 +460,7 @@ export default function MarketplaceFilterBar({
             allowClear
             onChange={(value) => onFrameSizeFilterChange(value ?? "all")}
             options={Array.isArray(frameSizeOptions) ? frameSizeOptions : []}
-            dropdownClassName="mp-frame-dropdown"
+            dropdownClassName="mp-sort-dropdown mp-frame-dropdown"
             dropdownMatchSelectWidth={false}
           />
 
@@ -476,6 +475,7 @@ export default function MarketplaceFilterBar({
             allowClear
             onChange={(value) => onCategoryFilterChange(value ?? "all")}
             options={Array.isArray(categoryOptions) ? categoryOptions : []}
+            dropdownClassName="mp-sort-dropdown"
           />
 
           <Select
@@ -485,6 +485,7 @@ export default function MarketplaceFilterBar({
             allowClear
             onChange={(value) => onBrandFilterChange(value ?? "all")}
             options={Array.isArray(brandOptions) ? brandOptions : []}
+            dropdownClassName="mp-sort-dropdown"
           />
 
           <Select
@@ -494,6 +495,7 @@ export default function MarketplaceFilterBar({
             allowClear
             onChange={(value) => onModelYearFilterChange(value ?? "all")}
             options={Array.isArray(modelYearOptions) ? modelYearOptions : []}
+            dropdownClassName="mp-sort-dropdown"
           />
 
           <button

@@ -9,10 +9,10 @@ export default function ReturnShippingReceiptFormItem() {
   return (
     <Form.Item
       name="shippingReceipt"
-      label="Ảnh biên lai / chứng minh (tuỳ chọn)"
+      label="Receipt / proof image (optional)"
       valuePropName="fileList"
       getValueFromEvent={normUploadFileList}
-      extra="PNG, JPG — tối đa 5MB. Ảnh sẽ được tải lên và lưu dưới dạng liên kết."
+      extra="PNG, JPG - max 5MB. The image will be uploaded and stored as a URL."
     >
       <Upload
         listType="picture-card"
@@ -22,7 +22,7 @@ export default function ReturnShippingReceiptFormItem() {
       >
         <div>
           <PlusOutlined />
-          <div style={{ marginTop: 8 }}>Tải ảnh</div>
+          <div style={{ marginTop: 8 }}>Upload image</div>
         </div>
       </Upload>
     </Form.Item>

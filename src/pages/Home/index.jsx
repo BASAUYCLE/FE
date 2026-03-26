@@ -30,9 +30,13 @@ export default function Home() {
         >
         <Typography sx={{ color: "#334155", lineHeight: 1.8, fontSize: { xs: 14, md: 18 } }}>
           <Box component="span" sx={{ color: "#0284c7", fontWeight: 700 }}>
-            Xe đạp thể thao
+            Sports bikes
           </Box>{" "}
-          là một trong những phương tiện được ưa nhất hiện nay, không chỉ giúp nâng cao sức khỏe mà còn giúp cải thiện thể lực, tinh thần thoải mái và giảm thiểu tác động của ô nhiễm môi trường so với xe máy hay ô tô. Với sự đa dạng về mẫu mã, kiểu dáng và thương hiệu, xe đạp ngày càng được ưa chuộng trên thị trường, từ những chiếc xe đạp thể thao cũ cho đến các dòng cao cấp, phù hợp với mọi đối tượng sử dụng, từ trẻ em đến người lớn, nữ và nam.
+          are one of the most popular transportation choices today. They improve
+          health, increase physical fitness, support mental well-being, and
+          reduce environmental impact compared with motorcycles or cars. With a
+          wide variety of designs, styles, and brands, bikes now fit every
+          rider segment, from children to adults.
         </Typography>
 
         <Box sx={{ mt: 3, textAlign: "center" }}>
@@ -64,7 +68,7 @@ export default function Home() {
                 "&:hover": { background: "linear-gradient(135deg, #0f766e 0%, #0369a1 100%)" },
               }}
             >
-              Xem thêm bài viết
+              View more article
             </Button>
           </Box>
         )}
@@ -79,37 +83,39 @@ export default function Home() {
               mt: { xs: 3, md: 4 },
             }}
           >
-            Trong bài viết này, BASAUYCLE sẽ cùng tìm hiểu về xe đạp thể thao là gì, các loại xe đạp
-            thể thao phổ biến, phân tích các thương hiệu uy tín, và cung cấp những hướng dẫn chọn mua
-            phù hợp để giúp bạn có được chiếc xe tốt nhất phù hợp với nhu cầu của mình.
+            In this article, BASAUYCLE explains what sports bikes are, introduces
+            popular bike categories, highlights trusted brands, and shares
+            practical buying tips to help you choose the right bike for your
+            needs.
           </Typography>
 
         <Typography
           variant="h6"
           sx={{ fontWeight: 700, color: "#0f172a", mb: 1.5, fontSize: { xs: 18, md: 24 } }}
         >
-          Xe đạp thể thao là gì?
+          What is a sports bike?
         </Typography>
 
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Xe đạp thể thao là loại phương tiện di chuyển ra đời năm 1817 của một nhà phát minh người
-          Đức. Xe có thể di chuyển bằng việc đạp pedal, thiết kế đặc nhằm mục đích hỗ trợ hoạt động
-          thể thao, tập luyện hoặc thể hiện phong cách sống năng động. Trong bối cảnh hiện nay, xe
-          đạp thể thao góp phần giảm thiểu ô nhiễm không khí, thúc đẩy lối sống xanh, bền vững.
+          The modern bicycle concept dates back to 1817. Sports bikes are
+          pedal-powered vehicles designed for training, commuting, and active
+          lifestyles. Today, they also help reduce air pollution and support a
+          greener, more sustainable way of living.
         </Typography>
 
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 } }}>
-          Năm 2025, xu hướng đạp xe tăng trưởng mạnh mẽ trên tại Việt Nam. Sự quan tâm đến sức
-          khỏe, lối sống xanh và nhu cầu di chuyển gọn nhẹ khiến xe đạp trở thành lựa chọn phổ biến
-          hơn bao giờ hết. Tại các đô thị lớn, nhiều người chuyển từ phương tiện cá nhân chạy xăng
-          sang xe đạp truyền thống hoặc xe đạp điện nhằm giảm chi phí và hạn chế ô nhiễm.
+          In 2025, cycling continues to grow strongly in Vietnam. Rising interest in
+          health, sustainable living, and lightweight commuting has made bicycles
+          more popular than ever. In major cities, many people are switching from
+          gasoline-powered personal vehicles to traditional bikes or e-bikes to
+          reduce costs and lower pollution.
         </Typography>
 
         <Box sx={{ mt: 3, textAlign: "center" }}>
           <Box
             component="img"
             src={urbanCyclingImage}
-            alt="Người đạp xe trên đường phố đô thị"
+            alt="Cyclist riding on an urban street"
             sx={{
               width: "min(100%, 760px)",
               height: { xs: 220, md: 360 },
@@ -130,32 +136,31 @@ export default function Home() {
             fontSize: { xs: 18, md: 24 },
           }}
         >
-          Tại sao chúng ta nên đạp xe hàng ngày
+          Why cycle every day?
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Chọn đạp xe hàng ngày mang lại nhiều lợi ích vượt xa mong đợi về sức khỏe lẫn tâm thần.
-          Việc duy trì thói quen đạp xe giúp tăng cường sức khỏe tim mạch, giảm nguy cơ mắc các bệnh
-          về tiểu đường, huyết áp cao, đồng thời cải thiện độ linh hoạt, sức bền của xương khớp. Ngoài
-          ra, xe đạp thể thao còn giúp giảm thiểu ô nhiễm môi trường, tiết kiệm chi phí di chuyển và
-          phù hợp với lối sống năng động, hiện đại.
+          Daily cycling offers both physical and mental benefits. It supports
+          cardiovascular health, helps reduce the risk of diabetes and high
+          blood pressure, and improves flexibility and endurance. It is also a
+          cost-effective and eco-friendly mobility choice for modern living.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Việc đạp xe đều đặn còn giúp giảm căng thẳng, cải thiện tâm trạng, có thể giúp bạn tỉnh
-          táo hơn trong công việc và cuộc sống. Dù là xe đạp thể thao nữ, xe đạp thể thao cho nam hay
-          xe đạp gấp gọn, đều mang lại lợi ích về sức khỏe lẫn tinh thần, góp phần giúp bạn sống tích
-          cực và lành mạnh hơn mỗi ngày.
+          Riding regularly can reduce stress, improve mood, and keep you more
+          focused throughout the day. Whether you ride a road bike, mountain
+          bike, or folding bike, cycling helps you build a healthier and more
+          positive lifestyle.
         </Typography>
 
         <Typography
           variant="h6"
           sx={{ fontWeight: 700, color: "#0f172a", mb: 1.5, fontSize: { xs: 18, md: 24 } }}
         >
-          Hướng dẫn chọn mua xe đạp thể thao phù hợp với bạn
+          How to choose the right sports bike
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Chọn đúng xe đạp thể thao phù hợp sẽ giúp bạn tận hưởng trọn vẹn đam mê đạp xe, đồng thời
-          sẽ phục vụ tối đa nhu cầu của bạn. Hãy chú ý đến những yếu tố quan trọng sau để có quyết
-          định đúng đắn.
+          Choosing the right bike lets you enjoy riding fully while matching
+          your real-world needs. Consider the key factors below before making a
+          decision.
         </Typography>
 
         <Typography
@@ -166,14 +171,13 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Chất liệu của khung xe
+          Frame material
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Chất liệu khung xe là yếu tố quyết định độ nhẹ, độ bền, khả năng chịu lực của xe. Thường
-          gặp các loại khung xe bằng hợp kim nhôm, carbon hoặc thép. Carbon mang lại độ nhẹ tối đa,
-          phù hợp cho xe đạp cao cấp và thi đấu chuyên nghiệp, trong khi nhôm là lựa chọn phổ biến,
-          độ bền tốt và giá cả hợp lý. Thép phù hợp với những dòng xe đạp thể thao cũ hoặc mục đích
-          sử dụng chậm, giữ được độ chắc chắn.
+          Frame material determines weight, durability, and ride feel. Common
+          options include aluminum, carbon, and steel. Carbon is light and ideal
+          for premium or performance bikes. Aluminum is durable and affordable.
+          Steel is sturdy and often preferred for comfort and long-term use.
         </Typography>
 
         <Typography
@@ -184,18 +188,17 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Kích thước xe phù hợp
+          Bike size and fit
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Không phải mẫu xe đạp thể thao nữ hay xe đạp thể thao cho nam nào cũng phù hợp với tất cả
-          mọi người. Hiểu rõ kích thước phù hợp với chiều cao, chiều dài chân và dáng người của bạn
-          là yếu tố then chốt để cảm thấy dễ chịu, thoải mái khi đạp, hạn chế các chấn thương không
-          mong muốn.
+          No single bike size fits everyone. Choosing a frame size that matches
+          your height, leg length, and body proportions is essential for comfort
+          and injury prevention.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Khi mua xe, bạn nên kiểm tra chiều cao yên xe, chiều cao của khung xe phù hợp với vóc dáng
-          của mình. Một chiếc xe đạp thể thao phù hợp kích thước sẽ giúp bạn duy trì tư thế đúng,
-          giảm mỏi mệt, nâng cao hiệu quả vận động và an toàn tối đa.
+          Check saddle height and frame geometry before buying. A properly fitted
+          bike helps maintain correct posture, reduces fatigue, improves
+          performance, and increases safety.
         </Typography>
 
         <Typography
@@ -206,19 +209,17 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Phù hợp với đối tượng sử dụng
+          Rider profile and purpose
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Bạn cần xác định rõ mục đích sử dụng như tập luyện, đua xe, đi lại hàng ngày hay du lịch để
-          chọn dòng xe đạp thể thao phù hợp. Ví dụ, xe đạp thể thao nữ, xe đạp trẻ em sẽ phù hợp với
-          các độ tuổi, vóc dáng khác nhau. Đối tượng sử dụng còn ảnh hưởng đến khả năng mang theo,
-          gấp gọn, trọng lượng của xe.
+          Define your main use case: training, racing, daily commuting, or
+          touring. Rider profile also affects ideal weight, portability, and
+          whether features like folding capability are important.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Ngoài ra, nếu bạn chỉ mới bắt đầu, nên chọn các mẫu xe đạp thể thao giá rẻ hoặc xe đạp thể
-          thao gấp gọn để dễ thao tác và làm quen. Trong khi đó, những người đam mê thể thao hoặc
-          thi đấu chuyên nghiệp sẽ ưu tiên các dòng xe đạp cao cấp từ các thương hiệu uy tín như
-          Fujisan, Merida để có trải nghiệm tối ưu nhất.
+          Beginners can start with budget-friendly or easy-to-handle models.
+          Enthusiasts and competitive riders may prefer higher-end bikes from
+          trusted brands for the best overall experience.
         </Typography>
 
         <Typography
@@ -229,19 +230,17 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Bộ truyền động tốt
+          Drivetrain quality
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Hệ thống truyền động gồm các đĩa xích, bộ chuyển tốc, bánh đà đóng vai trò trung tâm trong
-          quá trình vận hành của xe đạp thể thao. Một bộ truyền động tốt đảm bảo việc chuyển đổi các
-          tốc độ mượt mà, giúp người lái kiểm soát xe tốt hơn, phù hợp với các địa hình khác nhau.
-          Điều này đặc biệt quan trọng đối với xe đạp địa hình, xe đạp đua hoặc các dòng xe đạp thể
-          thao cao cấp.
+          The drivetrain includes chainrings, cassette, and derailleurs. A good
+          drivetrain enables smoother shifting, better control, and improved
+          riding efficiency across different terrains.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Bạn nên xem xét các hệ thống truyền động của các thương hiệu uy tín như Fujisan, Modeltime
-          hay Merida để chắc chắn sự ổn định, bền bỉ và dễ sửa chữa. Ngoài ra, việc bảo dưỡng bộ
-          truyền động định kỳ cũng giúp xe vận hành trơn tru, kéo dài tuổi thọ sử dụng.
+          Look for reliable drivetrain components that are durable and easy to
+          maintain. Regular cleaning and maintenance also extend component life
+          and keep your bike running smoothly.
         </Typography>
 
         <Typography
@@ -252,18 +251,17 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Phanh xe phù hợp
+          Brake system
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Phanh là bộ phận an toàn quan trọng nhất của bất kỳ xe đạp thể thao nào. Hiện nay, các loại
-          phanh chủ yếu gồm phanh cơ, phanh đĩa và phanh trống. Phanh đĩa thường được ưa chuộng cho
-          xe đạp địa hình hoặc xe đua vì khả năng phanh hiệu quả, không bị ảnh hưởng bởi điều kiện
-          thời tiết, nhất là khi trời mưa hoặc trơn trượt.
+          Brakes are one of the most important safety components. Common options
+          include rim brakes and disc brakes (mechanical or hydraulic). Disc
+          brakes are often preferred for stronger, more consistent stopping
+          power, especially in wet conditions.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Chọn phanh xe phù hợp giúp bạn kiểm soát tốc độ tốt nhất, đảm bảo an toàn trong mọi tình
-          huống. Các thương hiệu lớn như Fujisan, Merida đều trang bị hệ thống phanh chất lượng, hạn
-          chế tối đa rủi ro trong quá trình vận hành.
+          Selecting the right brake type helps you control speed more confidently
+          and ride safer in different scenarios.
         </Typography>
 
         <Typography
@@ -274,18 +272,17 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Thương hiệu uy tín
+          Trusted brands
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Chọn mua xe đạp thể thao của các thương hiệu uy tín như Fujisan, Merida, Galaxy, Asama,
-          hoặc các thương hiệu Nhật, châu Âu giúp bạn yên tâm về chất lượng, dịch vụ hậu mãi và linh
-          kiện thay thế trong quá trình sử dụng. Những thương hiệu này đều có sản phẩm phù hợp từ xe
-          đạp thể thao trong nhà, xe đạp trẻ em, đến các dòng xe đạp cao cấp, xe đạp gấp gọn.
+          Buying from trusted brands gives you better quality assurance,
+          after-sales support, and easier access to replacement parts. Well-known
+          brands usually offer options for all budgets and riding needs.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Bạn có thể dễ dàng tìm thấy các dòng xe đạp thể thao tại các showroom, cửa hàng phân phối
-          chính hãng hoặc các website uy tín để mua đúng hàng chính hãng, tránh hàng giả, hàng nhái
-          gây ảnh hưởng tới trải nghiệm sử dụng.
+          Purchase from official stores, authorized dealers, or reputable online
+          shops to avoid counterfeit products and protect your ownership
+          experience.
         </Typography>
 
         <Typography
@@ -296,19 +293,17 @@ export default function Home() {
             mb: 1,
           }}
         >
-          Giá thành phù hợp
+          Budget and value
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Ngân sách là yếu tố quyết định lớn tới việc chọn mua xe đạp thể thao phù hợp. Hiện nay, có
-          xe đạp thể thao giá rẻ chỉ từ vài triệu đồng, phù hợp cho người mới bắt đầu hoặc đạp để tập
-          thể dục, trong khi các dòng xe đạp cao cấp có thể lên tới hàng chục, thậm chí trăm triệu
-          đồng.
+          Budget is a major factor when choosing a bike. Entry-level options are
+          great for beginners and fitness riding, while premium models target
+          advanced riders with higher performance expectations.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 3 }}>
-          Bạn cần cân nhắc rõ nhu cầu sử dụng, tần suất và khả năng tài chính để chọn mua mẫu xe đạp
-          thể thao phù hợp, vừa có thể duy trì lâu dài, vừa đảm bảo hiệu quả sử dụng tối ưu nhất. Các
-          thương hiệu uy tín luôn cung cấp đa dạng các dòng xe phù hợp với mọi ngân sách, giúp bạn dễ
-          dàng lựa chọn hơn.
+          Balance your usage frequency, expected features, and spending plan.
+          A good bike should stay comfortable and reliable for long-term use
+          while still fitting your budget.
         </Typography>
 
         <Typography
@@ -321,14 +316,15 @@ export default function Home() {
             fontSize: { xs: 18, md: 24 },
           }}
         >
-          Cửa hàng xe đạp uy tín
+          Choose a reliable bike store
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 }, mb: 2 }}>
-          Muốn sở hữu xe đạp chất lượng, uy tín bạn nên tìm đến các cửa hàng, trung tâm phân phối uy
-          tín, có thương hiệu rõ ràng.
+          To own a quality bike, buy from stores or distributors with a clear
+          reputation and strong service policies.
         </Typography>
         <Typography sx={{ color: "#334155", lineHeight: 1.9, fontSize: { xs: 14, md: 17 } }}>
-          BASAUYCLE chúng tôi tự tin là đơn vị cung cấp xe đạp thể thao uy tín toàn quốc.
+          BASAUYCLE is committed to being a trusted sports bike provider
+          nationwide.
         </Typography>
 
         <Box sx={{ display: "flex", justifyContent: "center", mt: 3, mb: 0 }}>
@@ -345,7 +341,7 @@ export default function Home() {
               "&:hover": { borderColor: "#0f766e", backgroundColor: "rgba(13, 148, 136, 0.06)" },
             }}
           >
-            Thu gọn
+            Collapse
           </Button>
         </Box>
         </Collapse>

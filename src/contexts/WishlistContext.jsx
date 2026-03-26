@@ -192,7 +192,7 @@ export function WishlistProvider({ children }) {
           : { id: postId, postId };
       if (isProductBlockedForWishlist(productObj)) {
         message.warning(
-          "Không thể thêm vào wishlist: tin đang có giao dịch hoặc đã bán.",
+          "This listing can’t be added to your wishlist because it’s in a transaction or already sold.",
         );
         return;
       }

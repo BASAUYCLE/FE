@@ -35,9 +35,9 @@ export default function PostingCard({ posting, onSubmitted }) {
 
   const handleMarkSold = async () => {
     const ok = await confirmCrud({
-      title: "Đánh dấu đã bán?",
-      content: `Tin "${posting.bikeName ?? "này"}" sẽ chuyển sang trạng thái đã bán.`,
-      okText: "Xác nhận",
+      title: "Mark as sold?",
+      content: `Listing "${posting.bikeName ?? "this item"}" will be moved to Sold status.`,
+      okText: "Confirm",
       danger: true,
     });
     if (!ok) return;
@@ -146,9 +146,9 @@ export default function PostingCard({ posting, onSubmitted }) {
                     const id = posting.id ?? posting.backendPostId;
                     if (!id) return;
                     const ok = await confirmCrud({
-                      title: "Gửi duyệt tin đăng?",
-                      content: `Tin "${posting.bikeName ?? "này"}" sẽ được gửi cho quản trị / kiểm định xem xét.`,
-                      okText: "Gửi duyệt",
+                      title: "Submit listing for review?",
+                      content: `Listing "${posting.bikeName ?? "this item"}" will be sent to admin/inspector for review.`,
+                      okText: "Submit",
                     });
                     if (!ok) return;
                     setSubmitting(true);

@@ -139,7 +139,7 @@ export default function InspectorDisputeDetailPage() {
       setDetail(null);
       setPost(null);
       message.error(
-        e?.message || "Không tải được tranh chấp (kiểm tra ID và quyền).",
+        e?.message || "Could not load dispute (check ID and permissions).",
       );
     } finally {
       setLoading(false);
@@ -154,7 +154,7 @@ export default function InspectorDisputeDetailPage() {
     if (!detail?.disputeId) return;
     const note = String(values?.note ?? "").trim();
     if (!note) {
-      message.warning("Nhập nội dung ghi chú.");
+      message.warning("Please enter note content.");
       return;
     }
     try {
@@ -165,9 +165,9 @@ export default function InspectorDisputeDetailPage() {
       );
       const d = res?.result ?? res?.data ?? res;
       setDetail(d && typeof d === "object" ? d : detail);
-      message.success("Đã lưu ghi chú kiểm định.");
+      message.success("Inspector note saved.");
     } catch (e) {
-      message.error(e?.message || "Gửi ghi chú thất bại.");
+      message.error(e?.message || "Failed to submit note.");
     } finally {
       setNoteLoading(false);
     }
@@ -184,7 +184,7 @@ export default function InspectorDisputeDetailPage() {
               onClick={() => navigate("/inspector/disputes")}
               style={{ marginBottom: 12 }}
             >
-              Quay lại danh sách
+              Back to list
             </Button>
 
             {loading ? (
@@ -192,7 +192,7 @@ export default function InspectorDisputeDetailPage() {
                 <Spin />
               </div>
             ) : !detail ? (
-              <Alert type="warning" message="Không tìm thấy tranh chấp." />
+              <Alert type="warning" message="Dispute not found." />
             ) : (
               <div className="dispute-detail-split">
                 <section className="dispute-detail-col">
@@ -200,7 +200,7 @@ export default function InspectorDisputeDetailPage() {
                     level={4}
                     className="dispute-detail-col-title"
                   >
-                    Chi tiết tranh chấp
+                    Dispute details
                   </Typography.Title>
                   <Card
                     className="admin-card"
@@ -227,7 +227,7 @@ export default function InspectorDisputeDetailPage() {
                     {detail.status === DISPUTE_STATUS.OPEN && (
                       <div style={{ marginTop: 16 }}>
                         <Typography.Text strong>
-                          Ghi chú kiểm định (chuyển sang Reviewing)
+                          Inspector note (moves status to Reviewing)
                         </Typography.Text>
                         <Form
                           key={String(disputeId)}
@@ -240,13 +240,13 @@ export default function InspectorDisputeDetailPage() {
                             rules={[
                               {
                                 required: true,
-                                message: "Nhập nội dung ghi chú",
+                                message: "Please enter note content",
                               },
                             ]}
                           >
                             <Input.TextArea
                               rows={4}
-                              placeholder="Kết luận / đề xuất"
+                              placeholder="Conclusion / recommendation"
                             />
                           </Form.Item>
                           <Button
@@ -254,7 +254,7 @@ export default function InspectorDisputeDetailPage() {
                             htmlType="submit"
                             loading={noteLoading}
                           >
-                            Gửi ghi chú
+                            Submit note
                           </Button>
                         </Form>
                       </div>
@@ -262,7 +262,7 @@ export default function InspectorDisputeDetailPage() {
 
                     {detail.status !== DISPUTE_STATUS.OPEN && (
                       <p style={{ marginTop: 12, color: "#64748b" }}>
-                        Chỉ gửi ghi chú khi trạng thái OPEN. Hiện tại:{" "}
+                        Notes can only be submitted when status is OPEN. Current:{" "}
                         {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
                       </p>
                     )}
@@ -274,7 +274,7 @@ export default function InspectorDisputeDetailPage() {
                     level={4}
                     className="dispute-detail-col-title"
                   >
-                    Chi tiết bài đăng
+                    Listing details
                   </Typography.Title>
                   {post ? (
                     <Card
@@ -291,7 +291,7 @@ export default function InspectorDisputeDetailPage() {
                           />
                         ) : (
                           <div className="dispute-detail-post-image-placeholder">
-                            Không có ảnh
+                            No image
                           </div>
                         )}
                       </div>
@@ -308,11 +308,11 @@ export default function InspectorDisputeDetailPage() {
                       )}
                       <dl className="dispute-detail-dl">
                         <div>
-                          <dt>Hãng</dt>
+                          <dt>Brand</dt>
                           <dd>{post.brand}</dd>
                         </div>
                         <div>
-                          <dt>Danh mục</dt>
+                          <dt>Category</dt>
                           <dd>{post.category}</dd>
                         </div>
                         <div>
@@ -320,15 +320,15 @@ export default function InspectorDisputeDetailPage() {
                           <dd>{post.frameSize}</dd>
                         </div>
                         <div>
-                          <dt>Màu</dt>
+                          <dt>Color</dt>
                           <dd>{post.color}</dd>
                         </div>
                         <div>
-                          <dt>Trạng thái</dt>
+                          <dt>Status</dt>
                           <dd>{post.status}</dd>
                         </div>
                         <div>
-                          <dt>Người bán</dt>
+                          <dt>Seller</dt>
                           <dd>{post.sellerName}</dd>
                         </div>
                       </dl>
@@ -343,19 +343,19 @@ export default function InspectorDisputeDetailPage() {
                       ) : null}
                       <Link to={`/product/${post.postId}`}>
                         <Button type="primary" style={{ marginTop: 12 }}>
-                          Xem trang sản phẩm đầy đủ
+                          Open full product page
                         </Button>
                       </Link>
                     </Card>
                   ) : (
                     <Card variant="outlined">
                       <Empty
-                        description="Không có bài đăng hiển thị (bài đã gỡ, ẩn, hoặc API không trả dữ liệu)."
+                        description="No listing available (removed, hidden, or API returned no data)."
                         image={Empty.PRESENTED_IMAGE_SIMPLE}
                       />
                       <Typography.Paragraph type="secondary">
                         Order #{detail.orderId ?? "—"} —{" "}
-                        {detail.postTitle ?? "Không có tiêu đề"}
+                        {detail.postTitle ?? "No title"}
                       </Typography.Paragraph>
                       {(() => {
                         const pid =
@@ -366,7 +366,7 @@ export default function InspectorDisputeDetailPage() {
                         return pid != null ? (
                           <Link to={`/product/${pid}`}>
                             <Button type="default" style={{ marginTop: 8 }}>
-                              Thử mở trang sản phẩm (post #{pid})
+                              Try opening product page (post #{pid})
                             </Button>
                           </Link>
                         ) : null;

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import { Search } from "lucide-react";
 import adminService from "../../../services/adminService";
+import { getAvatarSrc } from "../../../utils/avatar";
 import "../dashboard/index.css";
 import "./index.css";
 
@@ -173,7 +174,7 @@ export default function TransactionManagement() {
 
               {/* Type */}
               <div className="admin-tx-filter-group">
-                <span className="admin-tx-filter-label">Loại GD</span>
+                <span className="admin-tx-filter-label">Transaction type</span>
                 <div className="admin-tx-filter-pills">
                   {TYPE_FILTERS.map((f) => (
                     <button
@@ -241,6 +242,13 @@ export default function TransactionManagement() {
                       tx.email ??
                       tx.userEmail ??
                       "—";
+                    const avatarUrl = getAvatarSrc(
+                      tx?.user ?? tx,
+                      tx?.userAvatar,
+                      tx?.userAvatarUrl,
+                      tx?.user_avatar,
+                      tx?.user_avatar_url,
+                    );
 
                     return (
                       <div
@@ -249,7 +257,19 @@ export default function TransactionManagement() {
                       >
                         {/* Thành viên */}
                         <div className="admin-tx-member">
-                          <div className="admin-tx-avatar">
+                          <div
+                            className="admin-tx-avatar"
+                            style={
+                              avatarUrl
+                                ? {
+                                    backgroundImage: `url(${avatarUrl})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                    color: "transparent",
+                                  }
+                                : undefined
+                            }
+                          >
                             {(member[0] ?? "?").toUpperCase()}
                           </div>
                           <span>{member}</span>

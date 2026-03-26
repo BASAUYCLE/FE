@@ -272,7 +272,7 @@ export default function AdminInspectionReports() {
               <div>
                 <h1 className="admin-page-title">Inspection history</h1>
                 <p className="admin-page-subtitle">
-                  Bao gồm bài đã duyệt và chưa duyệt bởi inspector ·{" "}
+                  Includes listings already reviewed and awaiting review by inspectors -{" "}
                   {reports.length} reports
                 </p>
               </div>
@@ -335,10 +335,10 @@ export default function AdminInspectionReports() {
                       onChange={(e) => setStatusFilter(e.target.value)}
                       className="admin-pill"
                     >
-                      <option value="all">Tất cả</option>
-                      <option value="APPROVED">Đã duyệt (Pass)</option>
-                      <option value="REJECTED">Từ chối (Fail)</option>
-                      <option value="PENDING">Đang chờ</option>
+                      <option value="all">All</option>
+                      <option value="APPROVED">Approved (Pass)</option>
+                      <option value="REJECTED">Rejected (Fail)</option>
+                      <option value="PENDING">Pending</option>
                     </select>
                   </div>
                 </div>

@@ -84,9 +84,9 @@ const STATUS_COLOR = {
 };
 const STATUS_LABEL = {
   AVAILABLE: "Available", DEPOSITED: "Deposited", SOLD: "Sold",
-  PENDING: "Pending", ADMIN_APPROVED: "Chờ kiểm định", REJECTED: "Rejected", HIDDEN: "Hidden",
+  PENDING: "Pending", ADMIN_APPROVED: "Pending inspection", REJECTED: "Rejected", HIDDEN: "Hidden",
 };
-const CONDITION_VI = { good: "Tốt", fair: "Khá", poor: "Trung bình" };
+const CONDITION_VI = { good: "Good", fair: "Fair", poor: "Average" };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -125,8 +125,8 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
   // Tính giá trị "Kiểm định" để đưa vào bảng thông số
   const score = calcScore(inspection);
   const inspectionEntry = (() => {
-    if (!inspection) return { value: "Chưa kiểm định", color: "#94a3b8" };
-    if (inspection.result === "FAIL") return { value: "Không đạt (0%)", color: "#ef4444" };
+    if (!inspection) return { value: "Not inspected", color: "#94a3b8" };
+    if (inspection.result === "FAIL") return { value: "Failed (0%)", color: "#ef4444" };
     const condLabel = CONDITION_VI[(inspection.condition ?? "").toLowerCase()] ?? null;
     if (score !== null) {
       const label = condLabel ? `${score}% · ${condLabel}` : `${score}%`;

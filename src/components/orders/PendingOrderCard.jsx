@@ -229,11 +229,11 @@ export default function PendingOrderCard({ order }) {
             </div>
             <div className="poc-actions poc-delivered-actions">
               <Popconfirm
-                title="Xác nhận đơn hàng?"
-                description="Hành động này sẽ chuyển đơn hàng sang trạng thái Completed và bạn có thể đánh giá."
+                title="Confirm this order?"
+                description="This action moves the order to Completed and lets you submit a review."
                 onConfirm={handleCompleteOrder}
-                okText="Xác nhận"
-                cancelText="Hủy"
+                okText="Confirm"
+                cancelText="Cancel"
               >
                 <Button
                   type="primary"
@@ -246,7 +246,7 @@ export default function PendingOrderCard({ order }) {
                     color: "#fff",
                   }}
                 >
-                  Xác nhận đơn hàng
+                  Confirm order
                 </Button>
               </Popconfirm>
               {canBuyerOpenDispute(order) &&

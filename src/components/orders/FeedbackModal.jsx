@@ -21,7 +21,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
-  // Khi mở modal, thử load feedback hiện có để cho phép edit
+  // When opening, load existing feedback to allow edits.
   useEffect(() => {
     if (!open || !order?.orderId) return;
     let cancelled = false;
@@ -84,7 +84,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
       if (isOrderNotCompletedError(error)) {
         message.warning({
           content:
-            "Hệ thống chỉ nhận đánh giá khi đơn ở trạng thái Completed (thường sau thời gian không tranh chấp). Vui lòng chờ hoặc mở lại từ Đơn hàng của tôi và bấm Gửi lại.",
+            "Reviews are accepted only when the order is in Completed status (usually after the dispute window). Please wait and try again from My Orders.",
           duration: 8,
         });
       } else {

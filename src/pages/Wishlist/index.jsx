@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Box, Typography, Button } from "@mui/material";
-import { PlusOutlined } from "@ant-design/icons";
+import { Trash2, ArrowRight, Heart } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { SimpleProductCard } from "../../components/featuredbikes";
@@ -29,7 +29,7 @@ const PRICE_MIN = 0;
 const PRICE_MAX = 50000000;
 
 export default function Wishlist() {
-  const { wishlist } = useWishlist();
+  const { wishlist, removeFromWishlist, loading } = useWishlist();
   const [searchName, setSearchName] = useState("");
   const [brandFilter, setBrandFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -221,6 +221,15 @@ export default function Wishlist() {
     setModelYearFilter("all");
   };
 
+  const handleClearWishlist = async () => {
+    const ids = wishlist.map((w) => w?.postId ?? w?.id).filter((x) => x != null);
+    for (const id of ids) {
+      // Sequential to keep API/backends safe; removeFromWishlist is resilient.
+      // eslint-disable-next-line no-await-in-loop
+      await removeFromWishlist(id);
+    }
+  };
+
   return (
     <Box
       component="main"
@@ -261,43 +270,62 @@ export default function Wishlist() {
               onViewModeChange={setViewMode}
             />
 
-            <Box className="wishlist-header">
-              <Box>
-                <Typography className="wishlist-title">
-                  YOUR WISHLIST
-                </Typography>
-                <Typography className="wishlist-subtitle">
-                  {displayItems.length} high-performance machines saved for your
-                  next ride.
-                </Typography>
-              </Box>
-            </Box>
-
             <Box
               className={`wishlist-grid ${viewMode === "list" ? "list" : ""} ${
                 displayItems.length === 0 ? "wishlist-grid-empty" : ""
               }`}
             >
-              {displayItems.map((bike, idx) => (
-                <SimpleProductCard
-                  key={bike?.id ?? bike?.postId ?? `wishlist-item-${idx}`}
-                  bike={{ ...bike, id: bike?.id ?? bike?.postId }}
-                  variant={viewMode === "list" ? "list" : "grid"}
-                />
-              ))}
-              {/* Add more card */}
-              <Link to="/marketplace" className="wishlist-add-card">
-                <PlusOutlined style={{ fontSize: 40, color: "#9ca3af" }} />
-                <Typography className="wishlist-add-title">
-                  SAVE MORE GEAR
-                </Typography>
-                <Typography className="wishlist-add-subtitle">
-                  Keep track of your dream builds
-                </Typography>
-                <Button variant="outlined" className="wishlist-explore-btn">
-                  EXPLORE MARKETPLACE
-                </Button>
-              </Link>
+              {displayItems.length === 0 ? (
+                <Box className="wishlist-empty">
+                  <Box className="wishlist-empty-icon">
+                    <Heart size={26} />
+                  </Box>
+                  <Typography className="wishlist-empty-title">
+                    Your wishlist is empty
+                  </Typography>
+                  <Typography className="wishlist-empty-subtitle">
+                    Save bikes you love so you can compare and come back later.
+                  </Typography>
+                  <Link to="/marketplace" className="wishlist-cta-link">
+                    <Button
+                      variant="contained"
+                      className="wishlist-empty-btn"
+                      endIcon={<ArrowRight size={16} />}
+                    >
+                      Browse marketplace
+                    </Button>
+                  </Link>
+                </Box>
+              ) : (
+                <>
+                  {displayItems.map((bike, idx) => (
+                    <SimpleProductCard
+                      key={bike?.id ?? bike?.postId ?? `wishlist-item-${idx}`}
+                      bike={{ ...bike, id: bike?.id ?? bike?.postId }}
+                      variant={viewMode === "list" ? "list" : "grid"}
+                    />
+                  ))}
+
+                  <Link to="/marketplace" className="wishlist-add-card">
+                    <Typography className="wishlist-add-kicker">
+                      Find your next ride
+                    </Typography>
+                    <Typography className="wishlist-add-title">
+                      Explore Marketplace
+                    </Typography>
+                    <Typography className="wishlist-add-subtitle">
+                      New listings drop daily. Save what you like.
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      className="wishlist-explore-btn"
+                      endIcon={<ArrowRight size={16} />}
+                    >
+                      Browse bikes
+                    </Button>
+                  </Link>
+                </>
+              )}
             </Box>
           </Box>
         </Box>
