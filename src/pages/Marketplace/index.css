@@ -12,6 +12,17 @@
   gap: 24px;
 }
 
+/* Scroll target from header search / trending — clears sticky header (teal + nav row) */
+.marketplace-browse-anchor {
+  scroll-margin-top: 132px;
+}
+
+@media (max-width: 768px) {
+  .marketplace-browse-anchor {
+    scroll-margin-top: 96px;
+  }
+}
+
 .marketplace-sidebar {
   width: 280px;
   flex-shrink: 0;

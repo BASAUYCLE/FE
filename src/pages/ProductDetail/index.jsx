@@ -45,6 +45,49 @@ import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
 import "../inspector/common/shared.css";
 import "./index.css";
 
+/** Align with Login page CTA (login.css — .auth-immersive__btn-primary & card outline) */
+const LOGIN_PAGE_PRIMARY_BTN_SX = {
+  borderRadius: 999,
+  minHeight: 52,
+  py: 1.75,
+  mb: 3,
+  textTransform: "uppercase",
+  fontSize: 15,
+  fontWeight: 600,
+  letterSpacing: "0.06em",
+  background: "linear-gradient(135deg, #00ccad 0%, #0d9488 100%)",
+  color: "#fff",
+  boxShadow: "0 10px 24px rgba(0, 204, 173, 0.35)",
+  "&:hover": {
+    background: "linear-gradient(135deg, #00c4aa 0%, #0c8770 100%)",
+    boxShadow: "0 12px 28px rgba(0, 204, 173, 0.42)",
+    filter: "brightness(1.05)",
+  },
+  "&:active": {
+    transform: "translateY(1px)",
+  },
+};
+
+const LOGIN_PAGE_OUTLINE_BTN_SX = {
+  borderRadius: 999,
+  minHeight: 52,
+  py: 1.75,
+  mb: 3,
+  textTransform: "uppercase",
+  fontSize: 15,
+  fontWeight: 600,
+  letterSpacing: "0.06em",
+  borderWidth: 2,
+  borderColor: "#00ccad",
+  color: "#0d9488",
+  bgcolor: "#ffffff",
+  "&:hover": {
+    borderColor: "#0d9488",
+    bgcolor: "rgba(0, 204, 173, 0.1)",
+    color: "#0f766e",
+  },
+};
+
 /** Map API GET /posts/:id response to posting shape (full images + content so admin sees same as member) */
 function mapApiPostToPosting(row) {
   if (!row || typeof row !== "object") return null;
@@ -178,6 +221,33 @@ function postingToProduct(p) {
         ? String(p.description).trim()
         : "Listed on BASAUYCLE.",
   };
+}
+
+/** Chip style key — member `product.badge` text or staff `postingStatus` */
+function getProductDetailBadgeVariant(badgeLabel, postingStatus, isStaffView) {
+  if (isStaffView && postingStatus) {
+    const s = String(postingStatus).toUpperCase();
+    if (["AVAILABLE", "VERIFIED", "ACTIVE"].includes(s)) return "verified";
+    if (
+      ["PENDING", "ADMIN_APPROVED", "PENDING_REVIEW"].includes(s)
+    ) {
+      return "pending";
+    }
+    if (
+      [POSTING_STATUS.PROCESSING, POSTING_STATUS.DEPOSITED].includes(s)
+    ) {
+      return "progress";
+    }
+    if (s === POSTING_STATUS.REJECTED) return "danger";
+    if (s === POSTING_STATUS.SOLD) return "sold";
+    if (s === POSTING_STATUS.DRAFTED) return "draft";
+    return "neutral";
+  }
+  const b = String(badgeLabel ?? "").toUpperCase();
+  if (b.includes("VERIFIED")) return "verified";
+  if (b.includes("PENDING")) return "pending";
+  if (b.includes("PROGRESS") || b.includes("ORDER")) return "progress";
+  return "listed";
 }
 
 export default function ProductDetail() {
@@ -641,7 +711,15 @@ export default function ProductDetail() {
           {/* Product Summary */}
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-              <span className="product-detail-badge">
+              <span
+                className={`product-detail-badge product-detail-badge--${getProductDetailBadgeVariant(
+                  isStaffView && postingStatus
+                    ? (POSTING_STATUS_LABEL[postingStatus] ?? postingStatus)
+                    : product.badge || "LISTED",
+                  postingStatus,
+                  isStaffView,
+                )}`}
+              >
                 {isStaffView && postingStatus
                   ? (POSTING_STATUS_LABEL[postingStatus] ?? postingStatus)
                   : product.badge || "LISTED"}
@@ -696,17 +774,7 @@ export default function ProductDetail() {
                 fullWidth
                 component={Link}
                 to="/manage-listings"
-                sx={{
-                  borderColor: "#00ccad",
-                  color: "#00ccad",
-                  fontWeight: 700,
-                  py: 1.5,
-                  mb: 3,
-                  "&:hover": {
-                    borderColor: "#00b89a",
-                    bgcolor: "rgba(0,204,173,0.08)",
-                  },
-                }}
+                sx={LOGIN_PAGE_OUTLINE_BTN_SX}
               >
                 Your listing
               </Button>
@@ -805,16 +873,10 @@ export default function ProductDetail() {
             ) : (
               <Button
                 variant="contained"
+                disableElevation
                 fullWidth
                 onClick={openCheckout}
-                sx={{
-                  bgcolor: "#00ccad",
-                  color: "#0f172a",
-                  fontWeight: 700,
-                  py: 1.5,
-                  mb: 3,
-                  "&:hover": { bgcolor: "#00b89a" },
-                }}
+                sx={LOGIN_PAGE_PRIMARY_BTN_SX}
               >
                 BUY NOW
               </Button>

@@ -6,6 +6,7 @@ import {
   INSPECTION_STATUS_LABEL,
   INSPECTION_STATUS_TAG_COLOR,
 } from "../../../constants/inspectionStatus";
+import AdminPaginationBar from "../../admin/AdminPaginationBar";
 
 const PAGE_SIZE = 10;
 
@@ -170,39 +171,13 @@ export default function InspectionQueueTable({
           ))
         )}
       </div>
-      <div className="inspector-pagination">
-        <span>
-          Showing {start + 1}–
-          {Math.min(start + PAGE_SIZE, filteredInspections.length)} of{" "}
-          {filteredInspections.length} inspections
-        </span>
-        <div className="inspector-pagination-btns">
-          <button
-            type="button"
-            disabled={page <= 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-          >
-            ‹
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button
-              key={p}
-              type="button"
-              className={p === page ? "active" : ""}
-              onClick={() => setPage(p)}
-            >
-              {p}
-            </button>
-          ))}
-          <button
-            type="button"
-            disabled={page >= totalPages}
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          >
-            ›
-          </button>
-        </div>
-      </div>
+      <AdminPaginationBar
+        totalCount={filteredInspections.length}
+        page={page}
+        totalPages={totalPages}
+        setPage={setPage}
+        nounPhrase="inspections"
+      />
     </section>
   );
 }

@@ -6,6 +6,7 @@ import { RefreshCw } from "lucide-react";
 import { useAuth } from "../../../contexts/AuthContext";
 import disputeService from "../../../services/disputeService";
 import DisputeSummaryRow from "../../../components/disputes/DisputeSummaryRow";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import "../dashboard/index.css";
 
 /**
@@ -109,37 +110,13 @@ export default function AdminDisputesPage() {
                 }
               />
             ))}
-            {totalPages > 1 && (
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginTop: 12,
-                }}
-              >
-                <span style={{ color: "#64748b", fontSize: 13 }}>
-                  {rows.length} disputes · Page {page}/{totalPages}
-                </span>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button
-                    type="button"
-                    className="admin-tx-page-btn"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    ‹
-                  </button>
-                  <button
-                    type="button"
-                    className="admin-tx-page-btn"
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
-            )}
+            <AdminPaginationBar
+              totalCount={rows.length}
+              page={page}
+              totalPages={totalPages}
+              setPage={setPage}
+              nounPhrase="disputes"
+            />
           </div>
         )}
       </div>

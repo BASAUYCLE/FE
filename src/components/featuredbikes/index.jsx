@@ -226,11 +226,18 @@ const CategoryCard = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   borderRadius: 20,
   backgroundColor: "#ffffff",
-  boxShadow: "0 10px 30px rgba(15,23,42,0.08)",
+  /* Không dùng box-shadow lớn — bóng lan ngang chồng giữa các ô tạo vệt xám */
+  border: "1px solid #e8ecf0",
+  boxShadow: "none",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   gap: theme.spacing(1.5),
+  transition: "border-color 0.2s ease, transform 0.2s ease",
+  "&:hover": {
+    borderColor: "#d1d5db",
+    transform: "translateY(-2px)",
+  },
 }));
 
 const CategoryImage = styled("div")(() => ({
@@ -238,7 +245,7 @@ const CategoryImage = styled("div")(() => ({
   height: 100,
   borderRadius: 16,
   overflow: "hidden",
-  background: "#f9fafb",
+  background: "#ffffff",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -254,6 +261,11 @@ const CategorySection = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(6),
   padding: theme.spacing(3, 0, 1),
   borderTop: "1px solid #e5e7eb",
+  /* Header sticky — chừa khoảng để tiêu đề Road Bike / Mountain Bike… còn nguyên trong viewport */
+  scrollMarginTop: "124px",
+  [theme.breakpoints.down("sm")]: {
+    scrollMarginTop: "96px",
+  },
 }));
 
 const CategorySectionHeader = styled(Box)(({ theme }) => ({
@@ -262,6 +274,11 @@ const CategorySectionHeader = styled(Box)(({ theme }) => ({
   justifyContent: "space-between",
   marginBottom: theme.spacing(2.5),
   gap: theme.spacing(2),
+  /* Fallback nếu trình duyệt mở #home-category-* trực tiếp */
+  scrollMarginTop: "calc(168px + 16px)",
+  [theme.breakpoints.down("sm")]: {
+    scrollMarginTop: "calc(120px + 12px)",
+  },
 }));
 
 const CategorySectionTitle = styled(Typography)({
@@ -370,17 +387,6 @@ const SimpleProductMetaText = styled("span")({
   color: "#6b7280",
 });
 
-const STATIC_FALLBACK_CATEGORIES = [
-  { key: "female", label: "Women's Bike" },
-  { key: "mtb", label: "Mountain Bike" },
-  { key: "road", label: "Road Bike" },
-  { key: "city", label: "City Bike" },
-  { key: "fixed", label: "Fixed Gear" },
-  { key: "student", label: "Student Bike" },
-  { key: "folding", label: "Folding Bike" },
-  { key: "ebike", label: "E-Bike" },
-];
-
 const CATEGORY_KEYS = ["road", "mountain", "gravel", "city", "ebike", "others"];
 
 const CATEGORY_SECTION_TITLES = {
@@ -391,6 +397,59 @@ const CATEGORY_SECTION_TITLES = {
   ebike: "E-Bike",
   others: "Others",
 };
+
+/** 6 ô PRODUCT CATEGORIES — trùng key với section bên dưới để cuộn đúng chỗ */
+const HOME_PRODUCT_CATEGORY_CARDS = CATEGORY_KEYS.map((key) => ({
+  key,
+  label: CATEGORY_SECTION_TITLES[key],
+}));
+
+const CATEGORY_CARD_IMAGE_BY_KEY = {
+  road: roadBikeImage,
+  mountain: mountainBikeImage,
+  gravel: gravelBikeImage,
+  city: cityBikeImage,
+  ebike: eBikeImage,
+  others: othersImage,
+};
+
+/** Vị trí cuộn dọc — một số trình duyệt chỉ có documentElement.scrollTop, window.scrollY = 0 → tránh top âm → nhảy về đầu trang */
+function getWindowScrollTop() {
+  if (typeof window === "undefined") return 0;
+  return (
+    window.pageYOffset ??
+    window.scrollY ??
+    document.documentElement?.scrollTop ??
+    document.body?.scrollTop ??
+    0
+  );
+}
+
+/** Cuộn tới hàng tiêu đề danh mục — offset theo chiều cao AppBar sticky để chữ không bị che */
+function scrollToHomeCategorySection(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (!el) return;
+
+  const run = () => {
+    const appBar =
+      document.querySelector("header.MuiAppBar-root") ??
+      document.querySelector(".MuiAppBar-root");
+    const gapPx = 16;
+    const offset = (appBar?.offsetHeight ?? 168) + gapPx;
+    const scrollTop = getWindowScrollTop();
+    const rect = el.getBoundingClientRect();
+    const targetY = rect.top + scrollTop - offset;
+    window.scrollTo({
+      top: Math.max(0, targetY),
+      left: 0,
+      behavior: "smooth",
+    });
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(run);
+  });
+}
 
 function resolveCategoryKeyFromText(text) {
   const t = (text || "").toLowerCase();
@@ -563,9 +622,6 @@ export default function FeaturedBikes() {
     usePostings();
   const [apiPostings, setApiPostings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categoryCards, setCategoryCards] = useState([]);
-  const [categoryLoading, setCategoryLoading] = useState(true);
-
   useEffect(() => {
     loadPublicPostings();
   }, [loadPublicPostings]);
@@ -646,52 +702,6 @@ export default function FeaturedBikes() {
     return buckets;
   }, [allFeaturedBikes]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadCategories = async () => {
-      try {
-        setCategoryLoading(true);
-        const res = await postService.getCategories();
-        if (cancelled) return;
-        const raw = res?.data ?? res?.result ?? res;
-        const list = Array.isArray(raw)
-          ? raw
-          : Array.isArray(raw?.result)
-            ? raw.result
-            : [];
-        const mapped = list.map((c, idx) => ({
-          key: String(c.categoryId ?? c.id ?? idx),
-          label: c.categoryName ?? c.name ?? `Category ${idx + 1}`,
-        }));
-        if (mapped.length > 0) {
-          const others = [];
-          const rest = [];
-          mapped.forEach((item) => {
-            const text = item.label?.toString().toLowerCase() ?? "";
-            if (text === "others" || text === "other" || text === "khác") {
-              others.push(item);
-            } else {
-              rest.push(item);
-            }
-          });
-          setCategoryCards([...rest, ...others].slice(0, 8));
-        } else {
-          setCategoryCards(STATIC_FALLBACK_CATEGORIES);
-        }
-      } catch {
-        if (!cancelled) {
-          setCategoryCards(STATIC_FALLBACK_CATEGORIES);
-        }
-      } finally {
-        if (!cancelled) setCategoryLoading(false);
-      }
-    };
-    loadCategories();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const scroll = (direction) => {
     if (!scrollRef.current) return;
     const step = direction === "left" ? -SCROLL_AMOUNT : SCROLL_AMOUNT;
@@ -745,67 +755,52 @@ export default function FeaturedBikes() {
         </SectionHeader>
 
         <CategoryGrid>
-          {(categoryLoading ? STATIC_FALLBACK_CATEGORIES : categoryCards).map(
-            (cat) => {
-              const key = resolveCategoryKeyFromText(cat.label);
-              const sectionId = `home-category-${key}`;
-              return (
-                <CategoryCard
-                  key={cat.key}
-                  onClick={() => {
-                    const el = document.getElementById(sectionId);
-                    if (el) {
-                      const rect = el.getBoundingClientRect();
-                      const offset = 100; // chừa khoảng cho header
-                      const targetY = rect.top + window.scrollY - offset;
-                      window.scrollTo({
-                        top: targetY,
-                        behavior: "smooth",
-                      });
-                    }
-                  }}
-                  sx={{ cursor: "pointer" }}
-                >
-                  <CategoryImage>
-                    <img
-                      src={
-                        cat.label === "Road Bike"
-                          ? roadBikeImage
-                          : cat.label === "Mountain Bike"
-                            ? mountainBikeImage
-                            : cat.label === "Gravel Bike"
-                              ? gravelBikeImage
-                              : cat.label === "City Bike"
-                                ? cityBikeImage
-                                : cat.label === "E-Bike"
-                                  ? eBikeImage
-                                  : cat.label === "Others"
-                                    ? othersImage
-                                    : demoBike
-                      }
-                      alt={cat.label}
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        objectFit: "cover",
-                        objectPosition: "center",
-                        display: "block",
-                      }}
-                    />
-                  </CategoryImage>
-                  <CategoryLabel>{cat.label}</CategoryLabel>
-                </CategoryCard>
-              );
-            },
-          )}
+          {HOME_PRODUCT_CATEGORY_CARDS.map((cat) => {
+            const sectionId = `home-category-${cat.key}`;
+            const imgSrc =
+              CATEGORY_CARD_IMAGE_BY_KEY[cat.key] ?? demoBike;
+            return (
+              <CategoryCard
+                key={cat.key}
+                component="button"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  scrollToHomeCategorySection(sectionId);
+                }}
+                sx={{
+                  cursor: "pointer",
+                  border: "none",
+                  font: "inherit",
+                  textAlign: "center",
+                }}
+              >
+                <CategoryImage>
+                  <img
+                    src={imgSrc}
+                    alt={cat.label}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "center",
+                      display: "block",
+                    }}
+                  />
+                </CategoryImage>
+                <CategoryLabel>{cat.label}</CategoryLabel>
+              </CategoryCard>
+            );
+          })}
         </CategoryGrid>
 
         {CATEGORY_KEYS.map((key) => {
           const bikes = categorizedBikes[key] ?? [];
           const title = CATEGORY_SECTION_TITLES[key] ?? key;
           return (
-            <CategorySection id={`home-category-${key}`} key={key}>
-              <CategorySectionHeader>
+            <CategorySection key={key}>
+              <CategorySectionHeader id={`home-category-${key}`}>
                 <CategorySectionTitle component="h3">
                   {title}
                 </CategorySectionTitle>
@@ -813,7 +808,7 @@ export default function FeaturedBikes() {
                   component={Link}
                   to={`/marketplace?category=${encodeURIComponent(title)}`}
                 >
-                  Xem tất cả »
+                  View all »
                 </CategorySectionViewAll>
               </CategorySectionHeader>
               <CategoryRowWrapper
@@ -856,7 +851,7 @@ export default function FeaturedBikes() {
                         px: 1,
                       }}
                     >
-                      Hiện chưa có xe trong danh mục này.
+                      No bikes in this category yet.
                     </Typography>
                   ) : (
                     bikes.slice(0, 5).map((bike) => (

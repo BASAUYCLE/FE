@@ -556,7 +556,8 @@
 .wallet-banner-card::before {
   content: "";
   position: absolute;
-  inset: -16px;
+  /* Inset trong card — tránh scale/âm inset + overflow:hidden làm cắt logo */
+  inset: 14px 18px 14px 18px;
   z-index: 0;
   pointer-events: none;
   background-color: #ffffff;
@@ -564,9 +565,8 @@
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
-  filter: blur(3.6px) saturate(1.06);
-  opacity: 0.7;
-  transform: scale(1.07);
+  filter: blur(1px) saturate(1.28) contrast(1.1);
+  opacity: 0.96;
 }
 
 .wallet-banner-card::after {
@@ -575,14 +575,15 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
+  /* Lớp phỏng mỏng — logo VNPay hiện rõ hơn */
   background: linear-gradient(
     155deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(240, 253, 250, 0.5) 38%,
-    rgba(248, 250, 252, 0.82) 72%,
-    rgba(255, 255, 255, 0.88) 100%
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(240, 253, 250, 0.22) 38%,
+    rgba(248, 250, 252, 0.4) 72%,
+    rgba(255, 255, 255, 0.48) 100%
   );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
 }
 
 .wallet-banner-card.ant-card .ant-card-body {
@@ -654,12 +655,13 @@
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.12em;
-  color: #0d9488;
+  color: #000000;
   margin-top: 2px;
   margin-bottom: 6px;
   position: relative;
   z-index: 3;
   text-shadow: none;
+  -webkit-font-smoothing: antialiased;
 }
 
 .wallet-hero-balance {
@@ -732,6 +734,18 @@
   background: rgba(13, 148, 136, 0.14);
 }
 
+.wallet-hero-balance .wallet-eye-btn {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.wallet-hero-balance .wallet-eye-btn:hover {
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+}
+
 .wallet-account {
   display: flex;
   align-items: center;
@@ -760,8 +774,9 @@
   font-size: 13px;
   font-weight: 900;
   margin-left: 8px;
-  opacity: 0.95;
-  color: #0d9488;
+  opacity: 1;
+  color: #000000;
+  -webkit-font-smoothing: antialiased;
 }
 
 .wallet-hero-footer {
@@ -867,6 +882,26 @@
 
 .wallet-page .ant-table-tbody > tr:hover > td {
   background: #f9fafb !important;
+}
+
+/* Type column: normal weight, sentence case, no underline (overrides global thead uppercase/bold) */
+.wallet-page .ant-table-thead > tr > th.wallet-tx-type-col,
+.wallet-page .ant-table-tbody > tr > td.wallet-tx-type-col {
+  text-transform: none !important;
+  font-weight: 400 !important;
+  letter-spacing: normal !important;
+  text-decoration: none !important;
+}
+
+.wallet-page .ant-table-thead > tr > th.wallet-tx-type-col {
+  font-weight: 600 !important;
+  color: #64748b !important;
+}
+
+.wallet-page .wallet-tx-type-text {
+  font-weight: 400;
+  text-decoration: none;
+  text-transform: none;
 }
 
 /* Table */

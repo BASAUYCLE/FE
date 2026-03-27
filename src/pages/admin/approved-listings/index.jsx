@@ -1,14 +1,84 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
-import { Search, Eye, MoreHorizontal, Filter } from "lucide-react";
+import {
+  Eye,
+  MoreHorizontal,
+  Filter,
+  ChevronDown,
+  Check,
+  LayoutGrid,
+  CheckCircle2,
+  BadgeCheck,
+  BadgeDollarSign,
+  Repeat,
+  Clock,
+  Ban,
+} from "lucide-react";
 import { POSTING_STATUS_LABEL } from "../../../constants/postingStatus";
 import adminPostService from "../../../services/adminPostService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
+import AdminToolbarFilters from "../../../components/admin/AdminToolbarFilters";
 import "../dashboard/index.css";
+import "../user/index.css";
 import "./index.css";
 
+/** Kích thước icon Lucide — khớp `.stat-icon svg` (22px) trên admin-users */
+const LUCIDE_STAT = { size: 22, strokeWidth: 2 };
+const LUCIDE_TABLE_ACTION = { size: 16, strokeWidth: 2 };
+
+/** Thẻ lọc trạng thái — Lucide components + stat-card giống admin-users */
+const LISTING_STATS_CONFIG = [
+  {
+    key: "members",
+    filter: "all",
+    label: "All listings",
+    Icon: LayoutGrid,
+  },
+  {
+    key: "verified",
+    filter: "AVAILABLE",
+    label: "Available",
+    Icon: CheckCircle2,
+  },
+  {
+    key: "hidden",
+    filter: "SOLD",
+    label: "Sold",
+    Icon: BadgeCheck,
+  },
+  {
+    key: "deposited",
+    filter: "DEPOSITED",
+    label: "Deposited",
+    Icon: BadgeDollarSign,
+  },
+  {
+    key: "pending",
+    filter: "PROCESSING",
+    label: "In transaction",
+    Icon: Repeat,
+  },
+  {
+    key: "listing-pending",
+    filter: "PENDING",
+    label: "Pending",
+    Icon: Clock,
+  },
+  {
+    key: "rejected",
+    filter: "REJECTED",
+    label: "Rejected",
+    Icon: Ban,
+  },
+];
+
 const PAGE_SIZE = 10;
+
+function categoryOptionLabel(c) {
+  return c === "all" ? "All categories" : c;
+}
 
 export default function AdminApprovedListings() {
   const [search, setSearch] = useState("");
@@ -120,16 +190,28 @@ export default function AdminApprovedListings() {
     return ["all", ...Array.from(set)];
   }, [listings]);
 
-  const statusOptions = useMemo(() => {
-    const set = new Set(
-      listings.map((r) => String(r.status ?? "").toUpperCase()).filter(Boolean),
-    );
-    return ["all", ...Array.from(set)];
-  }, [listings]);
+  const categoryFilterOptions = useMemo(
+    () =>
+      categories.map((c) => ({
+        value: c,
+        label: categoryOptionLabel(c),
+      })),
+    [categories],
+  );
+
+  const countForStatusFilter = useCallback(
+    (filter) => {
+      if (filter === "all") return listings.length;
+      return listings.filter(
+        (l) => String(l.status ?? "").toUpperCase() === filter,
+      ).length;
+    },
+    [listings],
+  );
 
   return (
     <AdminLayout>
-      <div className="admin-dashboard-page admin-approved-listings-page">
+      <div className="admin-dashboard-page admin-approved-listings-page admin-toolbar-page">
         <div className="admin-dashboard">
           <div className="admin-content">
             <header className="admin-topbar">
@@ -142,54 +224,54 @@ export default function AdminApprovedListings() {
             </header>
 
             <section className="admin-card admin-table-card">
-              <div className="admin-status-filter-bar">
-                {statusOptions.map((status) => (
-                  <button
-                    key={status}
-                    type="button"
-                    className={`admin-status-filter-btn ${
-                      statusFilter === status ? "active" : ""
-                    }`}
-                    onClick={() => setStatusFilter(status)}
-                  >
-                    {status === "all"
-                      ? "All status"
-                      : (POSTING_STATUS_LABEL[status] ?? status)}
-                  </button>
-                ))}
-              </div>
-              <div className="admin-card-header">
-                <div className="admin-approved-filters">
-                  <div className="admin-search-wrap">
-                    <Search className="admin-search-icon" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Search by title, seller, post ID..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="admin-search-input"
-                    />
-                  </div>
-                  <div className="admin-filter-wrap">
-                    <Filter size={14} />
-                    <select
-                      value={categoryFilter}
-                      onChange={(e) => setCategoryFilter(e.target.value)}
-                      className="admin-pill"
+              <section className="user-stats admin-approved-listing-stats">
+                {LISTING_STATS_CONFIG.map((item) => {
+                  const { Icon } = item;
+                  const count = countForStatusFilter(item.filter);
+                  const isActive =
+                    item.filter === "all"
+                      ? statusFilter === "all"
+                      : statusFilter === item.filter;
+                  return (
+                    <div
+                      key={item.key}
+                      role="button"
+                      tabIndex={0}
+                      className={`stat-card stat-card--${item.key} ${
+                        isActive ? "stat-card--active" : ""
+                      }`}
+                      onClick={() => setStatusFilter(item.filter)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setStatusFilter(item.filter);
+                        }
+                      }}
                     >
-                      {categories.map((c) => (
-                        <option key={c} value={c}>
-                          {c === "all" ? "All categories" : c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="admin-table-actions">
-                  <span className="admin-count-badge">
-                    {filtered.length} listing(s)
-                  </span>
-                </div>
+                      <div className="stat-icon">
+                        <Icon aria-hidden {...LUCIDE_STAT} />
+                      </div>
+                      <div className="stat-meta">
+                        <div className="stat-label">{item.label}</div>
+                        <div className="stat-row">
+                          <span className="stat-value">{count}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </section>
+              <div className="admin-card-header">
+                <AdminToolbarFilters
+                  searchValue={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Search by title, seller, post ID..."
+                  filterValue={categoryFilter}
+                  onFilterChange={setCategoryFilter}
+                  filterOptions={categoryFilterOptions}
+                  idPrefix="admin-approved-category"
+                  filterAriaLabel="Filter by category"
+                />
               </div>
               <div className="admin-table admin-approved-table">
                 <div className="admin-table-row admin-table-header">
@@ -259,7 +341,7 @@ export default function AdminApprovedListings() {
                           aria-label="View"
                           onClick={() => row.id && setPreviewId(row.id)}
                         >
-                          <Eye size={16} />
+                          <Eye aria-hidden {...LUCIDE_TABLE_ACTION} />
                         </button>
                         <button
                           type="button"
@@ -267,37 +349,22 @@ export default function AdminApprovedListings() {
                           title="More"
                           aria-label="More"
                         >
-                          <MoreHorizontal size={16} />
+                          <MoreHorizontal aria-hidden {...LUCIDE_TABLE_ACTION} />
                         </button>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              {totalPages > 1 && (
-                <div className="admin-tx-pagination" style={{ marginTop: 12 }}>
-                  <span style={{ color: "#64748b", fontSize: 13 }}>
-                    {filtered.length} listing(s) · Page {page}/{totalPages}
-                  </span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      type="button"
-                      className="admin-tx-page-btn"
-                      disabled={page === 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      className="admin-tx-page-btn"
-                      disabled={page === totalPages}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      ›
-                    </button>
-                  </div>
-                </div>
+              {!loading && (
+                <AdminPaginationBar
+                  totalCount={filtered.length}
+                  page={page}
+                  totalPages={totalPages}
+                  setPage={setPage}
+                  nounPhrase="listing(s)"
+                  style={{ padding: "0 20px 16px" }}
+                />
               )}
             </section>
           </div>

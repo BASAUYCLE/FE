@@ -232,7 +232,6 @@
   gap: 10px;
 }
 
-.queue-filter,
 .queue-refresh {
   display: inline-flex;
   align-items: center;
@@ -268,11 +267,13 @@
 }
 
 .queue-header-row {
-  background: #f3fbf9;
-  font-size: 12px;
+  background: #f8fafc;
+  font-size: 11px;
   font-weight: 700;
-  color: #00b894;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
   text-transform: uppercase;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .queue-bike {
@@ -377,9 +378,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  color: #0f766e;
+  color: #0f172a;
   font-size: 13px;
-  background: #f6fffd;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
 }
 
 .queue-pagination {

@@ -460,6 +460,7 @@ export default function Account() {
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState(() => pickAvatarUrl(user));
+  const [avatarLightboxOpen, setAvatarLightboxOpen] = useState(false);
   const avatarInputRef = useRef(null);
 
   useEffect(() => {
@@ -609,22 +610,43 @@ export default function Account() {
               }}
             >
               <Box sx={{ position: "relative" }}>
-                <Avatar
-                  src={avatarSrc || undefined}
+                <Box
+                  component="button"
+                  type="button"
+                  onClick={() => setAvatarLightboxOpen(true)}
                   sx={{
-                    width: 88,
-                    height: 88,
-                    bgcolor: "#00ccad",
-                    fontSize: 32,
-                    fontWeight: 600,
+                    border: "none",
+                    padding: 0,
+                    margin: 0,
+                    background: "none",
+                    cursor: "zoom-in",
+                    borderRadius: "50%",
+                    lineHeight: 0,
+                    display: "inline-flex",
+                    verticalAlign: "middle",
                   }}
+                  aria-label="View profile photo larger"
                 >
-                  {initials}
-                </Avatar>
+                  <Avatar
+                    src={avatarSrc || undefined}
+                    sx={{
+                      width: 88,
+                      height: 88,
+                      bgcolor: "#00ccad",
+                      fontSize: 32,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {initials}
+                  </Avatar>
+                </Box>
                 <Box
                   className={`account-avatar-edit ${avatarUploading ? "account-avatar-edit--disabled" : ""}`}
                   title={avatarUploading ? "Uploading..." : "Change photo"}
-                  onClick={handleAvatarEditClick}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAvatarEditClick();
+                  }}
                   role="button"
                   aria-label="Change photo"
                   tabIndex={0}
@@ -779,6 +801,54 @@ export default function Account() {
         {/* ── Address Section ── */}
         {userId && <AddressSection userId={userId} />}
       </Box>
+
+      <Modal
+        open={avatarLightboxOpen}
+        footer={null}
+        onCancel={() => setAvatarLightboxOpen(false)}
+        centered
+        width="auto"
+        title="Profile photo"
+        destroyOnClose
+        styles={{
+          body: {
+            padding: "16px 8px 24px",
+            textAlign: "center",
+          },
+        }}
+      >
+        {avatarSrc ? (
+          <Box
+            component="img"
+            src={avatarSrc}
+            alt="Profile"
+            sx={{
+              maxWidth: "min(90vw, 420px)",
+              maxHeight: "min(70vh, 420px)",
+              width: "auto",
+              height: "auto",
+              objectFit: "contain",
+              borderRadius: 2,
+              display: "block",
+              mx: "auto",
+              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
+            }}
+          />
+        ) : (
+          <Avatar
+            sx={{
+              width: 200,
+              height: 200,
+              fontSize: 72,
+              fontWeight: 600,
+              bgcolor: "#00ccad",
+              mx: "auto",
+            }}
+          >
+            {initials}
+          </Avatar>
+        )}
+      </Modal>
 
       <Footer
         marketplaceLinks={[

@@ -253,10 +253,19 @@ const MyWallet = () => {
     {
       title: "Type",
       key: "type",
+      className: "wallet-tx-type-col",
+      onHeaderCell: () => ({ className: "wallet-tx-type-col" }),
       render: (_, record) => {
         const txTypeRaw = getTxType(record);
         const txTypeKey = txTypeRaw ? String(txTypeRaw).toUpperCase() : null;
-        return TX_TYPE_LABEL[txTypeKey] ?? txTypeRaw ?? "—";
+        const mapped = TX_TYPE_LABEL[txTypeKey];
+        if (mapped) return <span className="wallet-tx-type-text">{mapped}</span>;
+        if (!txTypeRaw) return "—";
+        const human = String(txTypeRaw)
+          .replace(/_/g, " ")
+          .toLowerCase()
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        return <span className="wallet-tx-type-text">{human}</span>;
       },
       width: 92,
     },
@@ -372,7 +381,11 @@ const MyWallet = () => {
                           showBalance ? "Hide balance" : "Show balance"
                         }
                       >
-                        {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {showBalance ? (
+                          <EyeOff size={18} strokeWidth={2.75} />
+                        ) : (
+                          <Eye size={18} strokeWidth={2.75} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -491,7 +504,7 @@ const MyWallet = () => {
                       dataSource={tableData}
                       size="small"
                       pagination={{
-                        pageSize: 5,
+                        pageSize: 7,
                         pageSizeOptions: [5, 10, 20],
                         position: ["bottomCenter"],
                       }}

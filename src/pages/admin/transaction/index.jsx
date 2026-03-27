@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import { Search } from "lucide-react";
 import adminService from "../../../services/adminService";
 import { getAvatarSrc } from "../../../utils/avatar";
@@ -324,51 +325,15 @@ export default function TransactionManagement() {
                 )}
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="admin-tx-pagination">
-                  <span style={{ color: "#64748b", fontSize: 13 }}>
-                    {filtered.length} transactions · Page {page}/{totalPages}
-                  </span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      type="button"
-                      className="admin-tx-page-btn"
-                      disabled={page === 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      ‹
-                    </button>
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      const pg =
-                        page <= 4
-                          ? i + 1
-                          : page >= totalPages - 3
-                            ? totalPages - 6 + i
-                            : page - 3 + i;
-                      if (pg < 1 || pg > totalPages) return null;
-                      return (
-                        <button
-                          key={pg}
-                          type="button"
-                          className={`admin-tx-page-btn ${pg === page ? "active" : ""}`}
-                          onClick={() => setPage(pg)}
-                        >
-                          {pg}
-                        </button>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      className="admin-tx-page-btn"
-                      disabled={page === totalPages}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      ›
-                    </button>
-                  </div>
-                </div>
-              )}
+              <AdminPaginationBar
+                className="admin-tx-pagination"
+                style={{ marginTop: 0 }}
+                totalCount={filtered.length}
+                page={page}
+                totalPages={totalPages}
+                setPage={setPage}
+                nounPhrase="transactions"
+              />
             </section>
           </div>
         </div>

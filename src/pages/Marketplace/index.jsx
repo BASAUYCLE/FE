@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { Pagination } from "antd";
 import Header from "../../components/header";
@@ -98,17 +98,32 @@ const PRICE_RANGE_DEFAULT = [PRICE_MIN, PRICE_MAX];
 // 5 columns * 4 rows = 20 items per page.
 const PAGE_SIZE = 20;
 
+const MARKETPLACE_BROWSE_HASH = "#marketplace-browse";
+
 export default function Marketplace() {
   const { user } = useAuth();
   const { postings, publicPostings, loadPublicPostings, loadPostingsBySeller } =
     usePostings();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [apiPostings, setApiPostings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPublicPostings();
   }, [loadPublicPostings]);
+
+  /** Header search / trending links append this hash — scroll to filter + grid (below hero). */
+  useEffect(() => {
+    if (location.hash !== MARKETPLACE_BROWSE_HASH) return;
+    const t = window.setTimeout(() => {
+      document.getElementById("marketplace-browse")?.scrollIntoView({
+        behavior: "auto",
+        block: "start",
+      });
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
     const sellerId = user?.id ?? user?.userId ?? user?.user_id;
@@ -412,35 +427,42 @@ export default function Marketplace() {
       </Box>
       <Box className="marketplace-layout">
         <main className="marketplace-main">
-          <MarketplaceFilterBar
-            searchName={searchName}
-            onSearchNameChange={setSearchName}
-            brandFilter={brandFilter}
-            onBrandFilterChange={setBrandFilter}
-            categoryFilter={categoryFilter}
-            onCategoryFilterChange={setCategoryFilter}
-            frameSizeFilter={frameSizeFilter}
-            onFrameSizeFilterChange={setFrameSizeFilter}
-            modelYearFilter={modelYearFilter}
-            onModelYearFilterChange={setModelYearFilter}
-            priceRange={priceRange}
-            onPriceRangeChange={(updater) =>
-              setPriceRange((prev) =>
-                typeof updater === "function" ? updater(prev) : updater,
-              )
-            }
-            brandOptions={brandOptions}
-            categoryOptions={categoryOptions}
-            frameSizeOptions={frameSizeOptions}
-            modelYearOptions={modelYearOptions}
-            onClearFilters={clearFilters}
-            priceMin={PRICE_MIN}
-            priceMax={PRICE_MAX}
-            sortBy={sortBy}
-            onSortByChange={setSortBy}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-          />
+          <Box
+            id="marketplace-browse"
+            className="marketplace-browse-anchor"
+            component="section"
+            aria-label="Marketplace listings"
+          >
+            <MarketplaceFilterBar
+              searchName={searchName}
+              onSearchNameChange={setSearchName}
+              brandFilter={brandFilter}
+              onBrandFilterChange={setBrandFilter}
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              frameSizeFilter={frameSizeFilter}
+              onFrameSizeFilterChange={setFrameSizeFilter}
+              modelYearFilter={modelYearFilter}
+              onModelYearFilterChange={setModelYearFilter}
+              priceRange={priceRange}
+              onPriceRangeChange={(updater) =>
+                setPriceRange((prev) =>
+                  typeof updater === "function" ? updater(prev) : updater,
+                )
+              }
+              brandOptions={brandOptions}
+              categoryOptions={categoryOptions}
+              frameSizeOptions={frameSizeOptions}
+              modelYearOptions={modelYearOptions}
+              onClearFilters={clearFilters}
+              priceMin={PRICE_MIN}
+              priceMax={PRICE_MAX}
+              sortBy={sortBy}
+              onSortByChange={setSortBy}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
+          </Box>
 
           <Box
             className={`marketplace-grid ${viewMode === "list" ? "list" : ""}`}

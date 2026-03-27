@@ -1,15 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import bikeLogo from "../../assets/bike-logo.png";
 import vnpayLogo from "../../assets/vnpay.svg";
+import { onSameRouteScrollToTop } from "../../utils/sameRouteScroll";
 import "./index.css";
 
 export default function Footer() {
+  const { pathname } = useLocation();
+
   return (
     <footer className="app-footer">
       <div className="app-footer-inner">
         {/* Block 1: Logo + tagline + contact */}
         <div className="app-footer-main">
-          <Link to="/" className="app-footer-logo">
+          <Link
+            to="/"
+            className="app-footer-logo"
+            onClick={(e) => onSameRouteScrollToTop(e, "/", pathname)}
+          >
             <img
               src={bikeLogo}
               alt="BASAUYCLE"
@@ -26,7 +33,12 @@ export default function Footer() {
             <div><strong>Website:</strong></div>
           </div>
           <div className="app-footer-intro">
-            <Link to="/about">Introducing BASAUYCLE</Link>
+            <Link
+              to="/about"
+              onClick={(e) => onSameRouteScrollToTop(e, "/about", pathname)}
+            >
+              Introducing BASAUYCLE
+            </Link>
           </div>
         </div>
 
@@ -46,13 +58,52 @@ export default function Footer() {
         <div className="app-footer-col">
           <h3 className="app-footer-title">Information & Policies</h3>
           <div className="app-footer-links">
-            <Link to="/guide-buy">Shopping Guide</Link>
-            <Link to="/guide-payment">Payment Guide</Link>
-            <Link to="/shipping">Shipping Methods</Link>
-            <Link to="/payment-policy">Payment Policy</Link>
-            <Link to="/complaint">Complaint Handling Policy</Link>
-            <Link to="/return">Return & Refund Policy</Link>
-            <Link to="/privacy">Privacy Policy</Link>
+            <Link
+              to="/guide-buy"
+              onClick={(e) => onSameRouteScrollToTop(e, "/guide-buy", pathname)}
+            >
+              Shopping Guide
+            </Link>
+            <Link
+              to="/guide-payment"
+              onClick={(e) =>
+                onSameRouteScrollToTop(e, "/guide-payment", pathname)
+              }
+            >
+              Payment Guide
+            </Link>
+            <Link
+              to="/shipping"
+              onClick={(e) => onSameRouteScrollToTop(e, "/shipping", pathname)}
+            >
+              Shipping Methods
+            </Link>
+            <Link
+              to="/payment-policy"
+              onClick={(e) =>
+                onSameRouteScrollToTop(e, "/payment-policy", pathname)
+              }
+            >
+              Payment Policy
+            </Link>
+            <Link
+              to="/complaint"
+              onClick={(e) => onSameRouteScrollToTop(e, "/complaint", pathname)}
+            >
+              Complaint Handling Policy
+            </Link>
+            <Link
+              to="/return"
+              onClick={(e) => onSameRouteScrollToTop(e, "/return", pathname)}
+            >
+              Return & Refund Policy
+            </Link>
+            <Link
+              to="/privacy"
+              onClick={(e) => onSameRouteScrollToTop(e, "/privacy", pathname)}
+            >
+              Privacy Policy
+            </Link>
           </div>
         </div>
 

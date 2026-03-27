@@ -11,6 +11,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { usePostingStatusNotifications } from "./contexts/usePostingStatusNotifications";
 import MemberPostingsSync from "./components/MemberPostingsSync";
+import ScrollToTopOnRouteChange from "./components/ScrollToTopOnRouteChange";
 import { fontFamily, antdToken } from "./config/theme";
 
 // Lazy-load trang để app khởi động nhanh hơn
@@ -93,6 +94,7 @@ function App() {
       <ConfigProvider theme={{ token: antdToken }}>
         <AntApp>
           <BrowserRouter>
+            <ScrollToTopOnRouteChange />
             <AuthProvider>
               <WishlistProvider>
                 <PostingProvider>

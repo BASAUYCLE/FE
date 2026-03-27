@@ -5,12 +5,12 @@ import {
   FileCheck2,
   CheckCircle2,
   AlertTriangle,
-  Filter,
   RefreshCcw,
   Eye,
   ClipboardList,
 } from "lucide-react";
 import AdminLayout from "../../../components/layout/AdminLayout";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import { adminPostService } from "../../../services";
 import {
   POSTING_STATUS_LABEL,
@@ -183,10 +183,6 @@ export default function ListingApproval() {
                 <h2>Listing Approval Queue</h2>
               </div>
               <div className="queue-actions">
-                <button type="button" className="queue-filter">
-                  <Filter />
-                  Filter
-                </button>
                 <button
                   type="button"
                   className="queue-refresh"
@@ -299,32 +295,20 @@ export default function ListingApproval() {
             </div>
 
             <div className="queue-footer">
-              <span>
-                Showing {pageListings.length} / {listings.length} pending
-                result(s)
-              </span>
-              {totalPages > 1 && (
-                <div style={{ display: "flex", gap: 6 }}>
-                  <button
-                    type="button"
-                    className="admin-tx-page-btn"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    ‹
-                  </button>
-                  <span style={{ color: "#64748b", fontSize: 13 }}>
-                    Page {page}/{totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    className="admin-tx-page-btn"
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    ›
-                  </button>
-                </div>
+              {totalPages <= 1 ? (
+                <span>
+                  Showing {pageListings.length} / {listings.length} pending
+                  result(s)
+                </span>
+              ) : (
+                <AdminPaginationBar
+                  totalCount={listings.length}
+                  page={page}
+                  totalPages={totalPages}
+                  setPage={setPage}
+                  nounPhrase="pending result(s)"
+                  labelColor="#0f172a"
+                />
               )}
             </div>
           </div>

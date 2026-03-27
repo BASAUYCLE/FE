@@ -1,10 +1,8 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import {
-  Search,
   FileCheck2,
   Eye,
-  Filter,
   CheckCircle2,
   XCircle,
   Clock,
@@ -13,6 +11,8 @@ import adminService from "../../../services/adminService";
 import adminPostService from "../../../services/adminPostService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
+import AdminToolbarFilters from "../../../components/admin/AdminToolbarFilters";
 import "../dashboard/index.css";
 import "./index.css";
 
@@ -31,6 +31,13 @@ const STATUS_CONFIG = {
 
 const ADMIN_INSPECTION_STATUSES = ["ADMIN_APPROVED", "AVAILABLE"];
 const PAGE_SIZE = 10;
+
+const IR_STATUS_FILTER_OPTIONS = [
+  { value: "all", label: "All" },
+  { value: "APPROVED", label: "Approved (Pass)" },
+  { value: "REJECTED", label: "Rejected (Fail)" },
+  { value: "PENDING", label: "Pending" },
+];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -315,33 +322,18 @@ export default function AdminInspectionReports() {
             </div>
 
             {/* Filters */}
-            <section className="admin-card admin-table-card">
+            <section className="admin-card admin-table-card admin-toolbar-page">
               <div className="admin-card-header">
-                <div className="admin-approved-filters">
-                  <div className="admin-search-wrap">
-                    <Search className="admin-search-icon" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Search by bike name, inspector, seller..."
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="admin-search-input"
-                    />
-                  </div>
-                  <div className="admin-filter-wrap">
-                    <Filter size={14} />
-                    <select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                      className="admin-pill"
-                    >
-                      <option value="all">All</option>
-                      <option value="APPROVED">Approved (Pass)</option>
-                      <option value="REJECTED">Rejected (Fail)</option>
-                      <option value="PENDING">Pending</option>
-                    </select>
-                  </div>
-                </div>
+                <AdminToolbarFilters
+                  searchValue={search}
+                  onSearchChange={setSearch}
+                  searchPlaceholder="Search by bike name, inspector, seller..."
+                  filterValue={statusFilter}
+                  onFilterChange={setStatusFilter}
+                  filterOptions={IR_STATUS_FILTER_OPTIONS}
+                  idPrefix="admin-ir-status"
+                  filterAriaLabel="Filter by report status"
+                />
               </div>
 
               {/* Table */}
@@ -483,50 +475,13 @@ export default function AdminInspectionReports() {
                   })
                 )}
               </div>
-              {totalPages > 1 && (
-                <div className="admin-tx-pagination" style={{ marginTop: 12 }}>
-                  <span style={{ color: "#64748b", fontSize: 13 }}>
-                    {filtered.length} reports · Page {page}/{totalPages}
-                  </span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button
-                      type="button"
-                      className="admin-tx-page-btn"
-                      disabled={page === 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      ‹
-                    </button>
-                    {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                      const pg =
-                        page <= 4
-                          ? i + 1
-                          : page >= totalPages - 3
-                            ? totalPages - 6 + i
-                            : page - 3 + i;
-                      if (pg < 1 || pg > totalPages) return null;
-                      return (
-                        <button
-                          key={pg}
-                          type="button"
-                          className={`admin-tx-page-btn ${pg === page ? "active" : ""}`}
-                          onClick={() => setPage(pg)}
-                        >
-                          {pg}
-                        </button>
-                      );
-                    })}
-                    <button
-                      type="button"
-                      className="admin-tx-page-btn"
-                      disabled={page === totalPages}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      ›
-                    </button>
-                  </div>
-                </div>
-              )}
+              <AdminPaginationBar
+                totalCount={filtered.length}
+                page={page}
+                totalPages={totalPages}
+                setPage={setPage}
+                nounPhrase="reports"
+              />
             </section>
           </div>
         </div>

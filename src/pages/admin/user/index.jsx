@@ -1,13 +1,14 @@
 import "./index.css";
 import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
+import AdminToolbarFilters from "../../../components/admin/AdminToolbarFilters";
 import { message, Modal, Dropdown, Input } from "antd";
 import userService from "../../../services/userService";
 import { confirmCrud } from "../../../utils/confirmCrud";
 import { getAvatarSrc } from "../../../utils/avatar";
 import {
   ChevronDown,
-  Search,
   ShieldCheck,
   UserCheck,
   UserMinus,
@@ -54,6 +55,14 @@ const statsConfig = [
 ];
 
 const PAGE_SIZE = 10;
+
+const USER_STATUS_FILTER_OPTIONS = [
+  { value: "All", label: "All members" },
+  { value: "Verified", label: "Verified (Active)" },
+  { value: "Pending", label: "Pending" },
+  { value: "Rejected", label: "Rejected" },
+  { value: "Hidden", label: "Hidden" },
+];
 
 function formatJoinedDate(value) {
   if (value == null || value === "") return "—";
@@ -370,7 +379,7 @@ export default function UserManagement() {
 
   return (
     <AdminLayout>
-      <div className="user-management-page">
+      <div className="user-management-page admin-toolbar-page">
         <main className="user-content">
           <section className="user-header">
             <div className="user-header-spacer" />
@@ -391,7 +400,9 @@ export default function UserManagement() {
               const isActive = item.filter === statusFilter;
               return (
                 <div
-                  className={`stat-card ${isActive ? "stat-card--active" : ""}`}
+                  className={`stat-card stat-card--${item.key} ${
+                    isActive ? "stat-card--active" : ""
+                  }`}
                   key={item.key}
                   onClick={() => setStatusFilter(item.filter)}
                 >
@@ -409,28 +420,16 @@ export default function UserManagement() {
 
           <section className="user-table-card">
             <div className="user-table-toolbar">
-              <div className="search-input">
-                <Search />
-                <input
-                  type="text"
-                  placeholder="Search by name, email or ID..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div className="user-table-toolbar-meta">
-                <span
-                  className={`user-filter-pill ${
-                    statusFilter === "All" ? "user-filter-pill--muted" : ""
-                  }`}
-                >
-                  {statusFilter === "All"
-                    ? "Showing all members"
-                    : statusFilter === "Verified"
-                      ? "Showing verified (Active) members"
-                      : `Showing ${statusFilter.toLowerCase()} members`}
-                </span>
-              </div>
+              <AdminToolbarFilters
+                searchValue={search}
+                onSearchChange={setSearch}
+                searchPlaceholder="Search by name, email or ID..."
+                filterValue={statusFilter}
+                onFilterChange={setStatusFilter}
+                filterOptions={USER_STATUS_FILTER_OPTIONS}
+                idPrefix="admin-users-status"
+                filterAriaLabel="Filter by member status"
+              />
             </div>
             <div className="user-table">
               <div className="user-table-row header">
@@ -540,32 +539,19 @@ export default function UserManagement() {
               )}
             </div>
             <div className="user-table-footer">
-              <span>
-                Showing {pageUsers.length} / {filteredUsers.length} filtered
-                member(s)
-              </span>
-              {totalPages > 1 && (
-                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                  <button
-                    type="button"
-                    className="admin-tx-page-btn"
-                    disabled={page === 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    ‹
-                  </button>
-                  <span style={{ color: "#64748b", fontSize: 13 }}>
-                    Page {page}/{totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    className="admin-tx-page-btn"
-                    disabled={page === totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    ›
-                  </button>
-                </div>
+              {totalPages <= 1 ? (
+                <span>
+                  Showing {pageUsers.length} / {filteredUsers.length} filtered
+                  member(s)
+                </span>
+              ) : (
+                <AdminPaginationBar
+                  totalCount={filteredUsers.length}
+                  page={page}
+                  totalPages={totalPages}
+                  setPage={setPage}
+                  nounPhrase="member(s)"
+                />
               )}
             </div>
           </section>

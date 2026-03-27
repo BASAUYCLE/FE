@@ -39,6 +39,7 @@ import {
   DollarSign,
   ClipboardList,
   AlertTriangle,
+  ArrowRight,
 } from "lucide-react";
 import bikeLogo from "../../assets/bike-logo.png";
 import { useAuth } from "../../contexts/AuthContext";
@@ -46,6 +47,7 @@ import { useWishlist } from "../../contexts/WishlistContext";
 import { useNotifications } from "../../contexts/useNotifications";
 import { confirmCrud } from "../../utils/confirmCrud";
 import { getNavLinksForRole, getActiveLink } from "../../config/headerConfig";
+import { onSameRouteScrollToTop } from "../../utils/sameRouteScroll";
 import { formatDateTime } from "../../utils/date";
 import { getAvatarSrc } from "../../utils/avatar";
 import "./index.css";
@@ -256,7 +258,23 @@ const SuggestionTag = styled("button")(({ theme }) => ({
   },
 }));
 
+const wishlistMenuScrollSx = {
+  flex: "1 1 auto",
+  minHeight: 0,
+  maxHeight: 280,
+  overflowY: "auto",
+  scrollbarWidth: "none",
+  msOverflowStyle: "none",
+  /* Windows / WebKit: width 0 hides bar; display:none is unreliable on some builds */
+  "&::-webkit-scrollbar": {
+    width: 0,
+    height: 0,
+    background: "transparent",
+  },
+};
+
 const WishlistMenu = styled(Menu)(({ theme }) => ({
+  /* Paper often gets overflow:auto — that draws the visible scrollbar */
   "& .MuiPaper-root": {
     borderRadius: 12,
     boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
@@ -264,6 +282,25 @@ const WishlistMenu = styled(Menu)(({ theme }) => ({
     maxWidth: 400,
     maxHeight: 420,
     marginTop: theme.spacing(1.5),
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    scrollbarWidth: "none",
+    msOverflowStyle: "none",
+    "&::-webkit-scrollbar": {
+      width: 0,
+      height: 0,
+      background: "transparent",
+    },
+  },
+  "& .MuiList-root, & .MuiMenuList-root": {
+    padding: 0,
+    overflow: "hidden",
+    display: "flex",
+    flexDirection: "column",
+    flex: "1 1 auto",
+    minHeight: 0,
+    maxHeight: "100%",
   },
 }));
 
@@ -420,21 +457,27 @@ export default function Header({
     return () => clearTimeout(timer);
   }, [typingIndex]);
 
+  const marketplaceBrowseHash = "#marketplace-browse";
+
   const handleSearchSubmit = (raw) => {
     const query = raw?.trim?.() ?? "";
     navigate(
-      query ? `/marketplace?q=${encodeURIComponent(query)}` : "/marketplace",
+      query
+        ? `/marketplace?q=${encodeURIComponent(query)}${marketplaceBrowseHash}`
+        : `/marketplace${marketplaceBrowseHash}`,
     );
   };
 
   const handleQuickCategoryClick = (category) => {
     const value = category?.trim?.() ?? "";
     if (!value) {
-      navigate("/marketplace");
+      navigate(`/marketplace${marketplaceBrowseHash}`);
       return;
     }
     setSearchValue(value);
-    navigate(`/marketplace?category=${encodeURIComponent(value)}`);
+    navigate(
+      `/marketplace?category=${encodeURIComponent(value)}${marketplaceBrowseHash}`,
+    );
   };
 
   const handleUserMenuOpen = (e) => {
@@ -474,7 +517,11 @@ export default function Header({
             gap: 3,
           }}
         >
-          <LogoLink to={homeLink} aria-label="Home">
+          <LogoLink
+            to={homeLink}
+            aria-label="Home"
+            onClick={(e) => onSameRouteScrollToTop(e, homeLink, pathname)}
+          >
             <img
               src={bikeLogo}
               alt=""
@@ -675,6 +722,9 @@ export default function Header({
                   to={link.href || "#"}
                   active={activeLink === link.label}
                   variant={navVariant}
+                  onClick={(e) =>
+                    onSameRouteScrollToTop(e, link.href || "#", pathname)
+                  }
                 >
                   {link.label}
                 </NavLink>
@@ -685,6 +735,7 @@ export default function Header({
                     to="/about"
                     active={pathname === "/about"}
                     variant={navVariant}
+                    onClick={(e) => onSameRouteScrollToTop(e, "/about", pathname)}
                   >
                     About
                   </NavLink>
@@ -692,6 +743,7 @@ export default function Header({
                     to="/post"
                     active={pathname === "/post"}
                     variant={navVariant}
+                    onClick={(e) => onSameRouteScrollToTop(e, "/post", pathname)}
                   >
                     Post
                   </NavLink>
@@ -710,36 +762,115 @@ export default function Header({
         onClose={handleWishlistClose}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
+        MenuListProps={{
+          sx: {
+            padding: 0,
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            minHeight: 0,
+          },
+        }}
       >
-        <Box sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f3f4f6" }}>
+        <Box
+          sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f3f4f6", flexShrink: 0 }}
+        >
           <Typography variant="subtitle1" fontWeight={700} color="#1a1a1a">
             Wishlist ({wishlist.length})
           </Typography>
         </Box>
-        <Box sx={{ maxHeight: 280, overflowY: "auto" }}>
+        <Box sx={wishlistMenuScrollSx}>
           {wishlist.length === 0 ? (
-            <Box sx={{ py: 4, textAlign: "center", px: 2 }}>
-              <HeartOutlined
-                style={{ fontSize: 40, color: "#e5e7eb", marginBottom: 12 }}
-              />
-              <Typography color="#6b7280" variant="body2">
-                Wishlist is empty
+            <Box
+              sx={{
+                py: 3.5,
+                px: 2.5,
+                textAlign: "center",
+                background:
+                  "linear-gradient(180deg, #f0fdfa 0%, #ffffff 50%, #fafafa 100%)",
+              }}
+            >
+              <Box
+                sx={{
+                  width: 76,
+                  height: 76,
+                  mx: "auto",
+                  mb: 2,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background:
+                    "linear-gradient(145deg, rgba(0,204,173,0.18) 0%, rgba(13,148,136,0.1) 100%)",
+                  border: "1px solid rgba(0, 204, 173, 0.25)",
+                  boxShadow: "0 8px 24px rgba(0, 204, 173, 0.12)",
+                }}
+              >
+                <HeartOutlined
+                  style={{ fontSize: 34, color: "#00ccad" }}
+                  aria-hidden
+                />
+              </Box>
+              <Typography
+                variant="subtitle1"
+                fontWeight={700}
+                color="#0f172a"
+                sx={{ mb: 0.5, letterSpacing: "-0.02em" }}
+              >
+                Your wishlist is empty
+              </Typography>
+              <Typography
+                variant="body2"
+                color="#64748b"
+                sx={{
+                  mb: 2.5,
+                  lineHeight: 1.55,
+                  maxWidth: 280,
+                  mx: "auto",
+                  fontSize: 13,
+                }}
+              >
+                Heart items while you browse — they will show up here for quick
+                access.
               </Typography>
               <Button
                 component={Link}
                 to="/wishlist"
-                variant="contained"
-                size="small"
+                fullWidth
+                disableElevation
+                endIcon={
+                  <ArrowRight
+                    size={18}
+                    strokeWidth={2.5}
+                    aria-hidden
+                    style={{ marginLeft: 2 }}
+                  />
+                }
                 sx={{
-                  mt: 2,
-                  bgcolor: "#00ccad",
-                  color: "#0f172a",
+                  borderRadius: 999,
+                  py: 1.35,
+                  px: 2,
+                  textTransform: "none",
                   fontWeight: 700,
-                  "&:hover": { bgcolor: "#00b89a" },
+                  fontSize: 15,
+                  letterSpacing: "0.02em",
+                  color: "#fff",
+                  background:
+                    "linear-gradient(135deg, #00ccad 0%, #0d9488 100%)",
+                  boxShadow: "0 4px 18px rgba(0, 204, 173, 0.38)",
+                  "&:hover": {
+                    background:
+                      "linear-gradient(135deg, #00c4aa 0%, #0c8770 100%)",
+                    boxShadow: "0 6px 22px rgba(0, 204, 173, 0.45)",
+                    transform: "translateY(-1px)",
+                  },
+                  transition:
+                    "background 0.2s, box-shadow 0.2s, transform 0.2s",
                 }}
                 onClick={handleWishlistClose}
               >
-                View Wishlist
+                View wishlist
               </Button>
             </Box>
           ) : (
@@ -815,23 +946,54 @@ export default function Header({
           )}
         </Box>
         {wishlist.length > 0 && (
-          <Box sx={{ p: 2, borderTop: "1px solid #f3f4f6" }}>
+          <Box
+            sx={{
+              px: 2,
+              pb: 2,
+              pt: 1.5,
+              borderTop: "1px solid #f3f4f6",
+              background: "linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)",
+              flexShrink: 0,
+            }}
+          >
             <Button
               component={Link}
               to="/wishlist"
               fullWidth
               variant="contained"
-              size="small"
+              disableElevation
+              endIcon={
+                <ArrowRight
+                  size={18}
+                  strokeWidth={2.5}
+                  aria-hidden
+                  style={{ marginLeft: 2 }}
+                />
+              }
               sx={{
-                bgcolor: "#00ccad",
-                color: "#0f172a",
+                borderRadius: 999,
+                py: 1.25,
+                px: 2,
+                textTransform: "none",
+                fontSize: 15,
                 fontWeight: 700,
-                py: 1,
-                "&:hover": { bgcolor: "#00b89a" },
+                letterSpacing: 0.02,
+                bgcolor: "#00ccad",
+                color: "#ffffff",
+                boxShadow: "0 2px 12px rgba(0, 204, 173, 0.35)",
+                "&:hover": {
+                  bgcolor: "#00b89a",
+                  boxShadow: "0 4px 16px rgba(0, 204, 173, 0.45)",
+                  transform: "translateY(-1px)",
+                },
+                "&:active": {
+                  transform: "translateY(0)",
+                },
+                transition: "background-color 0.2s, box-shadow 0.2s, transform 0.2s",
               }}
               onClick={handleWishlistClose}
             >
-              View all Wishlist
+              View all wishlist
             </Button>
           </Box>
         )}
@@ -868,7 +1030,15 @@ export default function Header({
             )}
           </Box>
         </Box>
-        <Box sx={{ maxHeight: 320, overflowY: "auto" }}>
+        <Box
+          sx={{
+            maxHeight: 320,
+            overflowY: "auto",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            "&::-webkit-scrollbar": { display: "none" },
+          }}
+        >
           {notifications.length === 0 ? (
             <Box sx={{ py: 4, textAlign: "center" }}>
               <BellOutlined

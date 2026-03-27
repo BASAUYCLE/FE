@@ -1722,7 +1722,9 @@ export default function PostBike() {
                 {requiredPhotoKeys.map(({ key, label, labelVi }) => (
                   <div key={key} className="required-photo-slot">
                     <div className="required-photo-label">
-                      {label} ({labelVi})
+                      {labelVi && labelVi !== label
+                        ? `${label} (${labelVi})`
+                        : label}
                     </div>
                     <Upload
                       {...createRequiredUploadProps(key)}

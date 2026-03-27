@@ -13,14 +13,93 @@
   position: relative;
 }
 
+/* Status chip — modern pill, variants aligned with login CTA teal */
 .product-detail-badge {
-  display: inline-block;
-  padding: 6px 12px;
-  background: rgba(0, 204, 173, 0.15);
-  color: #008f7a;
-  border-radius: 8px;
-  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  border: none;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.product-detail-badge--verified {
+  background: linear-gradient(135deg, #00ccad 0%, #0d9488 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(0, 204, 173, 0.38);
+}
+
+.product-detail-badge--verified::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 9px;
+  margin-right: 2px;
+  margin-bottom: 1px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  opacity: 0.95;
+}
+
+.product-detail-badge--pending {
+  background: linear-gradient(
+    135deg,
+    rgba(251, 191, 36, 0.95) 0%,
+    rgba(245, 158, 11, 0.98) 100%
+  );
+  color: #422006;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+}
+
+.product-detail-badge--progress {
+  background: linear-gradient(
+    135deg,
+    rgba(251, 146, 60, 0.95) 0%,
+    rgba(234, 88, 12, 0.98) 100%
+  );
+  color: #fff7ed;
+  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+}
+
+.product-detail-badge--listed {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.product-detail-badge--danger {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.product-detail-badge--sold {
+  background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+  color: #f8fafc;
+  box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+}
+
+.product-detail-badge--draft {
+  background: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%);
+  color: #422006;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.product-detail-badge--neutral {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 .product-detail-section {

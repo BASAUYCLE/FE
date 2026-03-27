@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Box, Typography, Button } from "@mui/material";
-import { Trash2, ArrowRight, Heart } from "lucide-react";
+import { Trash2, ArrowRight, Heart, Store } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { SimpleProductCard } from "../../components/featuredbikes";
@@ -277,20 +277,25 @@ export default function Wishlist() {
             >
               {displayItems.length === 0 ? (
                 <Box className="wishlist-empty">
-                  <Box className="wishlist-empty-icon">
-                    <Heart size={26} />
+                  <Box className="wishlist-empty-icon-ring" aria-hidden>
+                    <Heart size={26} strokeWidth={2} />
                   </Box>
+                  <Typography className="wishlist-empty-kicker">
+                    Favorites
+                  </Typography>
                   <Typography className="wishlist-empty-title">
                     Your wishlist is empty
                   </Typography>
                   <Typography className="wishlist-empty-subtitle">
-                    Save bikes you love so you can compare and come back later.
+                    Tap the heart on any listing while you browse — saved bikes
+                    show up here so you can compare and buy when you are ready.
                   </Typography>
                   <Link to="/marketplace" className="wishlist-cta-link">
                     <Button
                       variant="contained"
+                      disableElevation
                       className="wishlist-empty-btn"
-                      endIcon={<ArrowRight size={16} />}
+                      endIcon={<ArrowRight size={16} strokeWidth={2.5} />}
                     >
                       Browse marketplace
                     </Button>
@@ -307,6 +312,9 @@ export default function Wishlist() {
                   ))}
 
                   <Link to="/marketplace" className="wishlist-add-card">
+                    <Box className="wishlist-add-icon-ring" aria-hidden>
+                      <Store size={22} strokeWidth={2} />
+                    </Box>
                     <Typography className="wishlist-add-kicker">
                       Find your next ride
                     </Typography>
@@ -314,15 +322,17 @@ export default function Wishlist() {
                       Explore Marketplace
                     </Typography>
                     <Typography className="wishlist-add-subtitle">
-                      New listings drop daily. Save what you like.
+                      New listings daily — heart what you like, compare later.
                     </Typography>
-                    <Button
-                      variant="outlined"
-                      className="wishlist-explore-btn"
-                      endIcon={<ArrowRight size={16} />}
-                    >
+                    <span className="wishlist-add-cta">
                       Browse bikes
-                    </Button>
+                      <ArrowRight
+                        size={16}
+                        strokeWidth={2.5}
+                        className="wishlist-add-cta-arrow"
+                        aria-hidden
+                      />
+                    </span>
                   </Link>
                 </>
               )}

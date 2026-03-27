@@ -206,7 +206,7 @@ export default function BikeCard({ bike }) {
             <Link to="/manage-listings" className="bike-card-actions-link">
               <Button
                 type="default"
-                className="bike-card-btn bike-card-view-details"
+                className="bike-card-btn bike-card-your-listing"
                 style={{ width: "100%" }}
               >
                 Your listing
@@ -214,7 +214,7 @@ export default function BikeCard({ bike }) {
             </Link>
           ) : (
             <Button
-              type="primary"
+              type="default"
               onClick={handleBuyNow}
               className="bike-card-btn bike-card-buy-now"
             >
@@ -223,7 +223,7 @@ export default function BikeCard({ bike }) {
           )}
           <Link to={`/product/${bike.id}`} className="bike-card-actions-link">
             <Button
-              type="primary"
+              type="default"
               className="bike-card-btn bike-card-view-details"
             >
               View Details

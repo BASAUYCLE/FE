@@ -121,22 +121,82 @@
   width: 48px;
   height: 48px;
   border-radius: 0.5rem;
-  background: rgba(0, 204, 173, 0.08);
-  color: #00ccad;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-
-.stat-card--active {
-  border-color: #00ccad;
-  background: rgba(0, 204, 173, 0.04);
-  box-shadow: 0 8px 18px rgba(0, 204, 173, 0.18);
+.stat-icon svg {
+  width: 22px;
+  height: 22px;
 }
 
-.stat-card:hover {
-  border-color: #00ccad;
-  background: rgba(0, 204, 173, 0.06);
+/* Màu icon theo ngữ nghĩa */
+.stat-card--members .stat-icon {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+}
+.stat-card--verified .stat-icon {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+.stat-card--pending .stat-icon {
+  background: rgba(245, 158, 11, 0.14);
+  color: #d97706;
+}
+.stat-card--rejected .stat-icon {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+.stat-card--hidden .stat-icon {
+  background: rgba(100, 116, 139, 0.12);
+  color: #64748b;
+}
+
+.stat-card--members.stat-card--active {
+  border-color: #0284c7;
+  background: rgba(14, 165, 233, 0.06);
+  box-shadow: 0 8px 18px rgba(14, 165, 233, 0.12);
+}
+.stat-card--verified.stat-card--active {
+  border-color: #059669;
+  background: rgba(16, 185, 129, 0.06);
+  box-shadow: 0 8px 18px rgba(16, 185, 129, 0.14);
+}
+.stat-card--pending.stat-card--active {
+  border-color: #d97706;
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.14);
+}
+.stat-card--rejected.stat-card--active {
+  border-color: #dc2626;
+  background: rgba(239, 68, 68, 0.06);
+  box-shadow: 0 8px 18px rgba(239, 68, 68, 0.12);
+}
+.stat-card--hidden.stat-card--active {
+  border-color: #64748b;
+  background: rgba(100, 116, 139, 0.08);
+  box-shadow: 0 8px 18px rgba(100, 116, 139, 0.12);
+}
+
+.stat-card--members:hover:not(.stat-card--active) {
+  border-color: rgba(14, 165, 233, 0.45);
+  background: rgba(14, 165, 233, 0.04);
+}
+.stat-card--verified:hover:not(.stat-card--active) {
+  border-color: rgba(16, 185, 129, 0.45);
+  background: rgba(16, 185, 129, 0.04);
+}
+.stat-card--pending:hover:not(.stat-card--active) {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(245, 158, 11, 0.06);
+}
+.stat-card--rejected:hover:not(.stat-card--active) {
+  border-color: rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.04);
+}
+.stat-card--hidden:hover:not(.stat-card--active) {
+  border-color: rgba(100, 116, 139, 0.4);
+  background: rgba(100, 116, 139, 0.05);
 }
 
 .stat-meta {

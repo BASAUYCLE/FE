@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
-import Footer from "../../../components/footer";
 import { DollarSign, TrendingUp, FileText, RefreshCw } from "lucide-react";
 import adminPostService from "../../../services/adminPostService";
 import systemConfigService from "../../../services/systemConfigService";
@@ -371,7 +370,6 @@ export default function AdminRevenue() {
 
           </div>
         </div>
-        <Footer />
       </div>
     </AdminLayout>
   );
