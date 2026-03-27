@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Modal, Tag, Spin } from "antd";
 import axiosInstance from "../../services/axiosConfig";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { getAvatarSrc } from "../../utils/avatar";
 import "./index.css";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -19,12 +20,27 @@ function extractImages(row) {
 function normalizePost(row) {
   if (!row || typeof row !== "object") return null;
   const price = row.price ?? row.askingPrice ?? null;
+  const sellerEntity = row.seller ?? row.user ?? null;
   return {
     id:             row.postId ?? row.id,
     name:           row.bicycleName  ?? row.title         ?? "—",
     priceDisplay:   typeof price === "number" ? formatCurrency(price) : (price ? String(price) : "—"),
     status:         row.postStatus   ?? row.status        ?? "AVAILABLE",
     seller:         row.sellerFullName ?? row.sellerName  ?? "—",
+    sellerAvatar:   getAvatarSrc(
+      sellerEntity,
+      row.sellerAvatar,
+      row.sellerAvatarUrl,
+      row.seller_avatar,
+      row.seller_avatar_url,
+      row.userAvatar,
+      row.userAvatarUrl,
+      row.user_avatar,
+      row.user_avatar_url,
+      row.avatar,
+      row.avatarUrl,
+      row.avatar_url,
+    ),
     sellerLocation: row.sellerLocation ?? row.seller_address ?? null,
     brand:          row.brandName    ?? row.brand         ?? null,
     category:       row.categoryName ?? row.category      ?? null,
@@ -95,11 +111,15 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
   const [inspection, setInspection] = useState(null);
   const [loading,    setLoading]    = useState(false);
   const [imgIdx,     setImgIdx]     = useState(0);
+  const [paymentInfo, setPaymentInfo] = useState(null);
+  const [avatarLoadError, setAvatarLoadError] = useState(false);
 
   useEffect(() => {
-    if (!open || !postId) { setProduct(null); setInspection(null); return; }
+    if (!open || !postId) { setProduct(null); setInspection(null); setPaymentInfo(null); return; }
     setLoading(true);
     setImgIdx(0);
+    setPaymentInfo(null);
+    setAvatarLoadError(false);
 
     (async () => {
       for (const url of [`/posts/${postId}`, `/admin/posts/${postId}`, `/bicycle-posts/${postId}`]) {
@@ -117,6 +137,28 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
           const ins = normalizeInspection(raw);
           if (ins?.result || ins?.condition) { setInspection(ins); break; }
         } catch { /* thử tiếp */ }
+      }
+      try {
+        const res = await axiosInstance.get("/orders/my-orders");
+        const raw = res?.result ?? res?.data ?? res?.content ?? res;
+        const orders = Array.isArray(raw) ? raw : (raw?.orders ?? raw?.content ?? []);
+        const matched = orders.find((o) => {
+          const oid = o?.postId ?? o?.post_id ?? o?.bikeId ?? o?.productId;
+          if (String(oid) !== String(postId)) return false;
+          const st = String(
+            o?.orderStatus ?? o?.order_status ?? o?.status ?? o?.orderState ?? o?.order_state ?? "",
+          ).toUpperCase();
+          return st === "DEPOSITED";
+        });
+        if (matched) {
+          const numericPrice = Number(matched.totalPrice ?? matched.total_price ?? 0);
+          const depositAmount = Number(matched.depositAmount ?? matched.deposit_amount ?? 0);
+          if (Number.isFinite(numericPrice) && Number.isFinite(depositAmount)) {
+            setPaymentInfo({ numericPrice, depositAmount });
+          }
+        }
+      } catch {
+        // ignore if not in buyer flow
       }
       setLoading(false);
     })();
@@ -153,8 +195,8 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
       open={open}
       onCancel={onClose}
       footer={null}
-      width={900}
-      centered
+      width="min(1120px, 96vw)"
+      style={{ top: 12 }}
       destroyOnHidden
       className="product-preview-modal"
       styles={{ body: { padding: 0 } }}
@@ -217,7 +259,17 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
             {/* Seller */}
             <div className="ppm-seller">
               <div className="ppm-seller-avatar">
-                {(product.seller[0] ?? "?").toUpperCase()}
+                {product.sellerAvatar && !avatarLoadError ? (
+                  <img
+                    src={product.sellerAvatar}
+                    alt={product.seller}
+                    className="ppm-seller-avatar-img"
+                    onError={() => setAvatarLoadError(true)}
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  (product.seller[0] ?? "?").toUpperCase()
+                )}
               </div>
               <div>
                 <div className="ppm-seller-name">{product.seller}</div>
@@ -253,6 +305,17 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
               <>
                 <div className="ppm-section-title">Description</div>
                 <p className="ppm-desc">{product.description}</p>
+              </>
+            )}
+            {paymentInfo && (
+              <>
+                <div className="ppm-section-title">Pay remaining</div>
+                <div className="ppm-pay-remaining-box">
+                  <span style={{ display: "block", fontSize: 16, color: "#475569", fontWeight: 600 }}>
+                    Pay {formatCurrency(paymentInfo.depositAmount)} now,{" "}
+                    {formatCurrency(paymentInfo.numericPrice - paymentInfo.depositAmount)} later
+                  </span>
+                </div>
               </>
             )}
 

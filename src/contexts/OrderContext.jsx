@@ -171,13 +171,17 @@ function normalizeOrder(row) {
   };
 }
 
-/** Với orders chưa có ảnh nhưng có bikeId, fetch ảnh từ /images/post/{postId}. */
+/** Đồng bộ ảnh mới nhất theo postId cho Orders/My Sales. */
 async function enrichImages(orders) {
-  const missing = orders.filter((o) => !o.image && o.bikeId);
-  if (!missing.length) return orders;
+  const postIds = [...new Set(
+    orders
+      .map((o) => o?.bikeId)
+      .filter((id) => id != null && String(id).trim() !== ""),
+  )];
+  if (!postIds.length) return orders;
 
   const results = await Promise.allSettled(
-    missing.map((o) => postService.getPostImages(o.bikeId)),
+    postIds.map((postId) => postService.getPostImages(postId)),
   );
 
   const map = {};
@@ -188,14 +192,19 @@ async function enrichImages(orders) {
       : [];
     const t = arr.find((img) => img?.isThumbnail) ?? arr[0];
     const url = t?.imageUrl ?? t?.image_url ?? t?.url ?? null;
-    if (url) map[String(missing[i].bikeId)] = url;
+    if (url) {
+      const updatedAt =
+        t?.updatedAt ?? t?.updated_at ?? t?.createdAt ?? t?.created_at ?? Date.now();
+      // cache-bust để FE luôn thấy ảnh mới khi user vừa thay đổi ảnh
+      map[String(postIds[i])] = `${url}${String(url).includes("?") ? "&" : "?"}v=${encodeURIComponent(String(updatedAt))}`;
+    }
   });
 
-  return orders.map((o) =>
-    !o.image && o.bikeId && map[String(o.bikeId)]
-      ? { ...o, image: map[String(o.bikeId)] }
-      : o,
-  );
+  return orders.map((o) => {
+    if (!o?.bikeId) return o;
+    const latest = map[String(o.bikeId)];
+    return latest ? { ...o, image: latest } : o;
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
