@@ -126,3 +126,10 @@
 .dispute-detail-case-card .ant-card-body {
   padding: 20px;
 }
+
+/* Ảnh chứng từ trong card dispute — dễ xem hơn thumbnail 72px mặc định */
+.dispute-detail-case-card .my-dispute-proof-thumb {
+  width: 128px;
+  height: 128px;
+  border-radius: 8px;
+}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   Typography,
@@ -24,6 +24,34 @@ import {
 import { formatCurrency } from "../../../utils/formatCurrency";
 import "../../MyDisputes/index.css";
 import "../dashboard/index.css";
+
+/** Ảnh khiếu nại người mua: BE có thể trả proofImages[], proofImage string, hoặc object có imageUrl */
+function collectDisputeProofUrls(row) {
+  if (!row || typeof row !== "object") return [];
+  const urls = [];
+  const push = (v) => {
+    if (v == null) return;
+    const s = typeof v === "string" ? v.trim() : "";
+    if (s) urls.push(s);
+  };
+  const fromEntry = (item) => {
+    if (typeof item === "string") push(item);
+    else if (item && typeof item === "object") {
+      push(
+        item.imageUrl ??
+          item.image_url ??
+          item.url ??
+          item.proofImageUrl ??
+          item.proof_image_url ??
+          "",
+      );
+    }
+  };
+  const list = row.proofImages ?? row.proof_images;
+  if (Array.isArray(list)) list.forEach(fromEntry);
+  push(row.proofImage ?? row.proof_image);
+  return [...new Set(urls)];
+}
 
 function normalizePost(row) {
   if (!row || typeof row !== "object") return null;
@@ -77,6 +105,11 @@ export default function InspectorDisputeDetailPage() {
   const [detail, setDetail] = useState(null);
   const [post, setPost] = useState(null);
   const [noteLoading, setNoteLoading] = useState(false);
+
+  const buyerProofUrls = useMemo(
+    () => collectDisputeProofUrls(detail),
+    [detail],
+  );
 
   const load = useCallback(async () => {
     if (!disputeId || !/^\d+$/.test(String(disputeId))) {
@@ -222,6 +255,31 @@ export default function InspectorDisputeDetailPage() {
                       <p>
                         <strong>Reason:</strong> {detail.reason}
                       </p>
+                    )}
+
+                    {buyerProofUrls.length > 0 && (
+                      <div style={{ marginTop: 12 }}>
+                        <Typography.Text strong>
+                          Buyer evidence (complaint photos)
+                        </Typography.Text>
+                        <div className="my-dispute-proofs">
+                          {buyerProofUrls.map((url, idx) => (
+                            <a
+                              key={`${url}-${idx}`}
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                src={url}
+                                alt="Buyer dispute evidence"
+                                className="my-dispute-proof-thumb"
+                                referrerPolicy="no-referrer"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
                     )}
 
                     {detail.status === DISPUTE_STATUS.OPEN && (

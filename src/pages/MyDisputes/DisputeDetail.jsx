@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Typography,
@@ -35,6 +35,61 @@ import "./index.css";
 
 function hasNonEmptyText(v) {
   return v != null && String(v).trim() !== "";
+}
+
+function pushUrl(urls, v) {
+  if (v == null) return;
+  const s = typeof v === "string" ? v.trim() : "";
+  if (s) urls.push(s);
+}
+
+function urlFromProofEntry(item) {
+  if (typeof item === "string") return item.trim();
+  if (item && typeof item === "object") {
+    return (
+      item.imageUrl ??
+      item.image_url ??
+      item.url ??
+      item.proofImageUrl ??
+      item.proof_image_url ??
+      ""
+    ).trim();
+  }
+  return "";
+}
+
+/** Ảnh khiếu nại lúc mở dispute: proofImages[], proofImage string, v.v. */
+function collectBuyerDisputeProofUrls(row) {
+  if (!row || typeof row !== "object") return [];
+  const urls = [];
+  const list = row.proofImages ?? row.proof_images;
+  if (Array.isArray(list)) {
+    list.forEach((item) => pushUrl(urls, urlFromProofEntry(item)));
+  }
+  pushUrl(urls, row.proofImage ?? row.proof_image);
+  return [...new Set(urls)];
+}
+
+/** Ảnh/biên lai người mua gửi khi ship hàng trả (sau khi admin approve). */
+function collectReturnShippingReceiptUrls(row) {
+  if (!row || typeof row !== "object") return [];
+  const urls = [];
+  const list =
+    row.shippingReceiptUrls ??
+    row.shipping_receipt_urls ??
+    row.returnShippingReceiptUrls ??
+    row.return_shipping_receipt_urls;
+  if (Array.isArray(list)) {
+    list.forEach((item) => pushUrl(urls, urlFromProofEntry(item)));
+  }
+  pushUrl(
+    urls,
+    row.shippingReceiptUrl ??
+      row.shipping_receipt_url ??
+      row.returnShippingReceiptUrl ??
+      row.return_shipping_receipt_url,
+  );
+  return [...new Set(urls)];
 }
 
 /** Admin outcome summary by status (BE DisputeStatus). */
@@ -133,6 +188,15 @@ export default function DisputeDetailPage() {
   const [shipModal, setShipModal] = useState(false);
   const [shipLoading, setShipLoading] = useState(false);
   const [form] = Form.useForm();
+
+  const buyerProofUrls = useMemo(
+    () => collectBuyerDisputeProofUrls(dispute),
+    [dispute],
+  );
+  const returnReceiptUrls = useMemo(
+    () => collectReturnShippingReceiptUrls(dispute),
+    [dispute],
+  );
 
   const load = useCallback(async () => {
     const id = String(disputeId || "").trim();
@@ -502,6 +566,37 @@ export default function DisputeDetailPage() {
                         <strong>Return ship:</strong> {dispute.shippingProvider}{" "}
                         / {dispute.trackingCode}
                       </p>
+                    )}
+                    {returnReceiptUrls.length > 0 && (
+                      <div style={{ marginTop: 10 }}>
+                        <Typography.Text strong>
+                          Return shipment photos
+                        </Typography.Text>
+                        <Typography.Paragraph
+                          type="secondary"
+                          style={{ marginBottom: 8, marginTop: 4, fontSize: 13 }}
+                        >
+                          Images the buyer uploaded with return shipping details
+                          (package / bike condition).
+                        </Typography.Paragraph>
+                        <div className="my-dispute-proofs">
+                          {returnReceiptUrls.map((url, idx) => (
+                            <a
+                              key={`ret-${url}-${idx}`}
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                src={url}
+                                alt="Return shipment evidence"
+                                className="my-dispute-proof-thumb"
+                                referrerPolicy="no-referrer"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
                     )}
 
                     <div style={{ marginTop: 16 }}>
