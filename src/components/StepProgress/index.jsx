@@ -9,7 +9,7 @@ import "./index.css";
 const STEPS = [
   { title: "Basic Info", icon: InfoCircleOutlined },
   { title: "Technical Specs", icon: SettingOutlined },
-  { title: "Photos/Videos", icon: CameraOutlined },
+  { title: "Photos", icon: CameraOutlined },
   { title: "Pricing", icon: CreditCardOutlined },
 ];
 
