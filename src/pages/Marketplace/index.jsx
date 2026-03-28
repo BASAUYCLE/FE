@@ -498,7 +498,14 @@ export default function Marketplace() {
                 total={displayedCount}
                 size="small"
                 showSizeChanger={false}
-                onChange={(nextPage) => setPage(nextPage)}
+                onChange={(nextPage) => {
+                  setPage(nextPage);
+                  requestAnimationFrame(() => {
+                    document
+                      .getElementById("marketplace-browse")
+                      ?.scrollIntoView({ behavior: "auto", block: "start" });
+                  });
+                }}
               />
             </Box>
           )}

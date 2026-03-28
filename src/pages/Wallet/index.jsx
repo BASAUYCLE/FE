@@ -21,6 +21,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { walletService, transactionService } from "../../services";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { scrollToTopAfterPagination } from "../../utils/scrollPagination";
 import { confirmCrud } from "../../utils/confirmCrud";
 import { getAvatarSrc } from "../../utils/avatar";
 import Header from "../../components/header";
@@ -507,6 +508,8 @@ const MyWallet = () => {
                         pageSize: 7,
                         pageSizeOptions: [5, 10, 20],
                         position: ["bottomCenter"],
+                        onChange: () => scrollToTopAfterPagination(),
+                        onShowSizeChange: () => scrollToTopAfterPagination(),
                       }}
                       scroll={{ x: 620 }}
                     />

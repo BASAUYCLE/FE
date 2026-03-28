@@ -34,6 +34,7 @@ import {
 } from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { confirmCrud } from "../../utils/confirmCrud";
+import { scrollToTopAfterPagination } from "../../utils/scrollPagination";
 import "./index.css";
 
 /* Tab theo luồng: PENDING → ADMIN_APPROVED → AVAILABLE | REJECTED; + VERIFIED, DEPOSITED, SOLD, DRAFTED */
@@ -493,7 +494,10 @@ export default function ManageListings() {
                   pageSize={pageSize}
                   total={filteredBySearch.length}
                   showSizeChanger={false}
-                  onChange={(nextPage) => setPage(nextPage)}
+                  onChange={(nextPage) => {
+                    setPage(nextPage);
+                    scrollToTopAfterPagination();
+                  }}
                   size="small"
                 />
               </div>

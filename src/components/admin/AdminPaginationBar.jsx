@@ -1,4 +1,5 @@
 import "../../pages/admin/transaction/index.css";
+import { scrollToTopAfterPagination } from "../../utils/scrollPagination";
 
 /**
  * Thanh phân trang thống nhất (pattern admin-disputes):
@@ -44,7 +45,10 @@ export default function AdminPaginationBar({
           type="button"
           className="admin-tx-page-btn"
           disabled={page === totalPages}
-          onClick={() => setPage((p) => p + 1)}
+          onClick={() => {
+            setPage((p) => p + 1);
+            scrollToTopAfterPagination();
+          }}
           aria-label="Next page"
         >
           ›

@@ -61,7 +61,7 @@ export const POSTING_STATUS_TAG_COLOR = {
   [POSTING_STATUS.EXPIRED]: "default",
 };
 
-/** Inspector: overallCondition (tình trạng tổng thể) */
+/** Inspector: overallCondition (API values unchanged; labels for UI) */
 export const OVERALL_CONDITION = {
   EXCELLENT: "EXCELLENT",
   GOOD: "GOOD",
@@ -70,8 +70,8 @@ export const OVERALL_CONDITION = {
 };
 
 export const OVERALL_CONDITION_LABEL = {
-  [OVERALL_CONDITION.EXCELLENT]: "Xuất sắc – Như mới",
-  [OVERALL_CONDITION.GOOD]: "Tốt – Có dấu hiệu sử dụng nhẹ",
-  [OVERALL_CONDITION.FAIR]: "Trung bình – Có hao mòn rõ",
-  [OVERALL_CONDITION.POOR]: "Kém – Cần sửa chữa",
+  [OVERALL_CONDITION.EXCELLENT]: "Excellent – Like new",
+  [OVERALL_CONDITION.GOOD]: "Good – Light signs of use",
+  [OVERALL_CONDITION.FAIR]: "Fair – Noticeable wear",
+  [OVERALL_CONDITION.POOR]: "Poor – Needs repair",
 };
