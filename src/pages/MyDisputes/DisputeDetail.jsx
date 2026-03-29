@@ -273,6 +273,7 @@ export default function DisputeDetailPage() {
       await disputeService.updateShippingInfo(dispute.disputeId, {
         shippingProvider: v.shippingProvider,
         trackingCode: v.trackingCode,
+        shippingPhone: (v.shippingPhone ?? "").trim(),
         shippingReceiptUrl,
       });
       message.success("Return shipping info saved.");
@@ -561,10 +562,18 @@ export default function DisputeDetailPage() {
                         </Typography.Text>
                       )}
 
-                    {(dispute.shippingProvider || dispute.trackingCode) && (
+                    {(dispute.shippingProvider ||
+                      dispute.trackingCode ||
+                      dispute.shippingPhone) && (
                       <p>
                         <strong>Return ship:</strong> {dispute.shippingProvider}{" "}
                         / {dispute.trackingCode}
+                        {hasNonEmptyText(dispute.shippingPhone) && (
+                          <>
+                            {" "}
+                            · <strong>Phone:</strong> {dispute.shippingPhone}
+                          </>
+                        )}
                       </p>
                     )}
                     {returnReceiptUrls.length > 0 && (
@@ -632,8 +641,6 @@ export default function DisputeDetailPage() {
         zIndex={1300}
         styles={{
           body: {
-            maxHeight: "min(70vh, 520px)",
-            overflowY: "auto",
             paddingTop: 8,
           },
         }}
@@ -652,6 +659,13 @@ export default function DisputeDetailPage() {
             rules={[{ required: true, message: "Required" }]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            name="shippingPhone"
+            label="Phone number"
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input placeholder="e.g. 0912345678" inputMode="tel" />
           </Form.Item>
           <ReturnShippingReceiptFormItem />
         </Form>

@@ -162,6 +162,7 @@ function normalizeOrder(row) {
     shippingMethod: row.shippingMethod ?? row.shipping_method ?? null,
     shippingTrackingNumber:
       row.shippingTrackingNumber ?? row.shipping_tracking_number ?? null,
+    shippingPhone: row.shippingPhone ?? row.shipping_phone ?? null,
     proofImage: row.proofImage ?? row.proof_image ?? null,
     shippedAt: row.shippedAt ?? row.shipped_at ?? null,
     deliveredAt: row.deliveredAt ?? row.delivered_at ?? null,
@@ -333,11 +334,12 @@ export function OrderProvider({ children }) {
   const confirmShipping = useCallback(
     async (
       orderId,
-      { shippingMethod, shippingTrackingNumber, proofImageFile },
+      { shippingMethod, shippingTrackingNumber, shippingPhone, proofImageFile },
     ) => {
       const res = await orderService.confirmShipping(orderId, {
         shippingMethod,
         shippingTrackingNumber,
+        shippingPhone,
         proofImageFile,
       });
       const updated = normalizeOrder(res?.result ?? res?.data ?? res);
@@ -346,6 +348,7 @@ export function OrderProvider({ children }) {
           status: ORDER_STATUS.SHIPPING,
           shippingMethod: updated.shippingMethod,
           shippingTrackingNumber: updated.shippingTrackingNumber,
+          shippingPhone: updated.shippingPhone,
           proofImage: updated.proofImage,
           shippedAt: updated.shippedAt,
         }

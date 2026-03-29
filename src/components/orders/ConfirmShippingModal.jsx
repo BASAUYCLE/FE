@@ -46,6 +46,7 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
       await confirmShipping(order.orderId, {
         shippingMethod: values.shippingMethod || "",
         shippingTrackingNumber: values.shippingTrackingNumber || "",
+        shippingPhone: (values.shippingPhone ?? "").trim(),
         proofImageFile: proofFile,
       });
       message.success("Shipping confirmed successfully!");
@@ -94,7 +95,7 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
       width={560}
       destroyOnHidden
       zIndex={1300}
-      styles={{ body: { padding: 0, maxHeight: "72vh", overflowY: "auto" } }}
+      styles={{ body: { padding: 0 } }}
     >
       {/* Header */}
       <div style={{ padding: "14px 18px 0" }}>
@@ -220,6 +221,22 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
             }
           >
             <Input placeholder="e.g. GHTK123456789" style={{ fontSize: 13 }} />
+          </Form.Item>
+
+          <Form.Item
+            name="shippingPhone"
+            label={
+              <span style={{ fontSize: 12, fontWeight: 600 }}>
+                Phone number
+              </span>
+            }
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input
+              placeholder="e.g. 0912345678"
+              inputMode="tel"
+              style={{ fontSize: 13 }}
+            />
           </Form.Item>
 
           <Form.Item

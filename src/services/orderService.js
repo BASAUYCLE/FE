@@ -20,10 +20,11 @@ const orderService = {
   payRemaining: (orderId) => axiosInstance.put(E.PAY_REMAINING(orderId)),
 
   // PUT /orders/{id}/shipping — B4: Seller xác nhận giao hàng (multipart)
-  confirmShipping: (orderId, { shippingMethod, shippingTrackingNumber, proofImageFile }) => {
+  confirmShipping: (orderId, { shippingMethod, shippingTrackingNumber, shippingPhone, proofImageFile }) => {
     const form = new FormData();
     form.append("shippingMethod", shippingMethod || "");
     form.append("shippingTrackingNumber", shippingTrackingNumber || "");
+    form.append("shippingPhone", shippingPhone || "");
     if (proofImageFile) {
       const file = proofImageFile?.originFileObj ?? proofImageFile;
       if (file instanceof File || file instanceof Blob) {
