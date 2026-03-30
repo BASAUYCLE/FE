@@ -15,6 +15,7 @@ import {
 import { Wallet, RefreshCw, Clock, Banknote, Copy, Eye } from "lucide-react";
 import adminService from "../../../services/adminService";
 import userService from "../../../services/userService";
+import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import {
   buildAvatarUrlMapFromUsers,
@@ -97,6 +98,8 @@ async function fetchAllTransactionsMerged() {
   return all;
 }
 
+const PAGE_SIZE = 10;
+
 export default function AdminWithdrawals() {
   const [loading, setLoading] = useState(true);
   const [rows, setRows] = useState([]);
@@ -104,6 +107,7 @@ export default function AdminWithdrawals() {
   const [actionId, setActionId] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailRecord, setDetailRecord] = useState(null);
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -143,6 +147,14 @@ export default function AdminWithdrawals() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // reset page when list changes (refresh / approve / reject)
+  useEffect(() => {
+    setPage(1);
+  }, [rows.length]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageItems = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const totalPendingAmount = useMemo(
     () =>
@@ -467,19 +479,21 @@ export default function AdminWithdrawals() {
                 <Table
                   rowKey={(r) => String(r.transactionId ?? r.id)}
                   columns={columns}
-                  dataSource={rows}
+                  dataSource={pageItems}
                   size="middle"
-                  pagination={{
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showTotal: (t) => `${t} request(s)`,
-                  }}
-                  scroll={{ x: 960 }}
+                  pagination={false}
                   locale={{
                     emptyText: loading
                       ? "Loading…"
                       : "No pending withdrawal requests.",
                   }}
+                />
+                <AdminPaginationBar
+                  totalCount={rows.length}
+                  nounPhrase="request(s)"
+                  page={page}
+                  totalPages={totalPages}
+                  setPage={setPage}
                 />
               </Spin>
             </section>

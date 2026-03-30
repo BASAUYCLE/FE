@@ -106,6 +106,10 @@
   overflow: hidden;
 }
 
+.withdrawals-table-card .ant-table-content {
+  overflow-x: hidden !important;
+}
+
 .withdrawals-table-card .ant-table {
   font-size: 13px;
 }
