@@ -25,12 +25,12 @@ export default function Footer() {
             <span className="app-footer-logo-text">BASAUYCLE</span>
           </Link>
           <p className="app-footer-tagline">
-          Professional Bicycle Marketplace
+          REPUTABLE BICYCLE MARKETPLACE
+
           </p>
           <div className="app-footer-contact">
-            <div><strong>Hotline:</strong> </div>
-            <div><strong>Email:</strong> </div>
-            <div><strong>Website:</strong></div>
+            <div><strong>Hotline:</strong> 0387.687.323</div>
+            <div><strong>Email:</strong> basauycle@gmail.com</div>
           </div>
           <div className="app-footer-intro">
             <Link

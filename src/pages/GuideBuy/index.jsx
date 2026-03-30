@@ -32,30 +32,7 @@ export default function GuideBuy() {
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            1. Buy directly at our stores
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            You can visit BASAUYCLE stores to view bikes, test ride, and receive
-            detailed consultation before making a purchase decision.
-          </Typography>
-
-          <Typography
-            component="h3"
-            sx={{ fontSize: 16, fontWeight: 600, mt: 2, mb: 1 }}
-          >
-            In-store payment
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            After choosing the right bike, you can pay by cash, bank transfer,
-            or supported electronic payment methods. Our staff will issue the
-            invoice and activate the corresponding warranty.
-          </Typography>
-
-          <Typography
-            component="h2"
-            sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
-          >
-            2. Buy online via website
+            1. Buy online via website
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
             Step 1: Visit BASAUYCLE homepage and go to Marketplace to select the
@@ -73,18 +50,6 @@ export default function GuideBuy() {
             available).
           </Typography>
 
-          <Typography
-            component="h2"
-            sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
-          >
-            3. Buy through support channels
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            If you need quick consultation, contact our hotline or chat with
-            BASAUYCLE support team. They will help you choose the right bike
-            for your needs (commuting, school, training, racing, touring, etc.)
-            and guide you through order completion just like on the website.
-          </Typography>
         </Container>
       </Box>
       <Footer showSubscribe={false} />

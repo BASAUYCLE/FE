@@ -37,8 +37,7 @@ export default function Complaint() {
             complete warranty procedures.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            - Complaint resolution time is up to 03 (three) working days from
-            the time we receive the complaint. In force majeure cases, both
+            - In force majeure cases, both
             parties will negotiate a suitable solution.
           </Typography>
         </Container>

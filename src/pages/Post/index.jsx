@@ -436,7 +436,7 @@ export default function PostBike() {
                   uid: `edit-${key}-${i}`,
                   url,
                   status: "done",
-                  name: `Ảnh ${key}`,
+                  name: `Image ${key}`,
                 },
               ]
             : [];
@@ -461,7 +461,7 @@ export default function PostBike() {
                   uid: `edit-${key}-${i}`,
                   url: urls[i],
                   status: "done",
-                  name: `Ảnh ${key}`,
+                  name: `Image ${key}`,
                 },
               ]
             : [];
@@ -1412,7 +1412,7 @@ export default function PostBike() {
       if (imageUploadFailed) {
         const detail =
           lastImageErrorMsg && String(lastImageErrorMsg).trim()
-            ? ` Chi tiết: ${lastImageErrorMsg}`
+            ? ` Details: ${lastImageErrorMsg}`
             : "";
         message.warning({
           content: `Listing ${isEditingDraft ? "submitted" : editId ? "updated" : "created"} (ID: ${postId}) but images could not be uploaded. You can edit later.${detail}`,

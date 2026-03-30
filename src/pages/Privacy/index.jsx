@@ -29,8 +29,7 @@ export default function Privacy() {
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-            Welcome to BASAUYCLE, one of Vietnam's leading professional bicycle
-            retail systems.
+            Welcome to BASAUYCLE
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
             By accessing our website, making purchases, or using BASAUYCLE
@@ -66,23 +65,6 @@ export default function Privacy() {
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
             - Order information: bicycle type, model, color, frame serial
             number, accessories, purchase date, and order value.
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1.5 }}>
-            - Interaction information: consultation chat history, complaints,
-            and feedback about product/service quality.
-          </Typography>
-
-          <Typography sx={{ fontWeight: 500, mb: 0.5 }}>
-            b. Technical data (when visiting the website):
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - IP address, browser type, and access time.
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            - Cookies: we use cookies to remember preferences, personalize your
-            browsing experience, and recommend relevant bike models. You may
-            disable cookies in your browser, but some website features may be
-            affected.
           </Typography>
 
           <Typography sx={{ fontWeight: 600, mt: 1, mb: 0.5 }}>
@@ -194,15 +176,12 @@ export default function Privacy() {
             privacy rights, please contact BASAUYCLE Customer Support.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Hotline (24/7): 0386.868.986
+            - Hotline (24/7): 0387.687.323
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Email: @gmail.com
+            - Email: basauycle@gmail.com
           </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            We will do our best to respond as soon as possible (typically
-            within 48 working hours).
-          </Typography>
+
         </Container>
       </Box>
       <Footer showSubscribe={false} />

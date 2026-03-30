@@ -452,9 +452,23 @@ export default function UserFeedbackPage() {
                       color: "#64748b",
                       fontSize: 13,
                       lineHeight: 1.2,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.75,
                     }}
                   >
-                    Active {activityText}
+                    <Box
+                      aria-hidden="true"
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: "50%",
+                        backgroundColor: "#22c55e",
+                        boxShadow: "0 0 0 2px rgba(34,197,94,0.18)",
+                        flex: "0 0 auto",
+                      }}
+                    />
+                    <span>Active {activityText}</span>
                   </Box>
                 </Box>
 

@@ -61,19 +61,13 @@ export default function ReturnPolicy() {
             2. Time limits for return notification and shipment
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Return notification time: within 48 hours after receiving the
-            product for missing accessories/gifts or damaged items.
+            - Return notification period: within the specified timeframe
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Product return shipment time: within 14 days from receipt date.
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Return location: customers may bring products directly to our
-            office/store or send them via postal/courier service.
+            - Product return shipment time: within the specified timeframe
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            If you have feedback/complaints related to product quality, please
-            contact our customer support hotline.
+
           </Typography>
 
           <Typography
@@ -92,15 +86,9 @@ export default function ReturnPolicy() {
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            If customers no longer need the product due to product faults or do
-            not accept the exchanged item, we will issue a refund via bank
-            transfer or another agreed method within 07 working days from the
-            request date. Transfer fees (if any) are borne by the customer.
+          If the customer no longer needs the product due to a product defect or does not accept the replacement product, we will issue a refund via VN Pay bank transfer.
           </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Any shipping costs for returned/exchanged items are borne by the
-            customer and paid directly to the carrier.
-          </Typography>
+
         </Container>
       </Box>
       <Footer showSubscribe={false} />

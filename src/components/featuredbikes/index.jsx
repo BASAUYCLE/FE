@@ -599,7 +599,7 @@ function SimpleProductCard({ bike, variant = "grid" }) {
         <SimpleProductPrice>{bike.price}</SimpleProductPrice>
         <SimpleProductMetaRow>
           {sold > 0 && (
-            <SimpleProductMetaText>Đã bán {sold}</SimpleProductMetaText>
+            <SimpleProductMetaText>Sold {sold}</SimpleProductMetaText>
           )}
           <SimpleProductMetaText style={{ color: "#16a34a", fontWeight: 500 }}>
             In stock

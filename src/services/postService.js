@@ -67,7 +67,7 @@ const postService = {
   uploadPostImage: async ({ postId, imageFile, imageType, isThumbnail = false }) => {
     const file = imageFile?.originFileObj ?? imageFile;
     if (!file || !(file instanceof File || file instanceof Blob)) {
-      return Promise.reject(new Error("Ảnh không hợp lệ (thiếu file)."));
+      return Promise.reject(new Error("Invalid image (missing file)."));
     }
     const fileName = file instanceof File ? file.name : (file.name || "image.jpg");
 

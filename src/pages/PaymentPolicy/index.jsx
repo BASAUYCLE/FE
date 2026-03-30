@@ -29,7 +29,7 @@ export default function PaymentPolicy() {
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            We offer three payment methods. Customers may choose whichever is
+            We offer two payment methods. Customers may choose whichever is
             most convenient:
           </Typography>
 
@@ -37,18 +37,7 @@ export default function PaymentPolicy() {
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}
           >
-            Method 1: Direct cash payment
-          </Typography>
-          <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            If you purchase at our store, you can pay directly in cash to our
-            sales staff.
-          </Typography>
-
-          <Typography
-            component="h2"
-            sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}
-          >
-            Method 2: Cash on Delivery (COD)
+            Method 1: Cash on Delivery (COD)
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
             With this method, customers check the item upon delivery and then
@@ -59,17 +48,10 @@ export default function PaymentPolicy() {
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1 }}
           >
-            Method 3: Advance bank transfer
+            Method 2: Payment via VNPay
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-            Customers transfer payment in advance, then we arrange delivery
-            according to the agreed schedule or contract terms.
-          </Typography>
-          <Typography sx={{ color: "#111827", fontSize: 14, mt: 1 }}>
-            Account No.: 8666226868888 – Account Holder: BASAUYCLE Company
-          </Typography>
-          <Typography sx={{ color: "#111827", fontSize: 14, mb: 3 }}>
-            Bank – Branch
+          Pay via VNPay to top up your account for purchases on the website.
           </Typography>
 
           <Typography

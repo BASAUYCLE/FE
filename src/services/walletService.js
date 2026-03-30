@@ -11,11 +11,11 @@ const walletService = {
     if (!amount || amount <= 0) {
       return Promise.reject(new Error("Số tiền phải lớn hơn 0"));
     }
-    
+
     // Construct callback URL - will be called by VNPay after payment
     const returnUrl = `${window.location.origin}/payment/result`;
-    
-    return axiosInstance.post("/wallet/top-up", { 
+
+    return axiosInstance.post("/wallet/top-up", {
       amount,
       returnUrl
     });
