@@ -20,6 +20,14 @@ const feedbackService = {
   // PUT /feedbacks/orders/{orderId} — cập nhật feedback hiện có
   updateFeedback: (orderId, payload) =>
     axiosInstance.put(`/feedbacks/orders/${orderId}`, payload),
+
+  // DELETE /feedbacks/orders/{orderId}
+  deleteFeedback: (orderId) =>
+    axiosInstance.delete(`/feedbacks/orders/${orderId}`),
+
+  // GET /feedbacks/posts/{postId} — đánh giá theo bài đăng
+  getFeedbacksByPost: (postId) =>
+    axiosInstance.get(`/feedbacks/posts/${postId}`),
 };
 
 export default feedbackService;

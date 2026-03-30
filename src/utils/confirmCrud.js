@@ -5,8 +5,8 @@ function runConfirm(confirmFn, options) {
   const {
     title,
     content,
-    okText = "Xác nhận",
-    cancelText = "Hủy",
+    okText = "Confirm",
+    cancelText = "Cancel",
     danger = false,
   } = options;
   return new Promise((resolve) => {
@@ -24,9 +24,7 @@ function runConfirm(confirmFn, options) {
   });
 }
 
-/**
- * Dùng trong component là con của `<App>` (antd) — modal đúng lớp / theme (khuyến nghị cho admin).
- */
+/** Use inside components wrapped by `<App>` (antd) so modals use the correct layer/theme. */
 export function useConfirmCrud() {
   const { modal } = App.useApp();
   return useCallback(
@@ -35,9 +33,7 @@ export function useConfirmCrud() {
   );
 }
 
-/**
- * Modal.confirm tĩnh — giữ tương thích các màn không dùng hook.
- */
+/** Static `Modal.confirm` for screens that do not use the hook. */
 export function confirmCrud(options) {
   return runConfirm(Modal.confirm, options);
 }

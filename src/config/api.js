@@ -14,6 +14,8 @@ export const API_ENDPOINTS = {
     REGISTER: '/auth/register',
     LOGOUT: '/auth/logout',
     VERIFY: '/auth/verify',
+    /** POST body `{ token }` — kiểm tra JWT còn hiệu lực */
+    INTROSPECT: '/auth/introspect',
     REFRESH: '/auth/refresh',
     FORGOT_PASSWORD: '/auth/forgot-password',
     RESET_PASSWORD: '/auth/reset-password',
@@ -126,6 +128,7 @@ export const API_ENDPOINTS = {
   TRANSACTIONS: {
     LIST: "/transactions",
     BY_ID: (transactionId) => `/transactions/${transactionId}`,
+    WITHDRAW: "/transactions/withdraw",
   },
 
   // System Configuration
@@ -226,6 +229,12 @@ export const API_ENDPOINTS = {
     REVENUE_STATS: (period) => `/admin/stats/revenue?period=${period}`,
     INSPECTION_REPORTS: '/admin/inspection/reports',
     TRANSACTIONS: '/admin/transactions',
+    /** POST — approve pending WITHDRAW */
+    TRANSACTION_WITHDRAW_APPROVE: (transactionId) =>
+      `/admin/transactions/${transactionId}/approve`,
+    /** POST — reject withdrawal */
+    TRANSACTION_WITHDRAW_REJECT: (transactionId) =>
+      `/admin/transactions/${transactionId}/reject`,
   },
 };
 

@@ -1,14 +1,26 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Tag } from "antd";
-import { Search, Filter, Eye, Upload, Play } from "lucide-react";
+import { Eye, Upload, Play } from "lucide-react";
 import {
+  INSPECTION_STATUS,
   INSPECTION_STATUS_LABEL,
   INSPECTION_STATUS_TAG_COLOR,
 } from "../../../constants/inspectionStatus";
 import AdminPaginationBar from "../../admin/AdminPaginationBar";
+import AdminToolbarFilters from "../../admin/AdminToolbarFilters";
 
 const PAGE_SIZE = 10;
+
+/** Status filters shown in toolbar (queue may not include every value). */
+const STATUS_FILTER_OPTIONS = [
+  { value: "ALL", label: "All" },
+  { value: INSPECTION_STATUS.PENDING, label: "Pending" },
+  { value: INSPECTION_STATUS.IN_PROGRESS, label: "In progress" },
+  { value: INSPECTION_STATUS.OVERDUE, label: "Overdue" },
+  { value: INSPECTION_STATUS.COMPLETED, label: "Completed" },
+  { value: INSPECTION_STATUS.REJECTED, label: "Rejected" },
+];
 
 function formatRequestedDate(iso) {
   return new Date(iso).toLocaleString("en-US", {
@@ -29,18 +41,27 @@ export default function InspectionQueueTable({
 }) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState(1);
 
   const filteredInspections = useMemo(() => {
+    let list = inspections;
+    if (statusFilter !== "ALL") {
+      list = list.filter((i) => (i.status ?? "") === statusFilter);
+    }
     const q = search.trim().toLowerCase();
-    if (!q) return inspections;
-    return inspections.filter(
-      (i) =>
-        i.id.toLowerCase().includes(q) ||
+    if (!q) return list;
+    return list.filter((i) => {
+      const idStr = String(i.id ?? i.postId ?? "").toLowerCase();
+      return (
+        idStr.includes(q) ||
         i.bicycleName?.toLowerCase().includes(q) ||
-        i.bicycleType?.toLowerCase().includes(q),
-    );
-  }, [inspections, search]);
+        i.bicycleType?.toLowerCase().includes(q) ||
+        i.sellerName?.toLowerCase().includes(q) ||
+        i.sellerLocation?.toLowerCase().includes(q)
+      );
+    });
+  }, [inspections, search, statusFilter]);
 
   const totalPages = Math.ceil(filteredInspections.length / PAGE_SIZE) || 1;
   const start = (page - 1) * PAGE_SIZE;
@@ -48,7 +69,7 @@ export default function InspectionQueueTable({
 
   useEffect(() => {
     setPage(1);
-  }, [inspections.length]);
+  }, [inspections.length, search, statusFilter]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -56,27 +77,26 @@ export default function InspectionQueueTable({
 
   return (
     <section className="admin-card inspector-queue-card">
-      <div className="admin-card-header">
+      <div className="admin-card-header inspector-queue-card-header">
         <div className="inspector-queue-toolbar">
-          <div className="inspector-search">
-            <Search size={16} color="#94a3b8" />
-            <input
-              type="text"
-              placeholder="Search by ID or model..."
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
+          <div className="admin-toolbar-page inspector-toolbar-page">
+            <AdminToolbarFilters
+              idPrefix="inspector-toolbar-status"
+              searchValue={search}
+              onSearchChange={(v) => {
+                setSearch(v);
                 setPage(1);
               }}
+              searchPlaceholder="Search by ID, model, seller…"
+              filterValue={statusFilter}
+              onFilterChange={(v) => {
+                setStatusFilter(v);
+                setPage(1);
+              }}
+              filterOptions={STATUS_FILTER_OPTIONS}
+              filterAriaLabel="Filter by status"
             />
           </div>
-          <button type="button" className="admin-outline-button">
-            <Filter
-              size={14}
-              style={{ marginRight: 6, verticalAlign: "middle" }}
-            />
-            Filters
-          </button>
         </div>
       </div>
       <div className="admin-table">
@@ -96,7 +116,7 @@ export default function InspectionQueueTable({
                 textAlign: "center",
               }}
             >
-              Đang tải...
+              Loading…
             </div>
           </div>
         ) : (

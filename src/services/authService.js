@@ -160,6 +160,12 @@ const authService = {
   forgotPassword: (email) => axiosInstance.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email }),
   resetPassword: (resetData) => axiosInstance.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, resetData),
   changePassword: (passwordData) => axiosInstance.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData),
+
+  /** POST /auth/introspect — `{ token }` hoặc dùng token hiện tại từ session */
+  introspect: (token) =>
+    axiosInstance.post(API_ENDPOINTS.AUTH.INTROSPECT, {
+      token: token ?? sessionStorage.getItem(STORAGE_KEYS.TOKEN),
+    }),
 };
 
 export default authService;

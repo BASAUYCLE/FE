@@ -1,4 +1,4 @@
-/* Layout: sidebar trái cố định + nội dung bên phải */
+/* Fixed left sidebar + main content */
 .app-sidebar-layout {
   display: flex;
   min-height: 100vh;
@@ -123,6 +123,9 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  /* Above .app-sidebar (100) so dropdowns in main are not covered */
+  position: relative;
+  z-index: 101;
 }
 
 .app-sidebar-header {

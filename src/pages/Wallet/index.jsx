@@ -9,6 +9,7 @@ import {
   Divider,
   Table,
   Avatar,
+  Modal,
 } from "antd";
 import {
   Wallet,
@@ -34,7 +35,10 @@ const MyWallet = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [topUpLoading, setTopUpLoading] = useState(false);
+  const [withdrawLoading, setWithdrawLoading] = useState(false);
+  const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [form] = Form.useForm();
+  const [withdrawForm] = Form.useForm();
   const [quickAmount, setQuickAmount] = useState(5000000);
   const [showBalance, setShowBalance] = useState(false);
 
@@ -46,7 +50,7 @@ const MyWallet = () => {
       : "U";
   const userAvatarUrl = getAvatarSrc(user) || null;
 
-  // Lấy thông tin ví và lịch sử giao dịch
+  // Load wallet balance and transaction history
   const fetchWalletData = async () => {
     if (!user?.id && !user?.userId && !user?.email) {
       message.error("Please sign in to view your wallet");
@@ -55,12 +59,12 @@ const MyWallet = () => {
 
     setLoading(true);
     try {
-      // Lấy thông tin ví
+      // Wallet balance
       const walletRes = await walletService.getWallet();
       const walletData = walletRes?.result ?? walletRes?.data ?? walletRes;
       setWallet(walletData);
 
-      // Lấy lịch sử giao dịch
+      // Transactions
       const txRes = await transactionService.getHistory({ limit: 20 });
       const txList = txRes?.result ?? txRes?.data ?? txRes;
       setTransactions(Array.isArray(txList) ? txList : []);
@@ -75,7 +79,7 @@ const MyWallet = () => {
     fetchWalletData();
   }, [user]);
 
-  // Xử lý nạp tiền - redirect sang VNPay
+  // Top-up — redirect to VNPay
   const handleTopUp = async (values) => {
     if (!values.amount || values.amount <= 0) {
       message.error("Amount must be greater than 0");
@@ -96,7 +100,7 @@ const MyWallet = () => {
       const paymentUrl = res?.result ?? res?.data;
 
       if (paymentUrl && typeof paymentUrl === "string") {
-        // Redirect sang VNPay Sandbox
+        // Redirect to VNPay
         message.info("Redirecting to VNPay...");
         setTimeout(() => {
           window.location.href = paymentUrl;
@@ -111,31 +115,72 @@ const MyWallet = () => {
     }
   };
 
+  const handleWithdraw = async (values) => {
+    const amount = Number(values.amount);
+    if (!Number.isFinite(amount) || amount < 50000) {
+      message.error("Minimum withdrawal is 50,000 VND");
+      return;
+    }
+    const ok = await confirmCrud({
+      title: "Submit withdrawal request?",
+      content: `Request a withdrawal of ${formatCurrency(amount)}? Continue?`,
+      okText: "Submit",
+    });
+    if (!ok) return;
+    setWithdrawLoading(true);
+    try {
+      await transactionService.requestWithdrawal({
+        amount,
+        bankName: values.bankName?.trim(),
+        bankAccountNumber: values.bankAccountNumber?.trim(),
+        bankAccountHolder: values.bankAccountHolder?.trim(),
+      });
+      message.success("Withdrawal request submitted.");
+      withdrawForm.resetFields();
+      setWithdrawModalOpen(false);
+      await fetchWalletData();
+    } catch (error) {
+      const raw = String(error?.message ?? "");
+      if (raw.includes("Database constraint violation")) {
+        message.error({
+          content:
+            "Could not submit withdrawal. Please try again later or contact support.",
+          duration: 8,
+        });
+      } else {
+        message.error(raw || "Withdrawal request failed.");
+      }
+    } finally {
+      setWithdrawLoading(false);
+    }
+  };
+
   const handleQuickTopUp = (amount) => {
-    // Chỉ set giá trị để khi bấm "Process Deposit" thì onFinish gọi handleTopUp
+    // Prefill amount for "Process Deposit"
     setQuickAmount(amount);
     form.setFieldValue("amount", amount);
   };
 
-  /**
-   * BE có thể trả về transactionType (camelCase) hoặc transaction_type (snake_case).
-   * DB values: TOP_UP | DEPOSIT | PURCHASE | REFUND | POSTING_FEE, ...
-   */
+  /** transactionType (camelCase) or transaction_type (snake_case). */
   const getTxType = (record) =>
     record.transactionType ?? record.transaction_type ?? record.type ?? null;
 
   const getTransactionDescription = (record) =>
-    String(record?.description ?? record?.transactionDescription ?? record?.note ?? "")
-      .trim();
+    String(
+      record?.description ??
+        record?.transactionDescription ??
+        record?.note ??
+        "",
+    ).trim();
 
   const inferMoneyInFromDescription = (record) => {
     const desc = getTransactionDescription(record).toLowerCase();
     if (!desc) return null;
 
     const moneyOutHints =
-      /trừ|thanh toán|mua|purchase|payment|phí|fee|withdraw|rút|đặt cọc|deposit cho đơn|order/i;
+      /trừ|thanh toán|mua|purchase|payment|phí|fee|withdraw|rút|đặt cọc|deposit cho đơn|order|deduct|paid|booking/i;
     const moneyInHints =
-      /nạp|top[\s-]?up|refund|hoàn tiền|cộng|bonus|nhận tiền|credit/i;
+      /nạp|top[\s-]?up|refund|hoàn tiền|cộng|bonus|nhận tiền|credit|received|topup|added|bonus/i;
 
     const isOut = moneyOutHints.test(desc);
     const isIn = moneyInHints.test(desc);
@@ -145,29 +190,34 @@ const MyWallet = () => {
     return null;
   };
 
-  // Số tiền thay đổi (dương: cộng vào ví, âm: trừ khỏi ví)
+  // Signed delta for running balance (positive = in, negative = out)
   const getSignedAmount = (record) => {
     const status = record.status ?? record.transactionStatus;
     const statusKey = status ? String(status).toUpperCase() : null;
-    // Chỉ tính vào currentBalance khi giao dịch đã "settle" (SUCCESS).
-    // PENDING/PROCESSING thường chưa được cộng/trừ vào ví thực tế của BE.
-    if (statusKey !== "SUCCESS") return 0;
-    const raw = Number(record.amount ?? 0);
-    if (!raw) return 0;
-
-    // Ưu tiên suy chiều tiền theo cột description từ dto.Transactions
-    const moneyInByDescription = inferMoneyInFromDescription(record);
-    if (moneyInByDescription != null) {
-      return moneyInByDescription ? Math.abs(raw) : -Math.abs(raw);
-    }
-
     const txTypeKey = (() => {
       const t = getTxType(record);
       return t ? String(t).toUpperCase() : null;
     })();
 
+    /** Pending WITHDRAW: treat as balance deducted for running column until settled. */
+    if (txTypeKey === "WITHDRAW" && statusKey === "PENDING") {
+      const raw = Number(record.amount ?? 0);
+      return raw ? -Math.abs(raw) : 0;
+    }
+
+    // Other types: count only when SUCCESS.
+    if (statusKey !== "SUCCESS") return 0;
+    const raw = Number(record.amount ?? 0);
+    if (!raw) return 0;
+
+    // Prefer direction hints from description text when present
+    const moneyInByDescription = inferMoneyInFromDescription(record);
+    if (moneyInByDescription != null) {
+      return moneyInByDescription ? Math.abs(raw) : -Math.abs(raw);
+    }
+
     const moneyInTypes = ["TOP_UP", "REFUND"];
-    const moneyOutTypes = ["DEPOSIT", "PURCHASE", "POSTING_FEE"];
+    const moneyOutTypes = ["DEPOSIT", "PURCHASE", "POSTING_FEE", "WITHDRAW"];
 
     const moneyIn =
       txTypeKey && moneyInTypes.includes(txTypeKey)
@@ -185,13 +235,15 @@ const MyWallet = () => {
     FAILED: { color: "#ef4444", text: "Failed" },
   };
 
-  // Mapping hiển thị cho Type lấy từ BE (không thay đổi logic dữ liệu)
+  // Display labels for transaction types
   const TX_TYPE_LABEL = {
     TOP_UP: "Top up",
     DEPOSIT: "Deposit",
     PURCHASE: "Purchase",
     REFUND: "Refund",
     POSTING_FEE: "Posting fee",
+    WITHDRAW: "Withdrawal",
+    WITHDRAWAL: "Withdrawal",
   };
 
   const formatVNDNumber = (value) => {
@@ -200,11 +252,10 @@ const MyWallet = () => {
     return n.toLocaleString("vi-VN");
   };
 
-  // Chuẩn hóa dataSource cho bảng, kèm currentBalance
+  // Table rows with running balance column
   const tableData = useMemo(() => {
     if (!transactions.length) return [];
 
-    // Nếu chưa có thông tin ví, trả danh sách tối thiểu
     if (!wallet) {
       return transactions.map((tx, idx) => ({
         ...tx,
@@ -212,7 +263,7 @@ const MyWallet = () => {
       }));
     }
 
-    // Sắp xếp mới nhất → cũ nhất để dòng đầu là transaction mới nhất
+    // Newest first so the first row is the latest transaction
     const sorted = [...transactions].sort((a, b) => {
       const da = new Date(a.createdAt ?? a.created_at ?? 0).getTime();
       const db = new Date(b.createdAt ?? b.created_at ?? 0).getTime();
@@ -233,7 +284,6 @@ const MyWallet = () => {
     });
   }, [transactions, wallet]);
 
-  // Cấu hình bảng giao dịch (code bảng cũ như trước)
   const transactionColumns = [
     {
       title: "Date",
@@ -260,7 +310,8 @@ const MyWallet = () => {
         const txTypeRaw = getTxType(record);
         const txTypeKey = txTypeRaw ? String(txTypeRaw).toUpperCase() : null;
         const mapped = TX_TYPE_LABEL[txTypeKey];
-        if (mapped) return <span className="wallet-tx-type-text">{mapped}</span>;
+        if (mapped)
+          return <span className="wallet-tx-type-text">{mapped}</span>;
         if (!txTypeRaw) return "—";
         const human = String(txTypeRaw)
           .replace(/_/g, " ")
@@ -393,6 +444,21 @@ const MyWallet = () => {
                   <div className="wallet-banner-bg" />
                 </Card>
 
+                <div className="wallet-withdraw-trigger">
+                  <Button
+                    type="default"
+                    size="large"
+                    block
+                    className="wallet-withdraw-open-btn"
+                    onClick={() => {
+                      withdrawForm.resetFields();
+                      setWithdrawModalOpen(true);
+                    }}
+                  >
+                    Withdraw
+                  </Button>
+                </div>
+
                 {/* Add funds */}
                 <Card className="wallet-topup-card wallet-card">
                   <div className="wallet-topup-header">
@@ -429,7 +495,9 @@ const MyWallet = () => {
                                 }
                                 if (value && value > 100000000) {
                                   return Promise.reject(
-                                    new Error("Maximum amount is 100,000,000 VND"),
+                                    new Error(
+                                      "Maximum amount is 100,000,000 VND",
+                                    ),
                                   );
                                 }
                                 return Promise.resolve();
@@ -535,6 +603,87 @@ const MyWallet = () => {
         )}
       </div>
       <Footer />
+
+      <Modal
+        title="Withdraw funds"
+        open={withdrawModalOpen}
+        onCancel={() => {
+          setWithdrawModalOpen(false);
+          withdrawForm.resetFields();
+        }}
+        footer={null}
+        width={480}
+        destroyOnHidden
+        centered
+      >
+        <p className="wallet-withdraw-modal-hint">
+          Minimum 50,000 VND. Your request will be reviewed by an admin.
+        </p>
+        <Form
+          form={withdrawForm}
+          layout="vertical"
+          onFinish={handleWithdraw}
+          requiredMark
+        >
+          <Form.Item
+            name="amount"
+            label="Amount (VND)"
+            rules={[
+              { required: true, message: "Enter amount" },
+              {
+                validator: (_, v) => {
+                  const n = Number(v);
+                  if (!Number.isFinite(n) || n < 50000) {
+                    return Promise.reject(new Error("Minimum is 50,000 VND"));
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <Input type="number" min={50000} step={10000} size="large" />
+          </Form.Item>
+          <Form.Item
+            name="bankName"
+            label="Bank name"
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input placeholder="e.g. Vietcombank" size="large" />
+          </Form.Item>
+          <Form.Item
+            name="bankAccountNumber"
+            label="Account number"
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input placeholder="Account number" size="large" />
+          </Form.Item>
+          <Form.Item
+            name="bankAccountHolder"
+            label="Account holder (full name)"
+            rules={[{ required: true, message: "Required" }]}
+          >
+            <Input placeholder="As registered at the bank" size="large" />
+          </Form.Item>
+          <div className="wallet-withdraw-modal-actions">
+            <Button
+              onClick={() => {
+                setWithdrawModalOpen(false);
+                withdrawForm.resetFields();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              className="wallet-btn-primary"
+              htmlType="submit"
+              loading={withdrawLoading}
+            >
+              {withdrawLoading ? "Submitting…" : "Submit request"}
+            </Button>
+          </div>
+        </Form>
+      </Modal>
     </div>
   );
 };

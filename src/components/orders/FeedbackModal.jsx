@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Modal, Rate, Input, message, Alert } from "antd";
+import { Modal, Rate, Input, message, Button } from "antd";
 import { feedbackService } from "../../services";
 import { ORDER_STATUS } from "../../constants/orderStatus";
 
@@ -20,6 +20,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
   const [initialLoaded, setInitialLoaded] = useState(false);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
+  const [hasExistingFeedback, setHasExistingFeedback] = useState(false);
 
   // When opening, load existing feedback to allow edits.
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
       })
       .catch(() => {
         if (!cancelled) {
+          setHasExistingFeedback(false);
           setRating(5);
           setComment("");
         }
@@ -97,6 +99,33 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
     }
   };
 
+  const handleDelete = async () => {
+    if (!order?.orderId) return;
+    Modal.confirm({
+      title: "Delete this review?",
+      content: "This cannot be undone.",
+      okText: "Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        setLoading(true);
+        try {
+          await feedbackService.deleteFeedback(order.orderId);
+          message.success("Review removed.");
+          setHasExistingFeedback(false);
+          setRating(5);
+          setComment("");
+          onSuccess?.();
+          onClose?.();
+        } catch (e) {
+          message.error(e?.message || "Could not delete review.");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
+
   const modalTitle = "Rate Seller";
 
   return (
@@ -104,14 +133,39 @@ export default function FeedbackModal({ open, onClose, order, onSuccess }) {
       title={modalTitle}
       open={open}
       onCancel={() => !loading && onClose?.()}
-      onOk={handleSubmit}
-      okText="Submit Review"
-      cancelText="Cancel"
-      confirmLoading={loading && initialLoaded}
       centered
       width={560}
       styles={{ body: { maxHeight: "60vh", overflowY: "auto" } }}
       destroyOnHidden
+      footer={
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          <span>
+            {hasExistingFeedback && initialLoaded ? (
+              <Button danger onClick={handleDelete} disabled={loading}>
+                Delete review
+              </Button>
+            ) : null}
+          </span>
+          <span style={{ display: "flex", gap: 8 }}>
+            <Button onClick={() => !loading && onClose?.()}>Cancel</Button>
+            <Button
+              type="primary"
+              onClick={handleSubmit}
+              loading={loading && initialLoaded}
+            >
+              Submit Review
+            </Button>
+          </span>
+        </div>
+      }
     >
       <div style={{ marginBottom: 16 }}>
         <div

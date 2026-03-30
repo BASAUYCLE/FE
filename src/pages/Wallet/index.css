@@ -592,6 +592,40 @@
   background: transparent !important;
 }
 
+.wallet-withdraw-trigger {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
+.wallet-withdraw-open-btn {
+  border-radius: 12px !important;
+  border: 2px solid #14b8a6 !important;
+  color: #0f766e !important;
+  font-weight: 600 !important;
+  height: 48px !important;
+}
+
+.wallet-withdraw-open-btn:hover {
+  color: #0d9488 !important;
+  border-color: #0d9488 !important;
+  background: rgba(20, 184, 166, 0.08) !important;
+}
+
+.wallet-withdraw-modal-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.wallet-withdraw-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 4px;
+}
+
 .wallet-banner-content {
   position: relative;
   z-index: 2;

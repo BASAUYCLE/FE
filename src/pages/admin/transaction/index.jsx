@@ -1,9 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { Avatar } from "antd";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import { Search } from "lucide-react";
 import adminService from "../../../services/adminService";
-import { getAvatarSrc } from "../../../utils/avatar";
+import userService from "../../../services/userService";
+import {
+  buildAvatarUrlMapFromUsers,
+  getAvatarForTransactionRow,
+} from "../../../utils/avatar";
 import "../dashboard/index.css";
 import "./index.css";
 
@@ -15,6 +20,7 @@ const TX_TYPE_LABEL = {
   PURCHASE: "Purchase",
   REFUND: "Refund",
   POSTING_FEE: "Posting fee",
+  WITHDRAW: "Withdrawal",
 };
 
 const TX_TYPE_COLOR = {
@@ -23,6 +29,7 @@ const TX_TYPE_COLOR = {
   DEPOSIT: "#d97706",
   PURCHASE: "#7c3aed",
   POSTING_FEE: "#f43f5e",
+  WITHDRAW: "#0d9488",
 };
 
 const TX_STATUS_CONFIG = {
@@ -39,6 +46,7 @@ const TYPE_FILTERS = [
   { value: "PURCHASE", label: "Purchase" },
   { value: "REFUND", label: "Refund" },
   { value: "POSTING_FEE", label: "Posting fee" },
+  { value: "WITHDRAW", label: "Withdrawal" },
 ];
 
 const STATUS_FILTERS = [
@@ -62,6 +70,7 @@ const getTxStatus = (tx) => tx.status ?? tx.transactionStatus ?? null;
 export default function TransactionManagement() {
   const [allTx, setAllTx] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [avatarByUserId, setAvatarByUserId] = useState(() => new Map());
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -80,18 +89,35 @@ export default function TransactionManagement() {
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await adminService.getAllTransactions();
-      const list = parseList(res) ?? [];
+      const [txRes, usersRes] = await Promise.allSettled([
+        adminService.getAllTransactions(),
+        userService.getAdminUsers(),
+      ]);
 
-      // Sắp xếp mới nhất trước
+      const list =
+        txRes.status === "fulfilled" ? (parseList(txRes.value) ?? []) : [];
       list.sort(
         (a, b) => new Date(b.createdAt ?? 0) - new Date(a.createdAt ?? 0),
       );
       console.info(`AdminTx: total ${list.length} transactions`);
       setAllTx(list);
+
+      if (usersRes.status === "fulfilled" && usersRes.value) {
+        const body = usersRes.value?.data ?? usersRes.value;
+        const raw = body?.result ?? body?.data ?? body?.content ?? body;
+        const users = Array.isArray(raw)
+          ? raw
+          : Array.isArray(raw?.content)
+            ? raw.content
+            : [];
+        setAvatarByUserId(buildAvatarUrlMapFromUsers(users));
+      } else {
+        setAvatarByUserId(new Map());
+      }
     } catch (err) {
       console.warn("AdminTransactions: fetch failed", err?.message);
       setAllTx([]);
+      setAvatarByUserId(new Map());
     } finally {
       setLoading(false);
     }
@@ -243,12 +269,9 @@ export default function TransactionManagement() {
                       tx.email ??
                       tx.userEmail ??
                       "—";
-                    const avatarUrl = getAvatarSrc(
-                      tx?.user ?? tx,
-                      tx?.userAvatar,
-                      tx?.userAvatarUrl,
-                      tx?.user_avatar,
-                      tx?.user_avatar_url,
+                    const avatarUrl = getAvatarForTransactionRow(
+                      tx,
+                      avatarByUserId,
                     );
 
                     return (
@@ -258,21 +281,13 @@ export default function TransactionManagement() {
                       >
                         {/* Thành viên */}
                         <div className="admin-tx-member">
-                          <div
+                          <Avatar
                             className="admin-tx-avatar"
-                            style={
-                              avatarUrl
-                                ? {
-                                    backgroundImage: `url(${avatarUrl})`,
-                                    backgroundSize: "cover",
-                                    backgroundPosition: "center",
-                                    color: "transparent",
-                                  }
-                                : undefined
-                            }
+                            size={30}
+                            src={avatarUrl || undefined}
                           >
                             {(member[0] ?? "?").toUpperCase()}
-                          </div>
+                          </Avatar>
                           <span>{member}</span>
                         </div>
 

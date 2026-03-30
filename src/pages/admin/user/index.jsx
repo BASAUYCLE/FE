@@ -56,6 +56,9 @@ const statsConfig = [
 
 const PAGE_SIZE = 10;
 
+/** Full email + Enter triggers GET /users/email/{email} */
+const LOOKS_LIKE_FULL_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const USER_STATUS_FILTER_OPTIONS = [
   { value: "All", label: "All members" },
   { value: "Verified", label: "Verified (Active)" },
@@ -94,17 +97,27 @@ function normalizeUser(row) {
     row.accountStatus ??
     row.account_status;
   let status = "Pending";
+  const s =
+    rawStatus == null
+      ? ""
+      : typeof rawStatus === "string"
+        ? rawStatus.trim()
+        : String(rawStatus);
+  const upper = s.toUpperCase();
   if (
-    rawStatus === "VERIFIED" ||
     rawStatus === true ||
     rawStatus === "true" ||
-    rawStatus === "Active"
+    upper === "VERIFIED" ||
+    upper === "ACTIVE" ||
+    s === "Active"
   ) {
     status = "Active";
-  } else if (rawStatus === "REJECTED") {
+  } else if (upper === "REJECTED") {
     status = "Rejected";
-  } else if (rawStatus === "HIDDEN") {
+  } else if (upper === "HIDDEN") {
     status = "Hidden";
+  } else if (upper === "PENDING" || s === "") {
+    status = "Pending";
   }
   const joinedRaw =
     row.updated_at ??
@@ -152,6 +165,8 @@ export default function UserManagement() {
   const [hideReason, setHideReason] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [page, setPage] = useState(1);
+  const [emailLookupOpen, setEmailLookupOpen] = useState(false);
+  const [emailLookupData, setEmailLookupData] = useState(null);
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -166,7 +181,7 @@ export default function UserManagement() {
         displayId: `#USR-${String(u.id).padStart(5, "0")}`,
       }));
       if (normalized.length > 0) setUsers(normalized);
-    } catch (err) {
+    } catch {
       try {
         const res = await userService.getAllUsers();
         const data = res?.data ?? res?.result ?? res?.content ?? res;
@@ -190,6 +205,38 @@ export default function UserManagement() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  const lookupUserByExactEmail = async (emailRaw) => {
+    const email = emailRaw.trim();
+    if (!email) {
+      message.warning("Enter an email address.");
+      return;
+    }
+    setEmailLookupData(null);
+    try {
+      const res = await userService.getUserByEmail(email);
+      const data = res?.result ?? res?.data ?? res;
+      setEmailLookupData(
+        data && typeof data === "object" ? data : { raw: data },
+      );
+      setEmailLookupOpen(true);
+    } catch (lookupErr) {
+      const msg =
+        lookupErr?.message ??
+        lookupErr?.data?.message ??
+        lookupErr?.data?.msg ??
+        "User not found or access denied.";
+      message.error(msg);
+    }
+  };
+
+  const handleSearchKeyDown = (e) => {
+    if (e.key !== "Enter") return;
+    const q = search.trim();
+    if (!LOOKS_LIKE_FULL_EMAIL.test(q)) return;
+    e.preventDefault();
+    lookupUserByExactEmail(q);
+  };
 
   const handleVerify = async (user) => {
     const id = user.id;
@@ -423,7 +470,8 @@ export default function UserManagement() {
               <AdminToolbarFilters
                 searchValue={search}
                 onSearchChange={setSearch}
-                searchPlaceholder="Search by name, email or ID..."
+                onSearchKeyDown={handleSearchKeyDown}
+                searchPlaceholder="Search by name, email or ID — press Enter for exact email lookup"
                 filterValue={statusFilter}
                 onFilterChange={setStatusFilter}
                 filterOptions={USER_STATUS_FILTER_OPTIONS}
@@ -457,6 +505,7 @@ export default function UserManagement() {
                   <div
                     className="user-table-row"
                     key={user.id ?? user.displayId}
+                    data-deleting={deletingId === user.id ? "true" : undefined}
                   >
                     <div className="user-cell">
                       <div
@@ -507,6 +556,18 @@ export default function UserManagement() {
                               onClick: () =>
                                 user.status !== "Rejected" &&
                                 handleReject(user),
+                            },
+                            {
+                              key: "hide",
+                              label: "Hide account",
+                              danger: true,
+                              onClick: () => handleHide(user),
+                            },
+                            {
+                              key: "delete",
+                              label: "Delete account",
+                              danger: true,
+                              onClick: () => handleDelete(user),
                             },
                           ],
                         }}
@@ -610,6 +671,34 @@ export default function UserManagement() {
             </div>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        title="User by email"
+        open={emailLookupOpen}
+        onCancel={() => {
+          setEmailLookupOpen(false);
+          setEmailLookupData(null);
+        }}
+        footer={null}
+        width={520}
+        destroyOnHidden
+      >
+        {emailLookupData && (
+          <pre
+            style={{
+              margin: 0,
+              padding: 12,
+              background: "#f8fafc",
+              borderRadius: 8,
+              fontSize: 13,
+              overflow: "auto",
+              maxHeight: 360,
+            }}
+          >
+            {JSON.stringify(emailLookupData, null, 2)}
+          </pre>
+        )}
       </Modal>
 
       <Modal

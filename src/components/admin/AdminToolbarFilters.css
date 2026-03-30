@@ -136,7 +136,8 @@
 
 .admin-toolbar-dropdown__menu {
   position: absolute;
-  z-index: 60;
+  /* Above .app-sidebar (100) when overlapping */
+  z-index: 120;
   left: 0;
   right: 0;
   top: calc(100% + 6px);
@@ -224,7 +225,7 @@
   }
 }
 
-/* Trang users: toolbar một hàng full width */
+/* Users page: full-width toolbar row */
 .user-table-toolbar .admin-toolbar-filters {
   flex: 1;
   min-width: 0;

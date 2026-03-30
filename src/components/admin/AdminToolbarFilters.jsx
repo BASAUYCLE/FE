@@ -1,8 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useRef,
-} from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Filter, ChevronDown, Check } from "lucide-react";
 import "./AdminToolbarFilters.css";
 
@@ -12,12 +8,14 @@ const LUCIDE_CATEGORY_CHEVRON = { size: 16, strokeWidth: 2 };
 const LUCIDE_CATEGORY_CHECK = { size: 16, strokeWidth: 2.5 };
 
 /**
- * Thanh tìm kiếm + dropdown lọc (cùng UI admin-approved-listings).
+ * Search bar + filter dropdown (shared admin pattern).
  * @param {{ value: string, label: string }[]} filterOptions
  */
 export default function AdminToolbarFilters({
   searchValue,
   onSearchChange,
+  /** Search input keydown — e.g. exact email lookup */
+  onSearchKeyDown,
   searchPlaceholder = "Search…",
   filterValue,
   onFilterChange,
@@ -34,21 +32,19 @@ export default function AdminToolbarFilters({
 
   useEffect(() => {
     if (!menuOpen) return;
+    // Use "click" instead of "mousedown" so the menu does not close before the option receives the click.
     const onDoc = (e) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setMenuOpen(false);
       }
     };
     const onKey = (e) => {
       if (e.key === "Escape") setMenuOpen(false);
     };
-    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("click", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("click", onDoc);
       document.removeEventListener("keydown", onKey);
     };
   }, [menuOpen]);
@@ -59,16 +55,13 @@ export default function AdminToolbarFilters({
   return (
     <div className="admin-toolbar-filters">
       <div className="admin-search-wrap">
-        <Search
-          className="admin-search-icon"
-          aria-hidden
-          {...LUCIDE_SEARCH}
-        />
+        <Search className="admin-search-icon" aria-hidden {...LUCIDE_SEARCH} />
         <input
           type="text"
           placeholder={searchPlaceholder}
           value={searchValue}
           onChange={(e) => onSearchChange(e.target.value)}
+          onKeyDown={onSearchKeyDown}
           className="admin-search-input"
         />
       </div>
@@ -121,7 +114,7 @@ export default function AdminToolbarFilters({
                           : "admin-toolbar-dropdown__option"
                       }
                       onClick={() => {
-                        onFilterChange(opt.value);
+                        onFilterChange?.(opt.value);
                         setMenuOpen(false);
                       }}
                     >

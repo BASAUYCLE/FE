@@ -33,6 +33,7 @@ import adminPostService from "../../services/adminPostService";
 import postService from "../../services/postService";
 import disputeService from "../../services/disputeService";
 import orderService from "../../services/orderService";
+import feedbackService from "../../services/feedbackService";
 import { confirmCrud } from "../../utils/confirmCrud";
 import { getAvatarSrc, getAvatarInitial } from "../../utils/avatar";
 import {
@@ -228,14 +229,10 @@ function getProductDetailBadgeVariant(badgeLabel, postingStatus, isStaffView) {
   if (isStaffView && postingStatus) {
     const s = String(postingStatus).toUpperCase();
     if (["AVAILABLE", "VERIFIED", "ACTIVE"].includes(s)) return "verified";
-    if (
-      ["PENDING", "ADMIN_APPROVED", "PENDING_REVIEW"].includes(s)
-    ) {
+    if (["PENDING", "ADMIN_APPROVED", "PENDING_REVIEW"].includes(s)) {
       return "pending";
     }
-    if (
-      [POSTING_STATUS.PROCESSING, POSTING_STATUS.DEPOSITED].includes(s)
-    ) {
+    if ([POSTING_STATUS.PROCESSING, POSTING_STATUS.DEPOSITED].includes(s)) {
       return "progress";
     }
     if (s === POSTING_STATUS.REJECTED) return "danger";
@@ -272,6 +269,8 @@ export default function ProductDetail() {
   const [fetchedPosting, setFetchedPosting] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [activeDisputeIdForPost, setActiveDisputeIdForPost] = useState(null);
+  const [postFeedbacks, setPostFeedbacks] = useState([]);
+  const [postFeedbacksLoading, setPostFeedbacksLoading] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -288,6 +287,33 @@ export default function ProductDetail() {
       })
       .catch(() => setFetchedPosting(null))
       .finally(() => setLoadingDetail(false));
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const postId = Number(id);
+    if (!Number.isFinite(postId) || postId < 1) {
+      setPostFeedbacks([]);
+      return;
+    }
+    let cancelled = false;
+    setPostFeedbacksLoading(true);
+    feedbackService
+      .getFeedbacksByPost(postId)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res?.result ?? res?.data ?? res;
+        setPostFeedbacks(Array.isArray(data) ? data : []);
+      })
+      .catch(() => {
+        if (!cancelled) setPostFeedbacks([]);
+      })
+      .finally(() => {
+        if (!cancelled) setPostFeedbacksLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -500,20 +526,24 @@ export default function ProductDetail() {
 
   if (!product || isDraftHidden) {
     const notFoundBody = (
-      <Box
-        sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}
-      >
+      <Box sx={{ maxWidth: 1320, margin: "0 auto", p: 4, textAlign: "center" }}>
         <Typography variant="h5" gutterBottom>
           Product not found
         </Typography>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {isDraftHidden
-            ? "This listing is a draft and is not visible."
-            : null}
+          {isDraftHidden ? "This listing is a draft and is not visible." : null}
         </Typography>
         <Button
           variant="contained"
-          onClick={() => navigate(isStaffView ? (isAdminView ? "/admin-dashboard" : "/inspector") : "/")}
+          onClick={() =>
+            navigate(
+              isStaffView
+                ? isAdminView
+                  ? "/admin-dashboard"
+                  : "/inspector"
+                : "/",
+            )
+          }
           sx={{
             bgcolor: "#00ccad",
             color: "#0f172a",
@@ -845,8 +875,9 @@ export default function ProductDetail() {
                   Purchase unavailable right now
                 </Typography>
                 <Typography variant="body2" color="#7c2d12">
-                  This listing currently has an active order or dispute (it is not
-                  available for additional purchases until the current order is completed).
+                  This listing currently has an active order or dispute (it is
+                  not available for additional purchases until the current order
+                  is completed).
                 </Typography>
                 {activeDisputeIdForPost != null && (
                   <Button
@@ -1151,6 +1182,70 @@ export default function ProductDetail() {
                     No history information available.
                   </Typography>
                 )}
+            </Box>
+
+            <Box className="product-detail-section" sx={{ mt: 3 }}>
+              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                Reviews for this listing
+              </Typography>
+              {postFeedbacksLoading ? (
+                <Typography color="#6b7280" variant="body2">
+                  Loading reviews…
+                </Typography>
+              ) : postFeedbacks.length === 0 ? (
+                <Typography color="#6b7280" variant="body2">
+                  No reviews linked to this listing yet.
+                </Typography>
+              ) : (
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {postFeedbacks.map((fb, idx) => {
+                    const rating = fb.rating ?? fb.stars ?? fb.score ?? null;
+                    const comment =
+                      fb.comment ?? fb.reviewText ?? fb.content ?? "";
+                    const who =
+                      fb.buyerName ??
+                      fb.buyerFullName ??
+                      fb.reviewerName ??
+                      "Buyer";
+                    return (
+                      <Box
+                        key={fb.feedbackId ?? fb.id ?? idx}
+                        sx={{
+                          p: 2,
+                          borderRadius: 2,
+                          bgcolor: "#f9fafb",
+                          border: "1px solid #e5e7eb",
+                        }}
+                      >
+                        <Typography fontWeight={600} color="#111827">
+                          {who}
+                          {rating != null && (
+                            <Typography
+                              component="span"
+                              variant="body2"
+                              color="#f59e0b"
+                              sx={{ ml: 1 }}
+                            >
+                              {"★".repeat(
+                                Math.min(5, Math.max(1, Number(rating))),
+                              )}
+                            </Typography>
+                          )}
+                        </Typography>
+                        {comment ? (
+                          <Typography
+                            variant="body2"
+                            color="#4b5563"
+                            sx={{ mt: 0.5 }}
+                          >
+                            {comment}
+                          </Typography>
+                        ) : null}
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
             </Box>
           </Box>
 

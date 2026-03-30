@@ -27,6 +27,9 @@ const userService = {
   // GET /users/{userId} - Lấy thông tin user theo ID
   getUserById: (userId) => axiosInstance.get(USER.BY_ID(userId)),
 
+  // GET /users/email/{email} — thường dùng cho admin tra cứu
+  getUserByEmail: (email) => axiosInstance.get(USER.BY_EMAIL(email)),
+
   // PUT /users/{userId} - Cập nhật user (admin)
   updateUser: (userId, userData) => 
     axiosInstance.put(USER.UPDATE(userId), userData),

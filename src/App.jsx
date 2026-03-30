@@ -14,7 +14,7 @@ import MemberPostingsSync from "./components/MemberPostingsSync";
 import ScrollToTopOnRouteChange from "./components/ScrollToTopOnRouteChange";
 import { fontFamily, antdToken } from "./config/theme";
 
-// Lazy-load trang để app khởi động nhanh hơn
+// Lazy-loaded pages for faster initial load
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Home = lazy(() => import("./pages/Home"));
@@ -53,7 +53,9 @@ const AdminInspectionReports = lazy(
   () => import("./pages/admin/inspection-reports"),
 );
 const AdminTransactions = lazy(() => import("./pages/admin/transaction"));
+const AdminWithdrawals = lazy(() => import("./pages/admin/withdrawals"));
 const AdminConfig = lazy(() => import("./pages/admin/config"));
+const AdminCatalog = lazy(() => import("./pages/admin/catalog"));
 const AdminDisputes = lazy(() => import("./pages/admin/disputes"));
 const AdminDisputeDetail = lazy(
   () => import("./pages/admin/disputes/DisputeDetail"),
@@ -263,6 +265,28 @@ function App() {
                             element={<AdminApprovedListings />}
                           />
                           <Route
+                            path="/admin-catalog"
+                            element={<AdminCatalog />}
+                          />
+                          <Route
+                            path="/admin-brands"
+                            element={
+                              <Navigate
+                                to="/admin-catalog?tab=brands"
+                                replace
+                              />
+                            }
+                          />
+                          <Route
+                            path="/admin-categories"
+                            element={
+                              <Navigate
+                                to="/admin-catalog?tab=categories"
+                                replace
+                              />
+                            }
+                          />
+                          <Route
                             path="/admin-revenue"
                             element={<AdminRevenue />}
                           />
@@ -273,6 +297,10 @@ function App() {
                           <Route
                             path="/admin-transactions"
                             element={<AdminTransactions />}
+                          />
+                          <Route
+                            path="/admin-withdrawals"
+                            element={<AdminWithdrawals />}
                           />
                           <Route
                             path="/admin-config"
