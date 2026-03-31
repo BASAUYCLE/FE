@@ -1,1 +1,178 @@
+.home-page {
+  min-height: 100vh;
+  background-color: #f9fafa;
+}
+
+.home-article-shell {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 32px 16px;
+}
+
+.home-article-card {
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #cbd5e1;
+  background-color: #ffffff;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+.home-intro-text {
+  color: #334155;
+  line-height: 1.8;
+  font-size: 14px;
+}
+
+.home-accent-text {
+  color: #0284c7;
+  font-weight: 700;
+}
+
+.home-image-wrap {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.home-image {
+  width: min(100%, 760px);
+  object-fit: cover;
+  border-radius: 16px;
+  display: inline-block;
+}
+
+.home-image-top {
+  height: 220px;
+}
+
+.home-image-mid {
+  height: 220px;
+}
+
+.home-btn-center {
+  display: flex;
+  justify-content: center;
+}
+
+.home-btn-center-top {
+  margin-top: 24px;
+}
+
+.home-btn-center-collapse-top {
+  margin-bottom: 16px;
+}
+
+.home-btn-center-collapse-bottom {
+  margin-top: 16px;
+  padding-top: 8px;
+}
+
+.home-view-more-btn.MuiButton-root {
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding-left: 24px;
+  padding-right: 24px;
+  background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%);
+}
+
+.home-view-more-btn.MuiButton-root:hover {
+  background: linear-gradient(135deg, #0f766e 0%, #0369a1 100%);
+}
+
+.home-show-less-btn.MuiButton-root {
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 8px;
+  padding-left: 24px;
+  padding-right: 24px;
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+.home-show-less-btn.MuiButton-root:hover {
+  border-color: #0f766e;
+  background-color: rgba(13, 148, 136, 0.06);
+}
+
+.home-collapse-content {
+  padding-top: 16px;
+}
+
+.home-body-text {
+  color: #334155;
+  line-height: 1.9;
+  font-size: 14px;
+}
+
+.home-section-title {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 12px;
+  font-size: 18px;
+}
+
+.home-subsection-title {
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.home-mb-16 {
+  margin-bottom: 16px;
+}
+
+.home-mb-24 {
+  margin-bottom: 24px;
+}
+
+.home-mt-32 {
+  margin-top: 32px;
+}
+
+@media (min-width: 900px) {
+  .home-article-shell {
+    padding: 40px 24px;
+  }
+
+  .home-article-card {
+    padding: 24px;
+  }
+
+  .home-intro-text {
+    font-size: 18px;
+  }
+
+  .home-image-top {
+    height: 340px;
+  }
+
+  .home-image-mid {
+    height: 360px;
+  }
+
+  .home-btn-center-top {
+    margin-top: 32px;
+  }
+
+  .home-btn-center-collapse-top {
+    margin-bottom: 24px;
+  }
+
+  .home-collapse-content {
+    padding-top: 24px;
+  }
+
+  .home-body-text {
+    font-size: 17px;
+  }
+
+  .home-section-title {
+    font-size: 24px;
+  }
+
+  .home-subsection-title {
+    font-size: 18px;
+  }
+}
 
