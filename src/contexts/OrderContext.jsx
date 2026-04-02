@@ -113,6 +113,74 @@ function buildShippingAddress(row) {
   return null;
 }
 
+/**
+ * Số điện thoại người mua (Users.user_phone_number trong DB — join qua Orders.buyer_id).
+ * BE có thể trả camelCase userPhoneNumber, nested buyer, hoặc alias khác.
+ */
+function extractBuyerPhone(row) {
+  if (!row || typeof row !== "object") return null;
+
+  const pick = (v) =>
+    typeof v === "string" && v.trim() ? v.trim() : null;
+
+  const fromUserLike = (u) =>
+    u && typeof u === "object"
+      ? pick(
+          u.userPhoneNumber ??
+            u.user_phone_number ??
+            u.phoneNumber ??
+            u.phone ??
+            u.phone_number ??
+            u.mobile,
+        )
+      : null;
+
+  const direct = pick(
+    row.buyerPhone ??
+      row.buyer_phone ??
+      row.buyerPhoneNumber ??
+      row.buyer_phone_number ??
+      row.userPhoneNumber ??
+      row.user_phone_number ??
+      row.recipientPhone ??
+      row.recipient_phone ??
+      row.contactPhone ??
+      row.contact_phone ??
+      row.deliveryPhone ??
+      row.delivery_phone,
+  );
+  if (direct) return direct;
+
+  const buyer =
+    row.buyer ?? row.buyerInfo ?? row.buyerUser ?? row.buyerDetails ?? null;
+  const fromBuyer = fromUserLike(buyer);
+  if (fromBuyer) return fromBuyer;
+
+  const nestedUser =
+    row.buyer?.user ?? row.buyerUser?.user ?? row.buyerInfo?.user ?? null;
+  const fromNested = fromUserLike(nestedUser);
+  if (fromNested) return fromNested;
+
+  const addrObj =
+    (typeof row.shippingAddress === "object" && row.shippingAddress) ||
+    (typeof row.deliveryAddress === "object" && row.deliveryAddress) ||
+    (typeof row.address === "object" && row.address) ||
+    null;
+  if (addrObj) {
+    const p = pick(
+      addrObj.phoneNumber ??
+        addrObj.phone ??
+        addrObj.phone_number ??
+        addrObj.recipientPhone ??
+        addrObj.userPhoneNumber ??
+        addrObj.user_phone_number,
+    );
+    if (p) return p;
+  }
+
+  return pick(row.phoneNumber ?? row.phone_number);
+}
+
 /** Chuẩn hóa một row từ BE → shape order FE. */
 function normalizeOrder(row) {
   if (!row || typeof row !== "object") return null;
@@ -154,6 +222,7 @@ function normalizeOrder(row) {
       row.postTitle ?? row.post_title ?? row.bikeName ?? row.productName ?? "—",
     image: extractImage(row),
     shippingAddress: buildShippingAddress(row),
+    buyerPhone: extractBuyerPhone(row),
     status,
     totalPrice,
     depositAmount,

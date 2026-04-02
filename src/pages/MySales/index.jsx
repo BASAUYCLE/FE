@@ -59,9 +59,11 @@ export default function MySalesPage() {
 
   return (
     <div className="orders-page">
+      {/* <MySalesHeader /> */}
       <Header />
       <main className="orders-main">
         <div className="orders-container">
+          {/* <MySalesPageHeading /> */}
           <Typography.Title level={2} className="title">
             My Sales
           </Typography.Title>
@@ -69,6 +71,7 @@ export default function MySalesPage() {
             Manage orders from your listings
           </Typography.Text>
 
+          {/* <MySalesTabsAndList /> */}
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -77,6 +80,7 @@ export default function MySalesPage() {
           />
         </div>
       </main>
+      {/* <MySalesFooter /> */}
       <Footer />
     </div>
   );

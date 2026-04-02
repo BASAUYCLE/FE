@@ -63,13 +63,13 @@ export default function AuthPage() {
           result.user?.user_role ??
           "MEMBER"
         ).toUpperCase();
-        const from = location.state?.from?.pathname;
         if (role === "ADMIN") {
           navigate("/admin-dashboard", { replace: true });
         } else if (role === "INSPECTOR") {
           navigate("/inspector", { replace: true });
         } else {
-          navigate(from || "/", { replace: true });
+          // Always land on Home after switching accounts (don't restore previous route).
+          navigate("/", { replace: true });
         }
       } else {
         message.error(result.message || "Login failed.");
@@ -416,14 +416,7 @@ export default function AuthPage() {
                   className="auth-form__remember"
                 >
                   <Checkbox disabled={busy}>
-                    I agree to the{" "}
-                    <Link to="#" className="auth-card__link-inline">
-                      Terms of Service
-                    </Link>{" "}
-                    and{" "}
-                    <Link to="#" className="auth-card__link-inline">
-                      Privacy Policy
-                    </Link>
+                    I agree to the Terms of Service and Privacy Policy
                   </Checkbox>
                 </Form.Item>
 
@@ -543,8 +536,7 @@ export default function AuthPage() {
               </Form>
 
               <p className="auth-card__terms auth-immersive__terms">
-                By signing in you agree to our <Link to="#">Terms</Link> and{" "}
-                <Link to="#">Privacy</Link>.
+                By signing in you agree to our Terms and Privacy.
               </p>
 
               <div className="auth-immersive__switch">

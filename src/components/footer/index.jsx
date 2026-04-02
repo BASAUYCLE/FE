@@ -30,7 +30,8 @@ export default function Footer() {
           </p>
           <div className="app-footer-contact">
             <div><strong>Hotline:</strong> 0387.687.323</div>
-            <div><strong>Email:</strong> basauycle@gmail.com</div>
+            <div><strong>Email:</strong>contact.basaucycle2026@gmail.com
+            </div>
           </div>
           <div className="app-footer-intro">
             <Link

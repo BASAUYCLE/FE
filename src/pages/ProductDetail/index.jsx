@@ -645,9 +645,11 @@ export default function ProductDetail() {
 
   const mainColumn = (
     <>
+      {/* <ProductDetailHeader /> */}
       {!isStaffView && <Header />}
 
       <Box sx={{ maxWidth: 1320, margin: "0 auto", p: 3 }}>
+        {/* <ProductDetailBreadcrumbs /> */}
         <Breadcrumbs sx={{ mb: 3, fontSize: 12 }}>
           {breadcrumbs.map((b, i) =>
             b.href ? (
@@ -670,6 +672,7 @@ export default function ProductDetail() {
             mb: 4,
           }}
         >
+          {/* <ProductGallery /> */}
           {/* Main Image & Gallery - 6 detailed bike images */}
           <Box>
             <Box
@@ -738,6 +741,7 @@ export default function ProductDetail() {
             </Box>
           </Box>
 
+          {/* <ProductSummary /> */}
           {/* Product Summary */}
           <Box>
             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
@@ -966,13 +970,6 @@ export default function ProductDetail() {
                       </Typography>
                     );
                   })()}
-                  <Typography variant="body2" color="#6b7280">
-                    {product.seller.rating} ({product.seller.reviews} reviews)
-                  </Typography>
-                  <Typography variant="body2" color="#6b7280">
-                    Ships from {product.seller.location} (
-                    {product.seller.shippingEst} estimated)
-                  </Typography>
                 </Box>
               </Box>
             )}
@@ -1004,6 +1001,7 @@ export default function ProductDetail() {
           </Box>
         </Box>
 
+        {/* <ProductDetailsSection /> */}
         {/* Lower section: 2 columns */}
         <Box
           sx={{
@@ -1249,6 +1247,7 @@ export default function ProductDetail() {
             </Box>
           </Box>
 
+          {/* <ProductInspectionReport /> */}
           {/* Right column: Pro Inspection Report - dark card */}
           {product.inspection && (
             <Box className="product-detail-inspection-card">
@@ -1396,6 +1395,7 @@ export default function ProductDetail() {
         </Box>
       </Box>
 
+      {/* <ImageZoomModal /> */}
       <Modal
         open={imageZoomOpen}
         onCancel={() => setImageZoomOpen(false)}
@@ -1418,6 +1418,7 @@ export default function ProductDetail() {
         />
       </Modal>
 
+      {/* <RejectListingModal /> */}
       <Modal
         title="Reject listing"
         open={rejectModalOpen}
@@ -1446,6 +1447,7 @@ export default function ProductDetail() {
         />
       </Modal>
 
+      {/* <CheckoutModal /> */}
       <CheckoutModal
         open={checkoutOpen}
         onClose={() => setCheckoutOpen(false)}
@@ -1454,6 +1456,7 @@ export default function ProductDetail() {
         onSuccess={() => navigate("/orders")}
       />
 
+      {/* <ProductDetailFooter /> */}
       {!isStaffView && (
         <Footer
           marketplaceLinks={[
@@ -1483,6 +1486,7 @@ export default function ProductDetail() {
     </>
   );
 
+  // <ProductDetailLayoutWrapper />
   return isStaffView ? (
     isAdminView ? (
       <AdminLayout>

@@ -59,9 +59,11 @@ export default function OrdersPage() {
 
   return (
     <div className="orders-page">
+      {/* <OrdersHeader /> */}
       <Header />
       <main className="orders-main">
         <div className="orders-container">
+          {/* <OrdersPageHeading /> */}
           <Typography.Title level={2} className="title">
             My Orders
           </Typography.Title>
@@ -69,6 +71,7 @@ export default function OrdersPage() {
             Track and manage all your orders
           </Typography.Text>
 
+          {/* <OrdersTabsAndList /> */}
           <Tabs
             activeKey={activeTab}
             onChange={setActiveTab}
@@ -77,6 +80,7 @@ export default function OrdersPage() {
           />
         </div>
       </main>
+      {/* <OrdersFooter /> */}
       <Footer />
     </div>
   );

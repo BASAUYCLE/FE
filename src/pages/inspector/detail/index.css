@@ -1,5 +1,24 @@
 @import "../common/shared.css";
 
+/* Trang chi tiết báo cáo: khung hẹp, căn giữa trong vùng main (sidebar không đổi) */
+.inspector-page:has(.inspector-dashboard--detail-report) {
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.inspector-dashboard.inspector-dashboard--detail-report {
+  width: 100%;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 24px 20px 40px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
 .inspector-detail-page {
   max-width: 800px;
   margin: 0 auto;
@@ -100,9 +119,10 @@
 
 /* Inspection report page layout */
 .inspection-report-page {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 24px 16px 60px;
+  padding: 0 0 48px;
+  box-sizing: border-box;
 }
 
 .inspection-report-header {
@@ -111,14 +131,15 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .inspection-report-title {
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: #0f172a;
   margin: 0 0 4px 0;
+  line-height: 1.3;
 }
 
 .inspection-report-meta {
@@ -171,22 +192,61 @@
   background: #00b89a;
 }
 
-.inspection-report-grid {
-  display: grid;
-  grid-template-columns: 340px 1fr;
-  gap: 24px;
-  align-items: start;
+.inspection-report-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.inspection-report-left,
-.inspection-report-right {
+.inspection-report-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.inspection-report-top-row > .admin-card {
+  height: 100%;
+  min-height: 0;
+}
+
+.inspection-report-status-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.inspection-confirmation--inline {
+  display: flex;
+  flex-direction: column;
+}
+
+.inspection-confirmation--inline .inspection-confirmation-text {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.inspection-report-body {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
 .inspection-report-card {
+  padding: 18px;
+}
+
+.inspection-report-post-detail {
   padding: 20px;
+}
+
+.inspection-report-images-card {
+  padding: 20px;
+}
+
+.inspection-report-images-card .inspection-report-card-title {
+  font-size: 13px;
+  margin-bottom: 14px;
 }
 
 .inspection-report-card-title {
@@ -215,17 +275,20 @@
 
 .inspection-report-bike-image {
   width: 100%;
-  aspect-ratio: 4/3;
+  aspect-ratio: 16 / 10;
+  max-height: 320px;
+  min-height: 180px;
   object-fit: cover;
   border-radius: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .inspection-report-bike-name {
-  font-size: 18px;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 4px 0;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
 }
 
 .inspection-report-bike-meta {
@@ -234,9 +297,20 @@
   margin: 0 0 12px 0;
 }
 
+.inspection-report-post-detail .inspection-report-bike-meta {
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
 .inspection-report-detail-row {
   font-size: 13px;
   margin-bottom: 6px;
+}
+
+.inspection-report-post-detail .inspection-report-detail-row {
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.45;
 }
 
 .inspection-report-detail-label {
@@ -244,10 +318,52 @@
   margin-right: 6px;
 }
 
+.inspection-report-description-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.inspection-report-description-block > .inspection-report-detail-label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.inspection-report-description {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.inspection-report-post-detail .inspection-report-description {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
 .inspection-report-thumbnails {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+}
+
+/* Lưới ảnh kiểm định: ít cột hơn → ô ảnh lớn hơn */
+.inspection-report-thumbnails--large {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.inspection-report-thumbnails--large .inspection-report-thumb {
+  aspect-ratio: 1;
+  min-height: 100px;
+}
+
+@media (min-width: 1100px) {
+  .inspection-report-thumbnails--large .inspection-report-thumb {
+    min-height: 100px;
+  }
 }
 
 .inspection-report-thumb {
@@ -281,13 +397,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #64748b;
   border: none;
   cursor: pointer;
   background: #f1f5f9;
   transition: background 0.2s;
+  min-height: 100px;
+}
+
+@media (min-width: 1100px) {
+  .inspection-report-thumb-more {
+    min-height: 160px;
+    font-size: 16px;
+  }
 }
 
 .inspection-report-thumb-more:hover {
@@ -518,32 +642,6 @@
   border-color: #00ccad;
 }
 
-.inspection-notes-textarea {
-  width: 100%;
-  padding: 12px 14px;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #475569;
-  line-height: 1.5;
-  resize: vertical;
-  min-height: 100px;
-  font-family: inherit;
-}
-
-.inspection-notes-textarea:focus {
-  outline: none;
-  border-color: #00ccad;
-  box-shadow: 0 0 0 2px rgba(0, 204, 173, 0.15);
-}
-
-.inspection-report-notes {
-  font-size: 14px;
-  color: #475569;
-  line-height: 1.5;
-  margin: 0;
-}
-
 .inspection-confirmation {
   background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
   border-color: #a7f3d0;
@@ -619,7 +717,24 @@
 }
 
 @media (max-width: 900px) {
-  .inspection-report-grid {
+  .inspection-report-top-row {
     grid-template-columns: 1fr;
+  }
+
+  .inspector-dashboard.inspector-dashboard--detail-report {
+    padding: 16px 12px 32px;
+  }
+
+  .inspection-report-bike-image {
+    min-height: 160px;
+    max-height: 260px;
+  }
+
+  .inspection-report-thumbnails--large .inspection-report-thumb {
+    min-height: 120px;
+  }
+
+  .inspection-report-thumb-more {
+    min-height: 120px;
   }
 }

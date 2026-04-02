@@ -14,7 +14,6 @@ import {
   HeartOutlined,
   HeartFilled,
 } from "@ant-design/icons";
-import BikeCard from "../card";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useWishlist } from "../../contexts/WishlistContext";

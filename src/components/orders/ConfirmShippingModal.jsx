@@ -194,6 +194,22 @@ export default function ConfirmShippingModal({ open, onClose, order }) {
                   : "—"}
               </span>
             </div>
+            <div
+              style={{
+                fontSize: 11,
+                color: "#94a3b8",
+                marginTop: 4,
+              }}
+            >
+              <span style={{ fontWeight: 500, color: "#64748b" }}>
+                Buyer phone:
+              </span>{" "}
+              <span>
+                {order?.buyerPhone && String(order.buyerPhone).trim()
+                  ? String(order.buyerPhone).trim()
+                  : "—"}
+              </span>
+            </div>
           </div>
         </div>
 

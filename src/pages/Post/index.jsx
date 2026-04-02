@@ -1455,16 +1455,19 @@ export default function PostBike() {
 
   return (
     <div className="post-bike-container">
+      {/* <PostHeader /> */}
       <Header />
 
       <main className="post-main-content">
         <div className="post-content-container">
+          {/* <PostPageHeading /> */}
           {/* Page Header */}
           <div className="post-header">
             <h1 className="post-title">Post a Bike for Sale</h1>
             <p className="post-subtitle"></p>
           </div>
 
+          {/* <PostListingFeeAlert /> */}
           {!isFormReadOnly && (
             <Alert
               className="post-listing-fee-alert"
@@ -1490,6 +1493,7 @@ export default function PostBike() {
             onStepClick={handleStepClick}
           />
 
+          {/* <PostReadOnlyWarning /> */}
           {/* Warning for non-draft (non-DRAFTED) posts */}
           {isEditingNonDraft && (
             <div
@@ -1508,6 +1512,7 @@ export default function PostBike() {
             </div>
           )}
 
+          {/* <PostEditingDraftInfo /> */}
           {/* Info when editing draft (DRAFTED) */}
           {isEditingDraft && (
             <div
@@ -1526,8 +1531,10 @@ export default function PostBike() {
             </div>
           )}
 
+          {/* <PostFormContainer /> */}
           {/* Form Container */}
           <div className="post-form-container">
+            {/* <PostBasicInfoSection /> */}
             {/* Basic Information */}
             <div id="basic-info" className="form-section">
               <div className="section-content">
@@ -1592,6 +1599,7 @@ export default function PostBike() {
               </div>
             </div>
 
+            {/* <PostTechnicalSpecsSection /> */}
             {/* Technical Specifications */}
             <div id="technical-specs" className="form-section">
               <div className="section-content">
@@ -1708,6 +1716,7 @@ export default function PostBike() {
               </div>
             </div>
 
+            {/* <PostPhotosVideosSection /> */}
             {/* Photos & Videos - style giống Register */}
             <div
               id="photos-videos"
@@ -1766,6 +1775,7 @@ export default function PostBike() {
               </div>
             </div>
 
+            {/* <PostPricingSection /> */}
             {/* Pricing */}
             <div id="pricing" className="form-section">
               <div className="section-content">
@@ -1789,6 +1799,7 @@ export default function PostBike() {
             </div>
           </div>
 
+          {/* <PostFormActions /> */}
           {/* Form Actions - sibling of post-form-container for correct layout */}
           <div className="form-actions">
             <Button
@@ -1817,20 +1828,8 @@ export default function PostBike() {
         </div>
       </main>
 
-      <Footer
-        exploreLinks={[
-          { label: "Featured Road Bikes", href: "#" },
-          { label: "New MTB Arrivals", href: "#" },
-          { label: "Certified Pre-owned", href: "#" },
-          { label: "Popular Categories", href: "#" },
-        ]}
-        supportLinks={[
-          { label: "Help Center", href: "#" },
-          { label: "Safety Guidelines", href: "#" },
-          { label: "Listing Fees", href: "#" },
-          { label: "Contact Us", href: "#" },
-        ]}
-      />
+      {/* <PostFooter /> */}
+      <Footer />
     </div>
   );
 }

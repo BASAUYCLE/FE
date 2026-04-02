@@ -409,6 +409,7 @@ export default function Marketplace() {
   return (
     <Box className="marketplace-page">
       <Header />
+      {/* <MarketplaceHero /> */}
       <Box className="marketplace-hero-banner marketplace-hero-banner--fullbleed">
         <img
           src={bicyclesWorkshopImage}
@@ -427,6 +428,7 @@ export default function Marketplace() {
       </Box>
       <Box className="marketplace-layout">
         <main className="marketplace-main">
+          {/* <MarketplaceFilterBar ... /> */}
           <Box
             id="marketplace-browse"
             className="marketplace-browse-anchor"
@@ -464,6 +466,7 @@ export default function Marketplace() {
             />
           </Box>
 
+          {/* <MarketplaceResults ... /> */}
           <Box
             className={`marketplace-grid ${viewMode === "list" ? "list" : ""}`}
           >
@@ -489,6 +492,7 @@ export default function Marketplace() {
             )}
           </Box>
 
+          {/* <MarketplacePagination ... /> */}
           {displayedCount > 0 && (
             <Box className="marketplace-pagination-wrap">
               <Pagination

@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { formatCurrency } from "../../../utils/formatCurrency";
 import "./index.css";
 
 const CHECKLIST_STATUS_OPTIONS = [
@@ -34,6 +35,104 @@ function deepCloneChecklist(checklist) {
     ...group,
     items: (group.items || []).map((item) => ({ ...item })),
   }));
+}
+
+function firstNonEmpty(...vals) {
+  for (const v of vals) {
+    if (v == null) continue;
+    const s = typeof v === "string" ? v.trim() : String(v).trim();
+    if (s !== "") return s;
+  }
+  return null;
+}
+
+/** Chuẩn hóa GET /posts/:id — cùng alias field với ProductDetail để không thiếu dữ liệu. */
+function mapPostToInspectionReport(row) {
+  if (!row || typeof row !== "object") return null;
+  const postId = row.postId ?? row.post_id ?? row.id;
+  if (postId == null) return null;
+
+  const images =
+    row.images ?? row.bicycleImages ?? row.imageList ?? row.postImages ?? [];
+  const imgUrl = (i) => i?.imageUrl ?? i?.image_url ?? i?.url ?? null;
+  const thumb = images.find((i) => i?.isThumbnail);
+  const bicycleImage =
+    imgUrl(thumb) ?? imgUrl(images[0]) ?? null;
+  const inspectionImages = images.map(imgUrl).filter(Boolean);
+
+  const bicycleName =
+    firstNonEmpty(
+      row.bicycleName,
+      row.bicycle_name,
+      row.postTitle,
+      row.post_title,
+      row.title,
+    ) ?? "—";
+
+  const rawPrice = row.price;
+  const priceNum =
+    typeof rawPrice === "number" && !Number.isNaN(rawPrice)
+      ? rawPrice
+      : typeof rawPrice === "string" && String(rawPrice).trim() !== ""
+        ? Number(rawPrice)
+        : NaN;
+  const priceDisplay = Number.isFinite(priceNum)
+    ? formatCurrency(priceNum)
+    : firstNonEmpty(row.priceDisplay, row.price_display);
+
+  return {
+    id: postId,
+    reportId: `POST-${postId}`,
+    bicycleName,
+    bicycleImage,
+    inspectionImages,
+    owner: firstNonEmpty(
+      row.sellerFullName,
+      row.seller_full_name,
+      row.sellerName,
+      row.seller_name,
+    ) ?? "—",
+    updatedAt: row.updatedAt ?? row.updated_at ?? new Date().toISOString(),
+    reportStatus: String(
+      row.postStatus ?? row.post_status ?? row.status ?? "PENDING",
+    ).toUpperCase(),
+    categoryName:
+      firstNonEmpty(
+        row.categoryName,
+        row.category_name,
+        typeof row.category === "string" ? row.category : row.category?.categoryName ?? row.category?.name,
+      ) ?? "—",
+    brandName: firstNonEmpty(
+      row.brandName,
+      row.brand_name,
+      typeof row.brand === "string" ? row.brand : row.brand?.brandName ?? row.brand?.name,
+    ),
+    modelYear: firstNonEmpty(row.modelYear, row.model_year) ?? "—",
+    size: firstNonEmpty(row.size, row.frameSize, row.frame_size) ?? "—",
+    priceDisplay: priceDisplay ?? "—",
+    bicycleColor: firstNonEmpty(
+      row.bicycleColor,
+      row.bicycle_color,
+      row.color,
+    ),
+    frameMaterial: firstNonEmpty(row.frameMaterial, row.frame_material),
+    groupset: firstNonEmpty(row.groupset),
+    brakeType: firstNonEmpty(row.brakeType, row.brake_type),
+    description: firstNonEmpty(
+      row.bicycleDescription,
+      row.bicycle_description,
+      row.description,
+    ),
+    checklist: row.checklist ?? [],
+    completionPercent: row.completionPercent ?? 0,
+  };
+}
+
+function inspectionMetaLineParts(parts) {
+  const line = parts
+    .filter((p) => p != null && p !== "" && p !== "—")
+    .join(" · ");
+  return line || "—";
 }
 
 export default function InspectorDetail() {
@@ -52,27 +151,10 @@ export default function InspectorDetail() {
   const [submitOverallCondition, setSubmitOverallCondition] = useState(OVERALL_CONDITION.GOOD);
   const [submitNotes, setSubmitNotes] = useState("");
 
-  const report = postFromApi
-    ? {
-        id: postFromApi.postId,
-        reportId: `POST-${postFromApi.postId}`,
-        bicycleName: postFromApi.bicycleName,
-        bicycleImage: (postFromApi.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ?? postFromApi.images?.[0]?.imageUrl,
-        inspectionImages: (postFromApi.images ?? []).map((i) => i?.imageUrl).filter(Boolean),
-        owner: postFromApi.sellerFullName ?? postFromApi.sellerName,
-        updatedAt: postFromApi.updatedAt ?? new Date().toISOString().slice(0, 10),
-        reportStatus: String(
-          postFromApi.postStatus ?? postFromApi.post_status ?? postFromApi.status ?? "PENDING",
-        ).toUpperCase(),
-        categoryName: postFromApi.categoryName ?? "—",
-        modelYear: postFromApi.modelYear ?? "—",
-        size: postFromApi.size ?? "—",
-        frameNumber: postFromApi.frameNumber ?? "—",
-        checklist: postFromApi.checklist ?? [],
-        inspectorNotes: postFromApi.inspectorNotes ?? "",
-        completionPercent: postFromApi.completionPercent ?? 0,
-      }
-    : null;
+  const report = useMemo(
+    () => (postFromApi ? mapPostToInspectionReport(postFromApi) : null),
+    [postFromApi],
+  );
 
   useEffect(() => {
     if (!postIdNum) return;
@@ -95,7 +177,6 @@ export default function InspectorDetail() {
 
   const { addNotification } = useNotifications();
   const [checklist, setChecklist] = useState([]);
-  const [inspectorNotes, setInspectorNotes] = useState("");
   const [completionPercent, setCompletionPercent] = useState(0);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [confirmAction, setConfirmAction] = useState(null);
@@ -118,7 +199,6 @@ export default function InspectorDetail() {
   useEffect(() => {
     if (report) {
       setChecklist(deepCloneChecklist(report.checklist));
-      setInspectorNotes(report.inspectorNotes ?? "");
       setCompletionPercent(report.completionPercent ?? 0);
     }
   }, [report?.id]);
@@ -260,7 +340,7 @@ export default function InspectorDetail() {
   return (
     <InspectorLayout>
       <div className="inspector-page">
-        <div className="inspector-dashboard">
+        <div className="inspector-dashboard inspector-dashboard--detail-report">
           <div className="inspection-report-page">
           <PageBreadcrumb
             items={[
@@ -278,16 +358,28 @@ export default function InspectorDetail() {
             </div>
           </div>
 
-          <div className="inspection-report-grid">
-            <div className="inspection-report-left">
-              <div className="admin-card inspection-report-card">
+          <div className="inspection-report-layout">
+            <div className="inspection-report-top-row">
+              <div className="admin-card inspection-report-card inspection-report-status-card">
                 <h3 className="inspection-report-card-title">Current status</h3>
                 <p className={`inspection-report-status inspection-report-status--${report.reportStatus?.toLowerCase()}`}>
                   {statusLabel}
                 </p>
               </div>
 
-              <div className="admin-card inspection-report-card">
+              <div className="admin-card inspection-report-card inspection-confirmation inspection-confirmation--inline">
+                <div className="inspection-confirmation-icon">
+                  <Settings size={24} color="#fff" />
+                </div>
+                <h3 className="inspection-report-card-title">Inspection confirmation</h3>
+                <p className="inspection-confirmation-text">
+                  I confirm that the inspection was carried out in accordance with the applicable standards and that the information above is accurate at the time of inspection.
+                </p>
+              </div>
+            </div>
+
+            <div className="inspection-report-body">
+              <div className="admin-card inspection-report-card inspection-report-post-detail">
                 {report.bicycleImage && (
                   <img
                     src={report.bicycleImage}
@@ -297,21 +389,48 @@ export default function InspectorDetail() {
                 )}
                 <h2 className="inspection-report-bike-name">{report.bicycleName}</h2>
                 <p className="inspection-report-bike-meta">
-                  {report.categoryName ?? report.bicycleType} · {report.modelYear} · {report.size ? `Size ${report.size}` : ""}
+                  {inspectionMetaLineParts([
+                    report.brandName,
+                    report.categoryName,
+                    report.modelYear,
+                    report.size !== "—" ? `Size ${report.size}` : null,
+                  ])}
                 </p>
+                <div className="inspection-report-detail-row">
+                  <span className="inspection-report-detail-label">Price:</span>
+                  <span>{report.priceDisplay}</span>
+                </div>
                 <div className="inspection-report-detail-row">
                   <span className="inspection-report-detail-label">Owner:</span>
                   <span>{report.owner}</span>
                 </div>
                 <div className="inspection-report-detail-row">
-                  <span className="inspection-report-detail-label">Frame number:</span>
-                  <span>{report.frameNumber}</span>
+                  <span className="inspection-report-detail-label">Color:</span>
+                  <span>{report.bicycleColor ?? "—"}</span>
+                </div>
+                <div className="inspection-report-detail-row">
+                  <span className="inspection-report-detail-label">Frame material:</span>
+                  <span>{report.frameMaterial ?? "—"}</span>
+                </div>
+                <div className="inspection-report-detail-row">
+                  <span className="inspection-report-detail-label">Groupset:</span>
+                  <span>{report.groupset ?? "—"}</span>
+                </div>
+                <div className="inspection-report-detail-row">
+                  <span className="inspection-report-detail-label">Brake type:</span>
+                  <span>{report.brakeType ?? "—"}</span>
+                </div>
+                <div className="inspection-report-description-block">
+                  <span className="inspection-report-detail-label">Description</span>
+                  <p className="inspection-report-description">
+                    {report.description ?? "—"}
+                  </p>
                 </div>
               </div>
 
-              <div className="admin-card inspection-report-card">
+              <div className="admin-card inspection-report-card inspection-report-images-card">
                 <h3 className="inspection-report-card-title">Inspection images</h3>
-                <div className="inspection-report-thumbnails">
+                <div className="inspection-report-thumbnails inspection-report-thumbnails--large">
                   {report.inspectionImages?.filter(Boolean).slice(0, 4).map((img, idx) => (
                     <button
                       key={idx}
@@ -338,29 +457,6 @@ export default function InspectorDetail() {
                     </button>
                   )}
                 </div>
-              </div>
-            </div>
-
-            <div className="inspection-report-right">
-              <div className="admin-card inspection-report-card">
-                <h3 className="inspection-report-card-title">Inspector&apos;s notes</h3>
-                <textarea
-                  className="inspection-notes-textarea"
-                  placeholder="Enter your inspection notes..."
-                  value={inspectorNotes}
-                  onChange={(e) => setInspectorNotes(e.target.value)}
-                  rows={4}
-                />
-              </div>
-
-              <div className="admin-card inspection-report-card inspection-confirmation">
-                <div className="inspection-confirmation-icon">
-                  <Settings size={24} color="#fff" />
-                </div>
-                <h3 className="inspection-report-card-title">Inspection confirmation</h3>
-                <p className="inspection-confirmation-text">
-                  I confirm that the inspection was carried out in accordance with the applicable standards and that the information above is accurate at the time of inspection.
-                </p>
               </div>
             </div>
           </div>

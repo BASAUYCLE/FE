@@ -1,14 +1,43 @@
-import { createContext, useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import { useAuthOptional } from "./AuthContext";
 
-export const NotificationContext = createContext(null);
+import { NotificationContext } from "./NotificationContextBase";
 
-const STORAGE_KEY = "basauycle-notifications";
+const STORAGE_KEY_PREFIX = "basauycle-notifications";
+
+function normalizeUserId(user) {
+  return user?.id ?? user?.userId ?? user?.user_id ?? user?.email ?? null;
+}
+
+function getStorageKey(userId) {
+  return userId ? `${STORAGE_KEY_PREFIX}-${userId}` : STORAGE_KEY_PREFIX;
+}
+
+function loadFromStorage(key) {
+  try {
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch {
+    // ignore
+  }
+  return [];
+}
 
 export function NotificationProvider({ children }) {
+  const auth = useAuthOptional();
+  const userId = normalizeUserId(auth?.user ?? null);
+  const storageKey = getStorageKey(userId);
+
   const [notifications, setNotifications] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
+    const items = loadFromStorage(storageKey);
+    if (items.length > 0) return items;
+
+    // Seed a welcome notification only for "guest" storage to avoid
+    // polluting each user's inbox with duplicated demo content.
+    if (!userId) {
       const demo = [
         {
           id: Date.now(),
@@ -19,16 +48,27 @@ export function NotificationProvider({ children }) {
           createdAt: Date.now(),
         },
       ];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(demo));
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(demo));
+      } catch {
+        // ignore
+      }
       return demo;
-    } catch {
-      return [];
     }
+    return [];
   });
 
-  const saveToStorage = useCallback((items) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, []);
+  useEffect(() => {
+    // When user changes (login/logout/switch account), load the correct inbox.
+    setNotifications(loadFromStorage(storageKey));
+  }, [storageKey]);
+
+  const saveToStorage = useCallback(
+    (items) => {
+      localStorage.setItem(storageKey, JSON.stringify(items));
+    },
+    [storageKey],
+  );
 
   const addNotification = useCallback(
     (notification) => {

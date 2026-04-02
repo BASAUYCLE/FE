@@ -235,11 +235,13 @@ export default function Wishlist() {
       component="main"
       sx={{ minHeight: "100vh", backgroundColor: "#f9fafa" }}
     >
+      {/* <WishlistHeader /> */}
       <Header />
 
       <Box className="wishlist-page">
         <Box className="wishlist-layout">
           <Box className="wishlist-main">
+            {/* <WishlistFilterBar /> */}
             <MarketplaceFilterBar
               searchName={searchName}
               onSearchNameChange={setSearchName}
@@ -270,12 +272,14 @@ export default function Wishlist() {
               onViewModeChange={setViewMode}
             />
 
+            {/* <WishlistResults /> */}
             <Box
               className={`wishlist-grid ${viewMode === "list" ? "list" : ""} ${
                 displayItems.length === 0 ? "wishlist-grid-empty" : ""
               }`}
             >
               {displayItems.length === 0 ? (
+                /* <WishlistEmptyState /> */
                 <Box className="wishlist-empty">
                   <Box className="wishlist-empty-icon-ring" aria-hidden>
                     <Heart size={26} strokeWidth={2} />
@@ -302,6 +306,7 @@ export default function Wishlist() {
                   </Link>
                 </Box>
               ) : (
+                /* <WishlistItemsGrid /> */
                 <>
                   {displayItems.map((bike, idx) => (
                     <SimpleProductCard
@@ -311,6 +316,7 @@ export default function Wishlist() {
                     />
                   ))}
 
+                  {/* <WishlistBrowseMoreCard /> */}
                   <Link to="/marketplace" className="wishlist-add-card">
                     <Box className="wishlist-add-icon-ring" aria-hidden>
                       <Store size={22} strokeWidth={2} />
@@ -341,30 +347,8 @@ export default function Wishlist() {
         </Box>
       </Box>
 
-      <Footer
-        marketplaceLinks={[
-          { label: "All Bikes", href: "#" },
-          { label: "Mountain Bikes", href: "#" },
-          { label: "Road Bikes", href: "#" },
-          { label: "Accessories", href: "#" },
-        ]}
-        servicesLinks={[
-          { label: "Help Center", href: "#" },
-          { label: "Safety Tips", href: "#" },
-          { label: "Shipping Info", href: "#" },
-          { label: "Trust & Safety", href: "#" },
-        ]}
-        companyLinks={[
-          { label: "Terms of Service", href: "#" },
-          { label: "Privacy Policy", href: "#" },
-          { label: "Cookie Settings", href: "#" },
-        ]}
-        bottomLinks={[
-          { label: "Privacy Policy", href: "#" },
-          { label: "Terms of Service", href: "#" },
-          { label: "Cookie Settings", href: "#" },
-        ]}
-      />
+      {/* <WishlistFooter /> */}
+      <Footer />
     </Box>
   );
 }

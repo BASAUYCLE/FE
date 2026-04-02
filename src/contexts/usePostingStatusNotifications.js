@@ -1,10 +1,18 @@
-import { useEffect, useContext } from "react";
+import { useEffect, useContext, useMemo } from "react";
 import { useAuthOptional } from "./AuthContext";
 import { usePostings } from "./PostingContext";
-import { NotificationContext } from "./NotificationContext";
+import { NotificationContext } from "./NotificationContextBase";
 import { emitPostingStatusNotifications } from "../utils/postingStatusNotify";
 
-const STORAGE_KEY = "basauycle-posting-status-prev";
+const STORAGE_KEY_PREFIX = "basauycle-posting-status-prev";
+
+function normalizeUserId(user) {
+  return user?.id ?? user?.userId ?? user?.user_id ?? user?.email ?? null;
+}
+
+function getStorageKey(userId) {
+  return userId ? `${STORAGE_KEY_PREFIX}-${userId}` : STORAGE_KEY_PREFIX;
+}
 
 function getPrevStatus(prevMap, postingId) {
   if (postingId == null) return undefined;
@@ -20,6 +28,8 @@ function getPrevStatus(prevMap, postingId) {
 export function usePostingStatusNotifications() {
   const auth = useAuthOptional();
   const user = auth?.user ?? null;
+  const userId = normalizeUserId(user);
+  const storageKey = useMemo(() => getStorageKey(userId), [userId]);
   const notifCtx = useContext(NotificationContext) ?? null;
   const addNotification = notifCtx?.addNotification ?? null;
 
@@ -37,7 +47,7 @@ export function usePostingStatusNotifications() {
     }
     let prev = {};
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       if (raw) prev = JSON.parse(raw);
     } catch (_) {}
     for (const p of postings) {
@@ -46,11 +56,11 @@ export function usePostingStatusNotifications() {
     }
     try {
       localStorage.setItem(
-        STORAGE_KEY,
+        storageKey,
         JSON.stringify(
           Object.fromEntries(postings.map((p) => [p.id, p.status])),
         ),
       );
     } catch (_) {}
-  }, [user, postings, addNotification]);
+  }, [user, postings, addNotification, storageKey]);
 }

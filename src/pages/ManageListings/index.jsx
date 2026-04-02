@@ -419,9 +419,11 @@ export default function ManageListings() {
 
   return (
     <div className="manage-listings-page">
+      {/* <ManageListingsHeader /> */}
       <Header />
       <main className="manage-listings-main">
         <div className="manage-listings-container">
+          {/* <ManageListingsPageHeading /> */}
           <div className="manage-listings-header">
             <div>
               <Typography.Title level={2} className="manage-listings-title">
@@ -445,6 +447,7 @@ export default function ManageListings() {
             </Button>
           </div>
 
+          {/* <ManageListingsTabs /> */}
           <Tabs
             activeKey={activeTab}
             onChange={(k) => {
@@ -462,6 +465,7 @@ export default function ManageListings() {
             }))}
           />
 
+          {/* <ManageListingsSearchToolbar /> */}
           <div className="manage-listings-toolbar">
             <Input
               placeholder="Search by bike name, brand or ID..."
@@ -476,6 +480,7 @@ export default function ManageListings() {
             />
           </div>
 
+          {/* <ManageListingsTable /> */}
           <div className="manage-listings-table-wrap">
             <Table
               dataSource={paginatedData}
@@ -488,6 +493,7 @@ export default function ManageListings() {
               }}
             />
             {filteredBySearch.length > 0 && (
+              /* <ManageListingsPagination /> */
               <div className="manage-listings-pagination">
                 <Pagination
                   current={page}
@@ -505,8 +511,10 @@ export default function ManageListings() {
           </div>
         </div>
       </main>
+      {/* <ManageListingsFooter /> */}
       <Footer />
 
+      {/* <ManageListingsDeleteModal /> */}
       <Modal
         title="Confirm delete"
         open={deleteModal.open}

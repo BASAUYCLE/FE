@@ -253,16 +253,7 @@ export default function Home() {
           </Collapse>
         </Box>
       </Box>
-      <Footer
-        showSubscribe={false}
-        companyLinks={[
-          { label: "About Us", href: "#" },
-          { label: "Careers", href: "#" },
-          { label: "Help Center", href: "#" },
-          { label: "Privacy Policy", href: "#" },
-          { label: "Terms of Service", href: "#" },
-        ]}
-      />
+      <Footer />
     </Box>
   );
 }

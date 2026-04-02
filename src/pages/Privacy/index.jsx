@@ -179,7 +179,7 @@ export default function Privacy() {
             - Hotline (24/7): 0387.687.323
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 0.5 }}>
-            - Email: basauycle@gmail.com
+            - Email: contact.basaucycle2026@gmail.com
           </Typography>
 
         </Container>
