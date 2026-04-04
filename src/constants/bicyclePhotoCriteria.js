@@ -35,13 +35,13 @@ export const BICYCLE_PHOTO_CRITERIA = [
     titleVi: "Phanh trước",
     titleEn: "Front brake",
     hintVi:
-      "Caliper hoặc đĩa phanh trước, má phanh nếu rim brake — rõ model và độ mòn.",
+      "Caliper hoặc đĩa phanh trước, má phanh nếu rim brake — rõ model và độ mòn. Chụp rõ để thấy độ mòn lốp xe và tình trạng phanh.",
   },
   {
     code: "REAR_BRAKE",
     titleVi: "Phanh sau",
     titleEn: "Rear brake",
-    hintVi: "Tương tự phanh trước; đảm bảo không chụp quá tối hoặc quá chói.",
+    hintVi: "Tương tự phanh trước; đảm bảo không chụp quá tối hoặc quá chói. Chụp rõ để thấy độ mòn lốp xe và tình trạng phanh.",
   },
   {
     code: "DEFECT_POINT",

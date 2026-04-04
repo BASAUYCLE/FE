@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { POSTING_STATUS_LABEL } from "../../../constants/postingStatus";
 import adminPostService from "../../../services/adminPostService";
+import { useConfirmCrud } from "../../../utils/confirmCrud";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
@@ -90,6 +91,7 @@ export default function AdminApprovedListings() {
   const [loading, setLoading] = useState(true);
   const [previewId, setPreviewId] = useState(null);
   const [page, setPage] = useState(1);
+  const [hidingId, setHidingId] = useState(null);
 
   /** Chuẩn hóa 1 post từ BE → row UI */
   const normalizePost = (row) => {
