@@ -7,38 +7,38 @@ import { VALID_INSPECTION_SCORES } from "../utils/inspectionScoring";
 
 export { VALID_INSPECTION_SCORES };
 
-/** 4 mức điểm cho radio / button group */
+/** 4 mức điểm cho radio / button group / dropdown */
 export const INSPECTION_SCORE_OPTIONS = Object.freeze([
   {
     value: 10,
     labelVi: "Như mới",
     labelEn: "Like new",
-    hintVi: "Không có dấu hiệu sử dụng nhiều",
-    hintEn: "Little to no signs of use",
+    hintVi: "Như mới, nguyên bản, không có dấu hiệu sử dụng",
+    hintEn: "Like new, original, no signs of use",
     emoji: "🟢",
   },
   {
     value: 7,
-    labelVi: "Tốt",
-    labelEn: "Good",
-    hintVi: "Nguyên bản, có dấu hiệu sử dụng nhẹ",
-    hintEn: "Original, light signs of use",
+    labelVi: "Nguyên bản, sử dụng nhẹ",
+    labelEn: "Original, light use",
+    hintVi: "Nguyên bản nhưng có dấu hiệu sử dụng nhẹ",
+    hintEn: "Original but with light signs of use",
     emoji: "🟡",
   },
   {
     value: 3,
-    labelVi: "Tạm ổn",
-    labelEn: "Fair",
+    labelVi: "Thay thế / chỉnh sửa",
+    labelEn: "Replaced / modified",
     hintVi: "Có dấu hiệu thay thế hoặc chỉnh sửa",
-    hintEn: "Replacement parts or noticeable wear",
+    hintEn: "Signs of replacement or modification",
     emoji: "🟠",
   },
   {
     value: 0,
-    labelVi: "Hỏng",
-    labelEn: "Poor / failed",
-    hintVi: "Hư hỏng nặng, khả năng sử dụng thấp",
-    hintEn: "Heavy damage or unsafe to use",
+    labelVi: "Hư hỏng nặng",
+    labelEn: "Severely damaged",
+    hintVi: "Hư hỏng nặng, không có khả năng sử dụng",
+    hintEn: "Severely damaged, not fit for use",
     emoji: "🔴",
   },
 ]);

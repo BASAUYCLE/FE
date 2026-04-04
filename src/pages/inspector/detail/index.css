@@ -838,10 +838,6 @@
 }
 
 .inspection-rubric-section-title-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px 12px;
   margin-bottom: 6px;
 }
 
@@ -852,17 +848,6 @@
   letter-spacing: -0.015em;
   color: #0f172a;
   line-height: 1.35;
-}
-
-.inspection-rubric-section-weight {
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  white-space: nowrap;
 }
 
 .inspection-rubric-item-score {

@@ -40,10 +40,10 @@ function createDefaultScores() {
   return o;
 }
 
-/** Options for Ant Design Select — same labels as native & Post-style dropdowns */
+/** Hiển thị mô tả đánh giá tiếng Việt (đồng bộ hintVi trong rubric) */
 const INSPECTION_SCORE_SELECT_OPTIONS = INSPECTION_SCORE_OPTIONS.map((opt) => ({
   value: opt.value,
-  label: `${opt.value} — ${opt.labelEn}`,
+  label: `${opt.value} — ${opt.hintVi}`,
 }));
 
 /** Chuẩn hóa GET /posts/:id — cùng alias field với ProductDetail để không thiếu dữ liệu. */
@@ -418,10 +418,9 @@ export default function InspectorDetail() {
                       Scoring rubric
                     </h3>
                     <p className="inspection-scoring-card-subtitle">
-                      Six weighted criteria — choose{" "}
-                      <strong>0, 3, 7, or 10</strong> per row. The server
-                      derives overall condition and <strong>PASS/FAIL</strong>;
-                      you cannot set PASS/FAIL manually.
+                      Sáu tiêu chí — chọn <strong>0, 3, 7 hoặc 10</strong> mỗi
+                      dòng. Hệ thống tính tổng tình trạng và{" "}
+                      <strong>PASS/FAIL</strong>; không thể tự chọn PASS/FAIL.
                     </p>
                   </div>
                   {!canSubmit && (
@@ -446,17 +445,14 @@ export default function InspectorDetail() {
                             <div className="inspection-rubric-section-copy">
                               <div className="inspection-rubric-section-title-row">
                                 <h4 className="inspection-rubric-section-title">
-                                  {row.labelEn}
+                                  {row.labelVi}
                                 </h4>
-                                <span className="inspection-rubric-section-weight">
-                                  {row.weightPercent}% weight
-                                </span>
                               </div>
-                              {row.hintEn ? (
+                              {row.hintVi ? (
                                 <p
                                   className={`inspection-criterion-hint ${row.critical ? "inspection-criterion-hint--critical" : ""}`}
                                 >
-                                  {row.hintEn}
+                                  {row.hintVi}
                                 </p>
                               ) : null}
                             </div>
@@ -466,7 +462,7 @@ export default function InspectorDetail() {
                               className="field-label inspection-rubric-score-label"
                               htmlFor={`rubric-score-${row.key}`}
                             >
-                              Score
+                              Điểm
                             </label>
                             <Select
                               id={`rubric-score-${row.key}`}
@@ -479,7 +475,7 @@ export default function InspectorDetail() {
                               }
                               options={INSPECTION_SCORE_SELECT_OPTIONS}
                               getPopupContainer={() => document.body}
-                              aria-label={`${row.labelEn}: score`}
+                              aria-label={`${row.labelVi}: điểm`}
                             />
                           </div>
                         </div>
@@ -609,7 +605,7 @@ export default function InspectorDetail() {
               <ul className="inspection-confirm-scores">
                 {INSPECTION_CRITERIA_ROWS.map((row) => (
                   <li key={row.key}>
-                    {row.labelEn}: <strong>{scores[row.key]}</strong>
+                    {row.labelVi}: <strong>{scores[row.key]}</strong>
                   </li>
                 ))}
               </ul>
