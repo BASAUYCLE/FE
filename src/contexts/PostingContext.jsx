@@ -220,10 +220,7 @@ export function PostingProvider({ children }) {
       .filter(Boolean);
     const price = row.price;
     const postStatus =
-      row.postStatus ??
-      row.post_status ??
-      row.status ??
-      POSTING_STATUS.PENDING;
+      row.postStatus ?? row.post_status ?? row.status ?? POSTING_STATUS.PENDING;
     const sellerIdRow = row.sellerId ?? row.seller_id;
     return buildPosting(
       {
@@ -359,7 +356,7 @@ export function PostingProvider({ children }) {
 
   /**
    * Tải tin đăng công khai (AVAILABLE / ADMIN_APPROVED) cho Home & Marketplace.
-   * Thử GET /posts rồi GET /posts/status/AVAILABLE và ADMIN_APPROVED.
+   * BE chỉ còn GET /posts (public); /posts/status/* đã gỡ — lọc theo status ở client.
    */
   const loadPublicPostings = useCallback(async () => {
     const allowedStatuses = [
@@ -385,28 +382,7 @@ export function PostingProvider({ children }) {
       const res = await postService.getPosts();
       const list = extractListFromResponse(res);
       const merged = filterAndMap(list);
-      if (merged.length > 0) {
-        merged.sort(
-          (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
-        );
-        setPublicPostings(merged);
-        return merged;
-      }
-    } catch (_) {}
-
-    try {
-      const [resAvailable, resApproved] = await Promise.all([
-        postService.getPostsByStatus(POSTING_STATUS.AVAILABLE),
-        postService.getPostsByStatus(POSTING_STATUS.ADMIN_APPROVED),
-      ]);
-      const listA = extractListFromResponse(resAvailable);
-      const listB = extractListFromResponse(resApproved);
-      const byId = new Map();
-      [...listA, ...listB].forEach((row) => {
-        const p = mapRowToPosting(row);
-        if (p?.id != null) byId.set(p.id, p);
-      });
-      const merged = [...byId.values()].sort(
+      merged.sort(
         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
       );
       setPublicPostings(merged);
