@@ -1,5 +1,6 @@
 import axios from "axios";
 import { API_CONFIG } from "../config/api";
+import { messageForApiErrorCode } from "../constants/apiErrorCodes";
 import { STORAGE_KEYS } from "../constants/storageKeys";
 
 const { BASE_URL, TIMEOUT } = API_CONFIG;
@@ -82,7 +83,13 @@ axiosInstance.interceptors.response.use(
 
     const status = error.response?.status;
     const data = error.response?.data;
-    const message = getErrorMessage(data) || error.message || "Something went wrong. Please try again.";
+    const code = data?.code ?? data?.errorCode;
+    const mappedByCode = messageForApiErrorCode(code);
+    const message =
+      mappedByCode ||
+      getErrorMessage(data) ||
+      error.message ||
+      "Something went wrong. Please try again.";
 
     if (status === 401) {
       sessionStorage.removeItem(STORAGE_KEYS.USER);
@@ -90,7 +97,9 @@ axiosInstance.interceptors.response.use(
       // Thông báo cho AuthContext/Header cập nhật lại trạng thái đăng nhập
       try {
         window.dispatchEvent(new Event("basauycle-auth-logout"));
-      } catch (_) {}
+      } catch {
+        /* ignore */
+      }
       if (!LOGIN_PATHS.includes(window.location.pathname)) {
         window.location.href = "/login";
       }
