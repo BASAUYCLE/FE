@@ -62,13 +62,9 @@
 }
 
 .product-detail-badge--progress {
-  background: linear-gradient(
-    135deg,
-    rgba(251, 146, 60, 0.95) 0%,
-    rgba(234, 88, 12, 0.98) 100%
-  );
-  color: #fff7ed;
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35);
+  background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(26, 188, 156, 0.38);
 }
 
 .product-detail-badge--listed {
