@@ -12,25 +12,33 @@ export const INSPECTION_SCORE_OPTIONS = Object.freeze([
   {
     value: 10,
     labelVi: "Như mới",
+    labelEn: "Like new",
     hintVi: "Không có dấu hiệu sử dụng nhiều",
+    hintEn: "Little to no signs of use",
     emoji: "🟢",
   },
   {
     value: 7,
     labelVi: "Tốt",
+    labelEn: "Good",
     hintVi: "Nguyên bản, có dấu hiệu sử dụng nhẹ",
+    hintEn: "Original, light signs of use",
     emoji: "🟡",
   },
   {
     value: 3,
     labelVi: "Tạm ổn",
+    labelEn: "Fair",
     hintVi: "Có dấu hiệu thay thế hoặc chỉnh sửa",
+    hintEn: "Replacement parts or noticeable wear",
     emoji: "🟠",
   },
   {
     value: 0,
     labelVi: "Hỏng",
+    labelEn: "Poor / failed",
     hintVi: "Hư hỏng nặng, khả năng sử dụng thấp",
+    hintEn: "Heavy damage or unsafe to use",
     emoji: "🔴",
   },
 ]);
@@ -44,39 +52,51 @@ export const INSPECTION_CRITERIA_ROWS = Object.freeze([
     key: "colorScore",
     weightPercent: 10,
     labelVi: "Sơn & thẩm mỹ",
+    labelEn: "Paint & aesthetics",
     hintVi: "Sơn, tổng thể ngoại hình",
+    hintEn: "Paint and overall appearance",
   },
   {
     key: "frameScore",
     weightPercent: 30,
     labelVi: "Khung xe",
+    labelEn: "Frame",
     hintVi: "Nếu 0 điểm → tự động FAIL",
+    hintEn: "Score 0 forces FAIL",
     critical: true,
   },
   {
     key: "groupsetScore",
     weightPercent: 25,
     labelVi: "Bộ truyền động",
+    labelEn: "Groupset / drivetrain",
     hintVi: "Groupset",
+    hintEn: "Drivetrain condition",
   },
   {
     key: "brakeScore",
     weightPercent: 15,
     labelVi: "Phanh",
+    labelEn: "Brakes",
     hintVi: "Nếu 0 điểm → tự động FAIL",
+    hintEn: "Score 0 forces FAIL",
     critical: true,
   },
   {
     key: "controlScore",
     weightPercent: 10,
     labelVi: "Ghi đông & tay lái",
+    labelEn: "Cockpit / controls",
     hintVi: "Control",
+    hintEn: "Handlebar, stem, levers",
   },
   {
     key: "wheelScore",
     weightPercent: 10,
     labelVi: "Bánh & lốp",
+    labelEn: "Wheels & tires",
     hintVi: "Wheel",
+    hintEn: "Wheels and tires",
   },
 ]);
 
@@ -86,4 +106,10 @@ export const INSPECTION_PREVIEW_WARNING_TEXT_VI = Object.freeze({
     "Khung hoặc phanh đang 0 điểm — hệ thống sẽ ghi nhận FAIL bất kể tổng điểm.",
   below_50:
     "Tổng tình trạng dưới 50% — kết quả dự kiến là FAIL.",
+});
+
+export const INSPECTION_PREVIEW_WARNING_TEXT_EN = Object.freeze({
+  critical_frame_brake:
+    "Frame or brake score is 0 — the system will record FAIL regardless of the total score.",
+  below_50: "Overall condition is under 50% — expected result is FAIL.",
 });
