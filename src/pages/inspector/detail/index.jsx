@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { message, Modal, Input, Alert } from "antd";
+import { message, Modal, Input, Alert, Select } from "antd";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
 import PageBreadcrumb from "../../../components/PageBreadcrumb";
 import { postService, inspectionService } from "../../../services";
@@ -39,6 +39,12 @@ function createDefaultScores() {
   }
   return o;
 }
+
+/** Options for Ant Design Select — same labels as native & Post-style dropdowns */
+const INSPECTION_SCORE_SELECT_OPTIONS = INSPECTION_SCORE_OPTIONS.map((opt) => ({
+  value: opt.value,
+  label: `${opt.value} — ${opt.labelEn}`,
+}));
 
 /** Chuẩn hóa GET /posts/:id — cùng alias field với ProductDetail để không thiếu dữ liệu. */
 function mapPostToInspectionReport(row) {
@@ -457,32 +463,24 @@ export default function InspectorDetail() {
                           </div>
                           <div className="inspection-rubric-item-score">
                             <label
-                              className="inspection-rubric-field-label"
+                              className="field-label inspection-rubric-score-label"
                               htmlFor={`rubric-score-${row.key}`}
                             >
                               Score
                             </label>
-                            <select
+                            <Select
                               id={`rubric-score-${row.key}`}
-                              className="inspection-rubric-score-select"
+                              size="large"
+                              className="field-select"
+                              popupClassName="inspection-rubric-score-dropdown"
                               value={scores[row.key]}
-                              onChange={(e) =>
-                                setCriterionScore(
-                                  row.key,
-                                  Number(e.target.value),
-                                )
+                              onChange={(value) =>
+                                setCriterionScore(row.key, value)
                               }
+                              options={INSPECTION_SCORE_SELECT_OPTIONS}
+                              getPopupContainer={() => document.body}
                               aria-label={`${row.labelEn}: score`}
-                            >
-                              {INSPECTION_SCORE_OPTIONS.map((opt) => (
-                                <option
-                                  key={opt.value}
-                                  value={opt.value}
-                                >
-                                  {opt.value} — {opt.labelEn}
-                                </option>
-                              ))}
-                            </select>
+                            />
                           </div>
                         </div>
                       </div>
