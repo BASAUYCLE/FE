@@ -15,7 +15,6 @@ import {
   INSPECTION_PREVIEW_WARNING_TEXT_EN,
 } from "../../../constants/inspectionRubric";
 import {
-  INSPECTION_SCORE_KEYS,
   buildInspectionPreview,
   validateInspectionScores,
 } from "../../../utils/inspectionScoring";
@@ -32,18 +31,15 @@ function firstNonEmpty(...vals) {
   return null;
 }
 
-function createDefaultScores() {
-  const o = {};
-  for (const k of INSPECTION_SCORE_KEYS) {
-    o[k] = 7;
-  }
-  return o;
+/** No preset scores — inspector must choose each row (placeholder: "Select rating"). */
+function createEmptyScores() {
+  return {};
 }
 
-/** Hiển thị mô tả đánh giá tiếng Việt (đồng bộ hintVi trong rubric) */
+/** Select options — English rubric text (hintEn) */
 const INSPECTION_SCORE_SELECT_OPTIONS = INSPECTION_SCORE_OPTIONS.map((opt) => ({
   value: opt.value,
-  label: `${opt.value} — ${opt.hintVi}`,
+  label: `${opt.value} — ${opt.hintEn}`,
 }));
 
 /** Chuẩn hóa GET /posts/:id — cùng alias field với ProductDetail để không thiếu dữ liệu. */
@@ -144,7 +140,7 @@ export default function InspectorDetail() {
   const [postFromApi, setPostFromApi] = useState(null);
   const [postLoading, setPostLoading] = useState(!!postIdNum);
   const [submitLoading, setSubmitLoading] = useState(false);
-  const [scores, setScores] = useState(createDefaultScores);
+  const [scores, setScores] = useState(createEmptyScores);
   const [notes, setNotes] = useState("");
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
@@ -418,9 +414,10 @@ export default function InspectorDetail() {
                       Scoring rubric
                     </h3>
                     <p className="inspection-scoring-card-subtitle">
-                      Sáu tiêu chí — chọn <strong>0, 3, 7 hoặc 10</strong> mỗi
-                      dòng. Hệ thống tính tổng tình trạng và{" "}
-                      <strong>PASS/FAIL</strong>; không thể tự chọn PASS/FAIL.
+                      Six criteria — choose <strong>0, 3, 7, or 10</strong> per
+                      row. The server derives overall condition and{" "}
+                      <strong>PASS/FAIL</strong>; you cannot set PASS/FAIL
+                      manually.
                     </p>
                   </div>
                   {!canSubmit && (
@@ -445,14 +442,14 @@ export default function InspectorDetail() {
                             <div className="inspection-rubric-section-copy">
                               <div className="inspection-rubric-section-title-row">
                                 <h4 className="inspection-rubric-section-title">
-                                  {row.labelVi}
+                                  {row.labelEn}
                                 </h4>
                               </div>
-                              {row.hintVi ? (
+                              {row.hintEn ? (
                                 <p
                                   className={`inspection-criterion-hint ${row.critical ? "inspection-criterion-hint--critical" : ""}`}
                                 >
-                                  {row.hintVi}
+                                  {row.hintEn}
                                 </p>
                               ) : null}
                             </div>
@@ -462,20 +459,21 @@ export default function InspectorDetail() {
                               className="field-label inspection-rubric-score-label"
                               htmlFor={`rubric-score-${row.key}`}
                             >
-                              Điểm
+                              Score
                             </label>
                             <Select
                               id={`rubric-score-${row.key}`}
                               size="large"
                               className="field-select"
                               popupClassName="inspection-rubric-score-dropdown"
+                              placeholder="Select rating"
                               value={scores[row.key]}
                               onChange={(value) =>
                                 setCriterionScore(row.key, value)
                               }
                               options={INSPECTION_SCORE_SELECT_OPTIONS}
                               getPopupContainer={() => document.body}
-                              aria-label={`${row.labelVi}: điểm`}
+                              aria-label={`${row.labelEn}: score`}
                             />
                           </div>
                         </div>
@@ -605,7 +603,7 @@ export default function InspectorDetail() {
               <ul className="inspection-confirm-scores">
                 {INSPECTION_CRITERIA_ROWS.map((row) => (
                   <li key={row.key}>
-                    {row.labelVi}: <strong>{scores[row.key]}</strong>
+                    {row.labelEn}: <strong>{scores[row.key]}</strong>
                   </li>
                 ))}
               </ul>
