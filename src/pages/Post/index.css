@@ -249,8 +249,16 @@
     width: 100%;
 }
 
-.price-field .field-input {
-    max-width: calc((100% - 1.25rem) / 2);
+/* Pricing: full width trong section (không giới hạn nửa cột như form-row) */
+#pricing .price-field .field-input {
+    max-width: 100%;
+    width: 100%;
+}
+
+#pricing .price-field .field-input .ant-input {
+    font-size: 1.0625rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
 }
 
 /* Tránh tràn khi nội dung quá dài (Groupset, Brake Type, v.v.) */
@@ -887,10 +895,6 @@
 
     .section-content {
         padding: 1.5rem;
-    }
-
-    .price-field .field-input {
-        max-width: 100%;
     }
 
     .post-upload-section {
