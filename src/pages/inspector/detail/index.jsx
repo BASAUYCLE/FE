@@ -425,50 +425,68 @@ export default function InspectorDetail() {
                       message="Submit is only available when the post is admin-approved (pending inspection)."
                     />
                   )}
-                  <div className="inspection-criteria-list">
-                    {INSPECTION_CRITERIA_ROWS.map((row) => (
-                      <div key={row.key} className="inspection-criterion-block">
-                        <div className="inspection-criterion-head">
-                          <span className="inspection-criterion-title">
-                            {row.labelEn}
-                          </span>
-                          <span className="inspection-criterion-weight">
-                            {row.weightPercent}%
-                          </span>
+                  <div className="inspection-criteria-list inspection-criteria-list--rubric-form">
+                    {INSPECTION_CRITERIA_ROWS.map((row, idx) => (
+                      <div
+                        key={row.key}
+                        className="inspection-rubric-section"
+                      >
+                        <div className="inspection-rubric-section-header">
+                          <div className="inspection-rubric-section-title-row">
+                            <span className="inspection-rubric-section-index">
+                              {idx + 1}.
+                            </span>
+                            <span className="inspection-rubric-section-title">
+                              {row.labelEn.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="inspection-rubric-section-header-right">
+                            <span className="inspection-rubric-section-weight-pill">
+                              {row.weightPercent}%
+                            </span>
+                          </div>
                         </div>
-                        {row.hintEn ? (
-                          <p className="inspection-criterion-hint">
-                            {row.hintEn}
-                          </p>
-                        ) : null}
-                        <div
-                          className="inspection-score-pills"
-                          role="group"
-                          aria-label={row.labelEn}
-                        >
-                          {INSPECTION_SCORE_OPTIONS.map((opt) => {
-                            const active = scores[row.key] === opt.value;
-                            return (
-                              <button
-                                key={opt.value}
-                                type="button"
-                                className={`inspection-score-pill ${active ? "inspection-score-pill--active" : ""}`}
-                                onClick={() =>
-                                  setCriterionScore(row.key, opt.value)
-                                }
+                        <div className="inspection-rubric-section-body">
+                          <div className="inspection-rubric-item-row">
+                            <div className="inspection-rubric-item-main">
+                              {row.hintEn ? (
+                                <p
+                                  className={`inspection-criterion-hint ${row.critical ? "inspection-criterion-hint--critical" : ""}`}
+                                >
+                                  {row.hintEn}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="inspection-rubric-item-score">
+                              <label
+                                className="inspection-rubric-field-label"
+                                htmlFor={`rubric-score-${row.key}`}
                               >
-                                <span className="inspection-score-pill-emoji">
-                                  {opt.emoji}
-                                </span>
-                                <span className="inspection-score-pill-val">
-                                  {opt.value}
-                                </span>
-                                <span className="inspection-score-pill-label">
-                                  {opt.labelEn}
-                                </span>
-                              </button>
-                            );
-                          })}
+                                Score
+                              </label>
+                              <select
+                                id={`rubric-score-${row.key}`}
+                                className="inspection-rubric-score-select"
+                                value={scores[row.key]}
+                                onChange={(e) =>
+                                  setCriterionScore(
+                                    row.key,
+                                    Number(e.target.value),
+                                  )
+                                }
+                                aria-label={`${row.labelEn}: score`}
+                              >
+                                {INSPECTION_SCORE_OPTIONS.map((opt) => (
+                                  <option
+                                    key={opt.value}
+                                    value={opt.value}
+                                  >
+                                    {opt.value} — {opt.labelEn}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     ))}
