@@ -648,7 +648,15 @@ export default function ProductDetail() {
       {/* <ProductDetailHeader /> */}
       {!isStaffView && <Header />}
 
-      <Box sx={{ maxWidth: 1320, margin: "0 auto", p: 3 }}>
+      <Box
+        sx={{
+          maxWidth: { xs: "100%", lg: 1200, xl: 1400 },
+          width: "100%",
+          margin: "0 auto",
+          px: { xs: 2, sm: 3 },
+          py: 3,
+        }}
+      >
         {/* <ProductDetailBreadcrumbs /> */}
         <Breadcrumbs sx={{ mb: 3, fontSize: 12 }}>
           {breadcrumbs.map((b, i) =>
@@ -1002,17 +1010,22 @@ export default function ProductDetail() {
         </Box>
 
         {/* <ProductDetailsSection /> */}
-        {/* Lower section: 2 columns */}
+        {/* Lower: 1 cột full width nếu không có inspection; 2 cột khi có Pro Inspection */}
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+            gridTemplateColumns: {
+              xs: "1fr",
+              lg: product.inspection
+                ? "minmax(0, 1.15fr) minmax(0, 1fr)"
+                : "1fr",
+            },
             gap: 4,
             mb: 4,
           }}
         >
-          {/* Left column: Technical Specs + Ownership Journey */}
-          <Box>
+          {/* Cột chính: Technical Specs + Ownership + Reviews */}
+          <Box sx={{ minWidth: 0 }}>
             {product.specs && (
               <Box className="product-detail-section" sx={{ mb: 4 }}>
                 <Box
@@ -1026,7 +1039,11 @@ export default function ProductDetail() {
                 <Box
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gridTemplateColumns: {
+                      xs: "1fr",
+                      sm: "repeat(2, minmax(0, 1fr))",
+                      lg: "repeat(3, minmax(0, 1fr))",
+                    },
                     gap: 2,
                   }}
                 >
@@ -1144,106 +1161,125 @@ export default function ProductDetail() {
               </Box>
             )}
 
-            {/* Ownership Journey */}
-            <Box className="product-detail-section">
-              <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
-              >
-                <SyncOutlined style={{ color: "#6b7280", fontSize: 20 }} />
-                <Typography variant="h6" fontWeight={700}>
-                  Ownership History
-                </Typography>
-              </Box>
-              {product.description && (
-                <Box sx={{ mb: 2 }}>
-                  <Typography fontWeight={600} color="#00ccad">
-                    CURRENT: Listed on BASAUYCLE
-                  </Typography>
-                  <Typography color="#6b7280" variant="body2" sx={{ mt: 0.5 }}>
-                    {product.description}
-                  </Typography>
-                </Box>
-              )}
-              {product.history?.map((h, i) => (
-                <Box key={i} sx={{ mb: 2 }}>
-                  <Typography fontWeight={600} variant="body2">
-                    {h.date?.toUpperCase?.() || h.date}: {h.title}
-                  </Typography>
-                  <Typography color="#6b7280" variant="body2" sx={{ mt: 0.5 }}>
-                    {h.detail}
+            {/* Ownership + Reviews: 2 cột trên desktop để tận dụng chiều ngang */}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+                gap: 3,
+                alignItems: "start",
+              }}
+            >
+              <Box className="product-detail-section">
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
+                >
+                  <SyncOutlined style={{ color: "#6b7280", fontSize: 20 }} />
+                  <Typography variant="h6" fontWeight={700}>
+                    Ownership History
                   </Typography>
                 </Box>
-              ))}
-              {(!product.history || product.history.length === 0) &&
-                !product.description && (
-                  <Typography color="#6b7280" variant="body2">
-                    No history information available.
-                  </Typography>
+                {product.description && (
+                  <Box sx={{ mb: 2 }}>
+                    <Typography fontWeight={600} color="#00ccad">
+                      CURRENT: Listed on BASAUYCLE
+                    </Typography>
+                    <Typography
+                      color="#6b7280"
+                      variant="body2"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {product.description}
+                    </Typography>
+                  </Box>
                 )}
-            </Box>
+                {product.history?.map((h, i) => (
+                  <Box key={i} sx={{ mb: 2 }}>
+                    <Typography fontWeight={600} variant="body2">
+                      {h.date?.toUpperCase?.() || h.date}: {h.title}
+                    </Typography>
+                    <Typography
+                      color="#6b7280"
+                      variant="body2"
+                      sx={{ mt: 0.5 }}
+                    >
+                      {h.detail}
+                    </Typography>
+                  </Box>
+                ))}
+                {(!product.history || product.history.length === 0) &&
+                  !product.description && (
+                    <Typography color="#6b7280" variant="body2">
+                      No history information available.
+                    </Typography>
+                  )}
+              </Box>
 
-            <Box className="product-detail-section" sx={{ mt: 3 }}>
-              <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                Reviews for this listing
-              </Typography>
-              {postFeedbacksLoading ? (
-                <Typography color="#6b7280" variant="body2">
-                  Loading reviews…
+              <Box className="product-detail-section">
+                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
+                  Reviews for this listing
                 </Typography>
-              ) : postFeedbacks.length === 0 ? (
-                <Typography color="#6b7280" variant="body2">
-                  No reviews linked to this listing yet.
-                </Typography>
-              ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  {postFeedbacks.map((fb, idx) => {
-                    const rating = fb.rating ?? fb.stars ?? fb.score ?? null;
-                    const comment =
-                      fb.comment ?? fb.reviewText ?? fb.content ?? "";
-                    const who =
-                      fb.buyerName ??
-                      fb.buyerFullName ??
-                      fb.reviewerName ??
-                      "Buyer";
-                    return (
-                      <Box
-                        key={fb.feedbackId ?? fb.id ?? idx}
-                        sx={{
-                          p: 2,
-                          borderRadius: 2,
-                          bgcolor: "#f9fafb",
-                          border: "1px solid #e5e7eb",
-                        }}
-                      >
-                        <Typography fontWeight={600} color="#111827">
-                          {who}
-                          {rating != null && (
-                            <Typography
-                              component="span"
-                              variant="body2"
-                              color="#f59e0b"
-                              sx={{ ml: 1 }}
-                            >
-                              {"★".repeat(
-                                Math.min(5, Math.max(1, Number(rating))),
-                              )}
-                            </Typography>
-                          )}
-                        </Typography>
-                        {comment ? (
-                          <Typography
-                            variant="body2"
-                            color="#4b5563"
-                            sx={{ mt: 0.5 }}
-                          >
-                            {comment}
+                {postFeedbacksLoading ? (
+                  <Typography color="#6b7280" variant="body2">
+                    Loading reviews…
+                  </Typography>
+                ) : postFeedbacks.length === 0 ? (
+                  <Typography color="#6b7280" variant="body2">
+                    No reviews linked to this listing yet.
+                  </Typography>
+                ) : (
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+                  >
+                    {postFeedbacks.map((fb, idx) => {
+                      const rating = fb.rating ?? fb.stars ?? fb.score ?? null;
+                      const comment =
+                        fb.comment ?? fb.reviewText ?? fb.content ?? "";
+                      const who =
+                        fb.buyerName ??
+                        fb.buyerFullName ??
+                        fb.reviewerName ??
+                        "Buyer";
+                      return (
+                        <Box
+                          key={fb.feedbackId ?? fb.id ?? idx}
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: "#f9fafb",
+                            border: "1px solid #e5e7eb",
+                          }}
+                        >
+                          <Typography fontWeight={600} color="#111827">
+                            {who}
+                            {rating != null && (
+                              <Typography
+                                component="span"
+                                variant="body2"
+                                color="#f59e0b"
+                                sx={{ ml: 1 }}
+                              >
+                                {"★".repeat(
+                                  Math.min(5, Math.max(1, Number(rating))),
+                                )}
+                              </Typography>
+                            )}
                           </Typography>
-                        ) : null}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              )}
+                          {comment ? (
+                            <Typography
+                              variant="body2"
+                              color="#4b5563"
+                              sx={{ mt: 0.5 }}
+                            >
+                              {comment}
+                            </Typography>
+                          ) : null}
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
+              </Box>
             </Box>
           </Box>
 
