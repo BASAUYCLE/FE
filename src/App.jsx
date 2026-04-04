@@ -114,6 +114,7 @@ function App() {
                             path="/guide-payment"
                             element={<GuidePayment />}
                           />
+                          {/* Public guide: BE imageType + POST /images */}
                           <Route
                             path="/guide-bike-photos"
                             element={<GuidePhotoUpload />}

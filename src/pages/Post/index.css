@@ -120,6 +120,18 @@
     color: #475569;
 }
 
+/* Link trong alert hướng dẫn ảnh (Post page) */
+.post-content-container .post-photo-guide-alert.ant-alert-info .ant-alert-description a {
+    color: #0d9488;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.post-content-container .post-photo-guide-alert.ant-alert-info .ant-alert-description a:hover {
+    color: #0f766e;
+}
+
 /* Form Container — full width trong .post-content-container */
 .post-form-container {
     max-width: 100%;
