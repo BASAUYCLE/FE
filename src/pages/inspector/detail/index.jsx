@@ -407,16 +407,17 @@ export default function InspectorDetail() {
                 </div>
 
                 <div className="admin-card inspection-report-card inspection-scoring-card">
-                  <h3 className="inspection-report-card-title">
-                    Scoring rubric (6 criteria)
-                  </h3>
-                  <p className="inspection-scoring-intro">
-                    Each criterion must be <strong>0, 3, 7, or 10</strong>. You
-                    only enter scores and optional notes—the backend derives
-                    overall condition, <strong>PASS/FAIL</strong>, and listing
-                    status. You cannot manually pick PASS/FAIL, and there is no
-                    separate reject-only action.
-                  </p>
+                  <div className="inspection-scoring-card-head">
+                    <h3 className="inspection-scoring-card-title">
+                      Scoring rubric
+                    </h3>
+                    <p className="inspection-scoring-card-subtitle">
+                      Six weighted criteria — choose{" "}
+                      <strong>0, 3, 7, or 10</strong> per row. The server
+                      derives overall condition and <strong>PASS/FAIL</strong>;
+                      you cannot set PASS/FAIL manually.
+                    </p>
+                  </div>
                   {!canSubmit && (
                     <Alert
                       type="warning"
@@ -431,24 +432,20 @@ export default function InspectorDetail() {
                         key={row.key}
                         className="inspection-rubric-section"
                       >
-                        <div className="inspection-rubric-section-header">
-                          <div className="inspection-rubric-section-title-row">
+                        <div className="inspection-rubric-section-inner">
+                          <div className="inspection-rubric-section-leading">
                             <span className="inspection-rubric-section-index">
-                              {idx + 1}.
+                              {idx + 1}
                             </span>
-                            <span className="inspection-rubric-section-title">
-                              {row.labelEn.toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="inspection-rubric-section-header-right">
-                            <span className="inspection-rubric-section-weight-pill">
-                              {row.weightPercent}%
-                            </span>
-                          </div>
-                        </div>
-                        <div className="inspection-rubric-section-body">
-                          <div className="inspection-rubric-item-row">
-                            <div className="inspection-rubric-item-main">
+                            <div className="inspection-rubric-section-copy">
+                              <div className="inspection-rubric-section-title-row">
+                                <h4 className="inspection-rubric-section-title">
+                                  {row.labelEn}
+                                </h4>
+                                <span className="inspection-rubric-section-weight">
+                                  {row.weightPercent}% weight
+                                </span>
+                              </div>
                               {row.hintEn ? (
                                 <p
                                   className={`inspection-criterion-hint ${row.critical ? "inspection-criterion-hint--critical" : ""}`}
@@ -457,35 +454,35 @@ export default function InspectorDetail() {
                                 </p>
                               ) : null}
                             </div>
-                            <div className="inspection-rubric-item-score">
-                              <label
-                                className="inspection-rubric-field-label"
-                                htmlFor={`rubric-score-${row.key}`}
-                              >
-                                Score
-                              </label>
-                              <select
-                                id={`rubric-score-${row.key}`}
-                                className="inspection-rubric-score-select"
-                                value={scores[row.key]}
-                                onChange={(e) =>
-                                  setCriterionScore(
-                                    row.key,
-                                    Number(e.target.value),
-                                  )
-                                }
-                                aria-label={`${row.labelEn}: score`}
-                              >
-                                {INSPECTION_SCORE_OPTIONS.map((opt) => (
-                                  <option
-                                    key={opt.value}
-                                    value={opt.value}
-                                  >
-                                    {opt.value} — {opt.labelEn}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
+                          </div>
+                          <div className="inspection-rubric-item-score">
+                            <label
+                              className="inspection-rubric-field-label"
+                              htmlFor={`rubric-score-${row.key}`}
+                            >
+                              Score
+                            </label>
+                            <select
+                              id={`rubric-score-${row.key}`}
+                              className="inspection-rubric-score-select"
+                              value={scores[row.key]}
+                              onChange={(e) =>
+                                setCriterionScore(
+                                  row.key,
+                                  Number(e.target.value),
+                                )
+                              }
+                              aria-label={`${row.labelEn}: score`}
+                            >
+                              {INSPECTION_SCORE_OPTIONS.map((opt) => (
+                                <option
+                                  key={opt.value}
+                                  value={opt.value}
+                                >
+                                  {opt.value} — {opt.labelEn}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </div>
