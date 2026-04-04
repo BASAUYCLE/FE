@@ -230,9 +230,7 @@ export default function AdminDisputeDetailPage() {
   const hasInspectorNote = hasNonEmptyText(inspectorNoteRaw);
   /** Chỉ sau khi inspector gửi ghi chú (BE chuyển sang REVIEWING) admin mới được quyết định. */
   const canModerate =
-    detail &&
-    detail.status === DISPUTE_STATUS.REVIEWING &&
-    hasInspectorNote;
+    detail && detail.status === DISPUTE_STATUS.REVIEWING && hasInspectorNote;
 
   const orderStatusLabel =
     order?.orderStatus != null

@@ -136,7 +136,7 @@ export default function AdminWithdrawals() {
       pending.sort((a, b) => getCreatedAt(b) - getCreatedAt(a));
       setRows(pending);
     } catch (e) {
-      message.error(e?.message || "Could not load transactions.");
+      message.error(e?.message || "Không tải được giao dịch.");
       setRows([]);
       setAvatarByUserId(new Map());
     } finally {

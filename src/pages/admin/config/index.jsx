@@ -307,9 +307,7 @@ export default function AdminConfig() {
               <div className="admin-card admin-config-card">
                 <div className="admin-card-header">
                   <div>
-                    <div className="admin-card-title">
-                      Auto-confirm order
-                    </div>
+                    <div className="admin-card-title">Auto-confirm order</div>
                   </div>
                 </div>
                 <div className="admin-config-body">
@@ -325,8 +323,8 @@ export default function AdminConfig() {
                     />
                   </label>
                   <div className="admin-config-help">
-                    Automatically confirms after {preview.autoConfirmDays} day(s)
-                    from order delivery/receipt.
+                    Automatically confirms after {preview.autoConfirmDays}{" "}
+                    day(s) from order delivery/receipt.
                   </div>
                 </div>
               </div>

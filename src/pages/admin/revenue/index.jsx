@@ -8,8 +8,8 @@ import "../dashboard/index.css";
 import "./index.css";
 
 const PERIODS = [
-  { value: "week",    label: "This week",    days: 7  },
-  { value: "month",   label: "This month",   days: 30 },
+  { value: "week", label: "This week", days: 7 },
+  { value: "month", label: "This month", days: 30 },
   { value: "quarter", label: "This quarter", days: 90 },
 ];
 
@@ -65,7 +65,7 @@ function getISOWeek(d) {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+  return Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
 }
 
 function buildChartData(posts, period, postingFee) {
@@ -78,9 +78,9 @@ function buildChartData(posts, period, postingFee) {
     const entries = Object.entries(buckets);
     const maxCount = Math.max(...entries.map(([, arr]) => arr.length), 1);
     return entries.map(([key, arr]) => ({
-      label:  key,
-      value:  Math.round((arr.length / maxCount) * 100),
-      count:  arr.length,
+      label: key,
+      value: Math.round((arr.length / maxCount) * 100),
+      count: arr.length,
       amount: arr.length > 0 ? formatCurrency(arr.length * postingFee) : "—",
     }));
   }
@@ -100,8 +100,8 @@ function buildChartData(posts, period, postingFee) {
         : `${d.getDate()}/${d.getMonth() + 1}`;
     return {
       label,
-      value:  Math.round((arr.length / maxCount) * 100),
-      count:  arr.length,
+      value: Math.round((arr.length / maxCount) * 100),
+      count: arr.length,
       amount: arr.length > 0 ? formatCurrency(arr.length * postingFee) : "—",
     };
   });
@@ -109,33 +109,33 @@ function buildChartData(posts, period, postingFee) {
 
 /** Status badge color */
 const STATUS_COLOR = {
-  AVAILABLE:      "#10b981",
-  DEPOSITED:      "#d97706",
-  SOLD:           "#7c3aed",
-  PENDING:        "#f59e0b",
+  AVAILABLE: "#10b981",
+  DEPOSITED: "#d97706",
+  SOLD: "#7c3aed",
+  PENDING: "#f59e0b",
   ADMIN_APPROVED: "#3b82f6",
-  REJECTED:       "#ef4444",
-  HIDDEN:         "#94a3b8",
-  DRAFTED:        "#94a3b8",
+  REJECTED: "#ef4444",
+  HIDDEN: "#94a3b8",
+  DRAFTED: "#94a3b8",
 };
 const STATUS_LABEL = {
-  AVAILABLE:      "Available",
-  DEPOSITED:      "Deposited",
-  SOLD:           "Sold",
-  PENDING:        "Pending",
+  AVAILABLE: "Available",
+  DEPOSITED: "Deposited",
+  SOLD: "Sold",
+  PENDING: "Pending",
   ADMIN_APPROVED: "Approved",
-  REJECTED:       "Rejected",
-  HIDDEN:         "Hidden",
-  DRAFTED:        "Draft",
+  REJECTED: "Rejected",
+  HIDDEN: "Hidden",
+  DRAFTED: "Draft",
 };
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AdminRevenue() {
-  const [period, setPeriod]       = useState("week");
-  const [allPosts, setAllPosts]   = useState([]);
+  const [period, setPeriod] = useState("week");
+  const [allPosts, setAllPosts] = useState([]);
   const [postingFee, setPostingFee] = useState(POSTING_FEE_FALLBACK);
-  const [loading, setLoading]     = useState(true);
+  const [loading, setLoading] = useState(true);
 
   // Fetch all posts + posting fee once
   const fetchData = useCallback(async () => {
@@ -147,16 +147,23 @@ export default function AdminRevenue() {
       ]);
 
       if (postsRes.status === "fulfilled") {
-        const raw = postsRes.value?.result ?? postsRes.value?.data ?? postsRes.value;
-        const list = Array.isArray(raw) ? raw : (raw?.content ?? raw?.posts ?? raw?.data ?? []);
+        const raw =
+          postsRes.value?.result ?? postsRes.value?.data ?? postsRes.value;
+        const list = Array.isArray(raw)
+          ? raw
+          : (raw?.content ?? raw?.posts ?? raw?.data ?? []);
         setAllPosts(list);
       }
 
       if (feeRes.status === "fulfilled") {
         const raw = feeRes.value?.result ?? feeRes.value?.data ?? feeRes.value;
         const strVal =
-          typeof raw === "string" ? raw
-          : raw?.configValue ?? raw?.config_value ?? raw?.value ?? String(raw ?? "");
+          typeof raw === "string"
+            ? raw
+            : (raw?.configValue ??
+              raw?.config_value ??
+              raw?.value ??
+              String(raw ?? ""));
         const num = parseFloat(strVal);
         if (!isNaN(num) && num > 0) setPostingFee(num);
       }
@@ -167,7 +174,9 @@ export default function AdminRevenue() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   // Posts trong kỳ đã chọn (chỉ tính các bài đã được submit = không phải DRAFTED)
   const periodPosts = useMemo(() => {
@@ -179,9 +188,11 @@ export default function AdminRevenue() {
     });
   }, [allPosts, period]);
 
-  const totalRevenue  = periodPosts.length * postingFee;
-  const totalAllPosts = allPosts.filter((p) => p.postStatus !== "DRAFTED").length;
-  const chartData     = useMemo(
+  const totalRevenue = periodPosts.length * postingFee;
+  const totalAllPosts = allPosts.filter(
+    (p) => p.postStatus !== "DRAFTED",
+  ).length;
+  const chartData = useMemo(
     () => buildChartData(periodPosts, period, postingFee),
     [periodPosts, period, postingFee],
   );
@@ -192,12 +203,12 @@ export default function AdminRevenue() {
       .sort((a, b) => new Date(b.createdAt ?? "") - new Date(a.createdAt ?? ""))
       .slice(0, 20)
       .map((p) => ({
-        id:       p.postId ?? p.id,
-        title:    p.bicycleName ?? p.title ?? "—",
-        seller:   p.sellerFullName ?? p.sellerName ?? p.seller?.fullName ?? "—",
-        status:   p.postStatus ?? p.status ?? "—",
-        date:     p.createdAt ?? p.created_at ?? null,
-        fee:      postingFee,
+        id: p.postId ?? p.id,
+        title: p.bicycleName ?? p.title ?? "—",
+        seller: p.sellerFullName ?? p.sellerName ?? p.seller?.fullName ?? "—",
+        status: p.postStatus ?? p.status ?? "—",
+        date: p.createdAt ?? p.created_at ?? null,
+        fee: postingFee,
       }));
   }, [periodPosts, postingFee]);
 
@@ -208,13 +219,13 @@ export default function AdminRevenue() {
       <div className="admin-dashboard-page admin-revenue-page">
         <div className="admin-dashboard">
           <div className="admin-content">
-
             {/* Header */}
             <header className="admin-topbar admin-revenue-topbar">
               <div>
                 <h1 className="admin-page-title">Listing revenue</h1>
                 <p className="admin-page-subtitle">
-                  Listing fee: {formatCurrency(postingFee)} / post · Total posted listings: {totalAllPosts}
+                  Listing fee: {formatCurrency(postingFee)} / post · Total
+                  posted listings: {totalAllPosts}
                 </p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -247,7 +258,9 @@ export default function AdminRevenue() {
               {/* Tổng doanh thu kỳ */}
               <div className="admin-card admin-stat-card">
                 <div className="admin-stat-top">
-                  <div className="admin-stat-icon green"><DollarSign /></div>
+                  <div className="admin-stat-icon green">
+                    <DollarSign />
+                  </div>
                   <span className="admin-stat-trend up">{periodLabel}</span>
                 </div>
                 <div className="admin-stat-title">Revenue in period</div>
@@ -259,7 +272,9 @@ export default function AdminRevenue() {
               {/* Số bài đăng trong kỳ */}
               <div className="admin-card admin-stat-card">
                 <div className="admin-stat-top">
-                  <div className="admin-stat-icon indigo"><FileText /></div>
+                  <div className="admin-stat-icon indigo">
+                    <FileText />
+                  </div>
                   <span className="admin-stat-trend up">posts</span>
                 </div>
                 <div className="admin-stat-title">Posts in period</div>
@@ -271,11 +286,15 @@ export default function AdminRevenue() {
               {/* Phí đăng bài đơn vị */}
               <div className="admin-card admin-stat-card">
                 <div className="admin-stat-top">
-                  <div className="admin-stat-icon blue"><TrendingUp /></div>
+                  <div className="admin-stat-icon blue">
+                    <TrendingUp />
+                  </div>
                   <span className="admin-stat-trend up">SystemConfig</span>
                 </div>
                 <div className="admin-stat-title">Fee / post</div>
-                <div className="admin-stat-value">{formatCurrency(postingFee)}</div>
+                <div className="admin-stat-value">
+                  {formatCurrency(postingFee)}
+                </div>
               </div>
             </section>
 
@@ -292,10 +311,14 @@ export default function AdminRevenue() {
                   <div className="admin-chart-bar" key={`${bar.label}-${i}`}>
                     <div
                       className={`admin-chart-fill ${i === chartData.length - 1 ? "highlight" : ""}`}
-                      style={{ height: `${Math.max(bar.value, bar.count > 0 ? 4 : 0)}%` }}
+                      style={{
+                        height: `${Math.max(bar.value, bar.count > 0 ? 4 : 0)}%`,
+                      }}
                     >
                       {bar.count > 0 && (
-                        <span className={`admin-chart-tooltip ${i === chartData.length - 1 ? "show" : ""}`}>
+                        <span
+                          className={`admin-chart-tooltip ${i === chartData.length - 1 ? "show" : ""}`}
+                        >
                           {bar.count} posts · {bar.amount}
                         </span>
                       )}
@@ -314,9 +337,12 @@ export default function AdminRevenue() {
             <section className="admin-card admin-table-card">
               <div className="admin-card-header">
                 <div>
-                  <div className="admin-card-title">Posting history in period</div>
+                  <div className="admin-card-title">
+                    Posting history in period
+                  </div>
                   <div className="admin-card-subtitle">
-                    {recentPosts.length} most recent posts · Fee per post: {formatCurrency(postingFee)}
+                    {recentPosts.length} most recent posts · Fee per post:{" "}
+                    {formatCurrency(postingFee)}
                   </div>
                 </div>
               </div>
@@ -333,7 +359,9 @@ export default function AdminRevenue() {
                 {loading ? (
                   <div className="admin-table-empty">Loading...</div>
                 ) : recentPosts.length === 0 ? (
-                  <div className="admin-table-empty">No postings in this period yet.</div>
+                  <div className="admin-table-empty">
+                    No postings in this period yet.
+                  </div>
                 ) : (
                   recentPosts.map((row, idx) => (
                     <div className="admin-table-row" key={row.id ?? idx}>
@@ -342,8 +370,11 @@ export default function AdminRevenue() {
                       <div className="admin-rev-date">
                         {row.date
                           ? new Date(row.date).toLocaleString("en-US", {
-                              day: "2-digit", month: "2-digit", year: "numeric",
-                              hour: "2-digit", minute: "2-digit",
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
                             })
                           : "—"}
                       </div>
@@ -365,9 +396,7 @@ export default function AdminRevenue() {
                   ))
                 )}
               </div>
-
             </section>
-
           </div>
         </div>
       </div>

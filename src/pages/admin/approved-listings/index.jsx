@@ -240,9 +240,7 @@ export default function AdminApprovedListings() {
         <div className="admin-dashboard">
           <div className="admin-content">
             <header className="admin-topbar">
-              <h1 className="admin-page-title">
-                Marketplace listing overview
-              </h1>
+              <h1 className="admin-page-title">Marketplace listing overview</h1>
               <p className="admin-page-subtitle">
                 Full list of marketplace listings across all statuses.
               </p>
@@ -374,8 +372,8 @@ export default function AdminApprovedListings() {
                           title="Hide listing"
                           aria-label="Hide listing"
                           disabled={
-                            String(row.status ?? "").toUpperCase() === "HIDDEN" ||
-                            hidingId === row.id
+                            String(row.status ?? "").toUpperCase() ===
+                              "HIDDEN" || hidingId === row.id
                           }
                           onClick={(e) => {
                             e.stopPropagation();

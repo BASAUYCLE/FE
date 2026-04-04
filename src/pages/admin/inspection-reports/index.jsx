@@ -1,12 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import AdminLayout from "../../../components/layout/AdminLayout";
-import {
-  FileCheck2,
-  Eye,
-  CheckCircle2,
-  XCircle,
-  Clock,
-} from "lucide-react";
+import { FileCheck2, Eye, CheckCircle2, XCircle, Clock } from "lucide-react";
 import adminService from "../../../services/adminService";
 import adminPostService from "../../../services/adminPostService";
 import { formatCurrency } from "../../../utils/formatCurrency";
@@ -279,8 +273,8 @@ export default function AdminInspectionReports() {
               <div>
                 <h1 className="admin-page-title">Inspection history</h1>
                 <p className="admin-page-subtitle">
-                  Includes listings already reviewed and awaiting review by inspectors -{" "}
-                  {reports.length} reports
+                  Includes listings already reviewed and awaiting review by
+                  inspectors - {reports.length} reports
                 </p>
               </div>
             </header>
