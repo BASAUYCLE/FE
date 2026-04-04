@@ -22,7 +22,9 @@ function loadRejectionOnceMap() {
 function saveRejectionOnceMap(map) {
   try {
     localStorage.setItem(REJECTION_ONCE_KEY, JSON.stringify(map));
-  } catch (_) {}
+  } catch {
+    /* ignore persist errors */
+  }
 }
 
 /**
@@ -46,7 +48,7 @@ export function emitPostingStatusNotifications(p, prevStatusRaw, addNotification
   ) {
     addNotification({
       title: "Listing approved",
-      message: `"${name}" has been approved by admin and is awaiting inspection.`,
+      message: `"${name}" has been approved by admin and is queued for inspection. PASS/FAIL is determined from the submitted rubric, not chosen manually.`,
       type: "success",
     });
     return;
@@ -60,7 +62,7 @@ export function emitPostingStatusNotifications(p, prevStatusRaw, addNotification
   ) {
     addNotification({
       title: "Listing is live",
-      message: `"${name}" has passed inspection and is now on Marketplace.`,
+      message: `"${name}" completed inspection and is now visible on the Marketplace.`,
       type: "success",
     });
     return;

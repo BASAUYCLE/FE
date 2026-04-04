@@ -68,6 +68,9 @@ export default function AdminDashboard() {
       const pending = posts.filter(
         (p) => (p.postStatus ?? p.status) === "PENDING",
       ).length;
+      const queuedForInspection = posts.filter(
+        (p) => (p.postStatus ?? p.status) === "ADMIN_APPROVED",
+      ).length;
       const available = posts.filter(
         (p) => (p.postStatus ?? p.status) === "AVAILABLE",
       ).length;
@@ -127,6 +130,7 @@ export default function AdminDashboard() {
         pendingUsers: pendingU,
         totalPosts: posts.length,
         pendingPosts: pending,
+        queuedForInspection,
         availablePosts: available,
         depositedPosts: deposited,
         soldPosts: sold,
@@ -197,7 +201,7 @@ export default function AdminDashboard() {
           tone: "indigo",
           label: "Listings",
           value: stats.totalPosts,
-          sub: `${stats.pendingPosts} pending inspection · ${stats.availablePosts} on sale`,
+          sub: `${stats.pendingPosts} admin review · ${stats.queuedForInspection} inspection queue · ${stats.availablePosts} on sale`,
           href: "/admin-listings",
         },
         {

@@ -147,7 +147,7 @@ export default function PostingCard({ posting, onSubmitted }) {
                     if (!id) return;
                     const ok = await confirmCrud({
                       title: "Submit listing for review?",
-                      content: `Listing "${posting.bikeName ?? "this item"}" will be sent to admin/inspector for review.`,
+                      content: `Listing "${posting.bikeName ?? "this item"}" will be sent for admin review first. If approved, it joins the inspection queue (PASS/FAIL is system-calculated after scoring).`,
                       okText: "Submit",
                     });
                     if (!ok) return;
@@ -155,7 +155,7 @@ export default function PostingCard({ posting, onSubmitted }) {
                     try {
                       await postService.submitDraft(id);
                       message.success(
-                        "Submitted for review. Awaiting admin/inspector approval.",
+                        "Submitted for review. Awaiting admin approval, then inspection if accepted.",
                       );
                       onSubmitted?.();
                     } catch (err) {

@@ -14,14 +14,7 @@ import {
   Tooltip,
   Pagination,
 } from "antd";
-import {
-  Search,
-  Plus,
-  Pencil,
-  Trash2,
-  MoreVertical,
-  Send,
-} from "lucide-react";
+import { Search, Plus, Pencil, Trash2, MoreVertical, Send } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { usePostings } from "../../contexts/PostingContext";
@@ -71,8 +64,7 @@ function getStatusLabel(status) {
 export default function ManageListings() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { postings, updatePostingStatus, deletePosting, loadMyListings } =
-    usePostings();
+  const { postings, deletePosting, loadMyListings } = usePostings();
   const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState(TAB_KEYS.ALL);
   const [searchText, setSearchText] = useState("");
@@ -137,12 +129,11 @@ export default function ManageListings() {
         return ownerId == mySellerId;
       });
     }
-    if (activeTab === TAB_KEYS.ALL) {
-    } else {
+    if (activeTab !== TAB_KEYS.ALL) {
       list = list.filter((p) => p.status === activeTab);
     }
     return list;
-  }, [postings, activeTab]);
+  }, [postings, activeTab, sellerId]);
 
   const filteredBySearch = useMemo(() => {
     if (!searchText.trim()) return filteredByTab;
@@ -176,7 +167,7 @@ export default function ManageListings() {
     if (!id) return;
     const ok = await confirmCrud({
       title: "Submit this listing for review?",
-      content: `Listing "${record.bikeName ?? "this item"}" will be sent to admin/inspector for review.`,
+      content: `Listing "${record.bikeName ?? "this item"}" will be sent for admin review first. If approved, it joins the inspection queue (PASS/FAIL is system-calculated after scoring).`,
       okText: "Submit",
     });
     if (!ok) return;
@@ -185,7 +176,7 @@ export default function ManageListings() {
       await postService.submitDraft(id);
       addNotification({
         title: "Submitted for review",
-        message: `"${record.bikeName}" has been sent for admin/inspector approval.`,
+        message: `"${record.bikeName}" has been submitted for admin review (then inspection if approved).`,
         type: "success",
       });
       message.success("Draft submitted for review. Awaiting approval.");
@@ -326,7 +317,6 @@ export default function ManageListings() {
       key: "actions",
       width: 160,
       render: (_, record) => {
-        const isSold = record.status === POSTING_STATUS.SOLD;
         const isDraftRow = record.status === POSTING_STATUS.DRAFTED;
         const actionItems = [
           {
@@ -366,7 +356,7 @@ export default function ManageListings() {
               title="Edit"
             />
             {isDraft && (
-              <Tooltip title="Submit for review (admin/inspector will approve)">
+              <Tooltip title="Submit for review: admin approves content, then an inspector scores the bike; PASS/FAIL is automatic.">
                 <Button
                   type="primary"
                   size="small"

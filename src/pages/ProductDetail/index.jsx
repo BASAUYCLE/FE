@@ -513,7 +513,9 @@ export default function ProductDetail() {
     setApprovingId(postId);
     try {
       await adminPostService.approvePost(postId);
-      message.success("Listing approved. It is now pending inspection.");
+      message.success(
+        "Listing approved. It is queued for inspection (inspector scores; PASS/FAIL from the server).",
+      );
       navigate("/admin-listings");
     } catch (err) {
       const msg = err?.data?.message ?? err?.message ?? "Approve failed.";

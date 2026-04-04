@@ -63,7 +63,7 @@ export default function ListingApproval() {
     const name = row?.bicycleName ?? "—";
     const ok = await askConfirm({
       title: "Confirm listing approval?",
-      content: `Listing "${name}" will move to the inspection step (Inspector). This action takes effect immediately.`,
+      content: `Listing "${name}" will move to the inspection queue. An inspector submits the six-criterion rubric; the system derives PASS/FAIL and listing status.`,
       okText: "Approve",
     });
     if (!ok) return;
@@ -71,7 +71,7 @@ export default function ListingApproval() {
       setApprovingId(postId);
       await adminPostService.approvePost(postId);
       message.success(
-        "Content approved. Post is now pending Inspector verification.",
+        "Approved. Listing is queued for inspection (scores on submit; PASS/FAIL from the server).",
       );
       await fetchPending();
     } catch (err) {

@@ -208,7 +208,7 @@ export default function InspectorDetail() {
       setSubmitLoading(true);
       await inspectionService.submitInspection(postIdNum, payload);
       message.success(
-        "Inspection submitted. The server has computed PASS/FAIL and updated the listing.",
+        "Inspection submitted. The server applied the rubric and updated PASS/FAIL and listing status.",
       );
       setSubmitConfirmOpen(false);
       navigate("/inspector");
@@ -411,10 +411,11 @@ export default function InspectorDetail() {
                     Scoring rubric (6 criteria)
                   </h3>
                   <p className="inspection-scoring-intro">
-                    Each criterion must be <strong>0, 3, 7, or 10</strong>. The
-                    server calculates overall condition, PASS/FAIL, and listing
-                    status. Use low scores and notes to document a poor outcome
-                    — there is no separate &quot;reject&quot; API.
+                    Each criterion must be <strong>0, 3, 7, or 10</strong>. You
+                    only enter scores and optional notes—the backend derives
+                    overall condition, <strong>PASS/FAIL</strong>, and listing
+                    status. You cannot manually pick PASS/FAIL, and there is no
+                    separate reject-only action.
                   </p>
                   {!canSubmit && (
                     <Alert
@@ -500,7 +501,7 @@ export default function InspectorDetail() {
                           <strong>{preview.conditionPercent}%</strong>
                         </div>
                         <div className="inspection-preview-row">
-                          <span>Overall label (estimated)</span>
+                          <span>Overall band (preview)</span>
                           <strong>
                             {preview.overallCondition
                               ? (OVERALL_CONDITION_LABEL[
@@ -510,7 +511,7 @@ export default function InspectorDetail() {
                           </strong>
                         </div>
                         <div className="inspection-preview-row">
-                          <span>Expected result</span>
+                          <span>PASS/FAIL (preview)</span>
                           <strong
                             className={
                               preview.result === "PASS"
@@ -532,7 +533,8 @@ export default function InspectorDetail() {
                       </>
                     ) : (
                       <p className="inspection-preview-incomplete">
-                        Select a score for every criterion to see the preview.
+                        Enter all six scores to see the computed preview
+                        (official result still comes from the server on submit).
                       </p>
                     )}
                     {preview.warnings.length > 0 && (
@@ -599,11 +601,13 @@ export default function InspectorDetail() {
                 ))}
               </ul>
               <p>
-                Estimated: <strong>{preview.conditionPercent}%</strong> ·{" "}
+                Preview (non-binding):{" "}
+                <strong>{preview.conditionPercent}%</strong> ·{" "}
                 <strong>{preview.result}</strong>
                 {preview.overallCondition
                   ? ` · ${OVERALL_CONDITION_LABEL[preview.overallCondition] ?? preview.overallCondition}`
                   : ""}
+                . Final values are returned by the server.
               </p>
               {notes.trim() ? (
                 <p className="inspection-confirm-notes">
