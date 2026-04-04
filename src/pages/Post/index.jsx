@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Input, Select, Button, Upload, App, Alert } from "antd";
 import {
   InfoCircleOutlined,
@@ -1726,6 +1726,23 @@ export default function PostBike() {
               <p className="post-upload-subtitle">
                 Upload 6 images from the following angles (required)
               </p>
+              {!isFormReadOnly && (
+                <Alert
+                  type="info"
+                  showIcon
+                  className="post-photo-guide-alert"
+                  message="Photo standards"
+                  description={
+                    <span>
+                      See{" "}
+                      <Link to="/guide-bike-photos">bike photo guide</Link> for
+                      angles and <code>imageType</code> codes required by the
+                      server.
+                    </span>
+                  }
+                  style={{ marginBottom: 16 }}
+                />
+              )}
 
               <div className="required-photos-grid">
                 {requiredPhotoKeys.map(({ key, label, labelVi }) => (

@@ -21,6 +21,7 @@ const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const GuideBuy = lazy(() => import("./pages/GuideBuy"));
 const GuidePayment = lazy(() => import("./pages/GuidePayment"));
+const GuidePhotoUpload = lazy(() => import("./pages/GuidePhotoUpload"));
 const Shipping = lazy(() => import("./pages/Shipping"));
 const PaymentPolicy = lazy(() => import("./pages/PaymentPolicy"));
 const Complaint = lazy(() => import("./pages/Complaint"));
@@ -112,6 +113,10 @@ function App() {
                           <Route
                             path="/guide-payment"
                             element={<GuidePayment />}
+                          />
+                          <Route
+                            path="/guide-bike-photos"
+                            element={<GuidePhotoUpload />}
                           />
                           <Route path="/shipping" element={<Shipping />} />
                           <Route
