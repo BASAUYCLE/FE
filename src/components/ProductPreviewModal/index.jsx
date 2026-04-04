@@ -4,10 +4,10 @@ import axiosInstance from "../../services/axiosConfig";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { getAvatarSrc } from "../../utils/avatar";
 import {
-  calculateConditionPercent,
-  validateInspectionScores,
-  INSPECTION_SCORE_KEYS,
-} from "../../utils/inspectionScoring";
+  calcScore,
+  inspectionResponseHasUsableData,
+  normalizeInspection,
+} from "../../utils/inspectionReportNormalize";
 import { OVERALL_CONDITION_LABEL } from "../../constants/postingStatus";
 import "./index.css";
 
@@ -69,96 +69,6 @@ function normalizePost(row) {
     createdAt: row.createdAt ?? null,
     images: extractImages(row),
   };
-}
-
-/**
- * Chuẩn hóa payload báo cáo kiểm định từ API.
- * BE mới trả conditionPercent + 6 điểm (0/3/7/10); bản cũ chỉ có result / overallCondition / checklist.
- */
-function normalizeInspection(row) {
-  if (!row || typeof row !== "object") return null;
-
-  const cpRaw =
-    row.conditionPercent ?? row.condition_percent ?? row.condition_pct ?? null;
-  let conditionPercent = null;
-  if (typeof cpRaw === "number" && Number.isFinite(cpRaw)) {
-    conditionPercent = cpRaw;
-  } else if (cpRaw != null && String(cpRaw).trim() !== "") {
-    const n = Number(cpRaw);
-    if (Number.isFinite(n)) conditionPercent = n;
-  }
-
-  const scores = {};
-  for (const key of INSPECTION_SCORE_KEYS) {
-    const v = row[key];
-    if (v == null || v === "") continue;
-    const n = typeof v === "number" ? v : Number(v);
-    if (Number.isFinite(n)) scores[key] = n;
-  }
-
-  return {
-    result: row.result ?? row.inspectionResult ?? null,
-    condition: row.overallCondition ?? row.condition ?? null,
-    conditionPercent,
-    scores: Object.keys(scores).length > 0 ? scores : null,
-    checklist: row.checklist ?? null,
-  };
-}
-
-function inspectionResponseHasUsableData(ins) {
-  if (!ins) return false;
-  if (ins.result != null && ins.result !== "") return true;
-  if (ins.condition != null && ins.condition !== "") return true;
-  if (typeof ins.conditionPercent === "number") return true;
-  if (ins.scores && Object.keys(ins.scores).length > 0) return true;
-  if (Array.isArray(ins.checklist) && ins.checklist.length > 0) return true;
-  return false;
-}
-
-/**
- * % hiển thị trong modal: ưu tiên đúng thứ tự nguồn dữ liệu
- * 1) conditionPercent từ BE (sau submit rubric 6 tiêu chí)
- * 2) Tính lại từ đủ 6 điểm (0/3/7/10) nếu API chỉ trả scores
- * 3) Checklist legacy (good/fair/poor)
- * 4) Ước lượng thô từ overallCondition / PASS-FAIL
- */
-function calcScore(ins) {
-  if (!ins) return null;
-  const { result, condition, checklist, conditionPercent, scores } = ins;
-
-  if (
-    typeof conditionPercent === "number" &&
-    Number.isFinite(conditionPercent)
-  ) {
-    return Math.round(conditionPercent * 10) / 10;
-  }
-
-  if (scores && validateInspectionScores(scores).valid) {
-    const pct = calculateConditionPercent(scores);
-    return Number.isNaN(pct) ? null : Math.round(pct * 10) / 10;
-  }
-
-  if (Array.isArray(checklist) && checklist.length > 0) {
-    const items = checklist.flatMap((g) => g.items ?? []);
-    const valid = items.filter((i) => i?.status && i.status !== "n/a");
-    if (valid.length > 0) {
-      const score = valid.reduce((s, i) => {
-        if (i.status === "good") return s + 1;
-        if (i.status === "fair") return s + 0.6;
-        return s;
-      }, 0);
-      return Math.round((score / valid.length) * 100);
-    }
-  }
-
-  if (result === "FAIL") return 0;
-  const c = (condition ?? "").toLowerCase();
-  if (c === "excellent") return 95;
-  if (c === "good") return 90;
-  if (c === "fair") return 70;
-  if (c === "poor") return 50;
-  if (result === "PASS") return 80;
-  return null;
 }
 
 const STATUS_COLOR = {

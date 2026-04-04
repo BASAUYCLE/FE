@@ -28,8 +28,6 @@ export const productsById = {
       location: "Austin, TX",
       shippingEst: "$150",
     },
-    veloHealthScore: 98,
-    inspectedDate: "Oct 14, 2023",
     description: "Garage kept and meticulously cleaned. Verified mileage: 1,240 miles.",
     history: [
       {
@@ -43,15 +41,6 @@ export const productsById = {
         detail: "Acquired brand new from flagship concept store in Austin, TX.",
       },
     ],
-    inspection: {
-      condition: "Exemplary",
-      carbonFrame: "Pass",
-      drivetrainLife: "15% Used",
-      brakingPower: "100% Efficiency",
-      mechanicVerdict: "Immacuately maintained performance machine. Minor aesthetic scuff on crank arm, otherwise shop-floor condition.",
-      mechanic: "Marcus G., Senior Mechanic",
-      reportId: "#VM-99210-SL7",
-    },
   },
   2: {
     id: 2,
@@ -75,16 +64,8 @@ export const productsById = {
       location: "Portland, OR",
       shippingEst: "$120",
     },
-    veloHealthScore: 95,
-    inspectedDate: "Nov 2023",
     description: "Trail-ready with top-tier suspension. Low miles.",
     history: [],
-    inspection: {
-      condition: "Excellent",
-      carbonFrame: "Pass",
-      drivetrainLife: "25% Used",
-      brakingPower: "95% Efficiency",
-    },
   },
   3: {
     id: 3,
@@ -109,16 +90,8 @@ export const productsById = {
       location: "Denver, CO",
       shippingEst: "$100",
     },
-    veloHealthScore: 97,
-    inspectedDate: "Dec 2023",
     description: "Adventure-ready gravel bike. Carbon frame, Shimano GRX.",
     history: [],
-    inspection: {
-      condition: "Exemplary",
-      carbonFrame: "Pass",
-      drivetrainLife: "10% Used",
-      brakingPower: "100% Efficiency",
-    },
   },
   4: {
     id: 4,

@@ -9,6 +9,8 @@ import {
   Breadcrumbs,
   Avatar,
   IconButton,
+  Chip,
+  LinearProgress,
 } from "@mui/material";
 import {
   HeartOutlined,
@@ -18,7 +20,6 @@ import {
   SettingOutlined,
   ThunderboltOutlined,
   ZoomInOutlined,
-  DownloadOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
 import { message, Modal } from "antd";
@@ -39,7 +40,18 @@ import { getAvatarSrc, getAvatarInitial } from "../../utils/avatar";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
+  OVERALL_CONDITION_LABEL,
 } from "../../constants/postingStatus";
+import {
+  INSPECTION_CRITERIA_ROWS,
+  INSPECTION_SCORE_OPTIONS,
+} from "../../constants/inspectionRubric";
+import axiosInstance from "../../services/axiosConfig";
+import {
+  calcScore,
+  inspectionResponseHasUsableData,
+  normalizeInspection,
+} from "../../utils/inspectionReportNormalize";
 import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
@@ -247,6 +259,25 @@ function getProductDetailBadgeVariant(badgeLabel, postingStatus, isStaffView) {
   return "listed";
 }
 
+function inspectionScoreLabelEn(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "—";
+  const opt = INSPECTION_SCORE_OPTIONS.find((o) => o.value === n);
+  return opt?.labelEn ?? String(n);
+}
+
+/** @param {unknown} raw */
+function formatInspectionReportDate(raw) {
+  if (raw == null || raw === "") return null;
+  const d = raw instanceof Date ? raw : new Date(raw);
+  if (Number.isNaN(d.getTime())) return typeof raw === "string" ? raw : null;
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -271,6 +302,7 @@ export default function ProductDetail() {
   const [activeDisputeIdForPost, setActiveDisputeIdForPost] = useState(null);
   const [postFeedbacks, setPostFeedbacks] = useState([]);
   const [postFeedbacksLoading, setPostFeedbacksLoading] = useState(false);
+  const [inspectionReport, setInspectionReport] = useState(null);
 
   useEffect(() => {
     if (!id) return;
@@ -311,6 +343,38 @@ export default function ProductDetail() {
       .finally(() => {
         if (!cancelled) setPostFeedbacksLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    const postId = Number(id);
+    let cancelled = false;
+    (async () => {
+      if (!Number.isFinite(postId) || postId < 1) {
+        if (!cancelled) setInspectionReport(null);
+        return;
+      }
+      for (const url of [
+        `/inspection/${postId}/report`,
+        `/admin/inspection/${postId}`,
+        `/inspection/${postId}`,
+      ]) {
+        try {
+          const res = await axiosInstance.get(url);
+          const raw = res?.result ?? res?.data ?? res;
+          const ins = normalizeInspection(raw);
+          if (!cancelled && inspectionResponseHasUsableData(ins)) {
+            setInspectionReport(ins);
+            return;
+          }
+        } catch {
+          /* try next URL */
+        }
+      }
+      if (!cancelled) setInspectionReport(null);
+    })();
     return () => {
       cancelled = true;
     };
@@ -386,6 +450,13 @@ export default function ProductDetail() {
   const product = posting
     ? postingToProduct(posting)
     : getProductById(Number(id) || 0);
+
+  const showProInspectionReport =
+    inspectionReport != null &&
+    inspectionResponseHasUsableData(inspectionReport);
+  const inspectionConditionPct = showProInspectionReport
+    ? calcScore(inspectionReport)
+    : null;
 
   const images =
     product?.images || (product ? Array(6).fill(product.image) : []);
@@ -981,42 +1052,17 @@ export default function ProductDetail() {
                 </Box>
               </Box>
             )}
-
-            {product.veloHealthScore && (
-              <Box
-                sx={{
-                  p: 2,
-                  bgcolor: "rgba(0,204,173,0.1)",
-                  borderRadius: 2,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 2,
-                }}
-              >
-                <SafetyCertificateOutlined
-                  style={{ fontSize: 24, color: "#00ccad" }}
-                />
-                <Box>
-                  <Typography fontWeight={700} color="#00ccad">
-                    VeloHealth Score: {product.veloHealthScore}/100
-                  </Typography>
-                  <Typography variant="body2" color="#6b7280">
-                    Inspected on {product.inspectedDate}
-                  </Typography>
-                </Box>
-              </Box>
-            )}
           </Box>
         </Box>
 
         {/* <ProductDetailsSection /> */}
-        {/* Lower: 1 cột full width nếu không có inspection; 2 cột khi có Pro Inspection */}
+        {/* Lower: 2 cột khi có báo cáo kiểm định từ API */}
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: {
               xs: "1fr",
-              lg: product.inspection
+              lg: showProInspectionReport
                 ? "minmax(0, 1.15fr) minmax(0, 1fr)"
                 : "1fr",
             },
@@ -1283,149 +1329,192 @@ export default function ProductDetail() {
             </Box>
           </Box>
 
-          {/* <ProductInspectionReport /> */}
-          {/* Right column: Pro Inspection Report - dark card */}
-          {product.inspection && (
+          {/* Right column: Pro Inspection — chỉ khi API trả báo cáo (6 điểm / % / PASS-FAIL) */}
+          {showProInspectionReport && (
             <Box className="product-detail-inspection-card">
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 1,
                   mb: 2,
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <SafetyCertificateOutlined
                     style={{ color: "#00ccad", fontSize: 20 }}
                   />
                   <Typography variant="h6" fontWeight={700} color="#fff">
                     Pro Inspection Report
                   </Typography>
-                </Box>
-                <Typography variant="body2" color="rgba(255,255,255,0.7)">
-                  {product.inspection.reportId}
-                </Typography>
-              </Box>
-              <Box sx={{ display: "grid", gap: 2, mb: 2 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography variant="body2" color="rgba(255,255,255,0.8)">
-                    Overall Condition
-                  </Typography>
-                  <Typography fontWeight={600} color="#fff">
-                    {product.inspection.condition}
-                  </Typography>
-                </Box>
-                {product.inspection.carbonFrame && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography variant="body2" color="rgba(255,255,255,0.8)">
-                      Carbon Frame Integrity
-                    </Typography>
-                    <Typography fontWeight={600} color="#00ccad">
-                      ✔ {product.inspection.carbonFrame}
-                    </Typography>
-                  </Box>
-                )}
-                {product.inspection.drivetrainLife && (
-                  <Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mb: 0.5,
-                      }}
-                    >
-                      <Typography variant="body2" color="rgba(255,255,255,0.8)">
-                        Drivetrain Life
-                      </Typography>
-                      <Typography fontWeight={600} color="#fff">
-                        {product.inspection.drivetrainLife}
-                      </Typography>
-                    </Box>
-                    <Box
-                      sx={{
-                        height: 6,
-                        bgcolor: "rgba(255,255,255,0.2)",
-                        borderRadius: 1,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <Box
+                  {inspectionReport.result != null &&
+                    String(inspectionReport.result) !== "" && (
+                      <Chip
+                        size="small"
+                        label={String(inspectionReport.result).toUpperCase()}
                         sx={{
-                          width: product.inspection.drivetrainLife?.includes(
-                            "15%",
-                          )
-                            ? "85%"
-                            : "75%",
-                          height: "100%",
-                          bgcolor: "#00ccad",
-                          borderRadius: 1,
+                          fontWeight: 700,
+                          letterSpacing: "0.04em",
+                          bgcolor:
+                            String(inspectionReport.result).toUpperCase() ===
+                            "PASS"
+                              ? "rgba(16,185,129,0.25)"
+                              : "rgba(239,68,68,0.25)",
+                          color:
+                            String(inspectionReport.result).toUpperCase() ===
+                            "PASS"
+                              ? "#6ee7b7"
+                              : "#fca5a5",
+                          border: "1px solid rgba(255,255,255,0.15)",
                         }}
                       />
-                    </Box>
-                  </Box>
-                )}
-                {product.inspection.brakingPower && (
+                    )}
+                </Box>
+                <Typography variant="body2" color="rgba(255,255,255,0.7)">
+                  Report{" "}
+                  {inspectionReport.reportId != null
+                    ? `#${inspectionReport.reportId}`
+                    : `#${id}`}
+                </Typography>
+              </Box>
+
+              {formatInspectionReportDate(inspectionReport.inspectedAt) && (
+                <Typography
+                  variant="body2"
+                  color="rgba(255,255,255,0.65)"
+                  sx={{ mb: 2 }}
+                >
+                  Inspected on{" "}
+                  {formatInspectionReportDate(inspectionReport.inspectedAt)}
+                </Typography>
+              )}
+
+              {typeof inspectionConditionPct === "number" && (
+                <Box sx={{ mb: 2 }}>
                   <Box
                     sx={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
+                      mb: 0.75,
                     }}
                   >
                     <Typography variant="body2" color="rgba(255,255,255,0.8)">
-                      Braking Power
+                      Condition score
                     </Typography>
-                    <Typography fontWeight={600} color="#fff">
-                      {product.inspection.brakingPower}
+                    <Typography fontWeight={700} color="#fff">
+                      {inspectionConditionPct}%
                     </Typography>
                   </Box>
-                )}
-              </Box>
-              {product.inspection.mechanicVerdict && (
-                <Box
-                  sx={{
-                    p: 2,
-                    bgcolor: "rgba(255,255,255,0.08)",
-                    borderRadius: 2,
-                    mb: 2,
-                  }}
-                >
-                  <Typography variant="body2" color="rgba(255,255,255,0.7)">
-                    Mechanic's Verdict — {product.inspection.mechanic}
-                  </Typography>
-                  <Typography color="#fff" sx={{ mt: 1, fontStyle: "italic" }}>
-                    "{product.inspection.mechanicVerdict}"
-                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={Math.min(100, Math.max(0, inspectionConditionPct))}
+                    sx={{
+                      height: 8,
+                      borderRadius: 1,
+                      bgcolor: "rgba(255,255,255,0.15)",
+                      "& .MuiLinearProgress-bar": {
+                        borderRadius: 1,
+                        bgcolor:
+                          inspectionConditionPct >= 80
+                            ? "#10b981"
+                            : inspectionConditionPct >= 50
+                              ? "#d97706"
+                              : "#ef4444",
+                      },
+                    }}
+                  />
                 </Box>
               )}
-              <Button
-                variant="outlined"
-                startIcon={<DownloadOutlined />}
-                sx={{
-                  borderColor: "#00ccad",
-                  color: "#00ccad",
-                  "&:hover": {
-                    borderColor: "#00ccad",
-                    bgcolor: "rgba(0,204,173,0.1)",
-                  },
-                }}
-              >
-                Full 50-Point Checklist (PDF)
-              </Button>
+
+              {(() => {
+                const ck = String(
+                  inspectionReport.condition ?? "",
+                ).toUpperCase();
+                const condLabel =
+                  OVERALL_CONDITION_LABEL[ck] ??
+                  inspectionReport.condition ??
+                  null;
+                if (!condLabel) return null;
+                return (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      mb: 2,
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="body2" color="rgba(255,255,255,0.8)">
+                      Overall band
+                    </Typography>
+                    <Typography
+                      fontWeight={600}
+                      color="#fff"
+                      sx={{ textAlign: "right", maxWidth: "70%" }}
+                    >
+                      {condLabel}
+                    </Typography>
+                  </Box>
+                );
+              })()}
+
+              {inspectionReport.scores && (
+                <Box sx={{ display: "grid", gap: 0.5, mb: 1 }}>
+                  {INSPECTION_CRITERIA_ROWS.map((row) => {
+                    const s = inspectionReport.scores[row.key];
+                    if (s == null) return null;
+                    return (
+                      <Box
+                        key={row.key}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: 2,
+                          py: 0.75,
+                          borderBottom: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          color="rgba(255,255,255,0.75)"
+                          sx={{ flex: 1 }}
+                        >
+                          {row.labelEn}
+                          {row.critical ? (
+                            <Typography
+                              component="span"
+                              variant="caption"
+                              color="rgba(255,255,255,0.45)"
+                              sx={{ ml: 0.5 }}
+                            >
+                              (critical)
+                            </Typography>
+                          ) : null}
+                        </Typography>
+                        <Typography
+                          fontWeight={600}
+                          color="#00ccad"
+                          sx={{ textAlign: "right", whiteSpace: "nowrap" }}
+                        >
+                          {inspectionScoreLabelEn(s)}
+                        </Typography>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              )}
             </Box>
           )}
         </Box>
