@@ -1,6 +1,5 @@
 /**
- * Khớp BE: BicycleImageService.VALID_IMAGE_TYPES
- * (POST /images — multipart: postId, image, imageType, isThumbnail).
+ * Tiêu chí góc ảnh — đồng bộ với form đăng tin & quy tắc duyệt bài trên BASAUYCLE.
  */
 export const BICYCLE_PHOTO_CRITERIA = [
   {
@@ -49,6 +48,6 @@ export const BICYCLE_PHOTO_CRITERIA = [
     titleVi: "Điểm lỗi / trầy xước (tùy chọn)",
     titleEn: "Defects / scratches (optional)",
     hintVi:
-      "Mỗi ảnh một vị trí cần minh bạch (trầy sơn, móp, nứt carbon…). BE cho phép nhiều ảnh loại này.",
+      "Mỗi ảnh một vị trí cần minh bạch (trầy sơn, móp, nứt carbon…). Có thể tải nhiều ảnh cho các vết khác nhau.",
   },
 ];

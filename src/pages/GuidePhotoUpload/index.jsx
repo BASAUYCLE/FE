@@ -48,48 +48,38 @@ export default function GuidePhotoUpload() {
           <Typography
             sx={{ textAlign: "center", color: "#64748b", fontSize: 15, mb: 4 }}
           >
-            Tiêu chí khớp hệ thống kiểm duyệt: mỗi ảnh gửi lên server phải dùng
-            đúng <strong>imageType</strong> mà backend chấp nhận (xem bảng bên
-            dưới).
+            Giúp người mua và bộ phận kiểm duyệt nhìn rõ tình trạng xe. Vui lòng
+            chuẩn bị đủ các góc ảnh theo bảng bên dưới trước khi đăng tin.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            1. Cách hệ thống nhận ảnh (API)
+            1. Vì sao cần đủ góc ảnh?
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            Sau khi tạo bài đăng, từng file được gửi lên{" "}
-            <Box
-              component="code"
-              sx={{
-                bgcolor: "#e2e8f0",
-                px: 0.75,
-                py: 0.25,
-                borderRadius: 1,
-                fontSize: 13,
-              }}
-            >
-              POST /images
-            </Box>{" "}
-            dạng <strong>multipart/form-data</strong> với các trường:{" "}
-            <code>postId</code>, <code>image</code> (file),{" "}
-            <code>imageType</code> (một trong các mã trong bảng), và{" "}
-            <code>isThumbnail</code> (true/false — thường chỉ một ảnh đại diện).
+            BASAUYCLE là sàn giao dịch có quy trình duyệt bài và (khi cần) kiểm
+            định. Ảnh đúng chuẩn giúp <strong>minh bạch tình trạng xe</strong>,
+            giảm tranh chấp sau này và rút ngắn thời gian xử lý tin đăng của
+            bạn.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Backend chỉ chấp nhận đúng các giá trị <code>imageType</code> đã
-            định nghĩa; giá trị khác sẽ bị từ chối. Ảnh được lưu qua dịch vụ lưu
-            trữ ảnh (Cloudinary), định dạng phải là <strong>ảnh hợp lệ</strong>,
-            file không được để trống.
+            Ảnh tải lên cần là <strong>file hình</strong> (ví dụ JPG, PNG), rõ
+            nét; mỗi ô bắt buộc trên form phải có ít nhất một ảnh. Một ảnh toàn
+            cảnh bên đùi đạp thường được dùng làm ảnh đại diện hiển thị trên
+            chợ.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            2. Bảng tiêu chí góc chụp (imageType)
+            2. Các góc ảnh cần có
+          </Typography>
+          <Typography sx={{ color: "#64748b", fontSize: 13, mb: 1.5 }}>
+            Sáu góc đầu là bắt buộc; phần mô tả lỗi / trầy xước là tùy chọn
+            nhưng nên có nếu xe có vết hư hỏng.
           </Typography>
           <TableContainer
             component={Paper}
@@ -99,30 +89,36 @@ export default function GuidePhotoUpload() {
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: "#f1f5f9" }}>
-                  <TableCell sx={{ fontWeight: 700 }}>Mã BE</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Mô tả</TableCell>
+                  <TableCell sx={{ fontWeight: 700, minWidth: 160 }}>
+                    Góc ảnh
+                  </TableCell>
                   <TableCell sx={{ fontWeight: 700 }}>Gợi ý chụp</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {BICYCLE_PHOTO_CRITERIA.map((row) => (
                   <TableRow key={row.code}>
-                    <TableCell>
+                    <TableCell sx={{ fontSize: 14, verticalAlign: "top" }}>
+                      <strong>{row.titleVi}</strong>
                       <Box
-                        component="code"
-                        sx={{ fontSize: 12, wordBreak: "break-all" }}
+                        component="span"
+                        sx={{
+                          display: "block",
+                          color: "#64748b",
+                          fontSize: 13,
+                          mt: 0.25,
+                        }}
                       >
-                        {row.code}
+                        {row.titleEn}
                       </Box>
                     </TableCell>
-                    <TableCell sx={{ fontSize: 14 }}>
-                      <strong>{row.titleVi}</strong>
-                      <br />
-                      <span style={{ color: "#64748b", fontSize: 13 }}>
-                        {row.titleEn}
-                      </span>
-                    </TableCell>
-                    <TableCell sx={{ color: "#4b5563", fontSize: 14 }}>
+                    <TableCell
+                      sx={{
+                        color: "#4b5563",
+                        fontSize: 14,
+                        verticalAlign: "top",
+                      }}
+                    >
                       {row.hintVi}
                     </TableCell>
                   </TableRow>
@@ -150,8 +146,8 @@ export default function GuidePhotoUpload() {
             </li>
             <li>Giữ nguyên tỷ lệ xe — tránh méo do filter quá mức.</li>
             <li>
-              Với <strong>DEFECT_POINT</strong>: chụp cận, có thể kèm mô tả
-              trong phần mô tả bài đăng.
+              Với ảnh <strong>trầy xước / lỗi</strong>: chụp cận từng vị trí, có
+              thể ghi thêm trong phần mô tả bài đăng.
             </li>
           </Typography>
 
@@ -159,15 +155,16 @@ export default function GuidePhotoUpload() {
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            4. Trên form đăng tin
+            4. Khi đăng tin trên website
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Trang{" "}
+            Vào mục{" "}
             <Link to="/post" style={{ color: "#0d9488", fontWeight: 600 }}>
-              Post a Bike
-            </Link>{" "}
-            đã map sẵn 6 ô bắt buộc và ảnh lỗi tùy chọn đúng các mã trên. Bạn
-            chỉ cần chọn đúng ô tương ứng với góc chụp.
+              Đăng bán xe
+            </Link>
+            , bạn sẽ thấy từng ô upload tương ứng với các góc ảnh ở bảng trên —
+            chỉ cần chọn đúng ảnh cho đúng ô. Ô ảnh lỗi là tùy chọn nhưng nên
+            điền nếu có hư hỏng cần công khai.
           </Typography>
 
           <Box sx={{ textAlign: "center", mt: 2 }}>
