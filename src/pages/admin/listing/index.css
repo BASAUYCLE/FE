@@ -325,6 +325,10 @@
   color: #f59e0b;
 }
 
+.queue-inspection.processing {
+  color: #1abc9c;
+}
+
 .queue-inspection svg {
   width: 14px;
   height: 14px;
