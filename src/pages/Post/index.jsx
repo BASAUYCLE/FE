@@ -157,7 +157,8 @@ export default function PostBike() {
     },
     {
       value: "Disc Brake (Hydraulic)",
-      label: "Hydraulic Disc Brake (Modern standard for Trek/Specialized/Giant)",
+      label:
+        "Hydraulic Disc Brake (Modern standard for Trek/Specialized/Giant)",
     },
     {
       value: "Disc Brake (Mechanical)",
@@ -203,9 +204,9 @@ export default function PostBike() {
   // Section IDs for scroll detection
   const sectionIds = [
     "basic-info",
+    "pricing",
     "technical-specs",
     "photos-videos",
-    "pricing",
   ];
 
   // Phí đăng tin (cấu hình admin) — hiển thị cho member khi đăng bài
@@ -594,6 +595,11 @@ export default function PostBike() {
       completed.push(0);
     }
 
+    // Pricing: price entered
+    if (price.trim()) {
+      completed.push(1);
+    }
+
     // Technical Specs: frameSize + frameMaterial + groupset + brakeType + modelYear + color + description
     if (
       frameSize.trim() &&
@@ -604,16 +610,11 @@ export default function PostBike() {
       color.trim() &&
       description.trim()
     ) {
-      completed.push(1);
+      completed.push(2);
     }
 
     // Photos: all 6 required slots filled
     if (allRequiredPhotosFilled) {
-      completed.push(2);
-    }
-
-    // Pricing: price entered
-    if (price.trim()) {
       completed.push(3);
     }
 
@@ -1599,6 +1600,29 @@ export default function PostBike() {
               </div>
             </div>
 
+            {/* <PostPricingSection /> */}
+            {/* Pricing — giữa Basic Information và Technical Specifications */}
+            <div id="pricing" className="form-section">
+              <div className="section-content">
+                <div className="section-title-row">
+                  <CreditCardOutlined className="section-icon-teal" />
+                  <h2 className="section-title">Pricing</h2>
+                </div>
+
+                <div className="form-field price-field">
+                  <label className="field-label">Sale Price (VND)</label>
+                  <Input
+                    placeholder="0.00"
+                    size="large"
+                    className="field-input"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    disabled={isFormReadOnly}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* <PostTechnicalSpecsSection /> */}
             {/* Technical Specifications */}
             <div id="technical-specs" className="form-section">
@@ -1734,10 +1758,9 @@ export default function PostBike() {
                   message="Photo standards"
                   description={
                     <span>
-                      See{" "}
-                      <Link to="/guide-bike-photos">bike photo guide</Link> for
-                      angles and <code>imageType</code> codes required by the
-                      server.
+                      See <Link to="/guide-bike-photos">bike photo guide</Link>{" "}
+                      for angles and <code>imageType</code> codes required by
+                      the server.
                     </span>
                   }
                   style={{ marginBottom: 16 }}
@@ -1788,29 +1811,6 @@ export default function PostBike() {
                       <div className="upload-text">Add photo</div>
                     </div>
                   </Upload>
-                </div>
-              </div>
-            </div>
-
-            {/* <PostPricingSection /> */}
-            {/* Pricing */}
-            <div id="pricing" className="form-section">
-              <div className="section-content">
-                <div className="section-title-row">
-                  <CreditCardOutlined className="section-icon-teal" />
-                  <h2 className="section-title">Pricing</h2>
-                </div>
-
-                <div className="form-field price-field">
-                  <label className="field-label">Sale Price (VND)</label>
-                  <Input
-                    placeholder="0.00"
-                    size="large"
-                    className="field-input"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    disabled={isFormReadOnly}
-                  />
                 </div>
               </div>
             </div>
