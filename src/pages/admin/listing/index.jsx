@@ -13,6 +13,7 @@ import AdminLayout from "../../../components/layout/AdminLayout";
 import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import { adminPostService } from "../../../services";
 import {
+  POSTING_STATUS,
   POSTING_STATUS_LABEL,
   POSTING_STATUS_TAG_COLOR,
 } from "../../../constants/postingStatus";
@@ -254,7 +255,11 @@ export default function ListingApproval() {
                       <div>{formatDate(row.createdAt) || "—"}</div>
                       <div>
                         <span
-                          className={`queue-inspection ${(POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()}`}
+                          className={`queue-inspection ${
+                            status === POSTING_STATUS.PROCESSING
+                              ? "processing"
+                              : (POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()
+                          }`}
                         >
                           <FileCheck2 />
                           {POSTING_STATUS_LABEL[status] ?? status}
