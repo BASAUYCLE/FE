@@ -24,13 +24,13 @@ export default function Footer() {
             />
             <span className="app-footer-logo-text">BASAUYCLE</span>
           </Link>
-          <p className="app-footer-tagline">
-          REPUTABLE BICYCLE MARKETPLACE
-
-          </p>
+          <p className="app-footer-tagline">REPUTABLE BICYCLE MARKETPLACE</p>
           <div className="app-footer-contact">
-            <div><strong>Hotline:</strong> 0387.687.323</div>
-            <div><strong>Email:</strong>contact.basaucycle2026@gmail.com
+            <div>
+              <strong>Hotline:</strong> 0387.687.323
+            </div>
+            <div>
+              <strong>Email:</strong>contact.basaucycle2026@gmail.com
             </div>
           </div>
           <div className="app-footer-intro">
@@ -120,7 +120,7 @@ export default function Footer() {
         {/* Block 4: Phương thức thanh toán (đặt cạnh cột Chính sách) */}
         <div className="app-footer-col app-footer-payment-col">
           <h3 className="app-footer-title app-footer-title--nowrap">
-          Payment Methods
+            Payment Methods
           </h3>
           <div className="app-footer-payment-methods app-footer-payment-methods--inline">
             <div className="app-footer-payment-item">
@@ -134,9 +134,9 @@ export default function Footer() {
       <div className="app-footer-bottom-wrap">
         <div className="app-footer-inner app-footer-bottom-inner">
           <div className="app-footer-bottom-text">
-            © 2026 BASAUYCLE. All rights reserved. By accessing and using BASAUYCLE’s content and services, you agree to be bound by our{" "}
-            <strong>Terms of Use</strong> and{" "}
-            <strong>Privacy Policy.</strong>
+            © 2026 BASAUYCLE. All rights reserved. By accessing and using
+            BASAUYCLE’s content and services, you agree to be bound by our{" "}
+            <strong>Terms of Use</strong> and <strong>Privacy Policy.</strong>
           </div>
         </div>
       </div>
