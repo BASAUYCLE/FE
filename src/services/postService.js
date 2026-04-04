@@ -21,10 +21,6 @@ const postService = {
   getPostsBySeller: (sellerId) =>
     axiosInstance.get(E.POSTS.BY_SELLER(sellerId)),
 
-  // GET /posts/status/{status} - Bài đăng theo status
-  getPostsByStatus: (status) =>
-    axiosInstance.get(E.POSTS.BY_STATUS(status)),
-
   // GET /posts/search?minPrice=&maxPrice= - Tìm kiếm theo giá
   searchPostsByPrice: (minPrice, maxPrice) =>
     axiosInstance.get(E.POSTS.SEARCH_BY_PRICE, {

@@ -58,7 +58,6 @@ export const API_ENDPOINTS = {
     BY_BRAND: (brandId) => `/posts/brand/${brandId}`,
     BY_CATEGORY: (categoryId) => `/posts/category/${categoryId}`,
     BY_SIZE: (size) => `/posts/size/${encodeURIComponent(size)}`,
-    BY_STATUS: (status) => `/posts/status/${status}`,
     SEARCH_BY_PRICE: "/posts/search",
   },
 
@@ -89,8 +88,6 @@ export const API_ENDPOINTS = {
   INSPECTION: {
     PENDING: "/inspection/pending",
     SUBMIT: (postId) => `/inspection/${postId}/submit`,
-    COMPLETED: "/inspection/completed",
-    REPORT: (postId) => `/inspection/${postId}/report`,
   },
 
   /** Disputes – BE: DisputeController @ /disputes */
@@ -226,7 +223,6 @@ export const API_ENDPOINTS = {
     BOOKINGS: '/admin/bookings',
     REPORTS: '/admin/reports',
     STATS: '/admin/stats',
-    REVENUE_STATS: (period) => `/admin/stats/revenue?period=${period}`,
     INSPECTION_REPORTS: '/admin/inspection/reports',
     TRANSACTIONS: '/admin/transactions',
     /** POST — approve pending WITHDRAW */

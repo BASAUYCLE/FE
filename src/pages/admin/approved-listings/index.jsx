@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { message } from "antd";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import {
   Eye,
-  MoreHorizontal,
+  EyeOff,
   Filter,
   ChevronDown,
   Check,
@@ -81,6 +82,7 @@ function categoryOptionLabel(c) {
 }
 
 export default function AdminApprovedListings() {
+  const askConfirm = useConfirmCrud();
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -158,6 +160,29 @@ export default function AdminApprovedListings() {
   useEffect(() => {
     fetchListings();
   }, [fetchListings]);
+
+  const handleHideListing = async (row) => {
+    const id = row?.id;
+    if (id == null) return;
+    const title = row?.title ?? "this listing";
+    const ok = await askConfirm({
+      title: "Hide listing?",
+      content: `"${title}" (#${id}) will be marked HIDDEN on the marketplace.`,
+      okText: "Hide",
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      setHidingId(id);
+      await adminPostService.hidePost(id);
+      message.success("Listing hidden.");
+      await fetchListings();
+    } catch (e) {
+      message.error(e?.message ?? "Could not hide listing.");
+    } finally {
+      setHidingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -346,10 +371,18 @@ export default function AdminApprovedListings() {
                         <button
                           type="button"
                           className="admin-actions-button"
-                          title="More"
-                          aria-label="More"
+                          title="Hide listing"
+                          aria-label="Hide listing"
+                          disabled={
+                            String(row.status ?? "").toUpperCase() === "HIDDEN" ||
+                            hidingId === row.id
+                          }
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleHideListing(row);
+                          }}
                         >
-                          <MoreHorizontal aria-hidden {...LUCIDE_TABLE_ACTION} />
+                          <EyeOff aria-hidden {...LUCIDE_TABLE_ACTION} />
                         </button>
                       </div>
                     </div>

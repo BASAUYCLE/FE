@@ -159,6 +159,7 @@ const authService = {
 
   forgotPassword: (email) => axiosInstance.post(API_ENDPOINTS.AUTH.FORGOT_PASSWORD, { email }),
   resetPassword: (resetData) => axiosInstance.post(API_ENDPOINTS.AUTH.RESET_PASSWORD, resetData),
+  /** BE có thể chưa có POST /auth/change-password — gọi từ UI có thể 404. */
   changePassword: (passwordData) => axiosInstance.post(API_ENDPOINTS.AUTH.CHANGE_PASSWORD, passwordData),
 
   /** POST /auth/introspect — `{ token }` hoặc dùng token hiện tại từ session */

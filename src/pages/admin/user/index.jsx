@@ -160,9 +160,6 @@ export default function UserManagement() {
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [userToReject, setUserToReject] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
-  const [hideModalOpen, setHideModalOpen] = useState(false);
-  const [userToHide, setUserToHide] = useState(null);
-  const [hideReason, setHideReason] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [page, setPage] = useState(1);
   const [emailLookupOpen, setEmailLookupOpen] = useState(false);
@@ -299,52 +296,6 @@ export default function UserManagement() {
         err?.data?.message ??
         err?.data?.msg ??
         "Rejection failed. Please try again.";
-      message.error(msg);
-    } finally {
-      setVerifyingId(null);
-    }
-  };
-
-  const handleHide = (user) => {
-    setUserToHide(user);
-    setHideReason("");
-    setHideModalOpen(true);
-  };
-
-  const handleHideConfirm = async () => {
-    const user = userToHide;
-    const id = user?.id;
-    if (id == null) return;
-    const reason = hideReason.trim();
-    if (!reason) {
-      message.warning("Please enter a reason for hiding this account.");
-      return;
-    }
-    const ok = await confirmCrud({
-      title: "Hide account?",
-      content: `User ${user.email} will not be able to sign in. A notification email will be sent.`,
-      okText: "Confirm hide",
-      danger: true,
-    });
-    if (!ok) return;
-    setVerifyingId(id);
-    try {
-      // Send hide email via API with reason and block login
-      await userService.hideUser(id, reason);
-      message.success(
-        `Account ${user.email} has been hidden. User cannot login. Notification email sent.`,
-      );
-      setHideModalOpen(false);
-      setUserToHide(null);
-      setHideReason("");
-      await fetchUsers();
-    } catch (err) {
-      const msg =
-        err?.message ??
-        err?.response?.data?.message ??
-        err?.data?.message ??
-        err?.data?.msg ??
-        "Hide account failed. Please try again.";
       message.error(msg);
     } finally {
       setVerifyingId(null);
@@ -559,9 +510,9 @@ export default function UserManagement() {
                             },
                             {
                               key: "hide",
-                              label: "Hide account",
+                              label: "Hide account (not on API yet)",
                               danger: true,
-                              onClick: () => handleHide(user),
+                              disabled: true,
                             },
                             {
                               key: "delete",
@@ -734,46 +685,6 @@ export default function UserManagement() {
             placeholder="e.g., CCCD images are not clear, Invalid ID card, etc."
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            rows={4}
-            maxLength={500}
-            showCount
-          />
-        </div>
-      </Modal>
-
-      <Modal
-        title="Hide User Account"
-        open={hideModalOpen}
-        onCancel={() => {
-          setHideModalOpen(false);
-          setUserToHide(null);
-          setHideReason("");
-        }}
-        onOk={handleHideConfirm}
-        okText="Hide Account"
-        okType="primary"
-        cancelText="Cancel"
-        okButtonProps={{ loading: verifyingId === userToHide?.id }}
-        destroyOnHidden
-      >
-        <div style={{ marginBottom: 16 }}>
-          <p style={{ marginBottom: 8, color: "#64748b" }}>
-            Are you sure you want to hide <strong>{userToHide?.email}</strong>?
-          </p>
-          <p style={{ marginBottom: 16, color: "#64748b" }}>
-            They will receive an email notification with your reason. Their
-            account will be hidden and they cannot login. The account will not
-            be deleted.
-          </p>
-        </div>
-        <div style={{ marginBottom: 18 }}>
-          <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>
-            Hide Reason <span style={{ color: "#ef4444" }}>*</span>
-          </label>
-          <Input.TextArea
-            placeholder="e.g., Suspicious activity, Policy violation, etc."
-            value={hideReason}
-            onChange={(e) => setHideReason(e.target.value)}
             rows={4}
             maxLength={500}
             showCount

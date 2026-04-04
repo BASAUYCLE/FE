@@ -4,10 +4,6 @@ import { API_ENDPOINTS } from "../config/api";
 const ADMIN = API_ENDPOINTS.ADMIN;
 
 const adminService = {
-  /** Revenue stats: period week | month | quarter */
-  getRevenueStats: (period = "week") =>
-    axiosInstance.get(ADMIN.REVENUE_STATS(period)),
-
   /** Inspection reports (admin) */
   getInspectionReports: (params = {}) =>
     axiosInstance.get(ADMIN.INSPECTION_REPORTS, { params }),

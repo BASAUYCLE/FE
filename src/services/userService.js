@@ -66,8 +66,7 @@ const userService = {
       reason: reason || undefined,
     }),
 
-  // POST /admin/users/hide - Ẩn/Khóa tài khoản user
-  // BE contract: { userId, reason }
+  // POST /admin/users/hide — FE gọi sẵn; BE BASAUYCLE/BE chưa có endpoint này (tránh bật UI cho đến khi BE thêm).
   hideUser: (userId, reason) =>
     axiosInstance.post(ADMIN.HIDE_USER, {
       userId,

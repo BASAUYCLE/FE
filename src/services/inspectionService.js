@@ -11,14 +11,6 @@ const inspectionService = {
   // POST /inspection/{postId}/submit - Nộp kết quả kiểm định
   submitInspection: (postId, payload) =>
     axiosInstance.post(ENDPOINTS.SUBMIT(postId), payload),
-
-  // GET /inspection/{postId}/report - Chi tiết báo cáo kiểm định
-  getInspectionReport: (postId) =>
-    axiosInstance.get(ENDPOINTS.REPORT(postId)),
-
-  // GET /inspection/completed - Danh sách kiểm định đã hoàn thành
-  getCompletedInspections: (params = {}) =>
-    axiosInstance.get(ENDPOINTS.COMPLETED, { params }),
 };
 
 export default inspectionService;

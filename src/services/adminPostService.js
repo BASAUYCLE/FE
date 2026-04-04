@@ -27,10 +27,6 @@ const adminPostService = {
   // PUT /admin/posts/{postId}/hide - Ẩn bài đăng
   hidePost: (postId) =>
     axiosInstance.put(ENDPOINTS.HIDE(postId)),
-
-  // GET /admin/posts/approval-history - Lịch sử inspector duyệt bài
-  getApprovalHistory: () =>
-    axiosInstance.get(ENDPOINTS.APPROVAL_HISTORY),
 };
 
 export default adminPostService;
