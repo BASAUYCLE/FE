@@ -57,6 +57,8 @@ export function normalizeInspection(row) {
       row.completed_at ??
       row.updatedAt ??
       row.updated_at ??
+      row.createdAt ??
+      row.created_at ??
       null,
     result: row.result ?? row.inspectionResult ?? null,
     condition: row.overallCondition ?? row.condition ?? null,

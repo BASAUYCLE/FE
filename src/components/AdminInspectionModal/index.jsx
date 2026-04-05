@@ -1,13 +1,11 @@
 import { useState, useEffect } from "react";
 import { Modal, Spin } from "antd";
 import { ClipboardList } from "lucide-react";
-import axiosInstance from "../../services/axiosConfig";
-import adminService from "../../services/adminService";
 import {
   calcScore,
   inspectionResponseHasUsableData,
-  normalizeInspection,
 } from "../../utils/inspectionReportNormalize";
+import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
 import { OVERALL_CONDITION_LABEL } from "../../constants/postingStatus";
 import {
   INSPECTION_CRITERIA_ROWS,
@@ -55,43 +53,6 @@ function conditionGaugeArcColor(pct) {
   return `hsl(${hue} ${sat}% ${light}%)`;
 }
 
-/** Giống trang admin Inspection history — BE trả list trong result/data/content. */
-function parseInspectionReportsList(res) {
-  const raw = res?.result ?? res?.data ?? res;
-  if (Array.isArray(raw)) return raw;
-  if (Array.isArray(raw?.content)) return raw.content;
-  if (Array.isArray(raw?.reports)) return raw.reports;
-  if (Array.isArray(raw?.data)) return raw.data;
-  return [];
-}
-
-function reportRowPostId(row) {
-  return (
-    row?.postId ??
-    row?.bicyclePostId ??
-    row?.post?.postId ??
-    row?.post?.id ??
-    null
-  );
-}
-
-/** Bản ghi mới nhất cho post (theo createdAt / inspectedAt). */
-function pickLatestReportRowForPost(rows, targetPostId) {
-  const key = String(targetPostId);
-  let best = null;
-  let bestTs = -Infinity;
-  for (const row of rows) {
-    const pid = reportRowPostId(row);
-    if (pid == null || String(pid) !== key) continue;
-    const ts = new Date(row?.createdAt ?? row?.inspectedAt ?? 0).getTime();
-    if (!best || ts >= bestTs) {
-      best = row;
-      bestTs = ts;
-    }
-  }
-  return best;
-}
-
 /**
  * Admin: xem Score Rubric (6 tiêu chí) inspector đã nộp — cùng API với ProductPreviewModal.
  */
@@ -115,40 +76,8 @@ export default function AdminInspectionModal({
       setInspection(null);
     });
     (async () => {
-      let found = null;
       try {
-        for (const url of [
-          `/inspection/${postId}/report`,
-          `/admin/inspection/${postId}`,
-          `/inspection/${postId}`,
-        ]) {
-          if (cancelled) return;
-          try {
-            const res = await axiosInstance.get(url);
-            const raw = res?.result ?? res?.data ?? res;
-            const ins = normalizeInspection(raw);
-            if (inspectionResponseHasUsableData(ins)) {
-              found = ins;
-              break;
-            }
-          } catch {
-            /* try next */
-          }
-        }
-        /* BE thường chỉ trả báo cáo admin qua GET /admin/inspection/reports (list). */
-        if (!found && !cancelled) {
-          try {
-            const res = await adminService.getInspectionReports();
-            const rows = parseInspectionReportsList(res);
-            const row = pickLatestReportRowForPost(rows, postId);
-            if (row) {
-              const ins = normalizeInspection(row);
-              if (inspectionResponseHasUsableData(ins)) found = ins;
-            }
-          } catch {
-            /* ignore */
-          }
-        }
+        const found = await fetchInspectionReportForPost(postId);
         if (!cancelled) setInspection(found);
       } finally {
         if (!cancelled) setLoading(false);
@@ -302,9 +231,7 @@ export default function AdminInspectionModal({
                   const n = Number(s);
                   const opt = inspectionScoreOption(s);
                   const tier =
-                    Number.isFinite(n) && [0, 3, 7, 10].includes(n)
-                      ? n
-                      : "na";
+                    Number.isFinite(n) && [0, 3, 7, 10].includes(n) ? n : "na";
                   return (
                     <li
                       key={row.key}
@@ -357,7 +284,9 @@ export default function AdminInspectionModal({
                 Inspector notes
               </h3>
               <div className="admin-inspection-modal__notes-panel">
-                <p className="admin-inspection-modal__notes-text">{notesText}</p>
+                <p className="admin-inspection-modal__notes-text">
+                  {notesText}
+                </p>
               </div>
             </section>
           ) : null}

@@ -47,12 +47,11 @@ import {
   INSPECTION_CRITICAL_CRITERIA_KEYS,
   INSPECTION_SCORE_OPTIONS,
 } from "../../constants/inspectionRubric";
-import axiosInstance from "../../services/axiosConfig";
 import {
   calcScore,
   inspectionResponseHasUsableData,
-  normalizeInspection,
 } from "../../utils/inspectionReportNormalize";
+import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
 import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
@@ -357,24 +356,16 @@ export default function ProductDetail() {
         if (!cancelled) setInspectionReport(null);
         return;
       }
-      for (const url of [
-        `/inspection/${postId}/report`,
-        `/admin/inspection/${postId}`,
-        `/inspection/${postId}`,
-      ]) {
-        try {
-          const res = await axiosInstance.get(url);
-          const raw = res?.result ?? res?.data ?? res;
-          const ins = normalizeInspection(raw);
-          if (!cancelled && inspectionResponseHasUsableData(ins)) {
-            setInspectionReport(ins);
-            return;
-          }
-        } catch {
-          /* try next URL */
+      try {
+        const ins = await fetchInspectionReportForPost(postId);
+        if (!cancelled) {
+          setInspectionReport(
+            ins && inspectionResponseHasUsableData(ins) ? ins : null,
+          );
         }
+      } catch {
+        if (!cancelled) setInspectionReport(null);
       }
-      if (!cancelled) setInspectionReport(null);
     })();
     return () => {
       cancelled = true;

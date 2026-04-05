@@ -3,11 +3,8 @@ import { Modal, Tag, Spin } from "antd";
 import axiosInstance from "../../services/axiosConfig";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { getAvatarSrc } from "../../utils/avatar";
-import {
-  calcScore,
-  inspectionResponseHasUsableData,
-  normalizeInspection,
-} from "../../utils/inspectionReportNormalize";
+import { calcScore } from "../../utils/inspectionReportNormalize";
+import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
 import { OVERALL_CONDITION_LABEL } from "../../constants/postingStatus";
 import "./index.css";
 
@@ -135,23 +132,8 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
             /* thử tiếp */
           }
         }
-        for (const url of [
-          `/inspection/${postId}/report`,
-          `/admin/inspection/${postId}`,
-          `/inspection/${postId}`,
-        ]) {
-          try {
-            const res = await axiosInstance.get(url);
-            const raw = res?.result ?? res?.data ?? res;
-            const ins = normalizeInspection(raw);
-            if (inspectionResponseHasUsableData(ins)) {
-              setInspection(ins);
-              break;
-            }
-          } catch {
-            /* thử tiếp */
-          }
-        }
+        const ins = await fetchInspectionReportForPost(postId);
+        setInspection(ins);
         try {
           const res = await axiosInstance.get("/orders/my-orders");
           const raw = res?.result ?? res?.data ?? res?.content ?? res;
