@@ -9,6 +9,15 @@ import {
   INSPECTION_SCORE_KEYS,
 } from "./inspectionScoring";
 
+function firstNonEmpty(...vals) {
+  for (const v of vals) {
+    if (v == null) continue;
+    const s = typeof v === "string" ? v.trim() : String(v).trim();
+    if (s !== "") return s;
+  }
+  return null;
+}
+
 /**
  * @param {Record<string, unknown> | null | undefined} row
  */
@@ -37,6 +46,19 @@ export function normalizeInspection(row) {
     if (Number.isFinite(n)) scores[key] = n;
   }
 
+  const inspObj =
+    row.inspector && typeof row.inspector === "object" && !Array.isArray(row.inspector)
+      ? row.inspector
+      : null;
+  const sellerObj =
+    row.seller && typeof row.seller === "object" && !Array.isArray(row.seller)
+      ? row.seller
+      : null;
+  const postObj =
+    row.post && typeof row.post === "object" && !Array.isArray(row.post)
+      ? row.post
+      : null;
+
   return {
     reportId:
       row.reportId ??
@@ -44,11 +66,57 @@ export function normalizeInspection(row) {
       row.inspectionReportId ??
       row.inspection_report_id ??
       null,
+    posterName: firstNonEmpty(
+      row.posterName,
+      row.poster_name,
+      row.sellerFullName,
+      row.seller_full_name,
+      row.sellerName,
+      row.seller_name,
+      row.memberName,
+      row.member_name,
+      row.ownerName,
+      row.owner_name,
+      typeof row.seller === "string" ? row.seller : null,
+      sellerObj?.fullName,
+      sellerObj?.name,
+      postObj?.sellerFullName,
+      postObj?.sellerName,
+    ),
+    inspectorName: firstNonEmpty(
+      row.inspectorName,
+      row.inspector_name,
+      row.inspectorFullName,
+      row.inspector_full_name,
+      inspObj?.fullName,
+      inspObj?.name,
+      typeof row.inspector === "string" ? row.inspector : null,
+      row.inspectedByName,
+      row.inspected_by_name,
+      row.inspectedBy,
+      row.inspected_by,
+      row.reviewerName,
+      row.reviewer_name,
+      row.reviewer,
+    ),
+    inspectorEmail: firstNonEmpty(
+      row.inspectorEmail,
+      row.inspector_email,
+      inspObj?.email,
+      row.reviewerEmail,
+      row.reviewer_email,
+      row.inspectedByEmail,
+      row.inspected_by_email,
+    ),
     notes:
       row.notes ??
       row.inspectorNotes ??
       row.inspector_notes ??
       row.inspectionNotes ??
+      row.inspection_notes ??
+      row.note ??
+      row.remark ??
+      row.comment ??
       null,
     inspectedAt:
       row.inspectedAt ??

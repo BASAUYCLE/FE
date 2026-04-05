@@ -80,6 +80,29 @@ const LISTING_STATS_CONFIG = [
 
 const PAGE_SIZE = 10;
 
+function buildListingMetaLine(row) {
+  const brand =
+    row.brandName ??
+    row.brand_name ??
+    (typeof row.brand === "string"
+      ? row.brand
+      : (row.brand?.brandName ?? row.brand?.name));
+  const cat =
+    row.categoryName ??
+    row.category_name ??
+    (typeof row.category === "string"
+      ? row.category
+      : (row.category?.categoryName ?? row.category?.name));
+  const year = row.modelYear ?? row.model_year;
+  const sizeRaw = row.size ?? row.frameSize ?? row.frame_size;
+  const sizePart =
+    sizeRaw != null && String(sizeRaw).trim() !== "" ? `Size ${sizeRaw}` : null;
+  const parts = [brand, cat, year, sizePart].filter(
+    (p) => p != null && String(p).trim() !== "" && String(p) !== "—",
+  );
+  return parts.length ? parts.join(" · ") : null;
+}
+
 function categoryOptionLabel(c) {
   return c === "all" ? "All categories" : c;
 }
@@ -95,6 +118,8 @@ export default function AdminApprovedListings() {
   const [inspectionModal, setInspectionModal] = useState({
     postId: null,
     title: null,
+    sessionKey: 0,
+    posterHint: null,
   });
   const [page, setPage] = useState(1);
   const [hidingId, setHidingId] = useState(null);
@@ -139,6 +164,7 @@ export default function AdminApprovedListings() {
           : approvedBy
             ? String(approvedBy)
             : null,
+      metaLine: buildListingMetaLine(row),
     };
   };
 
@@ -376,6 +402,12 @@ export default function AdminApprovedListings() {
                               setInspectionModal({
                                 postId: row.id,
                                 title: row.title ?? null,
+                                sessionKey: Date.now(),
+                                posterHint:
+                                  row.seller && row.seller !== "—"
+                                    ? row.seller
+                                    : null,
+                                listingMeta: row.metaLine ?? null,
                               });
                             }
                           }}
@@ -435,11 +467,24 @@ export default function AdminApprovedListings() {
         onClose={() => setPreviewId(null)}
       />
       <AdminInspectionModal
+        key={
+          inspectionModal.postId != null
+            ? String(inspectionModal.sessionKey)
+            : "inspection-modal-closed"
+        }
         postId={inspectionModal.postId}
         listingTitle={inspectionModal.title}
         open={inspectionModal.postId != null}
+        posterHint={inspectionModal.posterHint}
+        listingMeta={inspectionModal.listingMeta}
         onClose={() =>
-          setInspectionModal({ postId: null, title: null })
+          setInspectionModal({
+            postId: null,
+            title: null,
+            sessionKey: 0,
+            posterHint: null,
+            listingMeta: null,
+          })
         }
       />
     </AdminLayout>

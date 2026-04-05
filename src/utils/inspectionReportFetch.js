@@ -4,7 +4,7 @@
  */
 
 import axiosInstance from "../services/axiosConfig";
-import adminService from "../services/adminService";
+import { API_ENDPOINTS } from "../config/api";
 import {
   inspectionResponseHasUsableData,
   normalizeInspection,
@@ -40,7 +40,11 @@ export function reportRowPostId(row) {
 }
 
 function reportRowTimestamp(row) {
-  const v = row?.createdAt ?? row?.inspectedAt ?? row?.completedAt;
+  const v =
+    row?.createdAt ??
+    row?.inspectedAt ??
+    row?.completedAt ??
+    row?.updatedAt;
   if (v == null || v === "") return 0;
   if (Array.isArray(v) && v.length >= 3) {
     const [y, mo, d, h = 0, mi = 0, s = 0, nano = 0] = v;
@@ -70,6 +74,39 @@ export function pickLatestReportRowForPost(rows, targetPostId) {
   return best;
 }
 
+/**
+ * Lấy báo cáo từ GET /admin/inspection/reports — thử filter theo post + page size lớn
+ * để không chỉ dính trang đầu (mất bản ghi mới).
+ */
+async function fetchInspectionFromAdminList(postId) {
+  const url = API_ENDPOINTS.ADMIN.INSPECTION_REPORTS;
+  const bust = { _: Date.now() };
+  const paramSets = [
+    { ...bust, postId },
+    { ...bust, bicyclePostId: postId },
+    { ...bust, post_id: postId },
+    { ...bust, page: 0, size: 500 },
+    { ...bust, page: 0, size: 200 },
+    { ...bust, page: 0, size: 100 },
+    { ...bust },
+  ];
+
+  for (const params of paramSets) {
+    try {
+      const res = await axiosInstance.get(url, { params });
+      const rows = parseInspectionReportsList(res);
+      const row = pickLatestReportRowForPost(rows, postId);
+      if (row) {
+        const ins = normalizeInspection(row);
+        if (inspectionResponseHasUsableData(ins)) return ins;
+      }
+    } catch {
+      /* thử bộ param tiếp */
+    }
+  }
+  return null;
+}
+
 /** @param {string|number} postId */
 export async function fetchInspectionReportForPost(postId) {
   if (postId == null || postId === "") return null;
@@ -86,13 +123,8 @@ export async function fetchInspectionReportForPost(postId) {
   }
 
   try {
-    const res = await adminService.getInspectionReports();
-    const rows = parseInspectionReportsList(res);
-    const row = pickLatestReportRowForPost(rows, postId);
-    if (row) {
-      const ins = normalizeInspection(row);
-      if (inspectionResponseHasUsableData(ins)) return ins;
-    }
+    const fromList = await fetchInspectionFromAdminList(postId);
+    if (fromList) return fromList;
   } catch {
     /* 403 nếu không phải admin — bình thường */
   }

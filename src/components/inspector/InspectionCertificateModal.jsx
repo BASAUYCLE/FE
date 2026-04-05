@@ -16,10 +16,6 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
       ? `${snapshot.conditionPercent}%`
       : "—";
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <Modal
       open={open}
@@ -27,13 +23,6 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
       maskClosable={false}
       footer={
         <div className="inspection-certificate-footer-actions">
-          <button
-            type="button"
-            className="inspection-certificate-btn-print"
-            onClick={handlePrint}
-          >
-            In biên bản
-          </button>
           <button
             type="button"
             className="inspection-certificate-btn-done"

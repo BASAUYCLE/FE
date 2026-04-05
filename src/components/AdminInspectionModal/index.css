@@ -1,4 +1,4 @@
-/* Inspector score rubric modal — modern dashboard-style UI */
+/* Admin inspection modal — bố cục đồng bộ biên bản inspector (teal + bảng VI) */
 
 .admin-inspection-modal {
   --aim-bg: #ffffff;
@@ -9,7 +9,6 @@
   --aim-text: #0f172a;
   --aim-text-secondary: #475569;
   --aim-muted: #64748b;
-  /* Khớp --primary toàn site (#00ccad) + teal đậm cho chữ/viền */
   --aim-accent: #00ccad;
   --aim-accent-soft: rgba(0, 204, 173, 0.14);
   --aim-accent-deep: #0d9488;
@@ -78,7 +77,6 @@
   margin-top: 4px;
 }
 
-/* Loading */
 .admin-inspection-modal__loading {
   display: flex;
   justify-content: center;
@@ -87,7 +85,6 @@
   padding: 32px 0;
 }
 
-/* Empty state */
 .admin-inspection-modal__empty-state {
   text-align: center;
   padding: 28px 16px 36px;
@@ -131,7 +128,6 @@
   color: var(--aim-muted);
 }
 
-/* Body layout */
 .admin-inspection-modal__body {
   display: flex;
   flex-direction: column;
@@ -139,337 +135,256 @@
   padding-top: 4px;
 }
 
-/* Hero summary */
-.admin-inspection-modal__hero {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 18px 18px 16px;
-  border-radius: var(--aim-radius);
-  background: linear-gradient(
-    135deg,
-    var(--aim-surface) 0%,
-    #fafbfc 48%,
-    var(--aim-surface-2) 100%
-  );
-  border: 1px solid var(--aim-border);
-  box-shadow: var(--aim-shadow);
+/* —— Giống biên bản inspector —— */
+.admin-inspection-modal__cert {
+  --ac-border: #99f6e4;
+  --ac-border-strong: #5eead4;
+  --ac-surface: #f0fdfa;
+  --ac-surface-2: #ecfdf5;
+  --ac-ink: #0f766e;
+  --ac-ink-deep: #115e59;
+  font-size: 14px;
+  color: var(--aim-text);
 }
 
-.admin-inspection-modal__hero-top {
+.admin-inspection-modal__cert-brand {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px 20px;
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 3px solid var(--aim-accent);
 }
 
-.admin-inspection-modal__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-}
-
-.admin-inspection-modal__badge--pass {
-  background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
-  color: #047857;
-  border: 1px solid #6ee7b7;
-  box-shadow: 0 1px 2px rgba(5, 150, 105, 0.12);
-}
-
-.admin-inspection-modal__badge--fail {
-  background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
-  color: #b91c1c;
-  border: 1px solid #fca5a5;
-  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.1);
-}
-
-.admin-inspection-modal__badge--neutral {
-  background: var(--aim-surface-2);
-  color: var(--aim-text-secondary);
-  border: 1px solid var(--aim-border);
-}
-
-/* Circular condition gauge */
-.admin-inspection-modal__hero-gauge {
-  --aim-pct: 0;
-  --aim-gauge-fill: var(--aim-accent);
-  flex-shrink: 0;
-  width: 92px;
-  height: 92px;
-  border-radius: 50%;
-  padding: 5px;
-  background: conic-gradient(
-    var(--aim-gauge-fill) calc(var(--aim-pct) * 1%),
-    var(--aim-border) 0
-  );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-.admin-inspection-modal__hero-gauge-inner {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: var(--aim-bg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.15);
-}
-
-.admin-inspection-modal__hero-gauge-value {
-  font-size: 1.35rem;
+.admin-inspection-modal__cert-brand-mark {
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  color: var(--aim-text);
-  letter-spacing: -0.03em;
-  line-height: 1;
+  font-size: 1.2rem;
+  letter-spacing: 0.08em;
+  color: var(--ac-ink);
 }
 
-.admin-inspection-modal__hero-gauge-unit {
-  font-size: 0.65em;
-  font-weight: 700;
+.admin-inspection-modal__cert-brand-meta {
+  font-size: 11px;
   color: var(--aim-muted);
-  margin-left: 1px;
+  line-height: 1.45;
+  text-align: right;
+  max-width: 280px;
 }
 
-.admin-inspection-modal__hero-gauge-label {
-  font-size: 10px;
+.admin-inspection-modal__cert-banner {
+  padding: 14px 12px 12px;
+  text-align: center;
+  background: var(--ac-surface);
+  border-bottom: 1px solid var(--ac-border);
+  margin: 0 0 12px;
+  border-radius: 8px;
+}
+
+.admin-inspection-modal__cert-banner-title {
+  margin: 0;
+  font-size: clamp(0.88rem, 2vw, 1.02rem);
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--ac-ink-deep);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.admin-inspection-modal__cert-banner-sub {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #0d9488;
   font-weight: 600;
+}
+
+.admin-inspection-modal__cert-summary {
+  padding: 14px 16px;
+  border: 2px solid var(--ac-border);
+  border-radius: 8px;
+  background: var(--ac-surface-2);
+  margin-bottom: 16px;
+}
+
+.admin-inspection-modal__cert-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 20px;
+}
+
+@media (max-width: 560px) {
+  .admin-inspection-modal__cert-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-inspection-modal__cert-field-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--aim-muted);
-  margin-top: 4px;
+  color: var(--ac-ink);
+  margin-bottom: 2px;
 }
 
-.admin-inspection-modal__hero-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.admin-inspection-modal__chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 6px 12px;
-  border-radius: 999px;
-  font-size: 12px;
+.admin-inspection-modal__cert-field-value {
+  font-size: 13px;
   font-weight: 600;
-  color: var(--aim-text-secondary);
-  background: var(--aim-bg);
-  border: 1px solid var(--aim-border);
+  line-height: 1.45;
+  word-break: break-word;
 }
 
-.admin-inspection-modal__chip--muted {
+.admin-inspection-modal__cert-field-email {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--aim-text-secondary);
+}
+
+.admin-inspection-modal__cert-field-suben {
+  font-size: 12px;
   font-weight: 500;
   color: var(--aim-muted);
-  background: rgba(255, 255, 255, 0.7);
 }
 
-.admin-inspection-modal__chip--accent {
-  color: var(--aim-accent-deep);
-  background: var(--aim-accent-soft);
-  border-color: rgba(0, 204, 173, 0.32);
+.admin-inspection-modal__cert-result-pill {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
 }
 
-/* Section + rubric list */
-.admin-inspection-modal__section {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.admin-inspection-modal__cert-result-pill--pass {
+  background: #ccfbf1;
+  color: #0f766e;
+  border: 1px solid var(--aim-accent);
 }
 
-.admin-inspection-modal__section-head {
-  padding: 0 2px;
+.admin-inspection-modal__cert-result-pill--fail {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
 }
 
-.admin-inspection-modal__section-title {
-  margin: 0 0 4px;
-  font-size: 13px;
-  font-weight: 700;
+.admin-inspection-modal__cert-table-section {
+  margin-bottom: 16px;
+}
+
+.admin-inspection-modal__cert-table-heading {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--aim-muted);
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: linear-gradient(
+    90deg,
+    var(--aim-accent) 0%,
+    var(--aim-accent-deep) 100%
+  );
+  border-radius: 6px;
 }
 
-.admin-inspection-modal__section-desc {
-  margin: 0;
+.admin-inspection-modal__cert-table-wrap {
+  border: 1px solid #d1fae5;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.admin-inspection-modal__cert-table {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 13px;
-  line-height: 1.5;
-  color: var(--aim-muted);
 }
 
-.admin-inspection-modal__rubric-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.admin-inspection-modal__cert-table th,
+.admin-inspection-modal__cert-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #ecfdf5;
+  vertical-align: top;
 }
 
-.admin-inspection-modal__rubric-card {
-  --rubric-accent: var(--aim-accent);
-  margin: 0;
-  padding: 14px 16px 14px 18px;
-  border-radius: var(--aim-radius-sm);
-  background: var(--aim-bg);
-  border: 1px solid var(--aim-border);
-  border-left-width: 4px;
-  border-left-color: var(--rubric-accent);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.admin-inspection-modal__rubric-card:hover {
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
-  border-color: var(--aim-border-soft);
-}
-
-/* 10 & 7: cùng tông xanh brand (#00ccad) */
-.admin-inspection-modal__rubric-card[data-score="10"],
-.admin-inspection-modal__rubric-card[data-score="7"] {
-  --rubric-accent: var(--aim-accent);
-}
-
-.admin-inspection-modal__rubric-card[data-score="3"] {
-  --rubric-accent: #ea580c;
-}
-
-.admin-inspection-modal__rubric-card[data-score="0"] {
-  --rubric-accent: #dc2626;
-}
-
-.admin-inspection-modal__rubric-card[data-score="na"] {
-  --rubric-accent: #94a3b8;
-}
-
-.admin-inspection-modal__rubric-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-}
-
-.admin-inspection-modal__rubric-card-title-block {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.admin-inspection-modal__criterion-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--aim-text);
-  letter-spacing: -0.01em;
-  line-height: 1.35;
-}
-
-.admin-inspection-modal__critical-chip {
-  flex-shrink: 0;
+.admin-inspection-modal__cert-table th {
+  background: var(--ac-surface);
   font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ac-ink-deep);
+}
+
+.admin-inspection-modal__cert-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-inspection-modal__cert-table td:last-child {
+  text-align: center;
+  font-weight: 800;
+  width: 72px;
+  color: var(--ac-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-inspection-modal__cert-criterion-vi {
+  font-weight: 600;
+}
+
+.admin-inspection-modal__cert-critical-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 3px 9px;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
   border-radius: 999px;
   color: #9f1239;
   background: #ffe4e6;
   border: 1px solid #fb7185;
+  vertical-align: middle;
 }
 
-.admin-inspection-modal__score-pill {
-  flex-shrink: 0;
-  min-width: 40px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  font-size: 14px;
+.admin-inspection-modal__cert-notes {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  min-height: 64px;
+  border: 1px dashed var(--ac-border-strong);
+  border-radius: 8px;
+  background: #f8fffc;
+}
+
+.admin-inspection-modal__cert-notes-label {
+  font-size: 10px;
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-  line-height: 1.2;
-  border: 1px solid transparent;
-}
-
-.admin-inspection-modal__score-pill--10,
-.admin-inspection-modal__score-pill--7 {
-  color: var(--aim-accent-deep);
-  background: var(--aim-accent-soft);
-  border-color: rgba(0, 204, 173, 0.38);
-}
-
-.admin-inspection-modal__score-pill--3 {
-  color: #c2410c;
-  background: #fff7ed;
-  border-color: #fdba74;
-}
-
-.admin-inspection-modal__score-pill--0 {
-  color: #b91c1c;
-  background: #fef2f2;
-  border-color: #fecaca;
-}
-
-.admin-inspection-modal__score-pill--na {
-  color: var(--aim-muted);
-  background: var(--aim-surface);
-  border-color: var(--aim-border);
-}
-
-.admin-inspection-modal__rubric-rating-desc {
-  margin: 10px 0 0;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--aim-text-secondary);
-  font-weight: 500;
-}
-
-.admin-inspection-modal__criterion-hint {
-  margin: 8px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
-  color: var(--aim-muted);
-}
-
-/* Notes */
-.admin-inspection-modal__notes-block {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.admin-inspection-modal__notes-heading {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--aim-muted);
+  letter-spacing: 0.06em;
+  color: var(--ac-ink);
+  margin-bottom: 6px;
 }
 
-.admin-inspection-modal__notes-panel {
-  padding: 14px 16px;
-  border-radius: var(--aim-radius-sm);
-  background: linear-gradient(180deg, var(--aim-surface) 0%, var(--aim-bg) 100%);
-  border: 1px solid var(--aim-border);
-  border-left: 4px solid var(--aim-accent);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.admin-inspection-modal__notes-text {
-  margin: 0;
-  font-size: 14px;
+.admin-inspection-modal__cert-notes-body {
+  font-size: 13px;
   line-height: 1.55;
-  color: var(--aim-text-secondary);
   white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--aim-text-secondary);
+}
+
+.admin-inspection-modal__cert-footnote {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--aim-muted);
+  background: #f8fafc;
+  border-radius: 6px;
+  border-left: 3px solid var(--aim-accent);
 }
 
 @media (max-width: 520px) {
@@ -479,14 +394,5 @@
 
   .admin-inspection-modal .ant-modal-header {
     padding: 16px 16px 14px;
-  }
-
-  .admin-inspection-modal__hero-top {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .admin-inspection-modal__hero-gauge {
-    align-self: flex-end;
   }
 }
