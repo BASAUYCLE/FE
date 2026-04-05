@@ -42,6 +42,19 @@ function formatInspectedAt(raw) {
   });
 }
 
+/**
+ * Màu cung vòng condition: %% thấp → nhạt, %% cao → đậm (hue ~ teal brand #00ccad).
+ * @param {number} pct 0–100
+ */
+function conditionGaugeArcColor(pct) {
+  const t = Math.min(100, Math.max(0, pct)) / 100;
+  const eased = t * t;
+  const hue = 172;
+  const sat = 18 + 82 * eased;
+  const light = 92 - 52 * eased;
+  return `hsl(${hue} ${sat}% ${light}%)`;
+}
+
 /** Giống trang admin Inspection history — BE trả list trong result/data/content. */
 function parseInspectionReportsList(res) {
   const raw = res?.result ?? res?.data ?? res;
@@ -227,6 +240,7 @@ export default function AdminInspectionModal({
                     className="admin-inspection-modal__hero-gauge"
                     style={{
                       "--aim-pct": `${Math.min(100, Math.max(0, scorePct))}`,
+                      "--aim-gauge-fill": conditionGaugeArcColor(scorePct),
                     }}
                     aria-label={`Condition score ${scorePct} percent`}
                   >
