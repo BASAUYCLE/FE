@@ -1,20 +1,9 @@
-@import "../common/shared.css";
-
-.inspector-history-intro {
-  margin-bottom: 8px;
+/* Inspector history uses admin inspection-reports layout inside sidebar main. */
+.inspector-history-adminlike {
+  width: 100%;
+  min-width: 0;
 }
 
-.inspector-history-title {
-  margin: 0 0 8px;
-  font-size: 1.35rem;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.inspector-history-desc {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #64748b;
-  line-height: 1.5;
-  max-width: 640px;
+.inspector-history-adminlike .admin-dashboard {
+  padding-top: 0;
 }

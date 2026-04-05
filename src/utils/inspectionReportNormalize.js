@@ -40,7 +40,8 @@ export function normalizeInspection(row) {
       : {};
   const scores = {};
   for (const key of INSPECTION_SCORE_KEYS) {
-    const v = row[key] ?? nested[key];
+    const snakeKey = key.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
+    const v = row[key] ?? nested[key] ?? row[snakeKey] ?? nested[snakeKey];
     if (v == null || v === "") continue;
     const n = typeof v === "number" ? v : Number(v);
     if (Number.isFinite(n)) scores[key] = n;
@@ -128,8 +129,16 @@ export function normalizeInspection(row) {
       row.createdAt ??
       row.created_at ??
       null,
-    result: row.result ?? row.inspectionResult ?? null,
-    condition: row.overallCondition ?? row.condition ?? null,
+    result:
+      row.result ??
+      row.inspectionResult ??
+      row.inspection_result ??
+      null,
+    condition:
+      row.overallCondition ??
+      row.overall_condition ??
+      row.condition ??
+      null,
     conditionPercent,
     scores: Object.keys(scores).length > 0 ? scores : null,
     checklist: row.checklist ?? null,

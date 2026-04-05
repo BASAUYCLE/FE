@@ -1,6 +1,8 @@
 /**
- * Tải báo cáo kiểm định cho một post: thử endpoint theo postId, rồi fallback list admin
- * (BE bike_platform thường chỉ có GET /admin/inspection/reports).
+ * Tải báo cáo kiểm định cho một post:
+ * 1) GET theo postId (nếu BE có)
+ * 2) GET /inspection/reports (inspector — JWT; danh sách biên bản của chính họ)
+ * 3) GET /admin/inspection/reports (admin)
  */
 
 import axiosInstance from "../services/axiosConfig";
@@ -107,6 +109,35 @@ async function fetchInspectionFromAdminList(postId) {
   return null;
 }
 
+/**
+ * Inspector: GET /inspection/reports — lọc bản ghi theo postId (không cần quyền admin).
+ */
+async function fetchInspectionFromInspectorReportsList(postId) {
+  const url = API_ENDPOINTS.INSPECTION.HISTORY;
+  const bust = { _: Date.now() };
+  const paramSets = [
+    { ...bust, postId },
+    { ...bust, bicyclePostId: postId },
+    { ...bust, post_id: postId },
+    { ...bust },
+  ];
+
+  for (const params of paramSets) {
+    try {
+      const res = await axiosInstance.get(url, { params });
+      const rows = parseInspectionReportsList(res);
+      const row = pickLatestReportRowForPost(rows, postId);
+      if (row) {
+        const ins = normalizeInspection(row);
+        if (inspectionResponseHasUsableData(ins)) return ins;
+      }
+    } catch {
+      /* thử param tiếp hoặc 403 nếu không phải inspector */
+    }
+  }
+  return null;
+}
+
 /** @param {string|number} postId */
 export async function fetchInspectionReportForPost(postId) {
   if (postId == null || postId === "") return null;
@@ -123,10 +154,17 @@ export async function fetchInspectionReportForPost(postId) {
   }
 
   try {
+    const fromInspector = await fetchInspectionFromInspectorReportsList(postId);
+    if (fromInspector) return fromInspector;
+  } catch {
+    /* ignore */
+  }
+
+  try {
     const fromList = await fetchInspectionFromAdminList(postId);
     if (fromList) return fromList;
   } catch {
-    /* 403 nếu không phải admin — bình thường */
+    /* 403 nếu không phải admin */
   }
 
   return null;
