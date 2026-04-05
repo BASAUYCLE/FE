@@ -233,7 +233,6 @@ export default function ListingApproval() {
               <div className="stat-value">
                 {loading ? "…" : String(pendingCount)}
               </div>
-              <div className="stat-note green">Awaiting your review</div>
             </div>
             <div className="admin-listings-stat">
               <div className="stat-header">
@@ -249,11 +248,6 @@ export default function ListingApproval() {
                     ? String(stats.approvedToday)
                     : "—"}
               </div>
-              <div className="stat-note green">
-                {statsOk
-                  ? "ADMIN_APPROVED updated today"
-                  : "Load all posts for this metric"}
-              </div>
             </div>
             <div className="admin-listings-stat">
               <div className="stat-header">
@@ -268,13 +262,6 @@ export default function ListingApproval() {
                   : statsOk && stats.rejectionRatePct != null
                     ? `${stats.rejectionRatePct}%`
                     : "—"}
-              </div>
-              <div className="stat-note red">
-                {statsOk && stats.rejectionRatePct != null
-                  ? "Rejected ÷ (rejected + passed admin review)"
-                  : statsOk
-                    ? "No rejections / approvals yet"
-                    : "Load all posts for this metric"}
               </div>
             </div>
           </div>
