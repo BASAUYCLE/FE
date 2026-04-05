@@ -9,6 +9,7 @@ import {
 } from "../../../constants/inspectionStatus";
 import AdminPaginationBar from "../../admin/AdminPaginationBar";
 import AdminToolbarFilters from "../../admin/AdminToolbarFilters";
+import ProductPreviewModal from "../../ProductPreviewModal";
 
 const PAGE_SIZE = 10;
 
@@ -69,6 +70,12 @@ export default function InspectionQueueTable({
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState(1);
+  const [previewPostId, setPreviewPostId] = useState(null);
+
+  const openPostPreview = (item) => {
+    const pid = Number(item?.postId ?? item?.id);
+    if (Number.isFinite(pid) && pid >= 1) setPreviewPostId(pid);
+  };
 
   const filteredInspections = useMemo(() => {
     let list = inspections;
@@ -188,7 +195,8 @@ export default function InspectionQueueTable({
                     <button
                       type="button"
                       className="inspector-bike-name inspector-bike-name--link"
-                      onClick={() => navigate(`/inspector/${item.id}`)}
+                      aria-label={`View listing: ${item.bicycleName ?? "post"}`}
+                      onClick={() => openPostPreview(item)}
                     >
                       {item.bicycleName}
                     </button>
@@ -280,6 +288,11 @@ export default function InspectionQueueTable({
         totalPages={totalPages}
         setPage={setPage}
         nounPhrase={isHistory ? "records" : "inspections"}
+      />
+      <ProductPreviewModal
+        postId={previewPostId}
+        open={previewPostId != null}
+        onClose={() => setPreviewPostId(null)}
       />
     </section>
   );
