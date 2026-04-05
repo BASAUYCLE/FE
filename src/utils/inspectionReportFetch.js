@@ -1,6 +1,6 @@
 /**
  * Tải báo cáo kiểm định cho một post:
- * 1) GET theo postId (public / role tùy BE): /inspection/:id/report, …
+ * 1) GET theo postId: /inspection/:id/report, /inspection/:id; ADMIN thêm /admin/inspection/:id
  * 2) Chỉ khi user là INSPECTOR: GET /inspection/reports (lọc theo post)
  * 3) Chỉ khi user là ADMIN: GET /admin/inspection/reports
  */
@@ -13,13 +13,17 @@ import {
   normalizeInspection,
 } from "./inspectionReportNormalize";
 
-function perPostInspectionUrls(postId) {
+/** Không gồm /admin/inspection/:id — endpoint đó chỉ dành cho ADMIN, seller/buyer sẽ luôn 403. */
+function perPostInspectionUrls(postId, { isAdmin } = { isAdmin: false }) {
   const id = encodeURIComponent(String(postId));
-  return [
-    `/inspection/${id}/report`,
-    `/admin/inspection/${id}`,
-    `/inspection/${id}`,
-  ];
+  if (isAdmin) {
+    return [
+      `/inspection/${id}/report`,
+      `/admin/inspection/${id}`,
+      `/inspection/${id}`,
+    ];
+  }
+  return [`/inspection/${id}/report`, `/inspection/${id}`];
 }
 
 /**
@@ -161,7 +165,9 @@ async function fetchInspectionFromInspectorReportsList(postId) {
 export async function fetchInspectionReportForPost(postId) {
   if (postId == null || postId === "") return null;
 
-  for (const url of perPostInspectionUrls(postId)) {
+  const { isAdmin, isInspector } = inspectionListFetchRoles();
+
+  for (const url of perPostInspectionUrls(postId, { isAdmin })) {
     try {
       const res = await axiosInstance.get(url);
       const raw = res?.result ?? res?.data ?? res;
@@ -171,8 +177,6 @@ export async function fetchInspectionReportForPost(postId) {
       /* thử URL tiếp */
     }
   }
-
-  const { isAdmin, isInspector } = inspectionListFetchRoles();
 
   if (isInspector) {
     try {
