@@ -20,6 +20,65 @@ export const GUIDE_INSPECTION_HERO = Object.freeze({
     "BASAUYCLE uses a six-criterion rubric. Each criterion is scored with exactly one of four fixed values (0, 3, 7, 10). From those scores the system derives a condition percentage (conditionPercent) and PASS/FAIL using the same rules on the preview and on the server after the inspector submits.",
 });
 
+/**
+ * Luồng & chỗ xem báo cáo — khớp ProductDetail, ProductPreviewModal, Manage Listings.
+ */
+export const GUIDE_INSPECTION_MEMBER = Object.freeze({
+  titleVi: "Dành cho thành viên (người bán & người mua)",
+  titleEn: "For members (sellers & buyers)",
+  introVi:
+    "Bạn không nhập điểm rubric; inspector và hệ thống xử lý. Phần dưới mô tả trạng thái tin đăng và chỗ xem % / PASS-FAIL trên giao diện.",
+  introEn:
+    "Members do not enter rubric scores; inspectors and the system do. Below: listing statuses and where the UI shows the condition % and PASS/FAIL.",
+
+  sellerFlow: Object.freeze({
+    titleVi: "Luồng người bán",
+    titleEn: "Seller journey",
+    bulletsVi: [
+      "Đăng hoặc chỉnh sửa tin, gửi duyệt — tin ở trạng thái chờ admin (ví dụ Pending).",
+      "Admin duyệt nội dung → tin chuyển sang trạng thái đã duyệt, chờ kiểm định (ADMIN_APPROVED): lúc này xe xếp hàng để inspector chấm điểm.",
+      "Inspector gửi báo cáo: nếu PASS, tin thường được đưa lên sàn (Available) kèm % và báo cáo; nếu FAIL, tin không hiển thị như xe đạt chuẩn — theo chính sách backend (xem trạng thái trong Quản lý tin đăng / Manage listings).",
+      "Theo dõi trạng thái trong mục Quản lý tin đăng; thông báo trong app có thể nhắc khi tin được duyệt hoặc sau kiểm định.",
+    ],
+    bulletsEn: [
+      "Create or edit a listing and submit it for review — it waits for admin (e.g. Pending).",
+      "After admin approves content, the listing moves to admin-approved, pending inspection (ADMIN_APPROVED): it is queued for the inspector’s rubric.",
+      "When the inspector submits: on PASS, the listing usually goes Available on the marketplace with % and report data; on FAIL, it is not offered as a passing inspection — see status in Manage listings per backend rules.",
+      "Track status in Manage listings; in-app notifications may fire when a listing is approved or after inspection completes.",
+    ],
+  }),
+
+  whereToSee: Object.freeze({
+    titleVi: "Xem % và báo cáo kiểm định ở đâu?",
+    titleEn: "Where to see the % and inspection report",
+    bulletsVi: [
+      "Trang chi tiết sản phẩm (đường dẫn dạng /product/{id}): khi backend đã có báo cáo, cột Pro Inspection Report hiển thị PASS/FAIL, thanh % tình trạng, nhãn tổng thể (Excellent / Good / …) và bảng 6 tiêu chí (nếu API trả điểm).",
+      "Cùng trang đó, trong bảng Technical specs, dòng Inspection tóm tắt ngắn (ví dụ phần trăm kèm nhãn, hoặc Failed kèm % khi có).",
+      "Modal xem nhanh tin (khi mở preview bài đăng): có thể có dòng kiểm định tương tự trong bảng thông số khi report đã tồn tại.",
+      "Nếu chưa có báo cáo hoặc tin chưa qua kiểm định xong, các khối trên có thể ẩn hoặc hiển thị chưa kiểm định — không có nghĩa hệ thống lỗi.",
+    ],
+    bulletsEn: [
+      "Product detail (/product/{id}): when the backend exposes a report, the Pro Inspection Report panel shows PASS/FAIL, the condition % bar, the overall band (Excellent / Good / …), and the six criteria (if scores are returned).",
+      "On the same page, under Technical specs, the Inspection row gives a short summary (e.g. % with band, or Failed with % when present).",
+      "Listing preview modals may show a matching inspection line in the specs table when a report exists.",
+      "If there is no report yet or inspection is not finished, those blocks may be hidden or show a not-inspected state — that is expected.",
+    ],
+  }),
+
+  buyerNotes: Object.freeze({
+    titleVi: "Gợi ý cho người mua",
+    titleEn: "Tips for buyers",
+    bulletsVi: [
+      "Ưu tiên xem Pro Inspection Report và dòng Inspection trên trang xe trước khi cọc/mua; % và PASS/FAIL phản ánh rubric đã submit, không phải đánh giá chủ quan của người bán.",
+      "Nếu tin chỉ mới chờ kiểm định, chưa có % công bố — đợi tin Available (hoặc có báo cáo đầy đủ) rồi quyết định.",
+    ],
+    bulletsEn: [
+      "Prefer Pro Inspection Report and the Inspection spec row before depositing; % and PASS/FAIL reflect the submitted rubric, not the seller’s opinion.",
+      "If the listing is still pending inspection, there may be no public % yet — wait until it is Available (or shows a full report) before deciding.",
+    ],
+  }),
+});
+
 /** Công thức & giới hạn — khớp calculateConditionPercent */
 export const GUIDE_INSPECTION_FORMULA = Object.freeze({
   titleVi: "Cách tính % tình trạng",

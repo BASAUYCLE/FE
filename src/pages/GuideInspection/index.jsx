@@ -4,6 +4,7 @@ import Header from "../../components/header";
 import Footer from "../../components/footer";
 import {
   GUIDE_INSPECTION_HERO,
+  GUIDE_INSPECTION_MEMBER,
   GUIDE_INSPECTION_FORMULA,
   GUIDE_INSPECTION_PASS_FAIL,
   GUIDE_INSPECTION_BANDS,
@@ -28,6 +29,19 @@ function Section({ titleVi, titleEn, children }) {
         {titleEn}
       </Typography>
       {children}
+    </Box>
+  );
+}
+
+function Subheading({ titleVi, titleEn }) {
+  return (
+    <Box sx={{ mt: 2.5, mb: 0 }}>
+      <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.25 }}>
+        {titleVi}
+      </Typography>
+      <Typography sx={{ fontSize: 13, color: "#6b7280", mb: 1.5 }}>
+        {titleEn}
+      </Typography>
     </Box>
   );
 }
@@ -68,7 +82,7 @@ function BulletList({ itemsVi, itemsEn }) {
 
 /**
  * Hướng dẫn chấm điểm / kiểm định / % — nội dung từ `guideInspectionContent.js`.
- * Luồng member/inspector chi tiết có thể bổ sung ở commit sau.
+ * Phần inspector chi tiết có thể bổ sung thêm (bước 4).
  */
 export default function GuideInspection() {
   useEffect(() => {
@@ -125,6 +139,55 @@ export default function GuideInspection() {
           >
             {GUIDE_INSPECTION_HERO.leadEn}
           </Typography>
+
+          <Box
+            sx={{
+              mb: 5,
+              p: { xs: 2, md: 3 },
+              borderRadius: 2,
+              bgcolor: "#f0fdfa",
+              border: "1px solid #99f6e4",
+            }}
+          >
+            <Section
+              titleVi={GUIDE_INSPECTION_MEMBER.titleVi}
+              titleEn={GUIDE_INSPECTION_MEMBER.titleEn}
+            >
+              <Typography sx={{ color: "#374151", fontSize: 14, mb: 1.5 }}>
+                {GUIDE_INSPECTION_MEMBER.introVi}
+              </Typography>
+              <Typography sx={{ color: "#6b7280", fontSize: 13, mb: 1 }}>
+                {GUIDE_INSPECTION_MEMBER.introEn}
+              </Typography>
+
+              <Subheading
+                titleVi={GUIDE_INSPECTION_MEMBER.sellerFlow.titleVi}
+                titleEn={GUIDE_INSPECTION_MEMBER.sellerFlow.titleEn}
+              />
+              <BulletList
+                itemsVi={GUIDE_INSPECTION_MEMBER.sellerFlow.bulletsVi}
+                itemsEn={GUIDE_INSPECTION_MEMBER.sellerFlow.bulletsEn}
+              />
+
+              <Subheading
+                titleVi={GUIDE_INSPECTION_MEMBER.whereToSee.titleVi}
+                titleEn={GUIDE_INSPECTION_MEMBER.whereToSee.titleEn}
+              />
+              <BulletList
+                itemsVi={GUIDE_INSPECTION_MEMBER.whereToSee.bulletsVi}
+                itemsEn={GUIDE_INSPECTION_MEMBER.whereToSee.bulletsEn}
+              />
+
+              <Subheading
+                titleVi={GUIDE_INSPECTION_MEMBER.buyerNotes.titleVi}
+                titleEn={GUIDE_INSPECTION_MEMBER.buyerNotes.titleEn}
+              />
+              <BulletList
+                itemsVi={GUIDE_INSPECTION_MEMBER.buyerNotes.bulletsVi}
+                itemsEn={GUIDE_INSPECTION_MEMBER.buyerNotes.bulletsEn}
+              />
+            </Section>
+          </Box>
 
           <Section
             titleVi={GUIDE_INSPECTION_FORMULA.titleVi}
