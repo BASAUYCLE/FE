@@ -45,6 +45,70 @@ export function buildListingMetaLine(post) {
   return parts.length ? parts.join(" · ") : null;
 }
 
+function firstNonEmptyStr(...vals) {
+  for (const v of vals) {
+    if (v == null) continue;
+    const s = typeof v === "string" ? v.trim() : String(v).trim();
+    if (s !== "") return s;
+  }
+  return null;
+}
+
+/**
+ * Seller / poster display: root row + nested `post` + `post.seller` (BE/Jackson).
+ * @param {Record<string, unknown> | null | undefined} row
+ */
+export function pickSellerFromReportRow(row) {
+  if (!row || typeof row !== "object") return "—";
+  const post =
+    row.post && typeof row.post === "object" && !Array.isArray(row.post)
+      ? row.post
+      : null;
+  const postSeller =
+    post?.seller && typeof post.seller === "object" && !Array.isArray(post.seller)
+      ? post.seller
+      : null;
+  const rowSeller =
+    row.seller && typeof row.seller === "object" && !Array.isArray(row.seller)
+      ? row.seller
+      : null;
+
+  return (
+    firstNonEmptyStr(
+      row.sellerFullName,
+      row.seller_full_name,
+      row.sellerName,
+      row.seller_name,
+      typeof row.seller === "string" ? row.seller : null,
+      row.memberName,
+      row.member_name,
+      row.posterName,
+      row.poster_name,
+      row.ownerName,
+      row.owner_name,
+      rowSeller?.fullName,
+      rowSeller?.full_name,
+      rowSeller?.name,
+      post?.sellerFullName,
+      post?.seller_full_name,
+      post?.sellerName,
+      post?.seller_name,
+      typeof post?.seller === "string" ? post.seller : null,
+      postSeller?.fullName,
+      postSeller?.full_name,
+      postSeller?.name,
+      postSeller?.email,
+      post?.ownerFullName,
+      post?.owner_full_name,
+      post?.ownerName,
+      post?.member?.fullName,
+      post?.member?.name,
+      post?.user?.fullName,
+      post?.user?.name,
+    ) ?? "—"
+  );
+}
+
 /**
  * @param {Record<string, unknown> | null | undefined} row
  */
@@ -68,11 +132,19 @@ export function normalizeInspectionReportRow(row) {
     };
   }
 
+  const post =
+    row.post && typeof row.post === "object" && !Array.isArray(row.post)
+      ? row.post
+      : null;
+  const images = row.images ?? post?.images ?? [];
+
   const resultRaw = String(
-    row.result ?? row.inspectionResult ?? "",
+    row.result ?? row.inspectionResult ?? row.inspection_result ?? "",
   ).toUpperCase();
   const result = resultRaw || null;
-  const postStatus = String(row.postStatus ?? "").toUpperCase();
+  const postStatus = String(
+    row.postStatus ?? post?.postStatus ?? post?.status ?? "",
+  ).toUpperCase();
   const statusRaw = String(row.status ?? "").toUpperCase();
   const status = (() => {
     if (
@@ -92,17 +164,27 @@ export function normalizeInspectionReportRow(row) {
 
   return {
     id: row.reportId ?? row.id ?? row.postId,
-    postId: row.postId ?? row.bicyclePostId ?? row.id,
+    postId: row.postId ?? row.bicyclePostId ?? post?.postId ?? post?.id ?? row.id,
     title:
-      row.bicycleName ?? row.listingTitle ?? row.title ?? row.postTitle ?? "—",
+      row.bicycleName ??
+      row.listingTitle ??
+      row.title ??
+      row.postTitle ??
+      post?.bicycleName ??
+      post?.title ??
+      post?.postTitle ??
+      "—",
     thumbnail:
-      (row.images ?? []).find((i) => i?.isThumbnail)?.imageUrl ??
-      row.images?.[0]?.imageUrl ??
+      images.find((i) => i?.isThumbnail)?.imageUrl ??
+      images?.[0]?.imageUrl ??
       row.thumbnailUrl ??
+      post?.thumbnailUrl ??
       row.thumbnail ??
+      post?.thumbnail ??
       row.imageUrl ??
+      post?.imageUrl ??
       null,
-    seller: row.sellerFullName ?? row.sellerName ?? row.seller ?? "—",
+    seller: pickSellerFromReportRow(row),
     inspector:
       row.inspectorName ??
       row.inspectorFullName ??

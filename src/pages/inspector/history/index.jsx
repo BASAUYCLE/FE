@@ -3,7 +3,7 @@ import { Alert } from "antd";
 import { FileCheck2, Eye, CheckCircle2, XCircle, Clock } from "lucide-react";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
 import { useAuth } from "../../../contexts/AuthContext";
-import { inspectionService } from "../../../services";
+import { inspectionService, postService } from "../../../services";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import AdminInspectionModal from "../../../components/AdminInspectionModal";
@@ -48,6 +48,57 @@ function parseList(res) {
   return [];
 }
 
+function unwrapApiEntity(res) {
+  return res?.result ?? res?.data ?? res;
+}
+
+/**
+ * BE không gửi seller trên InspectionReportResponse — bù bằng GET /posts/:id.
+ */
+function enrichReportRowFromPostDetail(row, post) {
+  if (!post || typeof post !== "object") return row;
+  const sellerRaw =
+    post.sellerFullName ??
+    post.seller_name ??
+    post.sellerName ??
+    post.seller?.fullName ??
+    post.seller?.name;
+  const sellerTrim =
+    sellerRaw != null && String(sellerRaw).trim() !== ""
+      ? String(sellerRaw).trim()
+      : null;
+  const priceVal = row.price ?? post.price ?? post.salePrice;
+  const thumb = row.thumbnail || resolveListingThumbnailUrl(post) || null;
+  const metaLine = row.metaLine ?? buildListingMetaLine(post) ?? row.metaLine;
+  return {
+    ...row,
+    seller: sellerTrim ?? row.seller,
+    price: priceVal ?? row.price,
+    thumbnail: thumb ?? row.thumbnail,
+    metaLine: metaLine ?? row.metaLine,
+  };
+}
+
+async function fetchPostDetailsByIds(postIdStrings, chunkSize = 6) {
+  const map = new Map();
+  const ids = [...postIdStrings].filter(Boolean);
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    const chunk = ids.slice(i, i + chunkSize);
+    const settled = await Promise.allSettled(
+      chunk.map(async (id) => {
+        const res = await postService.getPostById(id);
+        const post = unwrapApiEntity(res);
+        return { id, post };
+      }),
+    );
+    for (const s of settled) {
+      if (s.status !== "fulfilled" || !s.value?.post) continue;
+      map.set(String(s.value.id), s.value.post);
+    }
+  }
+  return map;
+}
+
 /**
  * GET /inspection/reports item (+ nested post) → same row shape as admin table.
  */
@@ -65,6 +116,8 @@ function normalizedRowFromInspectorApiItem(item, fallbackInspectorEmail) {
   const flat = {
     reportId: item.reportId ?? item.id,
     postId: item.postId ?? post?.postId ?? post?.id,
+    /** Giữ `post` để pickSellerFromReportRow / ảnh đọc từ nested DTO */
+    post: post ?? undefined,
     bicycleName:
       item.postTitle ??
       item.bicycleName ??
@@ -160,7 +213,30 @@ export default function InspectorHistoryPage() {
         rows.sort(
           (a, b) => new Date(b.inspectedAt ?? 0) - new Date(a.inspectedAt ?? 0),
         );
-        if (!cancelled) setReports(rows);
+
+        const needPostDetailIds = [
+          ...new Set(
+            rows
+              .filter(
+                (r) => r.postId != null && (!r.seller || r.seller === "—"),
+              )
+              .map((r) => String(r.postId)),
+          ),
+        ];
+        let merged = rows;
+        if (needPostDetailIds.length > 0) {
+          const byId = await fetchPostDetailsByIds(needPostDetailIds);
+          if (!cancelled) {
+            merged = rows.map((r) =>
+              enrichReportRowFromPostDetail(
+                r,
+                r.postId != null ? byId.get(String(r.postId)) : null,
+              ),
+            );
+          }
+        }
+
+        if (!cancelled) setReports(merged);
       } catch (e) {
         if (!cancelled) {
           setReports([]);

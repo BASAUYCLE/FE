@@ -59,6 +59,18 @@ export function normalizeInspection(row) {
     row.post && typeof row.post === "object" && !Array.isArray(row.post)
       ? row.post
       : null;
+  const postSellerObj =
+    postObj?.seller &&
+    typeof postObj.seller === "object" &&
+    !Array.isArray(postObj.seller)
+      ? postObj.seller
+      : null;
+  const postOwnerObj =
+    postObj?.owner &&
+    typeof postObj.owner === "object" &&
+    !Array.isArray(postObj.owner)
+      ? postObj.owner
+      : null;
 
   return {
     reportId:
@@ -80,9 +92,29 @@ export function normalizeInspection(row) {
       row.owner_name,
       typeof row.seller === "string" ? row.seller : null,
       sellerObj?.fullName,
+      sellerObj?.full_name,
       sellerObj?.name,
+      sellerObj?.email,
       postObj?.sellerFullName,
+      postObj?.seller_full_name,
       postObj?.sellerName,
+      postObj?.seller_name,
+      typeof postObj?.seller === "string" ? postObj.seller : null,
+      postSellerObj?.fullName,
+      postSellerObj?.full_name,
+      postSellerObj?.name,
+      postSellerObj?.email,
+      postObj?.ownerFullName,
+      postObj?.owner_full_name,
+      postObj?.ownerName,
+      typeof postObj?.owner === "string" ? postObj.owner : null,
+      postOwnerObj?.fullName,
+      postOwnerObj?.full_name,
+      postOwnerObj?.name,
+      postObj?.member?.fullName,
+      postObj?.member?.name,
+      postObj?.user?.fullName,
+      postObj?.user?.name,
     ),
     inspectorName: firstNonEmpty(
       row.inspectorName,

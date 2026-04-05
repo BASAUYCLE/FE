@@ -61,9 +61,14 @@ function normalizeFromPost(post, historyByPostId) {
   return normalizeReport({
     reportId: history?.reportId,
     postId,
+    post,
     bicycleName: post?.bicycleName ?? post?.title ?? post?.postTitle,
     sellerFullName:
-      post?.sellerFullName ?? post?.sellerName ?? post?.seller?.fullName,
+      history?.sellerFullName ??
+      history?.sellerName ??
+      post?.sellerFullName ??
+      post?.sellerName ??
+      post?.seller?.fullName,
     images: post?.images,
     thumbnailUrl:
       post?.thumbnailUrl ??
