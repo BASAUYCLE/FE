@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Box,
@@ -11,12 +11,22 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Fade,
+  Zoom,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { ZoomIn } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { BICYCLE_PHOTO_CRITERIA } from "../../constants/bicyclePhotoCriteria";
+import drivesideExample from "../../assets/driveside.jpg";
 
 export default function GuidePhotoUpload() {
+  const [driveSideLightboxOpen, setDriveSideLightboxOpen] = useState(false);
+
   useEffect(() => {
     const prev = document.title;
     document.title = "Hướng dẫn ảnh xe | BASAUYCLE";
@@ -111,6 +121,145 @@ export default function GuidePhotoUpload() {
                       >
                         {row.titleEn}
                       </Box>
+                      {row.code === "OVERALL_DRIVE_SIDE" && (
+                        <>
+                          <Box
+                            sx={{
+                              position: "relative",
+                              display: "block",
+                              width: "100%",
+                              maxWidth: 320,
+                              mt: 1.5,
+                              borderRadius: 4,
+                              overflow: "hidden",
+                              border: "1px solid #e2e8f0",
+                            }}
+                          >
+                            <Box
+                              component="img"
+                              src={drivesideExample}
+                              alt="Ví dụ ảnh toàn xe phía đùi đạp (drive side)"
+                              sx={{
+                                display: "block",
+                                width: "100%",
+                                height: "auto",
+                                verticalAlign: "bottom",
+                                objectFit: "cover",
+                              }}
+                            />
+                            <IconButton
+                              type="button"
+                              size="small"
+                              aria-label="Phóng to ảnh mẫu"
+                              onClick={() => setDriveSideLightboxOpen(true)}
+                              sx={{
+                                position: "absolute",
+                                top: 10,
+                                right: 10,
+                                bgcolor: "rgba(255,255,255,0.94)",
+                                color: "#0f766e",
+                                boxShadow: "0 1px 4px rgba(15,23,42,0.12)",
+                                "&:hover": {
+                                  bgcolor: "rgba(255,255,255,1)",
+                                },
+                              }}
+                            >
+                              <ZoomIn size={18} strokeWidth={2} aria-hidden />
+                            </IconButton>
+                          </Box>
+                          <Dialog
+                            open={driveSideLightboxOpen}
+                            onClose={() => setDriveSideLightboxOpen(false)}
+                            maxWidth={false}
+                            TransitionComponent={Fade}
+                            transitionDuration={{ enter: 320, exit: 220 }}
+                            slotProps={{
+                              backdrop: {
+                                sx: {
+                                  backgroundColor: "rgba(15, 23, 42, 0.48)",
+                                  backdropFilter: "blur(12px)",
+                                  WebkitBackdropFilter: "blur(12px)",
+                                },
+                              },
+                              paper: {
+                                sx: {
+                                  bgcolor: "transparent",
+                                  backgroundImage: "none",
+                                  boxShadow: "none",
+                                  overflow: "visible",
+                                  maxWidth: "min(96vw, 1120px)",
+                                  width: "100%",
+                                  m: 2,
+                                },
+                              },
+                            }}
+                          >
+                            <IconButton
+                              type="button"
+                              aria-label="Đóng"
+                              onClick={() => setDriveSideLightboxOpen(false)}
+                              sx={{
+                                position: "absolute",
+                                right: 12,
+                                top: 12,
+                                zIndex: 1,
+                                color: "#f8fafc",
+                                bgcolor: "rgba(15, 23, 42, 0.45)",
+                                backdropFilter: "blur(8px)",
+                                WebkitBackdropFilter: "blur(8px)",
+                                border: "1px solid rgba(255,255,255,0.12)",
+                                "&:hover": {
+                                  bgcolor: "rgba(15, 23, 42, 0.62)",
+                                },
+                              }}
+                            >
+                              <CloseIcon />
+                            </IconButton>
+                            <DialogContent
+                              sx={{
+                                p: { xs: 2, sm: 3 },
+                                pt: { xs: 6, sm: 7 },
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                overflow: "visible",
+                              }}
+                            >
+                              <Zoom
+                                in={driveSideLightboxOpen}
+                                timeout={{ enter: 520, exit: 240 }}
+                                style={{
+                                  transitionDelay: driveSideLightboxOpen
+                                    ? "60ms"
+                                    : "0ms",
+                                }}
+                                easing={{
+                                  enter: "cubic-bezier(0.16, 1, 0.3, 1)",
+                                  exit: "cubic-bezier(0.4, 0, 1, 1)",
+                                }}
+                              >
+                                <Box
+                                  component="img"
+                                  src={drivesideExample}
+                                  alt="Ví dụ ảnh toàn xe phía đùi đạp (drive side), xem phóng to"
+                                  sx={{
+                                    display: "block",
+                                    maxWidth: "100%",
+                                    maxHeight: "min(82dvh, 860px)",
+                                    width: "auto",
+                                    height: "auto",
+                                    objectFit: "contain",
+                                    borderRadius: 3,
+                                    boxShadow:
+                                      "0 4px 6px -1px rgba(0,0,0,0.08), 0 24px 48px -12px rgba(15,23,42,0.45), 0 0 0 1px rgba(255,255,255,0.06)",
+                                    verticalAlign: "bottom",
+                                  }}
+                                />
+                              </Zoom>
+                            </DialogContent>
+                          </Dialog>
+                        </>
+                      )}
                     </TableCell>
                     <TableCell
                       sx={{
