@@ -7,6 +7,11 @@ import { VALID_INSPECTION_SCORES } from "../utils/inspectionScoring";
 
 export { VALID_INSPECTION_SCORES };
 
+/** Tiêu chí 0 điểm → FAIL bắt buộc (BE); dùng badge (critical) trên UI báo cáo */
+export const INSPECTION_CRITICAL_CRITERIA_KEYS = Object.freeze(
+  new Set(["frameScore", "brakeScore"]),
+);
+
 /** 4 mức điểm cho radio / button group / dropdown */
 export const INSPECTION_SCORE_OPTIONS = Object.freeze([
   {
@@ -61,9 +66,8 @@ export const INSPECTION_CRITERIA_ROWS = Object.freeze([
     weightPercent: 30,
     labelVi: "Khung xe",
     labelEn: "Frame",
-    hintVi: "Nếu 0 điểm → tự động FAIL",
-    hintEn: "Score 0 forces FAIL",
-    critical: true,
+    hintVi: "Ống khung, mối hàn, thẳng khung và tình trạng kết cấu",
+    hintEn: "Frame tubes, welds, alignment, and structural condition",
   },
   {
     key: "groupsetScore",
@@ -78,9 +82,8 @@ export const INSPECTION_CRITERIA_ROWS = Object.freeze([
     weightPercent: 15,
     labelVi: "Phanh",
     labelEn: "Brakes",
-    hintVi: "Nếu 0 điểm → tự động FAIL",
-    hintEn: "Score 0 forces FAIL",
-    critical: true,
+    hintVi: "Lực phanh, má phanh, đĩa hoặc vành, dây hoặc dầu phanh",
+    hintEn: "Braking power; pads, rotors or rims, cables or hydraulics",
   },
   {
     key: "controlScore",

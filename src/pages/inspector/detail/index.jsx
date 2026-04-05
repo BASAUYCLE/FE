@@ -446,9 +446,7 @@ export default function InspectorDetail() {
                                 </h4>
                               </div>
                               {row.hintEn ? (
-                                <p
-                                  className={`inspection-criterion-hint ${row.critical ? "inspection-criterion-hint--critical" : ""}`}
-                                >
+                                <p className="inspection-criterion-hint">
                                   {row.hintEn}
                                 </p>
                               ) : null}

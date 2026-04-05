@@ -44,6 +44,7 @@ import {
 } from "../../constants/postingStatus";
 import {
   INSPECTION_CRITERIA_ROWS,
+  INSPECTION_CRITICAL_CRITERIA_KEYS,
   INSPECTION_SCORE_OPTIONS,
 } from "../../constants/inspectionRubric";
 import axiosInstance from "../../services/axiosConfig";
@@ -1494,7 +1495,7 @@ export default function ProductDetail() {
                           sx={{ flex: 1 }}
                         >
                           {row.labelEn}
-                          {row.critical ? (
+                          {INSPECTION_CRITICAL_CRITERIA_KEYS.has(row.key) ? (
                             <Typography
                               component="span"
                               variant="caption"
