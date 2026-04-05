@@ -1,4 +1,4 @@
-import { Modal } from "antd";
+import { Modal, Progress } from "antd";
 import "./InspectionCertificateModal.css";
 
 export default function InspectionCertificateModal({ open, snapshot, onDone }) {
@@ -10,11 +10,18 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
       : snapshot.result === "FAIL"
         ? "inspection-certificate-result-pill--fail"
         : "inspection-certificate-result-pill--neutral";
-  const pctDisplay =
-    typeof snapshot.conditionPercent === "number" &&
-    !Number.isNaN(snapshot.conditionPercent)
-      ? `${snapshot.conditionPercent}%`
-      : "—";
+  const scorePctClamped = (() => {
+    const cp = snapshot.conditionPercent;
+    if (cp == null || cp === "") return null;
+    const n = typeof cp === "number" ? cp : Number(cp);
+    return Number.isFinite(n) ? Math.min(100, Math.max(0, n)) : null;
+  })();
+  const scoreRingStroke =
+    snapshot.result === "FAIL"
+      ? { "0%": "#f87171", "100%": "#dc2626" }
+      : snapshot.result === "PASS"
+        ? { "0%": "#00ccad", "100%": "#0d9488" }
+        : { "0%": "#94a3b8", "100%": "#64748b" };
 
   return (
     <Modal
@@ -113,37 +120,91 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
                 </span>
               </span>
             </div>
-            <div>
-              <span className="inspection-certificate-field-label">
-                Điểm tổng hợp (ước tính)
-              </span>
-              <span className="inspection-certificate-field-value">
-                {pctDisplay}
-              </span>
-            </div>
-            <div>
-              <span className="inspection-certificate-field-label">
-                Xếp loại tổng thể
-              </span>
-              <span className="inspection-certificate-field-value">
-                {snapshot.overallLabelVi}
-              </span>
-            </div>
-            <div style={{ gridColumn: "1 / -1" }}>
-              <span className="inspection-certificate-field-label">
-                Kết quả kiểm định
-              </span>
-              <div>
-                <span
-                  className={`inspection-certificate-result-pill ${resultPillClass}`}
-                >
-                  {snapshot.passFailVi}
-                  {snapshot.result === "PASS" || snapshot.result === "FAIL"
-                    ? ` (${snapshot.result})`
-                    : ""}
-                </span>
+            {scorePctClamped != null ? (
+              <div
+                className="inspection-certificate-score-hero"
+                style={{ gridColumn: "1 / -1" }}
+              >
+                <div className="inspection-certificate-score-hero-ring">
+                  <span className="inspection-certificate-score-hero-label">
+                    Điểm tổng hợp (ước tính)
+                  </span>
+                  <Progress
+                    type="circle"
+                    percent={scorePctClamped}
+                    size={168}
+                    strokeWidth={10}
+                    strokeColor={scoreRingStroke}
+                    trailColor="rgba(148, 163, 184, 0.22)"
+                    format={() => (
+                      <span className="inspection-certificate-score-hero-pct">
+                        {scorePctClamped % 1 === 0
+                          ? `${Math.round(scorePctClamped)}%`
+                          : `${scorePctClamped.toFixed(1)}%`}
+                      </span>
+                    )}
+                  />
+                </div>
+                <div className="inspection-certificate-score-hero-meta">
+                  <div>
+                    <span className="inspection-certificate-field-label">
+                      Xếp loại tổng thể
+                    </span>
+                    <span className="inspection-certificate-field-value">
+                      {snapshot.overallLabelVi}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="inspection-certificate-field-label">
+                      Kết quả kiểm định
+                    </span>
+                    <div>
+                      <span
+                        className={`inspection-certificate-result-pill inspection-certificate-result-pill--hero ${resultPillClass}`}
+                      >
+                        {snapshot.passFailVi}
+                        {snapshot.result === "PASS" ||
+                        snapshot.result === "FAIL"
+                          ? ` (${snapshot.result})`
+                          : ""}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                <div>
+                  <span className="inspection-certificate-field-label">
+                    Điểm tổng hợp (ước tính)
+                  </span>
+                  <span className="inspection-certificate-field-value">—</span>
+                </div>
+                <div>
+                  <span className="inspection-certificate-field-label">
+                    Xếp loại tổng thể
+                  </span>
+                  <span className="inspection-certificate-field-value">
+                    {snapshot.overallLabelVi}
+                  </span>
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <span className="inspection-certificate-field-label">
+                    Kết quả kiểm định
+                  </span>
+                  <div>
+                    <span
+                      className={`inspection-certificate-result-pill ${resultPillClass}`}
+                    >
+                      {snapshot.passFailVi}
+                      {snapshot.result === "PASS" || snapshot.result === "FAIL"
+                        ? ` (${snapshot.result})`
+                        : ""}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 

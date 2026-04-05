@@ -100,6 +100,90 @@
   gap: 10px 20px;
 }
 
+/* Vòng tròn % — đồng bộ với AdminInspectionModal (trang /product) */
+.inspection-certificate-score-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 28px 40px;
+  margin-top: 8px;
+  padding: 22px 18px;
+  background: linear-gradient(
+    165deg,
+    #ffffff 0%,
+    var(--cert-surface-strong) 55%,
+    var(--cert-surface) 100%
+  );
+  border: 2px solid var(--cert-border-strong);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(13, 148, 136, 0.08);
+}
+
+.inspection-certificate-score-hero-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.inspection-certificate-score-hero-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--cert-accent-ink);
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.35;
+}
+
+.inspection-certificate-score-hero-pct {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--cert-ink);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.inspection-certificate-score-hero .ant-progress-circle .ant-progress-text {
+  font-size: inherit;
+}
+
+.inspection-certificate-score-hero-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
+  max-width: 340px;
+  justify-content: center;
+}
+
+.inspection-certificate-result-pill--hero {
+  margin-top: 6px;
+  font-size: 13px;
+  padding: 9px 18px;
+}
+
+@media (max-width: 520px) {
+  .inspection-certificate-score-hero {
+    flex-direction: column;
+    padding: 18px 14px;
+  }
+
+  .inspection-certificate-score-hero-meta {
+    max-width: none;
+    width: 100%;
+    text-align: center;
+  }
+
+  .inspection-certificate-score-hero-meta .inspection-certificate-field-label {
+    text-align: center;
+  }
+}
+
 @media (max-width: 560px) {
   .inspection-certificate-summary-grid {
     grid-template-columns: 1fr;
