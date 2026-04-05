@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Box,
@@ -11,12 +11,70 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Fade,
+  Zoom,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { ZoomIn } from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import { BICYCLE_PHOTO_CRITERIA } from "../../constants/bicyclePhotoCriteria";
+import drivesideExample from "../../assets/driveside.jpg";
+import nonDrivesideExample from "../../assets/non-driveside.jpg";
+import cockpitExample from "../../assets/cockpit.jpg";
+import drivetrainExample from "../../assets/drivetrain.jpg";
+import frontBrakeExample from "../../assets/frontbrake.jpg";
+import rearBrakeExample from "../../assets/rearbrake.jpg";
+import defectsExample from "../../assets/defects.jpg";
+
+const GUIDE_EXAMPLE_PHOTOS = {
+  OVERALL_DRIVE_SIDE: {
+    src: drivesideExample,
+    altThumb: "Ví dụ ảnh toàn xe phía đùi đạp (drive side)",
+    altLarge:
+      "Ví dụ ảnh toàn xe phía đùi đạp (drive side), xem phóng to",
+  },
+  OVERALL_NON_DRIVE_SIDE: {
+    src: nonDrivesideExample,
+    altThumb: "Ví dụ ảnh toàn xe phía không đùi đạp (non-drive side)",
+    altLarge:
+      "Ví dụ ảnh toàn xe phía không đùi đạp (non-drive side), xem phóng to",
+  },
+  COCKPIT_AREA: {
+    src: cockpitExample,
+    altThumb: "Ví dụ ảnh khu vực cockpit",
+    altLarge: "Ví dụ ảnh khu vực cockpit, xem phóng to",
+  },
+  DRIVETRAIN_CLOSEUP: {
+    src: drivetrainExample,
+    altThumb: "Ví dụ ảnh cận groupset / truyền động",
+    altLarge:
+      "Ví dụ ảnh cận groupset / truyền động, xem phóng to",
+  },
+  FRONT_BRAKE: {
+    src: frontBrakeExample,
+    altThumb: "Ví dụ ảnh phanh trước",
+    altLarge: "Ví dụ ảnh phanh trước, xem phóng to",
+  },
+  REAR_BRAKE: {
+    src: rearBrakeExample,
+    altThumb: "Ví dụ ảnh phanh sau",
+    altLarge: "Ví dụ ảnh phanh sau, xem phóng to",
+  },
+  DEFECT_POINT: {
+    src: defectsExample,
+    altThumb: "Ví dụ ảnh điểm lỗi / trầy xước",
+    altLarge: "Ví dụ ảnh điểm lỗi / trầy xước, xem phóng to",
+  },
+};
 
 export default function GuidePhotoUpload() {
+  const [exampleLightboxCode, setExampleLightboxCode] = useState(null);
+  const lightboxExampleRef = useRef(null);
+
   useEffect(() => {
     const prev = document.title;
     document.title = "Hướng dẫn ảnh xe | BASAUYCLE";
@@ -111,6 +169,56 @@ export default function GuidePhotoUpload() {
                       >
                         {row.titleEn}
                       </Box>
+                      {GUIDE_EXAMPLE_PHOTOS[row.code] && (
+                        <Box
+                          sx={{
+                            position: "relative",
+                            display: "block",
+                            width: "100%",
+                            maxWidth: 320,
+                            mt: 1.5,
+                            borderRadius: 4,
+                            overflow: "hidden",
+                            border: "1px solid #e2e8f0",
+                          }}
+                        >
+                          <Box
+                            component="img"
+                            src={GUIDE_EXAMPLE_PHOTOS[row.code].src}
+                            alt={GUIDE_EXAMPLE_PHOTOS[row.code].altThumb}
+                            sx={{
+                              display: "block",
+                              width: "100%",
+                              height: "auto",
+                              verticalAlign: "bottom",
+                              objectFit: "cover",
+                            }}
+                          />
+                          <IconButton
+                            type="button"
+                            size="small"
+                            aria-label="Phóng to ảnh mẫu"
+                            onClick={() => {
+                              lightboxExampleRef.current =
+                                GUIDE_EXAMPLE_PHOTOS[row.code];
+                              setExampleLightboxCode(row.code);
+                            }}
+                            sx={{
+                              position: "absolute",
+                              top: 10,
+                              right: 10,
+                              bgcolor: "rgba(255,255,255,0.94)",
+                              color: "#0f766e",
+                              boxShadow: "0 1px 4px rgba(15,23,42,0.12)",
+                              "&:hover": {
+                                bgcolor: "rgba(255,255,255,1)",
+                              },
+                            }}
+                          >
+                            <ZoomIn size={18} strokeWidth={2} aria-hidden />
+                          </IconButton>
+                        </Box>
+                      )}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -126,6 +234,98 @@ export default function GuidePhotoUpload() {
               </TableBody>
             </Table>
           </TableContainer>
+
+          <Dialog
+            open={Boolean(exampleLightboxCode)}
+            onClose={() => setExampleLightboxCode(null)}
+            maxWidth={false}
+            TransitionComponent={Fade}
+            transitionDuration={{ enter: 320, exit: 220 }}
+            slotProps={{
+              backdrop: {
+                sx: {
+                  backgroundColor: "rgba(15, 23, 42, 0.48)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                },
+              },
+              paper: {
+                sx: {
+                  bgcolor: "transparent",
+                  backgroundImage: "none",
+                  boxShadow: "none",
+                  overflow: "visible",
+                  maxWidth: "min(96vw, 1120px)",
+                  width: "100%",
+                  m: 2,
+                },
+              },
+            }}
+          >
+            <IconButton
+              type="button"
+              aria-label="Đóng"
+              onClick={() => setExampleLightboxCode(null)}
+              sx={{
+                position: "absolute",
+                right: 12,
+                top: 12,
+                zIndex: 1,
+                color: "#f8fafc",
+                bgcolor: "rgba(15, 23, 42, 0.45)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                "&:hover": {
+                  bgcolor: "rgba(15, 23, 42, 0.62)",
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <DialogContent
+              sx={{
+                p: { xs: 2, sm: 3 },
+                pt: { xs: 6, sm: 7 },
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                overflow: "visible",
+              }}
+            >
+              {lightboxExampleRef.current && (
+                <Zoom
+                  in={Boolean(exampleLightboxCode)}
+                  timeout={{ enter: 520, exit: 240 }}
+                  style={{
+                    transitionDelay: exampleLightboxCode ? "60ms" : "0ms",
+                  }}
+                  easing={{
+                    enter: "cubic-bezier(0.16, 1, 0.3, 1)",
+                    exit: "cubic-bezier(0.4, 0, 1, 1)",
+                  }}
+                >
+                  <Box
+                    component="img"
+                    src={lightboxExampleRef.current.src}
+                    alt={lightboxExampleRef.current.altLarge}
+                    sx={{
+                      display: "block",
+                      maxWidth: "100%",
+                      maxHeight: "min(82dvh, 860px)",
+                      width: "auto",
+                      height: "auto",
+                      objectFit: "contain",
+                      borderRadius: 3,
+                      boxShadow:
+                        "0 4px 6px -1px rgba(0,0,0,0.08), 0 24px 48px -12px rgba(15,23,42,0.45), 0 0 0 1px rgba(255,255,255,0.06)",
+                      verticalAlign: "bottom",
+                    }}
+                  />
+                </Zoom>
+              )}
+            </DialogContent>
+          </Dialog>
 
           <Typography
             component="h2"
