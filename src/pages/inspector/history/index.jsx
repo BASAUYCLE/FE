@@ -31,7 +31,8 @@ function coerceDateValue(v) {
  * Fallback: shape giống GET /inspection/pending (bicycleName, thumbnailUrl, categoryName, …).
  */
 function mapHistoryRow(item) {
-  const postId = item.postId ?? item.id;
+  const post = item.post && typeof item.post === "object" ? item.post : null;
+  const postId = item.postId ?? post?.postId ?? post?.id ?? item.id;
   const rawResult = (
     item.result ??
     item.inspectionResult ??
@@ -61,13 +62,25 @@ function mapHistoryRow(item) {
     condBits.push(`${Number(item.conditionPercent).toFixed(0)}%`);
   const condLine = condBits.join(" · ");
 
+  const postStatus =
+    item.postStatus ?? post?.postStatus ?? post?.status ?? null;
+
   return {
     id: String(postId ?? ""),
     postId,
-    bicycleName: item.postTitle ?? item.bicycleName ?? "—",
-    bicycleImage: item.thumbnailUrl ?? item.bicycleImage ?? "",
-    bicycleType:
-      item.postStatus ?? item.categoryName ?? item.bicycleType ?? "—",
+    bicycleName:
+      item.postTitle ??
+      item.bicycleName ??
+      post?.bicycleName ??
+      post?.title ??
+      "—",
+    bicycleImage:
+      item.thumbnailUrl ??
+      item.bicycleImage ??
+      post?.thumbnailUrl ??
+      post?.images?.[0]?.imageUrl ??
+      "",
+    bicycleType: postStatus ?? item.categoryName ?? item.bicycleType ?? "—",
     sellerName: hasSeller ? sellerFromApi : condLine || "—",
     sellerLocation: hasSeller
       ? condLine || item.sellerLocation || ""
@@ -83,7 +96,7 @@ function mapHistoryRow(item) {
 }
 
 /**
- * Lịch sử kiểm định: GET `API_ENDPOINTS.INSPECTION.HISTORY` (mặc định /inspection/history).
+ * Inspector approval history: GET `API_ENDPOINTS.INSPECTION.HISTORY` → `/inspection/reports`.
  */
 export default function InspectorHistoryPage() {
   const [rows, setRows] = useState([]);
@@ -104,7 +117,7 @@ export default function InspectorHistoryPage() {
           setRows([]);
           setLoadError(
             e?.message ??
-              "Could not load inspection history. Confirm the backend exposes the inspector history route and that `INSPECTION.HISTORY` in api.js matches it.",
+              "Could not load inspection history. Ensure GET /inspection/reports is available and you are signed in as an inspector.",
           );
         }
       } finally {

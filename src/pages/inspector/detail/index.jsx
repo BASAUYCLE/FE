@@ -63,10 +63,10 @@ function createEmptyScores() {
   return {};
 }
 
-/** Select options — English rubric text (hintEn) */
+/** Select options — English description only (values 10/7/3/0 stay as option values for API). */
 const INSPECTION_SCORE_SELECT_OPTIONS = INSPECTION_SCORE_OPTIONS.map((opt) => ({
   value: opt.value,
-  label: `${opt.value} — ${opt.hintEn}`,
+  label: opt.hintEn,
 }));
 
 /** Chuẩn hóa GET /posts/:id — cùng alias field với ProductDetail để không thiếu dữ liệu. */

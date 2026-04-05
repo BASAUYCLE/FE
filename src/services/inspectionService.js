@@ -27,8 +27,8 @@ const inspectionService = {
     axiosInstance.get(ENDPOINTS.PENDING, { params }),
 
   /**
-   * GET `INSPECTION.HISTORY` — lịch sử báo cáo của inspector đăng nhập.
-   * BE (bike_platform): thường là `List<InspectionReportResponse>` (postId, postTitle, result, createdAt, postStatus, overallCondition, conditionPercent, …).
+   * GET /inspection/reports — inspector’s own approval / inspection history (JWT).
+   * BE: `List<InspectionReportResponse>` in `result` (postId, result, postStatus, scores, …).
    */
   getMyInspectionHistory: (params = {}) =>
     axiosInstance.get(ENDPOINTS.HISTORY, { params }),

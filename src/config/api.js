@@ -85,13 +85,13 @@ export const API_ENDPOINTS = {
   },
 
   /**
-   * Inspector – BE: GET /inspection/pending, POST /inspection/{postId}/submit.
-   * Lịch sử kiểm định (inspector): BE trả list `InspectionReportResponse` trong `result`;
-   * đổi HISTORY cho khớp route thực tế (vd. /inspection/my-history) nếu team BE đặt khác.
+   * Inspector – BE: GET /inspection/pending, GET /inspection/reports (my approval history),
+   * POST /inspection/{postId}/submit.
+   * History: `ApiResponse<List<InspectionReportResponse>>` (JWT subject = inspector email).
    */
   INSPECTION: {
     PENDING: "/inspection/pending",
-    HISTORY: "/inspection/history",
+    HISTORY: "/inspection/reports",
     SUBMIT: (postId) => `/inspection/${postId}/submit`,
   },
 
