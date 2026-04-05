@@ -189,6 +189,10 @@ export default function InspectorDetail() {
       );
       return;
     }
+    if (!notes.trim()) {
+      message.error("Please enter inspection notes before submitting.");
+      return;
+    }
     if (!canSubmit) {
       message.warning(
         "This listing is not in admin-approved (pending inspection) status.",
@@ -202,9 +206,13 @@ export default function InspectorDetail() {
     const v = validateInspectionScores(scores);
     if (!v.valid || !postIdNum) return;
     const trimmed = notes.trim();
+    if (!trimmed) {
+      message.error("Inspection notes are required.");
+      return;
+    }
     const payload = {
       ...scores,
-      ...(trimmed ? { notes: trimmed } : {}),
+      notes: trimmed,
     };
     try {
       setSubmitLoading(true);
@@ -484,11 +492,13 @@ export default function InspectorDetail() {
                       className="inspection-notes-label"
                       htmlFor="inspector-notes"
                     >
-                      Notes (optional)
+                      Notes (required)
                     </label>
                     <Input.TextArea
                       id="inspector-notes"
-                      placeholder="e.g. Minor paint chips on top tube; brakes bled recently."
+                      required
+                      aria-required="true"
+                      placeholder="Describe condition, defects, repairs, or test ride observations (required)."
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       rows={4}
@@ -614,11 +624,9 @@ export default function InspectorDetail() {
                   : ""}
                 . Final values are returned by the server.
               </p>
-              {notes.trim() ? (
-                <p className="inspection-confirm-notes">
-                  <em>Notes:</em> {notes.trim()}
-                </p>
-              ) : null}
+              <p className="inspection-confirm-notes">
+                <em>Notes:</em> {notes.trim()}
+              </p>
             </div>
           ) : (
             <p>Scores are incomplete.</p>

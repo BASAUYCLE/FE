@@ -18,7 +18,7 @@ const ENDPOINTS = API_ENDPOINTS.INSPECTION;
  * @property {InspectionScoreValue} brakeScore     — weight 15% (0 ⇒ auto FAIL)
  * @property {InspectionScoreValue} controlScore   — weight 10%
  * @property {InspectionScoreValue} wheelScore     — weight 10%
- * @property {string} [notes]                      — optional inspector notes
+ * @property {string} [notes]                      — inspector notes (required by FE before submit)
  */
 
 const inspectionService = {
