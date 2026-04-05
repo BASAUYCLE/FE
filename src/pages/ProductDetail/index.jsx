@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import AdminLayout from "../../components/layout/AdminLayout";
 import InspectorLayout from "../../components/layout/InspectorLayout";
@@ -22,7 +22,7 @@ import {
   ZoomInOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
-import { message, Modal } from "antd";
+import { message, Modal, Image } from "antd";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import CheckoutModal from "../../components/CheckoutModal";
@@ -475,7 +475,46 @@ export default function ProductDetail() {
     return imgs.map((url, i) => ({ url, label: `Photo ${i + 1}` }));
   }, [product]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [imageZoomOpen, setImageZoomOpen] = useState(false);
+  const galleryHeroRef = useRef(null);
+
+  const previewGalleryItems = useMemo(
+    () =>
+      galleryPhotos.slice(0, 6).map((p) => ({
+        src: p.url,
+        alt: `${product?.name ?? "Product"} — ${p.label ?? "Photo"}`,
+      })),
+    [galleryPhotos, product?.name],
+  );
+
+  const galleryPreviewConfig = useMemo(
+    () => ({
+      scaleStep: 0.5,
+      minScale: 0.5,
+      maxScale: 5,
+      movable: true,
+      mask: { blur: true },
+      onChange: (current) => setSelectedImageIndex(current),
+      actionsRender: (_, { icons }) => (
+        <div className="ant-image-preview-actions">
+          {icons.rotateLeftIcon}
+          {icons.rotateRightIcon}
+          {icons.flipXIcon}
+          {icons.flipYIcon}
+          {icons.zoomOutIcon}
+          {icons.zoomInIcon}
+        </div>
+      ),
+    }),
+    [],
+  );
+
+  const openProductImagePreview = useCallback(() => {
+    const root = galleryHeroRef.current;
+    if (!root) return;
+    const target =
+      root.querySelector(".ant-image-img") ?? root.querySelector(".ant-image");
+    target?.click();
+  }, []);
 
   const isOwnListing =
     product?.sellerId != null &&
@@ -823,6 +862,7 @@ export default function ProductDetail() {
           {/* Main Image & Gallery - 6 detailed bike images */}
           <Box>
             <Box
+              ref={galleryHeroRef}
               className="product-detail-main-image"
               sx={{
                 position: "relative",
@@ -833,26 +873,44 @@ export default function ProductDetail() {
                 mb: 2,
               }}
             >
-              <img
-                src={
-                  galleryPhotos[selectedImageIndex]?.url ||
-                  images[selectedImageIndex] ||
-                  product.image
-                }
-                alt={`${product.name} — ${galleryPhotos[selectedImageIndex]?.label ?? `Photo ${selectedImageIndex + 1}`}`}
-                referrerPolicy="no-referrer"
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
-              />
+              <Image.PreviewGroup
+                classNames={{
+                  popup: { root: "product-detail-gallery-preview" },
+                }}
+                items={previewGalleryItems}
+                preview={galleryPreviewConfig}
+              >
+                <Image
+                  src={
+                    galleryPhotos[selectedImageIndex]?.url ||
+                    images[selectedImageIndex] ||
+                    product.image
+                  }
+                  alt={`${product.name} — ${galleryPhotos[selectedImageIndex]?.label ?? `Photo ${selectedImageIndex + 1}`}`}
+                  referrerPolicy="no-referrer"
+                  rootClassName="product-detail-hero-ant-image"
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                />
+              </Image.PreviewGroup>
               <IconButton
-                onClick={() => setImageZoomOpen(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  openProductImagePreview();
+                }}
                 sx={{
                   position: "absolute",
                   top: 12,
                   right: 12,
+                  zIndex: 1,
                   bgcolor: "rgba(255,255,255,0.9)",
                   "&:hover": { bgcolor: "#fff" },
                 }}
-                aria-label="View enlarged image"
+                aria-label="Xem ảnh chi tiết (zoom, trước/sau)"
               >
                 <ZoomInOutlined />
               </IconButton>
@@ -1428,50 +1486,6 @@ export default function ProductDetail() {
           </Box>
         </Box>
       </Box>
-
-      {/* <ImageZoomModal /> */}
-      <Modal
-        open={imageZoomOpen}
-        onCancel={() => setImageZoomOpen(false)}
-        footer={null}
-        centered
-        width="min(90vw, 900px)"
-        styles={{ body: { padding: 0 } }}
-      >
-        <img
-          src={
-            galleryPhotos[selectedImageIndex]?.url ||
-            images[selectedImageIndex] ||
-            product?.image
-          }
-          alt={`${product?.name ?? "Product"} — ${galleryPhotos[selectedImageIndex]?.label ?? "photo"}`}
-          referrerPolicy="no-referrer"
-          style={{
-            width: "100%",
-            height: "auto",
-            maxHeight: "85vh",
-            objectFit: "contain",
-            display: "block",
-          }}
-        />
-        {galleryPhotos[selectedImageIndex]?.label ? (
-          <Typography
-            component="p"
-            variant="body2"
-            sx={{
-              px: 2,
-              py: 1.5,
-              m: 0,
-              textAlign: "center",
-              color: "#475569",
-              fontWeight: 600,
-              borderTop: "1px solid #f1f5f9",
-            }}
-          >
-            {galleryPhotos[selectedImageIndex].label}
-          </Typography>
-        ) : null}
-      </Modal>
 
       {/* <RejectListingModal /> */}
       <Modal

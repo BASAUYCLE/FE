@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Modal, Tag, Spin } from "antd";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Modal, Tag, Spin, Image } from "antd";
+import { ZoomInOutlined } from "@ant-design/icons";
 import axiosInstance from "../../services/axiosConfig";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { getAvatarSrc } from "../../utils/avatar";
@@ -97,6 +98,45 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
   const [imgIdx, setImgIdx] = useState(0);
   const [paymentInfo, setPaymentInfo] = useState(null);
   const [avatarLoadError, setAvatarLoadError] = useState(false);
+  const galleryHeroRef = useRef(null);
+
+  const previewGalleryItems = useMemo(() => {
+    if (!product?.images?.length) return [];
+    return product.images.slice(0, 8).map((url, i) => ({
+      src: url,
+      alt: `${product.name} — Photo ${i + 1}`,
+    }));
+  }, [product]);
+
+  const galleryPreviewConfig = useMemo(
+    () => ({
+      scaleStep: 0.5,
+      minScale: 0.5,
+      maxScale: 5,
+      movable: true,
+      mask: { blur: true },
+      onChange: (current) => setImgIdx(current),
+      actionsRender: (_, { icons }) => (
+        <div className="ant-image-preview-actions">
+          {icons.rotateLeftIcon}
+          {icons.rotateRightIcon}
+          {icons.flipXIcon}
+          {icons.flipYIcon}
+          {icons.zoomOutIcon}
+          {icons.zoomInIcon}
+        </div>
+      ),
+    }),
+    [],
+  );
+
+  const openGalleryLightbox = useCallback(() => {
+    const root = galleryHeroRef.current;
+    if (!root) return;
+    const target =
+      root.querySelector(".ant-image-img") ?? root.querySelector(".ant-image");
+    target?.click();
+  }, []);
 
   useEffect(() => {
     if (!open || !postId) {
@@ -229,8 +269,8 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
       open={open}
       onCancel={onClose}
       footer={null}
-      width="min(1120px, 96vw)"
-      style={{ top: 12 }}
+      centered
+      width="min(1600px, 97vw)"
       destroyOnHidden
       className="product-preview-modal"
       styles={{ body: { padding: 0 } }}
@@ -246,38 +286,104 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
         </div>
       ) : (
         <div className="ppm-body">
-          {/* Gallery */}
+          {/* Gallery + seller/description — đáy cột trái lấp khoảng trống khi cột phải dài */}
           <div className="ppm-gallery">
-            <div className="ppm-main-img-wrap">
-              {product.images.length > 0 ? (
-                <img
-                  src={product.images[imgIdx] ?? product.images[0]}
-                  alt={product.name}
-                  className="ppm-main-img"
-                  onError={(e) => {
-                    e.currentTarget.style.display = "none";
-                  }}
-                />
-              ) : (
-                <div className="ppm-no-img">No image</div>
+            <div className="ppm-gallery-stack">
+              <div className="ppm-main-img-wrap" ref={galleryHeroRef}>
+                {product.images.length > 0 ? (
+                  <>
+                    <Image.PreviewGroup
+                      classNames={{
+                        popup: { root: "product-detail-gallery-preview" },
+                      }}
+                      items={previewGalleryItems}
+                      preview={galleryPreviewConfig}
+                    >
+                      <Image
+                        src={product.images[imgIdx] ?? product.images[0]}
+                        alt={product.name}
+                        referrerPolicy="no-referrer"
+                        rootClassName="ppm-hero-ant-image"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                        }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    </Image.PreviewGroup>
+                    <button
+                      type="button"
+                      className="ppm-gallery-loupe"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openGalleryLightbox();
+                      }}
+                      aria-label="Xem ảnh chi tiết (zoom, trước/sau)"
+                    >
+                      <ZoomInOutlined />
+                    </button>
+                  </>
+                ) : (
+                  <div className="ppm-no-img">No image</div>
+                )}
+              </div>
+              {product.images.length > 1 && (
+                <div className="ppm-thumbs">
+                  {product.images.slice(0, 8).map((url, i) => (
+                    <img
+                      key={i}
+                      src={url}
+                      alt=""
+                      className={`ppm-thumb ${i === imgIdx ? "active" : ""}`}
+                      onClick={() => setImgIdx(i)}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  ))}
+                </div>
               )}
             </div>
-            {product.images.length > 1 && (
-              <div className="ppm-thumbs">
-                {product.images.slice(0, 8).map((url, i) => (
-                  <img
-                    key={i}
-                    src={url}
-                    alt=""
-                    className={`ppm-thumb ${i === imgIdx ? "active" : ""}`}
-                    onClick={() => setImgIdx(i)}
-                    onError={(e) => {
-                      e.currentTarget.style.display = "none";
-                    }}
-                  />
-                ))}
+            <div className="ppm-gallery-bottom">
+              <div className="ppm-seller ppm-seller--gallery">
+                <div className="ppm-seller-avatar">
+                  {product.sellerAvatar && !avatarLoadError ? (
+                    <img
+                      src={product.sellerAvatar}
+                      alt={product.seller}
+                      className="ppm-seller-avatar-img"
+                      onError={() => setAvatarLoadError(true)}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    (product.seller[0] ?? "?").toUpperCase()
+                  )}
+                </div>
+                <div className="ppm-seller-text">
+                  <div className="ppm-seller-name">{product.seller}</div>
+                  {product.sellerLocation && (
+                    <div className="ppm-seller-label">
+                      {product.sellerLocation}
+                    </div>
+                  )}
+                  <div className="ppm-seller-label">Seller</div>
+                </div>
               </div>
-            )}
+              {product.description ? (
+                <div className="ppm-gallery-desc-block">
+                  <div className="ppm-section-title ppm-section-title--gallery">
+                    Description
+                  </div>
+                  <p className="ppm-desc ppm-desc--gallery">
+                    {product.description}
+                  </p>
+                </div>
+              ) : null}
+            </div>
           </div>
 
           {/* Info */}
@@ -298,32 +404,6 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
                   {new Date(product.createdAt).toLocaleDateString("en-US")}
                 </div>
               )}
-            </div>
-
-            {/* Seller */}
-            <div className="ppm-seller">
-              <div className="ppm-seller-avatar">
-                {product.sellerAvatar && !avatarLoadError ? (
-                  <img
-                    src={product.sellerAvatar}
-                    alt={product.seller}
-                    className="ppm-seller-avatar-img"
-                    onError={() => setAvatarLoadError(true)}
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  (product.seller[0] ?? "?").toUpperCase()
-                )}
-              </div>
-              <div>
-                <div className="ppm-seller-name">{product.seller}</div>
-                {product.sellerLocation && (
-                  <div className="ppm-seller-label">
-                    {product.sellerLocation}
-                  </div>
-                )}
-                <div className="ppm-seller-label">Seller</div>
-              </div>
             </div>
 
             {/* Specs — bao gồm dòng Kiểm định */}
@@ -350,13 +430,6 @@ export default function ProductPreviewModal({ postId, open, onClose }) {
               </>
             )}
 
-            {/* Description */}
-            {product.description && (
-              <>
-                <div className="ppm-section-title">Description</div>
-                <p className="ppm-desc">{product.description}</p>
-              </>
-            )}
             {paymentInfo && (
               <>
                 <div className="ppm-section-title">Pay remaining</div>

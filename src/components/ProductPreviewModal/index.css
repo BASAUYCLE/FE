@@ -2,7 +2,7 @@
   border-radius: 16px;
   overflow: hidden;
   padding: 0;
-  max-height: calc(100vh - 24px);
+  max-height: calc(100vh - 32px);
   display: flex;
   flex-direction: column;
 }
@@ -11,6 +11,9 @@
   padding: 0;
   overflow: hidden;
   flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-preview-modal .ant-modal-close {
@@ -30,43 +33,148 @@
 
 /* ── Layout ───────────────────────────────────────── */
 .ppm-body {
+  flex: 1;
   display: grid;
-  grid-template-columns: 340px 1fr;
+  /* Hai cột chia đều 50% – 50% */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
   min-height: 0;
-  max-height: calc(100vh - 24px);
+  max-height: calc(100vh - 32px);
+  background: #fff;
 }
 
 /* ── Gallery ──────────────────────────────────────── */
 .ppm-gallery {
   background: #f8fafc;
-  padding: 20px 16px;
+  padding: 14px 12px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0;
   border-right: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
 }
 
-.ppm-main-img-wrap {
-  flex: 1;
+.ppm-gallery-stack {
+  flex: 0 0 auto;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Seller + mô tả: đẩy xuống đáy cột trái khi cột phải cao hơn — lấp khoảng trống */
+.ppm-gallery-bottom {
+  margin-top: auto;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ppm-seller--gallery {
+  padding: 8px 10px;
+  background: #fff;
+}
+
+.ppm-seller-text {
+  min-width: 0;
+  flex: 1;
+}
+
+.ppm-gallery-desc-block {
+  min-height: 0;
+}
+
+.ppm-section-title--gallery {
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+
+.ppm-desc--gallery {
+  max-height: min(220px, 32vh);
+  overflow-y: auto;
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+/* Ảnh chính — Ant Design Image + lightbox giống trang /product/:id */
+.ppm-main-img-wrap {
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: min(24vh, 200px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: 10px;
   overflow: hidden;
   background: #fff;
   border: 1px solid #e2e8f0;
-  min-height: 220px;
+  box-sizing: border-box;
 }
 
-.ppm-main-img {
+.ppm-main-img-wrap .ant-image,
+.ppm-main-img-wrap .ppm-hero-ant-image.ant-image {
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  height: 240px;
+  height: 100%;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.ppm-main-img-wrap .ant-image-img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto !important;
+  height: auto !important;
   object-fit: contain;
+  cursor: zoom-in;
+}
+
+.ppm-gallery-loupe {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+.ppm-gallery-loupe:hover {
+  background: #fff;
+}
+
+/* Portal lightbox — cùng class với ProductDetail */
+.product-detail-gallery-preview .ant-image-preview-img {
+  max-height: min(88vh, 920px);
 }
 
 .ppm-no-img {
+  flex: 0 0 auto;
   width: 100%;
-  height: 260px;
+  aspect-ratio: 4 / 3;
+  max-height: min(24vh, 200px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,23 +182,46 @@
   font-size: 13px;
   background: #f1f5f9;
   border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-sizing: border-box;
 }
 
+/* Một hàng: thumb to, chia đều ngang; cuộn khi >6 hoặc màn hẹp */
 .ppm-thumbs {
+  flex-shrink: 0;
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ppm-thumbs::-webkit-scrollbar {
+  height: 5px;
+}
+
+.ppm-thumbs::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .ppm-thumb {
-  width: 54px;
-  height: 46px;
+  flex: 1 1 0;
+  min-width: 72px;
+  width: 0;
+  height: 76px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 8px;
   border: 2px solid transparent;
   cursor: pointer;
   transition: border-color 0.15s;
   background: #fff;
+  box-sizing: border-box;
 }
 
 .ppm-thumb.active,
@@ -100,13 +231,14 @@
 
 /* ── Info panel ───────────────────────────────────── */
 .ppm-info {
-  padding: 20px 22px;
+  padding: 16px 20px 18px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   overflow-y: auto;
-  max-height: calc(100vh - 24px);
+  max-height: calc(100vh - 32px);
   min-height: 0;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -172,6 +304,7 @@
   font-size: 13px;
   font-weight: 600;
   color: #0f172a;
+  word-break: break-word;
 }
 
 .ppm-seller-label {
@@ -203,8 +336,9 @@
 
 .ppm-spec-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  gap: 10px 14px;
   font-size: 13px;
   padding: 7px 12px;
   border-bottom: 1px solid #f1f5f9;
@@ -219,13 +353,18 @@
 }
 
 .ppm-spec-label {
+  flex: 0 1 auto;
+  max-width: 46%;
   color: #64748b;
 }
 
 .ppm-spec-value {
+  flex: 1;
+  min-width: 0;
   font-weight: 500;
   color: #0f172a;
   text-align: right;
+  word-break: break-word;
 }
 
 /* Description */
@@ -327,9 +466,21 @@
   .ppm-gallery {
     border-right: none;
     border-bottom: 1px solid #e2e8f0;
+    height: auto;
   }
 
-  .ppm-main-img {
-    height: 200px;
+  .ppm-gallery-bottom {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+
+  .ppm-main-img-wrap,
+  .ppm-no-img {
+    max-height: min(32vw, 180px);
+  }
+
+  .ppm-thumb {
+    min-width: 56px;
+    height: 64px;
   }
 }
