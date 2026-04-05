@@ -12,6 +12,37 @@ function normalizeHistoryList(res) {
   return [];
 }
 
+/**
+ * Thumbnail listing: cùng logic alias với inspector detail / ProductDetail.
+ * @param {Record<string, unknown> | null | undefined} entity
+ * @returns {string}
+ */
+function resolveListingThumbnailUrl(entity) {
+  if (!entity || typeof entity !== "object") return "";
+  const s = (v) =>
+    typeof v === "string" && String(v).trim() !== "" ? String(v).trim() : "";
+  const top = s(
+    entity.thumbnailUrl ??
+      entity.thumbnail_url ??
+      entity.thumbnail ??
+      entity.imageUrl ??
+      entity.image_url ??
+      entity.bicycleImage,
+  );
+  if (top) return top;
+
+  const images =
+    entity.images ??
+    entity.bicycleImages ??
+    entity.imageList ??
+    entity.postImages ??
+    [];
+  if (!Array.isArray(images) || images.length === 0) return "";
+  const urlOf = (i) => s(i?.imageUrl ?? i?.image_url ?? i?.url);
+  const thumb = images.find((i) => i?.isThumbnail);
+  return urlOf(thumb) || urlOf(images[0]) || "";
+}
+
 /** BE LocalDateTime: chuỗi ISO hoặc mảng [y,m,d,h,mi,s,nano] (Jackson). */
 function coerceDateValue(v) {
   if (v == null || v === "") return "";
@@ -75,11 +106,7 @@ function mapHistoryRow(item) {
       post?.title ??
       "—",
     bicycleImage:
-      item.thumbnailUrl ??
-      item.bicycleImage ??
-      post?.thumbnailUrl ??
-      post?.images?.[0]?.imageUrl ??
-      "",
+      resolveListingThumbnailUrl(item) || resolveListingThumbnailUrl(post),
     bicycleType: postStatus ?? item.categoryName ?? item.bicycleType ?? "—",
     sellerName: hasSeller ? sellerFromApi : condLine || "—",
     sellerLocation: hasSeller

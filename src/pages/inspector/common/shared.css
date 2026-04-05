@@ -205,7 +205,7 @@
 
 .inspector-table-row {
   display: grid;
-  grid-template-columns: 2.4fr 1.25fr 1.15fr 0.95fr 1.25fr;
+  grid-template-columns: 2.6fr 1.2fr 0.95fr 1.15fr;
   gap: 16px;
   align-items: center;
   padding: 14px 24px;
@@ -236,6 +236,15 @@
   object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
+}
+
+.inspector-bike-thumb-placeholder {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px solid #e2e8f0;
 }
 
 .inspector-bike-name {
@@ -361,22 +370,21 @@
 
 @media (max-width: 900px) {
   .inspector-table-row {
-    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-columns: minmax(0, 2fr) 1fr 0.85fr auto;
   }
 
-  .inspector-table-row .inspector-bike-meta,
-  .inspector-table-row .inspector-seller-location {
+  .inspector-table-row .inspector-bike-meta {
     display: none;
   }
 }
 
 @media (max-width: 700px) {
   .inspector-table-row {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .inspector-table-row > div:nth-child(3),
-  .inspector-table-row > div:nth-child(4) {
+  .inspector-table-row > div:nth-child(2),
+  .inspector-table-row > div:nth-child(3) {
     display: none;
   }
 }

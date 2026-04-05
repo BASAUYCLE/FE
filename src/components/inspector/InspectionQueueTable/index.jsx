@@ -12,6 +12,17 @@ import AdminToolbarFilters from "../../admin/AdminToolbarFilters";
 
 const PAGE_SIZE = 10;
 
+function InspectorBikeThumb({ src, alt }) {
+  const [failed, setFailed] = useState(false);
+  const url = typeof src === "string" ? src.trim() : "";
+  const show = Boolean(url && !failed);
+  return show ? (
+    <img src={url} alt={alt || ""} onError={() => setFailed(true)} />
+  ) : (
+    <div className="inspector-bike-thumb-placeholder" aria-hidden />
+  );
+}
+
 /** Status filters for the pending queue (not every row type may appear). */
 const QUEUE_STATUS_FILTER_OPTIONS = [
   { value: "ALL", label: "All" },
@@ -112,7 +123,7 @@ export default function InspectionQueueTable({
                 setSearch(v);
                 setPage(1);
               }}
-              searchPlaceholder="Search by ID, model, seller…"
+              searchPlaceholder="Search by model, status…"
               filterValue={statusFilter}
               onFilterChange={(v) => {
                 setStatusFilter(v);
@@ -169,21 +180,24 @@ export default function InspectionQueueTable({
             >
               <div>
                 <div className="inspector-bike-cell">
-                  <img src={item.bicycleImage} alt={item.bicycleName} />
+                  <InspectorBikeThumb
+                    src={item.bicycleImage}
+                    alt={item.bicycleName}
+                  />
                   <div>
-                    <div className="inspector-bike-name">
+                    <button
+                      type="button"
+                      className="inspector-bike-name inspector-bike-name--link"
+                      onClick={() => navigate(`/inspector/${item.id}`)}
+                    >
                       {item.bicycleName}
-                    </div>
-                    <div className="inspector-bike-meta">
-                      ID: #{item.id} • {item.bicycleType}
-                    </div>
+                    </button>
+                    {item.bicycleType && item.bicycleType !== "—" ? (
+                      <div className="inspector-bike-meta">
+                        {item.bicycleType}
+                      </div>
+                    ) : null}
                   </div>
-                </div>
-              </div>
-              <div>
-                <div className="inspector-seller-name">{item.sellerName}</div>
-                <div className="inspector-seller-location">
-                  {item.sellerLocation}
                 </div>
               </div>
               <div>
