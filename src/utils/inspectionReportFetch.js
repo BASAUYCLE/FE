@@ -12,6 +12,7 @@ import { STORAGE_KEYS } from "../constants/storageKeys";
 import {
   inspectionResponseHasUsableData,
   normalizeInspection,
+  calcScore,
 } from "./inspectionReportNormalize";
 
 /** Không gồm /admin/inspection/:id — endpoint đó chỉ dành cho ADMIN, seller/buyer sẽ luôn 403. */
@@ -136,6 +137,37 @@ export function pickLatestReportRowForPost(rows, targetPostId) {
     }
   }
   return best;
+}
+
+/**
+ * Map postId (string) → % kiểm định từ GET public inspection list (một request, dùng cache TTL ngắn).
+ * Bù khi GET /posts không nhúng inspection — marketplace / home vẫn hiện VERIFIED: x%.
+ */
+export async function fetchPublicInspectionScoresByPostId() {
+  /** @type {Record<string, number>} */
+  const out = {};
+  try {
+    const rows = await getPublicInspectionRowsCached();
+    if (!Array.isArray(rows) || rows.length === 0) return out;
+    const idSet = new Set();
+    for (const row of rows) {
+      const pid = reportRowPostId(row);
+      if (pid != null) idSet.add(String(pid));
+    }
+    for (const id of idSet) {
+      const row = pickLatestReportRowForPost(rows, id);
+      if (!row) continue;
+      const ins = normalizeInspection(row);
+      if (!inspectionResponseHasUsableData(ins)) continue;
+      const s = calcScore(ins);
+      if (typeof s === "number" && Number.isFinite(s)) {
+        out[id] = s;
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+  return out;
 }
 
 /**

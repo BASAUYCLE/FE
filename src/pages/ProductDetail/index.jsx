@@ -45,6 +45,8 @@ import {
 import {
   extractInspectionFromPostPayload,
   inspectionResponseHasUsableData,
+  calcScore,
+  formatInspectionScorePercent,
 } from "../../utils/inspectionReportNormalize";
 import { buildListingPhotosFromPostImages } from "../../utils/listingPhotosFromPost";
 import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
@@ -194,8 +196,8 @@ function postingToProduct(p) {
   }));
   const st = String(p.status ?? "").toUpperCase();
   const badge =
-    st === "AVAILABLE"
-      ? "VERIFIED LISTING"
+    st === "AVAILABLE" || st === "VERIFIED"
+      ? "VERIFIED"
       : st === "ADMIN_APPROVED"
         ? "PENDING"
         : st === "PROCESSING" || st === "DEPOSITED"
@@ -485,7 +487,48 @@ export default function ProductDetail() {
 
   const postingStatus = posting?.status ?? null;
   const postingStatusUpper = String(postingStatus ?? "").toUpperCase();
-  /** Tin đang bán và đã qua kiểm định (badge VERIFIED LISTING) — luôn hiện nút xem biên bản; modal tự tải / báo trống nếu API chưa mở quyền */
+
+  const verificationScorePct = useMemo(() => {
+    if (
+      !inspectionReport ||
+      !inspectionResponseHasUsableData(inspectionReport)
+    ) {
+      return null;
+    }
+    const s = calcScore(inspectionReport);
+    return typeof s === "number" && Number.isFinite(s) ? s : null;
+  }, [inspectionReport]);
+
+  const productDetailBadgeText = useMemo(() => {
+    const staffLabel =
+      isStaffView && postingStatus
+        ? (POSTING_STATUS_LABEL[postingStatus] ?? postingStatus)
+        : null;
+    const memberBase = product?.badge || "LISTED";
+    const labelForVariant = staffLabel ?? memberBase;
+    const variant = getProductDetailBadgeVariant(
+      labelForVariant,
+      postingStatus,
+      isStaffView,
+    );
+
+    if (variant === "verified") {
+      if (verificationScorePct != null) {
+        const p = formatInspectionScorePercent(verificationScorePct);
+        if (p) {
+          return !isStaffView
+            ? `VERIFIED: ${p}%`
+            : `${staffLabel ?? "Verified"}: ${p}%`;
+        }
+      }
+      if (!isStaffView) return "VERIFIED";
+      return staffLabel ?? memberBase;
+    }
+
+    return staffLabel ?? memberBase;
+  }, [isStaffView, postingStatus, product?.badge, verificationScorePct]);
+
+  /** Tin đang bán và đã qua kiểm định (badge VERIFIED / VERIFIED: %) — luôn hiện nút xem biên bản; modal tự tải / báo trống nếu API chưa mở quyền */
   const badgeUpper = String(product?.badge ?? "").toUpperCase();
   const showInspectionCertificateCta =
     inspectionModalPostId != null &&
@@ -863,9 +906,7 @@ export default function ProductDetail() {
                   isStaffView,
                 )}`}
               >
-                {isStaffView && postingStatus
-                  ? (POSTING_STATUS_LABEL[postingStatus] ?? postingStatus)
-                  : product.badge || "LISTED"}
+                {productDetailBadgeText}
               </span>
               {!isOwnListing && !isStaffView && (
                 <Button

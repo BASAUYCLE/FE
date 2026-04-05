@@ -22,6 +22,11 @@ import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { confirmCrud } from "../../utils/confirmCrud";
 import { isProductBlockedForWishlist } from "../../utils/postAvailability";
+import {
+  verificationScorePctFromPostPayload,
+  formatInspectionScorePercent,
+} from "../../utils/inspectionReportNormalize";
+import { fetchPublicInspectionScoresByPostId } from "../../utils/inspectionReportFetch";
 import { message } from "antd";
 import demoBike from "../../assets/bike-logo.png";
 import roadBikeImage from "../../assets/RoadBike.png";
@@ -68,7 +73,10 @@ function postingToBike(p) {
     image: imageUrl,
     brand: brand,
     badge:
-      p.status === POSTING_STATUS.AVAILABLE || p.postStatus === "AVAILABLE"
+      p.status === POSTING_STATUS.AVAILABLE ||
+      p.postStatus === "AVAILABLE" ||
+      p.status === POSTING_STATUS.VERIFIED ||
+      p.postStatus === "VERIFIED"
         ? "INSPECTED"
         : p.status === POSTING_STATUS.PENDING_REVIEW ||
             p.postStatus === "PENDING_REVIEW"
@@ -78,6 +86,7 @@ function postingToBike(p) {
     sellerId: p.sellerId ?? p.seller_id ?? null,
     status,
     postStatus: status,
+    verificationScorePct: verificationScorePctFromPostPayload(p),
   };
 }
 
@@ -357,6 +366,42 @@ const SimpleProductImageWrapper = styled("div")(() => ({
   position: "relative",
 }));
 
+/** Cùng phong cách pill “verified” như trang chi tiết — đặt trên ảnh card */
+const VerifiedListingPhotoBadge = styled(Box)(() => ({
+  position: "absolute",
+  top: 8,
+  left: 8,
+  zIndex: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+  padding: "6px 11px",
+  borderRadius: 999,
+  fontSize: 9,
+  fontWeight: 700,
+  letterSpacing: "0.06em",
+  textTransform: "uppercase",
+  lineHeight: 1.25,
+  color: "#fff",
+  background: "linear-gradient(135deg, #00ccad 0%, #0d9488 100%)",
+  boxShadow: "0 4px 14px rgba(0, 204, 173, 0.35)",
+  maxWidth: "calc(100% - 52px)",
+  flexWrap: "wrap",
+  pointerEvents: "none",
+  "&::before": {
+    content: '""',
+    display: "inline-block",
+    width: 5,
+    height: 8,
+    marginBottom: 1,
+    border: "solid #fff",
+    borderWidth: "0 2px 2px 0",
+    transform: "rotate(45deg)",
+    flexShrink: 0,
+    opacity: 0.95,
+  },
+}));
+
 const SimpleProductTitle = styled(Typography)({
   fontSize: 14,
   fontWeight: 500,
@@ -462,6 +507,11 @@ function resolveCategoryKeyFromText(text) {
   return "others";
 }
 
+function isVerifiedListingCardBadge(bike) {
+  const b = String(bike?.badge ?? "").toUpperCase();
+  return b.includes("VERIFIED") || b === "INSPECTED";
+}
+
 function SimpleProductCard({ bike, variant = "grid" }) {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
@@ -487,6 +537,13 @@ function SimpleProductCard({ bike, variant = "grid" }) {
       bike.sellerId == user.userId ||
       bike.sellerId == user.user_id ||
       bike.sellerId === user.email);
+
+  const verificationScorePct =
+    typeof bike.verificationScorePct === "number" &&
+    Number.isFinite(bike.verificationScorePct)
+      ? bike.verificationScorePct
+      : null;
+  const showVerifiedPhotoBadge = isVerifiedListingCardBadge(bike);
 
   const handleFavoriteClick = async (e) => {
     e.preventDefault();
@@ -552,6 +609,37 @@ function SimpleProductCard({ bike, variant = "grid" }) {
             display: "block",
           }}
         />
+        {showVerifiedPhotoBadge ? (
+          <VerifiedListingPhotoBadge
+            component="span"
+            aria-label={
+              verificationScorePct != null
+                ? `Verified, inspection score ${verificationScorePct}%`
+                : "Verified"
+            }
+            sx={
+              isList
+                ? {
+                    top: 6,
+                    left: 6,
+                    padding: "4px 8px",
+                    fontSize: 7.5,
+                    maxWidth: "calc(100% - 44px)",
+                    gap: "4px",
+                    "&::before": {
+                      width: 4,
+                      height: 6,
+                      borderWidth: "0 1.5px 1.5px 0",
+                    },
+                  }
+                : undefined
+            }
+          >
+            {verificationScorePct != null
+              ? `VERIFIED: ${formatInspectionScorePercent(verificationScorePct)}%`
+              : "VERIFIED"}
+          </VerifiedListingPhotoBadge>
+        ) : null}
         {!isOwnListing && (
           <IconButton
             onClick={handleFavoriteClick}
@@ -621,6 +709,18 @@ export default function FeaturedBikes() {
     usePostings();
   const [apiPostings, setApiPostings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [publicInspectionScores, setPublicInspectionScores] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicInspectionScoresByPostId().then((scores) => {
+      if (!cancelled) setPublicInspectionScores(scores);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     loadPublicPostings();
   }, [loadPublicPostings]);
@@ -677,8 +777,17 @@ export default function FeaturedBikes() {
       .forEach((p) => {
         byId.set(p.id, p);
       });
-    return [...byId.values()].map(postingToBike);
-  }, [apiPostings, postings, publicPostings]);
+    return [...byId.values()].map((p) => {
+      const bike = postingToBike(p);
+      if (bike.verificationScorePct != null) return bike;
+      const id = String(bike.id ?? bike.postId ?? "");
+      const s = id ? publicInspectionScores[id] : undefined;
+      if (typeof s === "number" && Number.isFinite(s)) {
+        return { ...bike, verificationScorePct: s };
+      }
+      return bike;
+    });
+  }, [apiPostings, postings, publicPostings, publicInspectionScores]);
 
   const categorizedBikes = useMemo(() => {
     const buckets = {
@@ -756,8 +865,7 @@ export default function FeaturedBikes() {
         <CategoryGrid>
           {HOME_PRODUCT_CATEGORY_CARDS.map((cat) => {
             const sectionId = `home-category-${cat.key}`;
-            const imgSrc =
-              CATEGORY_CARD_IMAGE_BY_KEY[cat.key] ?? demoBike;
+            const imgSrc = CATEGORY_CARD_IMAGE_BY_KEY[cat.key] ?? demoBike;
             return (
               <CategoryCard
                 key={cat.key}

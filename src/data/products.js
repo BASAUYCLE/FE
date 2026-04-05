@@ -14,7 +14,7 @@ export const productsById = {
     image: bikeTarmac,
     images: [bikeTarmac, bikeTarmac, bikeTarmac, bikeTarmac, bikeTarmac, bikeTarmac],
     category: "ROAD / CARBON",
-    badge: "VERIFIED LISTING",
+    badge: "VERIFIED",
     specs: {
       frame: "High-Modulus Carbon",
       groupset: "Electronic Di2 12-Speed",
