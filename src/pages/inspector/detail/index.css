@@ -970,7 +970,7 @@
 
 @media (min-width: 640px) {
   .inspection-rubric-section-inner {
-    grid-template-columns: minmax(0, 1fr) minmax(200px, 260px);
+    grid-template-columns: minmax(0, 1fr) minmax(300px, min(460px, 100%));
     gap: 24px;
     padding: 20px 22px 20px 18px;
   }
@@ -1022,13 +1022,13 @@
   flex-direction: column;
   gap: 8px;
   width: 100%;
-  max-width: 280px;
+  max-width: 100%;
 }
 
 @media (min-width: 640px) {
   .inspection-rubric-item-score {
     justify-self: end;
-    max-width: none;
+    max-width: min(460px, 100%);
   }
 }
 
@@ -1084,11 +1084,25 @@
   box-shadow:
     0 10px 15px -3px rgba(15, 23, 42, 0.08),
     0 4px 6px -4px rgba(15, 23, 42, 0.05);
+  /* Wider than the trigger so long rubric lines are not clipped */
+  min-width: min(480px, calc(100vw - 24px)) !important;
+  max-width: min(560px, calc(100vw - 24px));
 }
 
 .inspection-rubric-score-dropdown .ant-select-item-option {
   border-radius: 8px;
   margin: 2px 4px;
+  min-height: auto;
+  padding-block: 10px;
+  align-items: flex-start;
+}
+
+.inspection-rubric-score-dropdown .ant-select-item-option-content {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  line-height: 1.45;
+  word-break: break-word;
 }
 
 .inspection-rubric-score-dropdown

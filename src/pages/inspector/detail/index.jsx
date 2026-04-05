@@ -523,6 +523,7 @@ export default function InspectorDetail() {
                               className="field-select"
                               popupClassName="inspection-rubric-score-dropdown"
                               placeholder="Select rating"
+                              popupMatchSelectWidth={false}
                               value={scores[row.key]}
                               onChange={(value) =>
                                 setCriterionScore(row.key, value)
