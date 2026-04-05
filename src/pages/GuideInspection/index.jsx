@@ -18,68 +18,36 @@ import {
 } from "../../constants/guideInspectionContent";
 import { INSPECTION_CRITICAL_CRITERIA_KEYS } from "../../constants/inspectionRubric";
 
-function Section({ titleVi, titleEn, children }) {
+function Section({ title, children }) {
   return (
     <Box component="section" sx={{ mb: 4 }}>
       <Typography
         component="h2"
-        sx={{ fontSize: { xs: 18, md: 20 }, fontWeight: 700, mb: 0.5 }}
+        sx={{ fontSize: { xs: 18, md: 20 }, fontWeight: 700, mb: 2 }}
       >
-        {titleVi}
-      </Typography>
-      <Typography
-        sx={{ fontSize: 14, color: "#6b7280", fontWeight: 600, mb: 2 }}
-      >
-        {titleEn}
+        {title}
       </Typography>
       {children}
     </Box>
   );
 }
 
-function Subheading({ titleVi, titleEn }) {
+function Subheading({ title }) {
   return (
-    <Box sx={{ mt: 2.5, mb: 0 }}>
-      <Typography sx={{ fontWeight: 700, fontSize: 15, mb: 0.25 }}>
-        {titleVi}
-      </Typography>
-      <Typography sx={{ fontSize: 13, color: "#6b7280", mb: 1.5 }}>
-        {titleEn}
-      </Typography>
-    </Box>
+    <Typography sx={{ fontWeight: 700, fontSize: 15, mt: 2.5, mb: 1.5 }}>
+      {title}
+    </Typography>
   );
 }
 
-function BulletList({ itemsVi, itemsEn }) {
+function BulletList({ items }) {
   return (
-    <Box sx={{ display: "grid", gap: 2 }}>
-      <Box
-        component="ul"
-        sx={{ m: 0, pl: 2.5, color: "#374151", fontSize: 14 }}
-      >
-        {itemsVi.map((t, i) => (
-          <li key={`vi-${i}`} style={{ marginBottom: 8 }}>
-            {t}
-          </li>
-        ))}
-      </Box>
-      <Box
-        component="ul"
-        sx={{
-          m: 0,
-          pl: 2,
-          ml: 0.5,
-          color: "#6b7280",
-          fontSize: 13,
-          borderLeft: "3px solid #e5e7eb",
-        }}
-      >
-        {itemsEn.map((t, i) => (
-          <li key={`en-${i}`} style={{ marginBottom: 8 }}>
-            {t}
-          </li>
-        ))}
-      </Box>
+    <Box component="ul" sx={{ m: 0, pl: 2.5, color: "#374151", fontSize: 14 }}>
+      {items.map((t, i) => (
+        <li key={i} style={{ marginBottom: 8 }}>
+          {t}
+        </li>
+      ))}
     </Box>
   );
 }
@@ -94,41 +62,23 @@ function GuideInspectionMain() {
             fontSize: { xs: 26, md: 32 },
             fontWeight: 800,
             textAlign: "center",
-            mb: 1,
-          }}
-        >
-          {GUIDE_INSPECTION_HERO.titleEn}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: 15,
-            fontWeight: 600,
-            textAlign: "center",
-            color: "#374151",
-            mb: 3,
-          }}
-        >
-          {GUIDE_INSPECTION_HERO.titleVi}
-        </Typography>
-        <Typography
-          sx={{
-            color: "#374151",
-            fontSize: 15,
             mb: 2,
-            lineHeight: 1.65,
           }}
         >
-          {GUIDE_INSPECTION_HERO.leadVi}
+          {GUIDE_INSPECTION_HERO.title}
         </Typography>
         <Typography
           sx={{
-            color: "#6b7280",
-            fontSize: 14,
+            color: "#374151",
+            fontSize: 15,
             mb: 5,
             lineHeight: 1.65,
+            textAlign: "center",
+            maxWidth: 720,
+            mx: "auto",
           }}
         >
-          {GUIDE_INSPECTION_HERO.leadEn}
+          {GUIDE_INSPECTION_HERO.lead}
         </Typography>
 
         <Box
@@ -140,76 +90,37 @@ function GuideInspectionMain() {
             border: "1px solid #99f6e4",
           }}
         >
-          <Section
-            titleVi={GUIDE_INSPECTION_MEMBER.titleVi}
-            titleEn={GUIDE_INSPECTION_MEMBER.titleEn}
-          >
-            <Typography sx={{ color: "#374151", fontSize: 14, mb: 1.5 }}>
-              {GUIDE_INSPECTION_MEMBER.introVi}
-            </Typography>
-            <Typography sx={{ color: "#6b7280", fontSize: 13, mb: 1 }}>
-              {GUIDE_INSPECTION_MEMBER.introEn}
+          <Section title={GUIDE_INSPECTION_MEMBER.title}>
+            <Typography sx={{ color: "#374151", fontSize: 14, mb: 2 }}>
+              {GUIDE_INSPECTION_MEMBER.intro}
             </Typography>
 
-            <Subheading
-              titleVi={GUIDE_INSPECTION_MEMBER.sellerFlow.titleVi}
-              titleEn={GUIDE_INSPECTION_MEMBER.sellerFlow.titleEn}
-            />
-            <BulletList
-              itemsVi={GUIDE_INSPECTION_MEMBER.sellerFlow.bulletsVi}
-              itemsEn={GUIDE_INSPECTION_MEMBER.sellerFlow.bulletsEn}
-            />
+            <Subheading title={GUIDE_INSPECTION_MEMBER.sellerFlow.title} />
+            <BulletList items={GUIDE_INSPECTION_MEMBER.sellerFlow.bullets} />
 
-            <Subheading
-              titleVi={GUIDE_INSPECTION_MEMBER.whereToSee.titleVi}
-              titleEn={GUIDE_INSPECTION_MEMBER.whereToSee.titleEn}
-            />
-            <BulletList
-              itemsVi={GUIDE_INSPECTION_MEMBER.whereToSee.bulletsVi}
-              itemsEn={GUIDE_INSPECTION_MEMBER.whereToSee.bulletsEn}
-            />
+            <Subheading title={GUIDE_INSPECTION_MEMBER.whereToSee.title} />
+            <BulletList items={GUIDE_INSPECTION_MEMBER.whereToSee.bullets} />
 
-            <Subheading
-              titleVi={GUIDE_INSPECTION_MEMBER.buyerNotes.titleVi}
-              titleEn={GUIDE_INSPECTION_MEMBER.buyerNotes.titleEn}
-            />
-            <BulletList
-              itemsVi={GUIDE_INSPECTION_MEMBER.buyerNotes.bulletsVi}
-              itemsEn={GUIDE_INSPECTION_MEMBER.buyerNotes.bulletsEn}
-            />
+            <Subheading title={GUIDE_INSPECTION_MEMBER.buyerNotes.title} />
+            <BulletList items={GUIDE_INSPECTION_MEMBER.buyerNotes.bullets} />
           </Section>
         </Box>
 
-        <Section
-          titleVi={GUIDE_INSPECTION_FORMULA.titleVi}
-          titleEn={GUIDE_INSPECTION_FORMULA.titleEn}
-        >
-          <BulletList
-            itemsVi={GUIDE_INSPECTION_FORMULA.bulletsVi}
-            itemsEn={GUIDE_INSPECTION_FORMULA.bulletsEn}
-          />
+        <Section title={GUIDE_INSPECTION_FORMULA.title}>
+          <BulletList items={GUIDE_INSPECTION_FORMULA.bullets} />
           <Typography sx={{ mt: 2, fontSize: 14, color: "#111827" }}>
-            {GUIDE_INSPECTION_FORMULA.formulaLineVi}
-          </Typography>
-          <Typography sx={{ mt: 0.5, fontSize: 13, color: "#6b7280" }}>
-            {GUIDE_INSPECTION_FORMULA.formulaLineEn}
+            {GUIDE_INSPECTION_FORMULA.formulaLine}
           </Typography>
         </Section>
 
-        <Section
-          titleVi={GUIDE_INSPECTION_PASS_FAIL.titleVi}
-          titleEn={GUIDE_INSPECTION_PASS_FAIL.titleEn}
-        >
-          <BulletList
-            itemsVi={GUIDE_INSPECTION_PASS_FAIL.bulletsVi}
-            itemsEn={GUIDE_INSPECTION_PASS_FAIL.bulletsEn}
-          />
+        <Section title={GUIDE_INSPECTION_PASS_FAIL.title}>
+          <BulletList items={GUIDE_INSPECTION_PASS_FAIL.bullets} />
         </Section>
 
-        <Section titleVi="Bốn mức điểm" titleEn="The four allowed scores">
+        <Section title="The four allowed scores">
           <Typography sx={{ color: "#374151", fontSize: 14, mb: 2 }}>
-            Mỗi tiêu chí chọn đúng một mức; nhãn gợi ý bên dưới khớp form
-            inspector.
+            Pick exactly one level per criterion; labels match the inspector
+            form.
           </Typography>
           <Box
             sx={{
@@ -238,25 +149,22 @@ function GuideInspectionMain() {
                   {opt.emoji} {opt.value}
                 </Typography>
                 <Typography component="span" sx={{ fontSize: 14 }}>
-                  {opt.labelVi} — {opt.labelEn}
+                  {opt.labelEn}
                 </Typography>
                 <Typography
                   component="span"
                   sx={{ fontSize: 13, color: "#6b7280", width: "100%" }}
                 >
-                  {opt.hintVi}
+                  {opt.hintEn}
                 </Typography>
               </Box>
             ))}
           </Box>
         </Section>
 
-        <Section
-          titleVi="Sáu tiêu chí & trọng số"
-          titleEn="Six criteria & weights"
-        >
+        <Section title="Six criteria & weights">
           <Typography sx={{ color: "#374151", fontSize: 14, mb: 2 }}>
-            Trọng số (%) dùng trong công thức conditionPercent; tổng = 100%.
+            Weights (%) feed into conditionPercent; total = 100%.
           </Typography>
           <Box
             component="table"
@@ -276,7 +184,7 @@ function GuideInspectionMain() {
                   component="th"
                   sx={{ textAlign: "left", p: 1.5, fontWeight: 700 }}
                 >
-                  Tiêu chí
+                  Criterion
                 </Box>
                 <Box
                   component="th"
@@ -295,15 +203,12 @@ function GuideInspectionMain() {
                 >
                   <Box component="td" sx={{ p: 1.5, verticalAlign: "top" }}>
                     <Typography sx={{ fontWeight: 600 }}>
-                      {row.labelVi}
-                    </Typography>
-                    <Typography sx={{ fontSize: 13, color: "#6b7280" }}>
                       {row.labelEn}
                     </Typography>
                     <Typography
-                      sx={{ fontSize: 12, color: "#9ca3af", mt: 0.5 }}
+                      sx={{ fontSize: 12, color: "#6b7280", mt: 0.5 }}
                     >
-                      {row.hintVi}
+                      {row.hintEn}
                     </Typography>
                   </Box>
                   <Box
@@ -327,7 +232,7 @@ function GuideInspectionMain() {
                           mt: 0.5,
                         }}
                       >
-                        0 điểm → FAIL
+                        0 → FAIL
                       </Typography>
                     ) : null}
                   </Box>
@@ -346,55 +251,29 @@ function GuideInspectionMain() {
             border: "1px solid #ddd6fe",
           }}
         >
-          <Section
-            titleVi={GUIDE_INSPECTION_INSPECTOR.titleVi}
-            titleEn={GUIDE_INSPECTION_INSPECTOR.titleEn}
-          >
-            <Typography sx={{ color: "#374151", fontSize: 14, mb: 1.5 }}>
-              {GUIDE_INSPECTION_INSPECTOR.introVi}
-            </Typography>
-            <Typography sx={{ color: "#6b7280", fontSize: 13, mb: 1 }}>
-              {GUIDE_INSPECTION_INSPECTOR.introEn}
+          <Section title={GUIDE_INSPECTION_INSPECTOR.title}>
+            <Typography sx={{ color: "#374151", fontSize: 14, mb: 2 }}>
+              {GUIDE_INSPECTION_INSPECTOR.intro}
             </Typography>
 
-            <Subheading
-              titleVi={GUIDE_INSPECTION_INSPECTOR.navigation.titleVi}
-              titleEn={GUIDE_INSPECTION_INSPECTOR.navigation.titleEn}
-            />
-            <BulletList
-              itemsVi={GUIDE_INSPECTION_INSPECTOR.navigation.bulletsVi}
-              itemsEn={GUIDE_INSPECTION_INSPECTOR.navigation.bulletsEn}
-            />
+            <Subheading title={GUIDE_INSPECTION_INSPECTOR.navigation.title} />
+            <BulletList items={GUIDE_INSPECTION_INSPECTOR.navigation.bullets} />
 
             <Subheading
-              titleVi={GUIDE_INSPECTION_INSPECTOR.formAndSubmit.titleVi}
-              titleEn={GUIDE_INSPECTION_INSPECTOR.formAndSubmit.titleEn}
+              title={GUIDE_INSPECTION_INSPECTOR.formAndSubmit.title}
             />
             <BulletList
-              itemsVi={GUIDE_INSPECTION_INSPECTOR.formAndSubmit.bulletsVi}
-              itemsEn={GUIDE_INSPECTION_INSPECTOR.formAndSubmit.bulletsEn}
+              items={GUIDE_INSPECTION_INSPECTOR.formAndSubmit.bullets}
             />
 
-            <Subheading
-              titleVi={GUIDE_INSPECTION_INSPECTOR.errors.titleVi}
-              titleEn={GUIDE_INSPECTION_INSPECTOR.errors.titleEn}
-            />
-            <BulletList
-              itemsVi={GUIDE_INSPECTION_INSPECTOR.errors.bulletsVi}
-              itemsEn={GUIDE_INSPECTION_INSPECTOR.errors.bulletsEn}
-            />
+            <Subheading title={GUIDE_INSPECTION_INSPECTOR.errors.title} />
+            <BulletList items={GUIDE_INSPECTION_INSPECTOR.errors.bullets} />
           </Section>
         </Box>
 
-        <Section
-          titleVi={GUIDE_INSPECTION_BANDS.titleVi}
-          titleEn={GUIDE_INSPECTION_BANDS.titleEn}
-        >
+        <Section title={GUIDE_INSPECTION_BANDS.title}>
           <Typography sx={{ color: "#374151", fontSize: 14, mb: 2 }}>
-            {GUIDE_INSPECTION_BANDS.introVi}
-          </Typography>
-          <Typography sx={{ color: "#6b7280", fontSize: 13, mb: 2 }}>
-            {GUIDE_INSPECTION_BANDS.introEn}
+            {GUIDE_INSPECTION_BANDS.intro}
           </Typography>
           <Box
             component="table"
@@ -409,10 +288,10 @@ function GuideInspectionMain() {
             <Box component="thead" sx={{ bgcolor: "#f3f4f6" }}>
               <Box component="tr">
                 <Box component="th" sx={{ textAlign: "left", p: 1.5 }}>
-                  Ngưỡng % (từ)
+                  Min. %
                 </Box>
                 <Box component="th" sx={{ textAlign: "left", p: 1.5 }}>
-                  Nhãn
+                  Band
                 </Box>
               </Box>
             </Box>
@@ -427,13 +306,7 @@ function GuideInspectionMain() {
                     ≥ {r.minPct}%
                   </Box>
                   <Box component="td" sx={{ p: 1.5 }}>
-                    {r.labelVi}
-                    <Typography
-                      component="div"
-                      sx={{ fontSize: 12, color: "#6b7280" }}
-                    >
-                      {r.labelEn}
-                    </Typography>
+                    {r.label}
                   </Box>
                 </Box>
               ))}
@@ -441,14 +314,8 @@ function GuideInspectionMain() {
           </Box>
         </Section>
 
-        <Section
-          titleVi={GUIDE_INSPECTION_API_NOTES.titleVi}
-          titleEn={GUIDE_INSPECTION_API_NOTES.titleEn}
-        >
-          <BulletList
-            itemsVi={GUIDE_INSPECTION_API_NOTES.bulletsVi}
-            itemsEn={GUIDE_INSPECTION_API_NOTES.bulletsEn}
-          />
+        <Section title={GUIDE_INSPECTION_API_NOTES.title}>
+          <BulletList items={GUIDE_INSPECTION_API_NOTES.bullets} />
         </Section>
       </Container>
     </Box>
@@ -456,8 +323,7 @@ function GuideInspectionMain() {
 }
 
 /**
- * Hướng dẫn chấm điểm / kiểm định / %.
- * Inspector: giữ sidebar Inspector (tránh lẫn navbar member). Member/khách: Header + Footer.
+ * Inspection scoring guide. Inspectors: InspectorLayout; others: Header + Footer.
  */
 export default function GuideInspection() {
   const auth = useAuthOptional();
