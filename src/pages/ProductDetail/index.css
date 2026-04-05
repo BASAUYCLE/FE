@@ -13,6 +13,47 @@
   position: relative;
 }
 
+.product-detail-thumb-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 76px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.product-detail-thumb-frame {
+  width: 72px;
+  height: 56px;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+  border: 2px solid #e5e7eb;
+  box-sizing: border-box;
+}
+
+.product-detail-thumb-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.product-detail-thumb-label {
+  width: 100%;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+  color: #64748b !important;
+  text-align: center;
+  overflow: hidden;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  word-break: break-word;
+}
+
 /* Status chip — modern pill, variants aligned with login CTA teal */
 .product-detail-badge {
   display: inline-flex;

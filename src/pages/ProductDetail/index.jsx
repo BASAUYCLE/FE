@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import AdminLayout from "../../components/layout/AdminLayout";
 import InspectorLayout from "../../components/layout/InspectorLayout";
@@ -41,18 +41,12 @@ import { getAvatarSrc, getAvatarInitial } from "../../utils/avatar";
 import {
   POSTING_STATUS,
   POSTING_STATUS_LABEL,
-  OVERALL_CONDITION_LABEL,
 } from "../../constants/postingStatus";
 import {
-  INSPECTION_CRITERIA_ROWS,
-  INSPECTION_CRITICAL_CRITERIA_KEYS,
-  INSPECTION_SCORE_OPTIONS,
-} from "../../constants/inspectionRubric";
-import {
-  calcScore,
   extractInspectionFromPostPayload,
   inspectionResponseHasUsableData,
 } from "../../utils/inspectionReportNormalize";
+import { buildListingPhotosFromPostImages } from "../../utils/listingPhotosFromPost";
 import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
 import { DISPUTE_STATUS } from "../../constants/disputeStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -126,6 +120,7 @@ function mapApiPostToPosting(row) {
   const imageUrls = images
     .map((i) => i?.imageUrl ?? i?.image_url ?? i?.url)
     .filter(Boolean);
+  const listingPhotos = buildListingPhotosFromPostImages(images);
   const price = row.price;
   const status =
     row.postStatus ?? row.post_status ?? row.status ?? POSTING_STATUS.PENDING;
@@ -153,6 +148,7 @@ function mapApiPostToPosting(row) {
         : (row.priceDisplay ?? String(price ?? "")),
     imageUrl: imageUrl || (imageUrls[0] ?? null),
     imageUrls: imageUrls.length ? imageUrls : imageUrl ? [imageUrl] : [],
+    listingPhotos,
     status,
     rejectionReason: row.rejectionReason ?? row.rejection_reason ?? null,
     sellerId: row.sellerId ?? row.seller_id,
@@ -181,11 +177,21 @@ function mapApiPostToPosting(row) {
 /** Map a posting from PostingContext or API to the product shape used by ProductDetail */
 function postingToProduct(p) {
   const defaultImg = p.imageUrl || defaultBikeImage;
-  const urls = p.imageUrls?.length > 0 ? p.imageUrls : [defaultImg];
+  const lp = Array.isArray(p.listingPhotos) ? p.listingPhotos : [];
+  const urls =
+    lp.length > 0
+      ? lp.map((x) => x.url).filter(Boolean)
+      : p.imageUrls?.length > 0
+        ? [...p.imageUrls]
+        : [defaultImg];
   const images =
     urls.length >= 6
       ? urls.slice(0, 6)
       : [...urls, ...Array(6 - urls.length).fill(urls[0] || defaultBikeImage)];
+  const galleryPhotos = images.map((url, i) => ({
+    url,
+    label: lp[i]?.label ?? `Photo ${i + 1}`,
+  }));
   const st = String(p.status ?? "").toUpperCase();
   const badge =
     st === "AVAILABLE"
@@ -203,6 +209,7 @@ function postingToProduct(p) {
       (p.price != null ? formatCurrency(Number(p.price)) : "$0"),
     image: images[0],
     images,
+    galleryPhotos,
     category: p.category || "BIKE",
     badge,
     brand: p.brand ?? null,
@@ -259,25 +266,6 @@ function getProductDetailBadgeVariant(badgeLabel, postingStatus, isStaffView) {
   if (b.includes("PENDING")) return "pending";
   if (b.includes("PROGRESS") || b.includes("ORDER")) return "progress";
   return "listed";
-}
-
-function inspectionScoreLabelEn(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return "—";
-  const opt = INSPECTION_SCORE_OPTIONS.find((o) => o.value === n);
-  return opt?.labelEn ?? String(n);
-}
-
-/** @param {unknown} raw */
-function formatInspectionReportDate(raw) {
-  if (raw == null || raw === "") return null;
-  const d = raw instanceof Date ? raw : new Date(raw);
-  if (Number.isNaN(d.getTime())) return typeof raw === "string" ? raw : null;
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
 }
 
 export default function ProductDetail() {
@@ -459,13 +447,6 @@ export default function ProductDetail() {
     ? postingToProduct(posting)
     : getProductById(Number(id) || 0);
 
-  const showProInspectionReport =
-    inspectionReport != null &&
-    inspectionResponseHasUsableData(inspectionReport);
-  const inspectionConditionPct = showProInspectionReport
-    ? calcScore(inspectionReport)
-    : null;
-
   const numericPostId = Number(id);
   const inspectionModalPostId =
     Number.isFinite(numericPostId) && numericPostId >= 1 ? numericPostId : null;
@@ -482,6 +463,15 @@ export default function ProductDetail() {
 
   const images =
     product?.images || (product ? Array(6).fill(product.image) : []);
+  const galleryPhotos = useMemo(() => {
+    if (product?.galleryPhotos?.length) return product.galleryPhotos;
+    const imgs = product?.images?.length
+      ? product.images
+      : product?.image
+        ? [product.image]
+        : [];
+    return imgs.map((url, i) => ({ url, label: `Photo ${i + 1}` }));
+  }, [product]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageZoomOpen, setImageZoomOpen] = useState(false);
 
@@ -801,8 +791,12 @@ export default function ProductDetail() {
               }}
             >
               <img
-                src={images[selectedImageIndex] || product.image}
-                alt={`${product.name} - image ${selectedImageIndex + 1}`}
+                src={
+                  galleryPhotos[selectedImageIndex]?.url ||
+                  images[selectedImageIndex] ||
+                  product.image
+                }
+                alt={`${product.name} — ${galleryPhotos[selectedImageIndex]?.label ?? `Photo ${selectedImageIndex + 1}`}`}
                 referrerPolicy="no-referrer"
                 style={{ width: "100%", height: "100%", objectFit: "contain" }}
               />
@@ -820,36 +814,37 @@ export default function ProductDetail() {
                 <ZoomInOutlined />
               </IconButton>
             </Box>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-              {images.slice(0, 6).map((img, i) => (
+            <Box sx={{ display: "flex", gap: 1.25, flexWrap: "wrap" }}>
+              {galleryPhotos.slice(0, 6).map((slot, i) => (
                 <Box
-                  key={i}
+                  key={`${slot.url}-${i}`}
+                  className="product-detail-thumb-wrap"
                   onClick={() => setSelectedImageIndex(i)}
-                  sx={{
-                    width: 72,
-                    height: 56,
-                    borderRadius: 1,
-                    overflow: "hidden",
-                    cursor: "pointer",
-                    border:
-                      selectedImageIndex === i
-                        ? "2px solid #00ccad"
-                        : "2px solid #e5e7eb",
-                    flexShrink: 0,
-                    transition: "border-color 0.2s",
-                    "&:hover": { borderColor: "#00ccad" },
-                  }}
+                  title={slot.label}
                 >
-                  <img
-                    src={img}
-                    alt={`Detail ${i + 1}`}
-                    referrerPolicy="no-referrer"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
+                  <Box
+                    className="product-detail-thumb-frame"
+                    sx={{
+                      border:
+                        selectedImageIndex === i
+                          ? "2px solid #00ccad"
+                          : "2px solid #e5e7eb",
+                      "&:hover": { borderColor: "#00ccad" },
                     }}
-                  />
+                  >
+                    <img
+                      src={slot.url}
+                      alt={slot.label}
+                      referrerPolicy="no-referrer"
+                    />
+                  </Box>
+                  <Typography
+                    component="span"
+                    className="product-detail-thumb-label"
+                    variant="caption"
+                  >
+                    {slot.label}
+                  </Typography>
                 </Box>
               ))}
             </Box>
@@ -1123,16 +1118,11 @@ export default function ProductDetail() {
         </Box>
 
         {/* <ProductDetailsSection /> */}
-        {/* Lower: 2 cột khi có báo cáo kiểm định từ API */}
+        {/* Lower: Technical Specs + Ownership + Reviews */}
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: {
-              xs: "1fr",
-              lg: showProInspectionReport
-                ? "minmax(0, 1.15fr) minmax(0, 1fr)"
-                : "1fr",
-            },
+            gridTemplateColumns: "1fr",
             gap: 4,
             mb: 4,
           }}
@@ -1395,195 +1385,6 @@ export default function ProductDetail() {
               </Box>
             </Box>
           </Box>
-
-          {/* Right column: Pro Inspection — chỉ khi API trả báo cáo (6 điểm / % / PASS-FAIL) */}
-          {showProInspectionReport && (
-            <Box className="product-detail-inspection-card">
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  flexWrap: "wrap",
-                  gap: 1,
-                  mb: 2,
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <SafetyCertificateOutlined
-                    style={{ color: "#00ccad", fontSize: 20 }}
-                  />
-                  <Typography variant="h6" fontWeight={700} color="#fff">
-                    Pro Inspection Report
-                  </Typography>
-                  {inspectionReport.result != null &&
-                    String(inspectionReport.result) !== "" && (
-                      <Chip
-                        size="small"
-                        label={String(inspectionReport.result).toUpperCase()}
-                        sx={{
-                          fontWeight: 700,
-                          letterSpacing: "0.04em",
-                          bgcolor:
-                            String(inspectionReport.result).toUpperCase() ===
-                            "PASS"
-                              ? "rgba(16,185,129,0.25)"
-                              : "rgba(239,68,68,0.25)",
-                          color:
-                            String(inspectionReport.result).toUpperCase() ===
-                            "PASS"
-                              ? "#6ee7b7"
-                              : "#fca5a5",
-                          border: "1px solid rgba(255,255,255,0.15)",
-                        }}
-                      />
-                    )}
-                </Box>
-                <Typography variant="body2" color="rgba(255,255,255,0.7)">
-                  Report{" "}
-                  {inspectionReport.reportId != null
-                    ? `#${inspectionReport.reportId}`
-                    : `#${id}`}
-                </Typography>
-              </Box>
-
-              {formatInspectionReportDate(inspectionReport.inspectedAt) && (
-                <Typography
-                  variant="body2"
-                  color="rgba(255,255,255,0.65)"
-                  sx={{ mb: 2 }}
-                >
-                  Inspected on{" "}
-                  {formatInspectionReportDate(inspectionReport.inspectedAt)}
-                </Typography>
-              )}
-
-              {typeof inspectionConditionPct === "number" && (
-                <Box sx={{ mb: 2 }}>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 0.75,
-                    }}
-                  >
-                    <Typography variant="body2" color="rgba(255,255,255,0.8)">
-                      Condition score
-                    </Typography>
-                    <Typography fontWeight={700} color="#fff">
-                      {inspectionConditionPct}%
-                    </Typography>
-                  </Box>
-                  <LinearProgress
-                    variant="determinate"
-                    value={Math.min(100, Math.max(0, inspectionConditionPct))}
-                    sx={{
-                      height: 8,
-                      borderRadius: 1,
-                      bgcolor: "rgba(255,255,255,0.15)",
-                      "& .MuiLinearProgress-bar": {
-                        borderRadius: 1,
-                        bgcolor:
-                          inspectionConditionPct >= 80
-                            ? "#10b981"
-                            : inspectionConditionPct >= 50
-                              ? "#d97706"
-                              : "#ef4444",
-                      },
-                    }}
-                  />
-                </Box>
-              )}
-
-              {(() => {
-                const ck = String(
-                  inspectionReport.condition ?? "",
-                ).toUpperCase();
-                const condLabel =
-                  OVERALL_CONDITION_LABEL[ck] ??
-                  inspectionReport.condition ??
-                  null;
-                if (!condLabel) return null;
-                return (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      mb: 2,
-                      gap: 2,
-                    }}
-                  >
-                    <Typography variant="body2" color="rgba(255,255,255,0.8)">
-                      Overall band
-                    </Typography>
-                    <Typography
-                      fontWeight={600}
-                      color="#fff"
-                      sx={{ textAlign: "right", maxWidth: "70%" }}
-                    >
-                      {condLabel}
-                    </Typography>
-                  </Box>
-                );
-              })()}
-
-              {inspectionReport.scores && (
-                <Box sx={{ display: "grid", gap: 0.5, mb: 1 }}>
-                  {INSPECTION_CRITERIA_ROWS.map((row) => {
-                    const s = inspectionReport.scores[row.key];
-                    if (s == null) return null;
-                    return (
-                      <Box
-                        key={row.key}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          gap: 2,
-                          py: 0.75,
-                          borderBottom: "1px solid rgba(255,255,255,0.08)",
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          color="rgba(255,255,255,0.75)"
-                          sx={{ flex: 1 }}
-                        >
-                          {row.labelEn}
-                          {INSPECTION_CRITICAL_CRITERIA_KEYS.has(row.key) ? (
-                            <Typography
-                              component="span"
-                              variant="caption"
-                              color="rgba(255,255,255,0.45)"
-                              sx={{ ml: 0.5 }}
-                            >
-                              (critical)
-                            </Typography>
-                          ) : null}
-                        </Typography>
-                        <Typography
-                          fontWeight={600}
-                          color="#00ccad"
-                          sx={{ textAlign: "right", whiteSpace: "nowrap" }}
-                        >
-                          {inspectionScoreLabelEn(s)}
-                        </Typography>
-                      </Box>
-                    );
-                  })}
-                </Box>
-              )}
-            </Box>
-          )}
         </Box>
       </Box>
 
@@ -1597,8 +1398,12 @@ export default function ProductDetail() {
         styles={{ body: { padding: 0 } }}
       >
         <img
-          src={images[selectedImageIndex] || product?.image}
-          alt={`${product?.name ?? "Product"} - full size`}
+          src={
+            galleryPhotos[selectedImageIndex]?.url ||
+            images[selectedImageIndex] ||
+            product?.image
+          }
+          alt={`${product?.name ?? "Product"} — ${galleryPhotos[selectedImageIndex]?.label ?? "photo"}`}
           referrerPolicy="no-referrer"
           style={{
             width: "100%",
@@ -1608,6 +1413,23 @@ export default function ProductDetail() {
             display: "block",
           }}
         />
+        {galleryPhotos[selectedImageIndex]?.label ? (
+          <Typography
+            component="p"
+            variant="body2"
+            sx={{
+              px: 2,
+              py: 1.5,
+              m: 0,
+              textAlign: "center",
+              color: "#475569",
+              fontWeight: 600,
+              borderTop: "1px solid #f1f5f9",
+            }}
+          >
+            {galleryPhotos[selectedImageIndex].label}
+          </Typography>
+        ) : null}
       </Modal>
 
       {/* <RejectListingModal /> */}
