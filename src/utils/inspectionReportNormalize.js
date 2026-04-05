@@ -21,6 +21,16 @@ function firstNonEmpty(...vals) {
 /**
  * @param {Record<string, unknown> | null | undefined} row
  */
+/** Gỡ enum JSON (Java) thành primitive hiển thị được */
+function unwrapEnumish(v) {
+  if (v == null) return null;
+  if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+    return v;
+  }
+  if (typeof v === "object" && v.name != null) return String(v.name);
+  return null;
+}
+
 export function normalizeInspection(row) {
   if (!row || typeof row !== "object") return null;
 
@@ -161,16 +171,15 @@ export function normalizeInspection(row) {
       row.createdAt ??
       row.created_at ??
       null,
-    result:
-      row.result ??
-      row.inspectionResult ??
-      row.inspection_result ??
-      null,
-    condition:
+    result: unwrapEnumish(
+      row.result ?? row.inspectionResult ?? row.inspection_result ?? null,
+    ),
+    condition: unwrapEnumish(
       row.overallCondition ??
-      row.overall_condition ??
-      row.condition ??
-      null,
+        row.overall_condition ??
+        row.condition ??
+        null,
+    ),
     conditionPercent,
     scores: Object.keys(scores).length > 0 ? scores : null,
     checklist: row.checklist ?? null,
@@ -230,5 +239,57 @@ export function calcScore(ins) {
   if (c === "fair") return 70;
   if (c === "poor") return 50;
   if (result === "PASS") return 80;
+  return null;
+}
+
+const POST_INSPECTION_NESTED_KEYS = [
+  "inspectionReport",
+  "inspection_report",
+  "inspectionReportResponse",
+  "inspection_report_response",
+  "latestInspection",
+  "latest_inspection",
+  "lastInspection",
+  "last_inspection",
+  "inspection",
+  "inspectionData",
+  "inspection_data",
+  "bicycleInspection",
+  "bicycle_inspection",
+];
+
+/**
+ * BE có thể nhúng báo cáo trong GET /posts/{id} (buyer không gọi được /inspection/...).
+ * @param {Record<string, unknown> | null | undefined} row
+ */
+export function extractInspectionFromPostPayload(row) {
+  if (!row || typeof row !== "object") return null;
+
+  for (const key of POST_INSPECTION_NESTED_KEYS) {
+    const v = row[key];
+    if (v && typeof v === "object" && !Array.isArray(v)) {
+      const ins = normalizeInspection(v);
+      if (inspectionResponseHasUsableData(ins)) return ins;
+    }
+  }
+
+  const nestedPost = row.post ?? row.bicyclePost ?? row.bicycle_post;
+  if (
+    nestedPost &&
+    typeof nestedPost === "object" &&
+    nestedPost !== row
+  ) {
+    for (const key of POST_INSPECTION_NESTED_KEYS) {
+      const v = nestedPost[key];
+      if (v && typeof v === "object" && !Array.isArray(v)) {
+        const ins = normalizeInspection(v);
+        if (inspectionResponseHasUsableData(ins)) return ins;
+      }
+    }
+  }
+
+  const flat = normalizeInspection(row);
+  if (inspectionResponseHasUsableData(flat)) return flat;
+
   return null;
 }

@@ -34,6 +34,13 @@ const inspectionService = {
     axiosInstance.get(ENDPOINTS.HISTORY, { params }),
 
   /**
+   * GET /reports/inspection — công khai (permitAll). PASS ai cũng xem; FAIL chỉ seller khi có JWT.
+   * @see BASAUYCLE/BE PublicInspectionController
+   */
+  getPublicInspectionReports: (params = {}) =>
+    axiosInstance.get(ENDPOINTS.PUBLIC_REPORTS, { params }),
+
+  /**
    * POST /inspection/{postId}/submit — submit 6-criterion rubric scores.
    *
    * @param {number|string} postId
