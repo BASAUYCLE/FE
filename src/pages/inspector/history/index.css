@@ -1,9 +1,5 @@
-/* Inspector history uses admin inspection-reports layout inside sidebar main. */
+/* Inspector history uses the same admin inspection-reports layout + CSS as /admin/inspection-reports. */
 .inspector-history-adminlike {
   width: 100%;
   min-width: 0;
-}
-
-.inspector-history-adminlike .admin-dashboard {
-  padding-top: 0;
 }

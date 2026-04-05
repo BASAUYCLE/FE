@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Modal, Spin } from "antd";
+import { Modal, Spin, Progress } from "antd";
 import { ClipboardList } from "lucide-react";
 import {
   calcScore,
@@ -78,11 +78,7 @@ export default function AdminInspectionModal({
     (async () => {
       try {
         const found = await fetchInspectionReportForPost(postId);
-        if (
-          !cancelled &&
-          found &&
-          inspectionResponseHasUsableData(found)
-        ) {
+        if (!cancelled && found && inspectionResponseHasUsableData(found)) {
           setInspection(found);
         }
       } finally {
@@ -124,7 +120,8 @@ export default function AdminInspectionModal({
       (inspection?.condition ? String(inspection.condition) : null)
     : (condKey && OVERALL_CONDITION_LABEL[condKey]
         ? OVERALL_CONDITION_LABEL[condKey]
-        : null) || (inspection?.condition ? String(inspection.condition) : null);
+        : null) ||
+      (inspection?.condition ? String(inspection.condition) : null);
 
   const resultUpper =
     inspection?.result != null && String(inspection.result).trim() !== ""
@@ -144,10 +141,14 @@ export default function AdminInspectionModal({
         : null;
 
   const refLine = `POST-${postId}`;
-  const pctDisplay =
+  const scorePctClamped =
     typeof scorePct === "number" && !Number.isNaN(scorePct)
-      ? `${scorePct}%`
-      : "—";
+      ? Math.min(100, Math.max(0, scorePct))
+      : null;
+  const scoreRingStroke =
+    resultUpper === "FAIL"
+      ? { "0%": "#f87171", "100%": "#dc2626" }
+      : { "0%": "#00ccad", "100%": "#0d9488" };
 
   return (
     <Modal
@@ -163,16 +164,26 @@ export default function AdminInspectionModal({
           <span className="admin-inspection-modal__title-kicker">
             {isPublic ? "BIKE INSPECTION" : "Inspection report"}
           </span>
-          <span className="admin-inspection-modal__title-main">
-            {isPublic
-              ? "Biên bản kiểm định"
-              : "Record (synced with inspector)"}
-          </span>
-          {listingTitle ? (
-            <span className="admin-inspection-modal__title-sub">
+          {isPublic ? (
+            <>
+              <span className="admin-inspection-modal__title-main">
+                Biên bản kiểm định
+              </span>
+              {listingTitle ? (
+                <span className="admin-inspection-modal__title-sub">
+                  {listingTitle}
+                </span>
+              ) : null}
+            </>
+          ) : listingTitle ? (
+            <span className="admin-inspection-modal__title-main">
               {listingTitle}
             </span>
-          ) : null}
+          ) : (
+            <span className="admin-inspection-modal__title-main">
+              Inspection record
+            </span>
+          )}
         </div>
       }
     >
@@ -299,43 +310,101 @@ export default function AdminInspectionModal({
                     ) : null}
                   </span>
                 </div>
-                <div>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic
-                      ? "ĐIỂM TỔNG HỢP (ƯỚC TÍNH)"
-                      : "Overall score (estimated)"}
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    {pctDisplay}
-                  </span>
-                </div>
-                <div>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic ? "XẾP LOẠI TỔNG THỂ" : "Overall condition"}
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    {condLabelSummary || "—"}
-                  </span>
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic ? "KẾT QUẢ CUỐI" : "Inspection outcome"}
-                  </span>
-                  <div>
-                    {passFailLabel && resultUpper ? (
-                      <span
-                        className={`admin-inspection-modal__cert-result-pill ${resultUpper === "PASS" ? "admin-inspection-modal__cert-result-pill--pass" : "admin-inspection-modal__cert-result-pill--fail"}`}
-                      >
-                        {`${passFailLabel} (${resultUpper})`}
+              </div>
+
+              {scorePctClamped != null ? (
+                <div className="admin-inspection-modal__cert-score-hero">
+                  <div className="admin-inspection-modal__cert-score-hero-ring">
+                    <span className="admin-inspection-modal__cert-score-hero-label">
+                      {isPublic
+                        ? "Điểm tổng hợp (ước tính)"
+                        : "Overall score (estimated)"}
+                    </span>
+                    <Progress
+                      type="circle"
+                      percent={scorePctClamped}
+                      size={168}
+                      strokeWidth={10}
+                      strokeColor={scoreRingStroke}
+                      trailColor="rgba(148, 163, 184, 0.22)"
+                      format={() => (
+                        <span className="admin-inspection-modal__cert-score-hero-pct">
+                          {scorePctClamped % 1 === 0
+                            ? `${Math.round(scorePctClamped)}%`
+                            : `${scorePctClamped.toFixed(1)}%`}
+                        </span>
+                      )}
+                    />
+                  </div>
+                  <div className="admin-inspection-modal__cert-score-hero-meta">
+                    <div>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        {isPublic ? "XẾP LOẠI TỔNG THỂ" : "Overall condition"}
                       </span>
-                    ) : (
                       <span className="admin-inspection-modal__cert-field-value">
-                        —
+                        {condLabelSummary || "—"}
                       </span>
-                    )}
+                    </div>
+                    <div>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        {isPublic ? "KẾT QUẢ CUỐI" : "Inspection outcome"}
+                      </span>
+                      <div>
+                        {passFailLabel && resultUpper ? (
+                          <span
+                            className={`admin-inspection-modal__cert-result-pill admin-inspection-modal__cert-result-pill--hero ${resultUpper === "PASS" ? "admin-inspection-modal__cert-result-pill--pass" : "admin-inspection-modal__cert-result-pill--fail"}`}
+                          >
+                            {`${passFailLabel} (${resultUpper})`}
+                          </span>
+                        ) : (
+                          <span className="admin-inspection-modal__cert-field-value">
+                            —
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="admin-inspection-modal__cert-summary-grid admin-inspection-modal__cert-summary-grid--fallback">
+                  <div>
+                    <span className="admin-inspection-modal__cert-field-label">
+                      {isPublic
+                        ? "ĐIỂM TỔNG HỢP (ƯỚC TÍNH)"
+                        : "Overall score (estimated)"}
+                    </span>
+                    <span className="admin-inspection-modal__cert-field-value">
+                      —
+                    </span>
+                  </div>
+                  <div>
+                    <span className="admin-inspection-modal__cert-field-label">
+                      {isPublic ? "XẾP LOẠI TỔNG THỂ" : "Overall condition"}
+                    </span>
+                    <span className="admin-inspection-modal__cert-field-value">
+                      {condLabelSummary || "—"}
+                    </span>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <span className="admin-inspection-modal__cert-field-label">
+                      {isPublic ? "KẾT QUẢ CUỐI" : "Inspection outcome"}
+                    </span>
+                    <div>
+                      {passFailLabel && resultUpper ? (
+                        <span
+                          className={`admin-inspection-modal__cert-result-pill ${resultUpper === "PASS" ? "admin-inspection-modal__cert-result-pill--pass" : "admin-inspection-modal__cert-result-pill--fail"}`}
+                        >
+                          {`${passFailLabel} (${resultUpper})`}
+                        </span>
+                      ) : (
+                        <span className="admin-inspection-modal__cert-field-value">
+                          —
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="admin-inspection-modal__cert-table-section">
@@ -434,9 +503,9 @@ export default function AdminInspectionModal({
               </p>
             ) : (
               <p className="admin-inspection-modal__cert-footnote">
-                Each row shows the same English rubric text as the inspector form
-                (without the numeric prefix). Overall Pass/Fail is computed on
-                the server.
+                Each row shows the same English rubric text as the inspector
+                form (without the numeric prefix). Overall Pass/Fail is computed
+                on the server.
               </p>
             )}
           </div>

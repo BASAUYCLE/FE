@@ -293,3 +293,20 @@ export function extractInspectionFromPostPayload(row) {
 
   return null;
 }
+
+/** Hiển thị trong UI (không kèm ký hiệu %) */
+export function formatInspectionScorePercent(n) {
+  if (typeof n !== "number" || !Number.isFinite(n)) return "";
+  return n % 1 === 0 ? `${Math.round(n)}` : n.toFixed(1);
+}
+
+/**
+ * % kiểm định từ payload tin đăng (GET post / list) khi BE nhúng inspection.
+ * @param {Record<string, unknown> | null | undefined} row
+ */
+export function verificationScorePctFromPostPayload(row) {
+  const ins = extractInspectionFromPostPayload(row);
+  if (!ins) return null;
+  const s = calcScore(ins);
+  return typeof s === "number" && Number.isFinite(s) ? s : null;
+}

@@ -23,6 +23,7 @@ import { formatCurrency } from "../../../utils/formatCurrency";
 import { useAuth } from "../../../contexts/AuthContext";
 import InspectionCertificateModal from "../../../components/inspector/InspectionCertificateModal";
 import { buildCertificateSnapshot } from "../../../utils/inspectionCertificate";
+import { buildListingPhotosFromPostImages } from "../../../utils/listingPhotosFromPost";
 import "./index.css";
 
 function firstNonEmpty(...vals) {
@@ -80,7 +81,8 @@ function mapPostToInspectionReport(row) {
   const imgUrl = (i) => i?.imageUrl ?? i?.image_url ?? i?.url ?? null;
   const thumb = images.find((i) => i?.isThumbnail);
   const bicycleImage = imgUrl(thumb) ?? imgUrl(images[0]) ?? null;
-  const inspectionImages = images.map(imgUrl).filter(Boolean);
+  const listingPhotos = buildListingPhotosFromPostImages(images);
+  const inspectionImages = listingPhotos.map((p) => p.url);
 
   const bicycleName =
     firstNonEmpty(
@@ -107,6 +109,7 @@ function mapPostToInspectionReport(row) {
     reportId: `POST-${postId}`,
     bicycleName,
     bicycleImage,
+    listingPhotos,
     inspectionImages,
     owner:
       firstNonEmpty(
@@ -324,6 +327,15 @@ export default function InspectorDetail() {
   const statusLabel =
     POSTING_STATUS_LABEL[report.reportStatus] ?? report.reportStatus;
 
+  const listingPhotos = report.listingPhotos ?? [];
+  const imageViewerPhoto = listingPhotos[imageViewerIndex];
+  const imageViewerLabel =
+    imageViewerPhoto?.label ?? `Photo ${imageViewerIndex + 1}`;
+  const imageViewerTitle =
+    listingPhotos.length > 0
+      ? `${imageViewerLabel} (${imageViewerIndex + 1} / ${listingPhotos.length})`
+      : undefined;
+
   return (
     <InspectorLayout>
       <div className="inspector-page">
@@ -435,32 +447,55 @@ export default function InspectorDetail() {
                       Listing photos
                     </h3>
                     <div className="inspection-report-thumbnails inspection-report-thumbnails--strip">
-                      {report.inspectionImages
-                        ?.filter(Boolean)
-                        .slice(0, 6)
-                        .map((img, idx) => (
+                      {listingPhotos.slice(0, 6).map((photo, idx) => {
+                        const totalPhotos = listingPhotos.length;
+                        const n = idx + 1;
+                        return (
                           <button
-                            key={idx}
+                            key={`${photo.url}-${idx}`}
                             type="button"
                             className="inspection-report-thumb inspection-report-thumb-btn"
+                            title={photo.label}
+                            aria-label={`View ${photo.label} — photo ${n} of ${totalPhotos}`}
                             onClick={() => {
                               setImageViewerIndex(idx);
                               setImageViewerOpen(true);
                             }}
                           >
-                            <img src={img} alt="" />
+                            <span
+                              className="inspection-report-thumb-position"
+                              aria-hidden
+                            >
+                              {photo.label}
+                            </span>
+                            <img
+                              src={photo.url}
+                              alt={`${photo.label} — ${n} of ${totalPhotos}`}
+                            />
                           </button>
-                        ))}
-                      {report.inspectionImages?.length > 6 && (
+                        );
+                      })}
+                      {listingPhotos.length > 6 && (
                         <button
                           type="button"
                           className="inspection-report-thumb inspection-report-thumb-more"
+                          title={listingPhotos
+                            .slice(6)
+                            .map((p) => p.label)
+                            .join(", ")}
+                          aria-label={`View more listing photos (${listingPhotos.length - 6} after the first six)`}
                           onClick={() => {
                             setImageViewerIndex(6);
                             setImageViewerOpen(true);
                           }}
                         >
-                          +{report.inspectionImages.length - 6}
+                          <span
+                            className="inspection-report-thumb-position inspection-report-thumb-position--more"
+                            aria-hidden
+                          >
+                            More
+                          </span>
+                          +{listingPhotos.length - 6}
                         </button>
                       )}
                     </div>
@@ -523,6 +558,7 @@ export default function InspectorDetail() {
                               className="field-select"
                               popupClassName="inspection-rubric-score-dropdown"
                               placeholder="Select rating"
+                              popupMatchSelectWidth={false}
                               value={scores[row.key]}
                               onChange={(value) =>
                                 setCriterionScore(row.key, value)
@@ -715,8 +751,9 @@ export default function InspectorDetail() {
           centered
           styles={{ body: { padding: 0 } }}
           className="inspection-image-viewer-modal"
+          title={imageViewerTitle}
         >
-          {report?.inspectionImages?.length > 0 && (
+          {listingPhotos.length > 0 && (
             <div className="inspection-viewer-wrap">
               <button
                 type="button"
@@ -728,8 +765,11 @@ export default function InspectorDetail() {
                 <ChevronLeft size={32} />
               </button>
               <img
-                src={report.inspectionImages[imageViewerIndex]}
-                alt="Listing"
+                src={
+                  imageViewerPhoto?.url ??
+                  report.inspectionImages?.[imageViewerIndex]
+                }
+                alt={`${imageViewerLabel} (${imageViewerIndex + 1} of ${listingPhotos.length})`}
                 className="inspection-viewer-img"
               />
               <button
@@ -737,18 +777,28 @@ export default function InspectorDetail() {
                 className="inspection-viewer-nav inspection-viewer-next"
                 onClick={() =>
                   setImageViewerIndex((i) =>
-                    Math.min(report.inspectionImages.length - 1, i + 1),
+                    Math.min(listingPhotos.length - 1, i + 1),
                   )
                 }
-                disabled={
-                  imageViewerIndex === report.inspectionImages.length - 1
-                }
+                disabled={imageViewerIndex === listingPhotos.length - 1}
                 aria-label="Next image"
               >
                 <ChevronRight size={32} />
               </button>
-              <div className="inspection-viewer-counter">
-                {imageViewerIndex + 1} / {report.inspectionImages.length}
+              <div
+                className="inspection-viewer-counter"
+                role="status"
+                aria-live="polite"
+              >
+                <span className="inspection-viewer-counter-slot">
+                  {imageViewerLabel}
+                </span>
+                <span className="inspection-viewer-counter-sep" aria-hidden>
+                  ·
+                </span>
+                <span className="inspection-viewer-counter-idx">
+                  {imageViewerIndex + 1} / {listingPhotos.length}
+                </span>
               </div>
             </div>
           )}

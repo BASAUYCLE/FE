@@ -235,28 +235,25 @@
 }
 
 /* ── Responsive ─────────────────────────────────────── */
-@media (max-width: 1000px) {
-  .admin-reports-table.admin-table .admin-table-row {
-    grid-template-columns: 2fr 1fr 0.8fr 0.8fr;
+/* Keep full grid + header alignment (same as admin Inspection history). Narrow screens scroll horizontally. */
+@media (max-width: 1100px) {
+  .admin-inspection-reports-page .admin-reports-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .admin-reports-table .admin-table-row > :nth-child(3),
-  .admin-reports-table .admin-table-row > :nth-child(4) {
-    display: none;
+
+  .admin-inspection-reports-page .admin-reports-table .admin-table-row {
+    min-width: 900px;
   }
+
   .admin-ir-stats {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 680px) {
-  .admin-reports-table.admin-table .admin-table-row {
-    grid-template-columns: 2fr 1fr 1fr;
-  }
-  .admin-reports-table .admin-table-row > :nth-child(2) {
-    display: none;
-  }
+@media (max-width: 520px) {
   .admin-ir-stats {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 }
 

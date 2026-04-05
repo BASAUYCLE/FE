@@ -11,6 +11,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { POSTING_STATUS } from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { verificationScorePctFromPostPayload } from "../../utils/inspectionReportNormalize";
+import { fetchPublicInspectionScoresByPostId } from "../../utils/inspectionReportFetch";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
 import bicyclesWorkshopImage from "../../assets/bicycles_workshop.jpg";
 import "./index.css";
@@ -31,7 +33,10 @@ function postingToBike(p) {
   const imageUrl = p.imageUrl ?? p.thumbnailUrl ?? thumb ?? null;
   const status = p.status ?? p.postStatus;
   const badge =
-    status === POSTING_STATUS.AVAILABLE || status === "AVAILABLE"
+    status === POSTING_STATUS.AVAILABLE ||
+    status === "AVAILABLE" ||
+    status === POSTING_STATUS.VERIFIED ||
+    status === "VERIFIED"
       ? "VERIFIED"
       : status === "CERTIFIED" || status === "ADMIN_APPROVED"
         ? "CERTIFIED"
@@ -61,6 +66,7 @@ function postingToBike(p) {
     biketype: p.biketype ?? p.bicycleType ?? p.categoryName ?? null,
     image: imageUrl ?? defaultBikeImage,
     badge,
+    verificationScorePct: verificationScorePctFromPostPayload(p),
     specs: {
       ...(p.specs ?? {}),
       brand,
@@ -108,6 +114,18 @@ export default function Marketplace() {
   const location = useLocation();
   const [apiPostings, setApiPostings] = useState([]);
   const [loading, setLoading] = useState(true);
+  /** % từ GET public inspection list khi DTO tin không có inspection */
+  const [publicInspectionScores, setPublicInspectionScores] = useState({});
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchPublicInspectionScoresByPostId().then((scores) => {
+      if (!cancelled) setPublicInspectionScores(scores);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     loadPublicPostings();
@@ -212,8 +230,17 @@ export default function Marketplace() {
         const key = p.id ?? p.postId;
         byId.set(key, p);
       });
-    return [...byId.values()].map(postingToBike);
-  }, [apiPostings, postings, publicPostings]);
+    return [...byId.values()].map((p) => {
+      const bike = postingToBike(p);
+      if (bike.verificationScorePct != null) return bike;
+      const id = String(bike.id ?? bike.postId ?? "");
+      const s = id ? publicInspectionScores[id] : undefined;
+      if (typeof s === "number" && Number.isFinite(s)) {
+        return { ...bike, verificationScorePct: s };
+      }
+      return bike;
+    });
+  }, [apiPostings, postings, publicPostings, publicInspectionScores]);
 
   // Load đầy đủ Brand/Category/FrameSize/ModelYear từ database giống trang Post
   useEffect(() => {
