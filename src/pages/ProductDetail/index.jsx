@@ -376,11 +376,7 @@ export default function ProductDetail() {
       setInspectionReport(null);
       try {
         const ins = await fetchInspectionReportForPost(postId);
-        if (
-          !cancelled &&
-          ins &&
-          inspectionResponseHasUsableData(ins)
-        ) {
+        if (!cancelled && ins && inspectionResponseHasUsableData(ins)) {
           setInspectionReport(ins);
         }
       } catch {
