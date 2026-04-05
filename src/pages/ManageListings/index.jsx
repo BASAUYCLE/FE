@@ -14,9 +14,18 @@ import {
   Tooltip,
   Pagination,
 } from "antd";
-import { Search, Plus, Pencil, Trash2, MoreVertical, Send } from "lucide-react";
+import {
+  Search,
+  Plus,
+  Pencil,
+  Trash2,
+  MoreVertical,
+  Send,
+  FileCheck,
+} from "lucide-react";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import AdminInspectionModal from "../../components/AdminInspectionModal";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/useNotifications";
@@ -57,6 +66,21 @@ const TAB_ITEMS = [
 
 import { formatDate } from "../../utils/date";
 
+/** Đã qua / có thể có biên bản inspector (không hiện icon khi chưa kiểm định) */
+const INSPECTION_REPORT_ACTION_STATUSES = new Set([
+  POSTING_STATUS.AVAILABLE,
+  POSTING_STATUS.VERIFIED,
+  POSTING_STATUS.ACTIVE,
+  POSTING_STATUS.REJECTED,
+  POSTING_STATUS.DEPOSITED,
+  POSTING_STATUS.SOLD,
+  POSTING_STATUS.PROCESSING,
+]);
+
+function showInspectionActionForStatus(status) {
+  return INSPECTION_REPORT_ACTION_STATUSES.has(String(status ?? "").toUpperCase());
+}
+
 function getStatusLabel(status) {
   return POSTING_STATUS_LABEL[status] ?? status;
 }
@@ -78,8 +102,20 @@ export default function ManageListings() {
   });
   const [deleting, setDeleting] = useState(false);
   const [submittingDraftId, setSubmittingDraftId] = useState(null);
+  const [inspectionModal, setInspectionModal] = useState({
+    open: false,
+    postId: null,
+    title: null,
+    meta: null,
+  });
 
   const sellerId = user?.userId ?? user?.user_id ?? user?.id ?? null;
+  const posterHintForInspection =
+    user?.fullName ??
+    user?.full_name ??
+    user?.name ??
+    user?.email ??
+    null;
 
   const fetchMyPostings = useCallback(async () => {
     let effectiveSellerId = sellerId;
@@ -161,6 +197,26 @@ export default function ManageListings() {
     );
     if (posting) setDeleteModal({ open: true, id, name: posting.bikeName });
   };
+
+  const openInspectionForRecord = useCallback((record) => {
+    const postId = record.id ?? record.backendPostId;
+    if (postId == null) return;
+    const meta =
+      [
+        record.brand,
+        record.category,
+        record.modelYear != null ? String(record.modelYear) : null,
+        record.frameSize,
+      ]
+        .filter(Boolean)
+        .join(" · ") || null;
+    setInspectionModal({
+      open: true,
+      postId: Number(postId) || postId,
+      title: record.bikeName ?? null,
+      meta,
+    });
+  }, []);
 
   const handleSubmitDraft = async (record) => {
     const id = record.id ?? record.backendPostId;
@@ -315,9 +371,10 @@ export default function ManageListings() {
     {
       title: "ACTIONS",
       key: "actions",
-      width: 160,
+      width: 200,
       render: (_, record) => {
         const isDraftRow = record.status === POSTING_STATUS.DRAFTED;
+        const showInspectionBtn = showInspectionActionForStatus(record.status);
         const actionItems = [
           {
             key: "edit",
@@ -355,6 +412,17 @@ export default function ManageListings() {
               onClick={() => navigate(`/post?edit=${record.id}`)}
               title="Edit"
             />
+            {showInspectionBtn && (
+              <Tooltip title="Xem biên bản kiểm định">
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<FileCheck size={14} />}
+                  onClick={() => openInspectionForRecord(record)}
+                  aria-label="Xem biên bản kiểm định"
+                />
+              </Tooltip>
+            )}
             {isDraft && (
               <Tooltip title="Submit for review: admin approves content, then an inspector scores the bike; PASS/FAIL is automatic.">
                 <Button
@@ -520,6 +588,28 @@ export default function ManageListings() {
         Are you sure you want to delete &quot;{deleteModal.name}&quot;? This
         action cannot be undone.
       </Modal>
+
+      <AdminInspectionModal
+        key={
+          inspectionModal.open && inspectionModal.postId != null
+            ? `manage-ir-${inspectionModal.postId}`
+            : "manage-ir-closed"
+        }
+        postId={inspectionModal.postId}
+        listingTitle={inspectionModal.title}
+        listingMeta={inspectionModal.meta}
+        posterHint={posterHintForInspection}
+        variant="public"
+        open={inspectionModal.open && inspectionModal.postId != null}
+        onClose={() =>
+          setInspectionModal({
+            open: false,
+            postId: null,
+            title: null,
+            meta: null,
+          })
+        }
+      />
     </div>
   );
 }
