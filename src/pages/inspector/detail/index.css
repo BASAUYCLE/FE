@@ -11,10 +11,10 @@
 
 .inspector-dashboard.inspector-dashboard--detail-report {
   width: 100%;
-  max-width: 900px;
+  max-width: min(1440px, 100%);
   margin-left: auto;
   margin-right: auto;
-  padding: 24px 20px 40px;
+  padding: 16px 20px 40px;
   box-sizing: border-box;
   flex-shrink: 0;
 }
@@ -77,6 +77,22 @@
   border-top: 1px solid #e2e8f0;
 }
 
+.inspector-detail-actions--in-panel {
+  margin-top: 0;
+  padding-top: 18px;
+  border-top: 1px solid #eef1f4;
+}
+
+.inspection-report-workspace .inspector-detail-actions--in-panel {
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.inspector-detail-actions .inspector-btn-exit {
+  border-radius: 10px;
+  padding: 11px 18px;
+}
+
 .inspector-detail-actions .inspector-btn-reject {
   background: #ef4444 !important;
   color: #fff !important;
@@ -92,11 +108,12 @@
   background: #00ccad !important;
   color: #fff !important;
   border: none;
-  padding: 10px 20px;
+  padding: 11px 22px;
   border-radius: 10px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 204, 173, 0.25);
 }
 
 .inspector-detail-actions-right {
@@ -117,7 +134,7 @@
   cursor: pointer;
 }
 
-/* Inspection report page layout */
+/* Inspection report page — workspace-style canvas */
 .inspection-report-page {
   max-width: 100%;
   margin: 0 auto;
@@ -131,21 +148,25 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e8eaed;
 }
 
 .inspection-report-title {
-  font-size: 1.35rem;
+  font-size: clamp(1.25rem, 2vw, 1.5rem);
   font-weight: 700;
   color: #0f172a;
-  margin: 0 0 4px 0;
-  line-height: 1.3;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
 }
 
 .inspection-report-meta {
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
   margin: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .inspection-report-actions-top {
@@ -192,22 +213,189 @@
   background: #00b89a;
 }
 
+/*
+ * Full-width listing strip (photo + details + gallery) · workspace below.
+ * Avoids a narrow sticky column that clips content and forces inner scroll.
+ */
 .inspection-report-layout {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+  min-width: 0;
 }
 
-.inspection-report-top-row {
+.inspection-report-listing-strip {
+  border-radius: 14px;
+  border: 1px solid #e8eaed;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow: visible;
+}
+
+.inspection-report-listing-strip-inner {
+  display: grid;
+  gap: 20px;
+  align-items: start;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "hero"
+    "copy"
+    "photos";
+}
+
+@media (min-width: 720px) {
+  .inspection-report-listing-strip-inner {
+    grid-template-columns: minmax(200px, 260px) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "hero copy"
+      "photos photos";
+    gap: 16px 24px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .inspection-report-listing-strip-inner {
+    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr) minmax(
+        260px,
+        380px
+      );
+    grid-template-rows: auto;
+    grid-template-areas: "hero copy photos";
+    gap: 20px 28px;
+  }
+}
+
+.inspection-report-listing-hero {
+  grid-area: hero;
+  min-width: 0;
+}
+
+.inspection-report-listing-copy {
+  grid-area: copy;
+  min-width: 0;
+}
+
+.inspection-report-listing-photos {
+  grid-area: photos;
+  min-width: 0;
+}
+
+.inspection-report-bike-placeholder {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #f1f5f9 0%, #e2e8f0 100%);
+  border: 1px dashed #cbd5e1;
+}
+
+.inspection-report-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px 20px;
+  margin-top: 4px;
+}
+
+@media (min-width: 520px) {
+  .inspection-report-detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.inspection-report-listing-copy .inspection-report-bike-name {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  margin-bottom: 4px;
+}
+
+.inspection-report-listing-copy .inspection-report-bike-meta {
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.inspection-report-listing-copy .inspection-report-detail-row {
+  font-size: 13px;
+  margin-bottom: 0;
+  line-height: 1.45;
+}
+
+.inspection-report-listing-copy .inspection-report-description {
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.inspection-report-listing-copy .inspection-report-description-block {
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.inspection-report-listing-photos .inspection-report-card-title {
+  margin-bottom: 10px;
+}
+
+/* Gallery in strip: use full width of photo column / row */
+.inspection-report-thumbnails--strip {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.inspection-report-thumbnails--strip .inspection-report-thumb {
+  aspect-ratio: 1;
+  min-height: 72px;
+}
+
+@media (min-width: 720px) {
+  .inspection-report-thumbnails--strip {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .inspection-report-thumbnails--strip .inspection-report-thumb {
+    min-height: 64px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .inspection-report-thumbnails--strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .inspection-report-thumbnails--strip .inspection-report-thumb {
+    min-height: 88px;
+  }
+}
+
+.inspection-report-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 4px 0 0;
+}
+
+/* Primary workspace card */
+.inspection-report-workspace .inspection-scoring-card {
+  border: 1px solid #e2e8f0;
+  box-shadow:
+    0 4px 6px -1px rgba(15, 23, 42, 0.06),
+    0 2px 4px -2px rgba(15, 23, 42, 0.04);
+}
+
+.inspection-report-workspace .inspection-report-inspect-top .admin-card {
+  border-radius: 12px;
+  border: 1px solid #e8eaed;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.inspection-report-inspect-top {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
   align-items: stretch;
 }
 
-.inspection-report-top-row > .admin-card {
-  height: 100%;
-  min-height: 0;
+@media (max-width: 1099px) {
+  .inspection-report-inspect-top {
+    grid-template-columns: 1fr;
+  }
 }
 
 .inspection-report-status-card {
@@ -216,24 +404,37 @@
   justify-content: center;
 }
 
-.inspection-confirmation--inline {
-  display: flex;
-  flex-direction: column;
+.inspection-report-status-card--compact {
+  padding: 14px 16px;
 }
 
-.inspection-confirmation--inline .inspection-confirmation-text {
-  flex: 1;
+.inspection-confirmation--compact {
+  padding: 14px 16px;
+}
+
+.inspection-confirmation--compact .inspection-confirmation-text {
+  font-size: 12px;
+  line-height: 1.45;
   margin-bottom: 0;
 }
 
-.inspection-report-body {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.inspection-confirmation-icon--sm {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 8px;
+}
+
+.inspection-confirmation-icon--sm svg {
+  width: 20px;
+  height: 20px;
 }
 
 .inspection-report-card {
   padding: 18px;
+}
+
+.inspection-report-listing-strip.inspection-report-card {
+  padding: 18px 20px;
 }
 
 .inspection-report-post-detail {
@@ -276,11 +477,19 @@
 .inspection-report-bike-image {
   width: 100%;
   aspect-ratio: 16 / 10;
-  max-height: 320px;
-  min-height: 180px;
+  max-height: 260px;
+  min-height: 160px;
   object-fit: cover;
   border-radius: 12px;
   margin-bottom: 14px;
+}
+
+.inspection-report-listing-hero .inspection-report-bike-image {
+  aspect-ratio: 4 / 3;
+  max-height: none;
+  min-height: 0;
+  margin-bottom: 0;
+  display: block;
 }
 
 .inspection-report-bike-name {
@@ -349,20 +558,20 @@
   gap: 8px;
 }
 
-/* Lưới ảnh kiểm định: ít cột hơn → ô ảnh lớn hơn */
-.inspection-report-thumbnails--large {
+/* Gallery: 2 columns in compact reference column */
+.inspection-report-thumbnails--gallery {
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 8px;
 }
 
-.inspection-report-thumbnails--large .inspection-report-thumb {
+.inspection-report-thumbnails--gallery .inspection-report-thumb {
   aspect-ratio: 1;
-  min-height: 100px;
+  min-height: 72px;
 }
 
 @media (min-width: 1100px) {
-  .inspection-report-thumbnails--large .inspection-report-thumb {
-    min-height: 100px;
+  .inspection-report-thumbnails--gallery .inspection-report-thumb {
+    min-height: 80px;
   }
 }
 
@@ -716,29 +925,25 @@
   border-color: #ef4444 !important;
 }
 
-/* ─── 6-criteria scoring (inspector submit) — modern card UI ─────────────── */
+/* ─── 6-criteria scoring — primary workspace (flat, inspection-platform style) ─ */
 .inspection-scoring-card {
   padding: 0;
-  /* allow Ant Select dropdown to escape card (portal still needs no clip on ancestors) */
   overflow: visible;
-  border-radius: 16px;
+  border-radius: 14px;
+  background: #fff;
 }
 
 .inspection-scoring-card-head {
-  padding: 22px 22px 18px;
-  border-bottom: 1px solid #f1f5f9;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(248, 250, 252, 0.65) 100%
-  );
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eef1f4;
+  background: #fafbfc;
 }
 
 .inspection-scoring-card-title {
   margin: 0 0 6px 0;
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
   color: #0f172a;
   line-height: 1.3;
 }
@@ -748,7 +953,7 @@
   font-size: 13px;
   line-height: 1.55;
   color: #64748b;
-  max-width: 52ch;
+  max-width: none;
 }
 
 .inspection-scoring-card-subtitle strong {
@@ -757,11 +962,11 @@
 }
 
 .inspection-scoring-card .ant-alert {
-  margin: 0 22px 16px;
+  margin: 0 24px 16px;
 }
 
 .inspection-scoring-card .inspection-criteria-list--rubric-form {
-  padding: 12px 22px 22px;
+  padding: 14px 24px 24px;
 }
 
 .inspection-criteria-list {
@@ -776,22 +981,16 @@
 
 .inspection-rubric-section {
   position: relative;
-  border-radius: 14px;
-  border: 1px solid #e8eef3;
+  border-radius: 10px;
+  border: 1px solid #e8eaed;
   background: #fff;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 4px 16px -4px rgba(15, 23, 42, 0.06);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  box-shadow: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .inspection-rubric-section:hover {
-  border-color: #dce6ed;
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.05),
-    0 8px 24px -6px rgba(15, 23, 42, 0.08);
+  border-color: #cdd5e0;
+  background: #fcfcfd;
 }
 
 .inspection-rubric-section-inner {
@@ -949,15 +1148,15 @@
 }
 
 .inspection-scoring-card .inspection-notes-block {
-  margin: 4px 22px 20px;
+  margin: 4px 24px 20px;
 }
 
 .inspection-scoring-card .inspection-preview-panel {
-  margin: 0 22px 22px;
-  border-radius: 14px;
-  border-color: #e8eef3;
-  background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  margin: 0 24px 24px;
+  border-radius: 10px;
+  border-color: #e8eaed;
+  background: #f8fafc;
+  box-shadow: none;
 }
 
 .inspection-notes-block {
@@ -1077,25 +1276,28 @@
   cursor: not-allowed;
 }
 
-@media (max-width: 900px) {
-  .inspection-report-top-row {
-    grid-template-columns: 1fr;
-  }
-
+@media (max-width: 1023px) {
   .inspector-dashboard.inspector-dashboard--detail-report {
     padding: 16px 12px 32px;
   }
 
-  .inspection-report-bike-image {
-    min-height: 160px;
-    max-height: 260px;
+  .inspection-report-listing-strip.inspection-report-card {
+    padding: 14px 14px;
   }
 
-  .inspection-report-thumbnails--large .inspection-report-thumb {
-    min-height: 120px;
+  .inspection-report-thumbnails--strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .inspection-report-thumbnails--strip .inspection-report-thumb {
+    min-height: 80px;
   }
 
   .inspection-report-thumb-more {
-    min-height: 120px;
+    min-height: 80px;
+  }
+
+  .inspection-report-layout {
+    gap: 20px;
   }
 }

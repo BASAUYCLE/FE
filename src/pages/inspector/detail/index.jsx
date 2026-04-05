@@ -299,132 +299,144 @@ export default function InspectorDetail() {
             </div>
 
             <div className="inspection-report-layout">
-              <div className="inspection-report-top-row">
-                <div className="admin-card inspection-report-card inspection-report-status-card">
-                  <h3 className="inspection-report-card-title">
-                    Current status
-                  </h3>
-                  <p
-                    className={`inspection-report-status inspection-report-status--${report.reportStatus?.toLowerCase()}`}
-                  >
-                    {statusLabel}
-                  </p>
-                </div>
-
-                <div className="admin-card inspection-report-card inspection-confirmation inspection-confirmation--inline">
-                  <div className="inspection-confirmation-icon">
-                    <Settings size={24} color="#fff" />
+              <div className="admin-card inspection-report-card inspection-report-listing-strip">
+                <div className="inspection-report-listing-strip-inner">
+                  <div className="inspection-report-listing-hero">
+                    {report.bicycleImage ? (
+                      <img
+                        src={report.bicycleImage}
+                        alt={report.bicycleName}
+                        className="inspection-report-bike-image"
+                      />
+                    ) : (
+                      <div
+                        className="inspection-report-bike-placeholder"
+                        aria-hidden
+                      />
+                    )}
                   </div>
-                  <h3 className="inspection-report-card-title">
-                    Inspection confirmation
-                  </h3>
-                  <p className="inspection-confirmation-text">
-                    I confirm that the inspection was carried out in accordance
-                    with the applicable standards and that the information above
-                    is accurate at the time of inspection.
-                  </p>
-                </div>
-              </div>
-
-              <div className="inspection-report-body">
-                <div className="admin-card inspection-report-card inspection-report-post-detail">
-                  {report.bicycleImage && (
-                    <img
-                      src={report.bicycleImage}
-                      alt={report.bicycleName}
-                      className="inspection-report-bike-image"
-                    />
-                  )}
-                  <h2 className="inspection-report-bike-name">
-                    {report.bicycleName}
-                  </h2>
-                  <p className="inspection-report-bike-meta">
-                    {inspectionMetaLineParts([
-                      report.brandName,
-                      report.categoryName,
-                      report.modelYear,
-                      report.size !== "—" ? `Size ${report.size}` : null,
-                    ])}
-                  </p>
-                  <div className="inspection-report-detail-row">
-                    <span className="inspection-report-detail-label">
-                      Price:
-                    </span>
-                    <span>{report.priceDisplay}</span>
-                  </div>
-                  <div className="inspection-report-detail-row">
-                    <span className="inspection-report-detail-label">
-                      Owner:
-                    </span>
-                    <span>{report.owner}</span>
-                  </div>
-                  <div className="inspection-report-detail-row">
-                    <span className="inspection-report-detail-label">
-                      Color:
-                    </span>
-                    <span>{report.bicycleColor ?? "—"}</span>
-                  </div>
-                  <div className="inspection-report-detail-row">
-                    <span className="inspection-report-detail-label">
-                      Frame material:
-                    </span>
-                    <span>{report.frameMaterial ?? "—"}</span>
-                  </div>
-                  <div className="inspection-report-detail-row">
-                    <span className="inspection-report-detail-label">
-                      Groupset:
-                    </span>
-                    <span>{report.groupset ?? "—"}</span>
-                  </div>
-                  <div className="inspection-report-detail-row">
-                    <span className="inspection-report-detail-label">
-                      Brake type:
-                    </span>
-                    <span>{report.brakeType ?? "—"}</span>
-                  </div>
-                  <div className="inspection-report-description-block">
-                    <span className="inspection-report-detail-label">
-                      Description
-                    </span>
-                    <p className="inspection-report-description">
-                      {report.description ?? "—"}
+                  <div className="inspection-report-listing-copy">
+                    <h2 className="inspection-report-bike-name">
+                      {report.bicycleName}
+                    </h2>
+                    <p className="inspection-report-bike-meta">
+                      {inspectionMetaLineParts([
+                        report.brandName,
+                        report.categoryName,
+                        report.modelYear,
+                        report.size !== "—" ? `Size ${report.size}` : null,
+                      ])}
                     </p>
+                    <div className="inspection-report-detail-grid">
+                      <div className="inspection-report-detail-row">
+                        <span className="inspection-report-detail-label">
+                          Price:
+                        </span>
+                        <span>{report.priceDisplay}</span>
+                      </div>
+                      <div className="inspection-report-detail-row">
+                        <span className="inspection-report-detail-label">
+                          Owner:
+                        </span>
+                        <span>{report.owner}</span>
+                      </div>
+                      <div className="inspection-report-detail-row">
+                        <span className="inspection-report-detail-label">
+                          Color:
+                        </span>
+                        <span>{report.bicycleColor ?? "—"}</span>
+                      </div>
+                      <div className="inspection-report-detail-row">
+                        <span className="inspection-report-detail-label">
+                          Frame material:
+                        </span>
+                        <span>{report.frameMaterial ?? "—"}</span>
+                      </div>
+                      <div className="inspection-report-detail-row">
+                        <span className="inspection-report-detail-label">
+                          Groupset:
+                        </span>
+                        <span>{report.groupset ?? "—"}</span>
+                      </div>
+                      <div className="inspection-report-detail-row">
+                        <span className="inspection-report-detail-label">
+                          Brake type:
+                        </span>
+                        <span>{report.brakeType ?? "—"}</span>
+                      </div>
+                    </div>
+                    <div className="inspection-report-description-block">
+                      <span className="inspection-report-detail-label">
+                        Description
+                      </span>
+                      <p className="inspection-report-description">
+                        {report.description ?? "—"}
+                      </p>
+                    </div>
                   </div>
-                </div>
-
-                <div className="admin-card inspection-report-card inspection-report-images-card">
-                  <h3 className="inspection-report-card-title">
-                    Listing images
-                  </h3>
-                  <div className="inspection-report-thumbnails inspection-report-thumbnails--large">
-                    {report.inspectionImages
-                      ?.filter(Boolean)
-                      .slice(0, 4)
-                      .map((img, idx) => (
+                  <div className="inspection-report-listing-photos">
+                    <h3 className="inspection-report-card-title">
+                      Listing photos
+                    </h3>
+                    <div className="inspection-report-thumbnails inspection-report-thumbnails--strip">
+                      {report.inspectionImages
+                        ?.filter(Boolean)
+                        .slice(0, 6)
+                        .map((img, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            className="inspection-report-thumb inspection-report-thumb-btn"
+                            onClick={() => {
+                              setImageViewerIndex(idx);
+                              setImageViewerOpen(true);
+                            }}
+                          >
+                            <img src={img} alt="" />
+                          </button>
+                        ))}
+                      {report.inspectionImages?.length > 6 && (
                         <button
-                          key={idx}
                           type="button"
-                          className="inspection-report-thumb inspection-report-thumb-btn"
+                          className="inspection-report-thumb inspection-report-thumb-more"
                           onClick={() => {
-                            setImageViewerIndex(idx);
+                            setImageViewerIndex(6);
                             setImageViewerOpen(true);
                           }}
                         >
-                          <img src={img} alt="" />
+                          +{report.inspectionImages.length - 6}
                         </button>
-                      ))}
-                    {report.inspectionImages?.length > 4 && (
-                      <button
-                        type="button"
-                        className="inspection-report-thumb inspection-report-thumb-more"
-                        onClick={() => {
-                          setImageViewerIndex(4);
-                          setImageViewerOpen(true);
-                        }}
-                      >
-                        +{report.inspectionImages.length - 4}
-                      </button>
-                    )}
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="inspection-report-workspace">
+                <div className="inspection-report-inspect-top">
+                  <div className="admin-card inspection-report-card inspection-report-status-card inspection-report-status-card--compact">
+                    <h3 className="inspection-report-card-title">
+                      Current status
+                    </h3>
+                    <p
+                      className={`inspection-report-status inspection-report-status--${report.reportStatus?.toLowerCase()}`}
+                    >
+                      {statusLabel}
+                    </p>
+                  </div>
+
+                  <div className="admin-card inspection-report-card inspection-confirmation inspection-confirmation--compact">
+                    <div className="inspection-confirmation-icon inspection-confirmation-icon--sm">
+                      <Settings size={20} color="#fff" />
+                    </div>
+                    <h3 className="inspection-report-card-title">
+                      Inspection confirmation
+                    </h3>
+                    <p className="inspection-confirmation-text">
+                      I confirm that the inspection was carried out in
+                      accordance with the applicable standards and that the
+                      information above is accurate at the time of inspection.
+                    </p>
                   </div>
                 </div>
 
@@ -450,10 +462,7 @@ export default function InspectorDetail() {
                   )}
                   <div className="inspection-criteria-list inspection-criteria-list--rubric-form">
                     {INSPECTION_CRITERIA_ROWS.map((row, idx) => (
-                      <div
-                        key={row.key}
-                        className="inspection-rubric-section"
-                      >
+                      <div key={row.key} className="inspection-rubric-section">
                         <div className="inspection-rubric-section-inner">
                           <div className="inspection-rubric-section-leading">
                             <span className="inspection-rubric-section-index">
@@ -499,10 +508,7 @@ export default function InspectorDetail() {
                     ))}
                   </div>
 
-                  <div
-                    ref={notesBlockRef}
-                    className="inspection-notes-block"
-                  >
+                  <div ref={notesBlockRef} className="inspection-notes-block">
                     <label
                       className={`inspection-notes-label ${notesError ? "inspection-notes-label--error" : ""}`}
                       htmlFor="inspector-notes"
@@ -599,26 +605,26 @@ export default function InspectorDetail() {
                     )}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="inspector-detail-actions">
-              <button
-                type="button"
-                className="inspector-btn-exit"
-                onClick={handleExit}
-              >
-                Exit
-              </button>
-              <div className="inspector-detail-actions-right">
-                <button
-                  type="button"
-                  className="inspector-btn-done"
-                  onClick={handleSubmitClick}
-                  disabled={!canSubmit || submitLoading}
-                >
-                  Submit inspection
-                </button>
+                <div className="inspector-detail-actions inspector-detail-actions--in-panel">
+                  <button
+                    type="button"
+                    className="inspector-btn-exit"
+                    onClick={handleExit}
+                  >
+                    Exit
+                  </button>
+                  <div className="inspector-detail-actions-right">
+                    <button
+                      type="button"
+                      className="inspector-btn-done"
+                      onClick={handleSubmitClick}
+                      disabled={!canSubmit || submitLoading}
+                    >
+                      Submit inspection
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
