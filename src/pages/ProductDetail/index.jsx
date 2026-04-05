@@ -26,6 +26,7 @@ import { message, Modal } from "antd";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import CheckoutModal from "../../components/CheckoutModal";
+import AdminInspectionModal from "../../components/AdminInspectionModal";
 import { getProductById } from "../../data/products";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { usePostings } from "../../contexts/PostingContext";
@@ -450,6 +451,20 @@ export default function ProductDetail() {
     ? calcScore(inspectionReport)
     : null;
 
+  const numericPostId = Number(id);
+  const inspectionModalPostId =
+    Number.isFinite(numericPostId) && numericPostId >= 1 ? numericPostId : null;
+  const inspectionModalListingMeta = product?.specs
+    ? [
+        product.specs.brand,
+        product.specs.category,
+        product.specs.modelYear,
+        product.specs.frameSize || product.specs.size || product.specs.frame,
+      ]
+        .filter(Boolean)
+        .join(" · ") || null
+    : null;
+
   const images =
     product?.images || (product ? Array(6).fill(product.image) : []);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -481,6 +496,9 @@ export default function ProductDetail() {
   const [rejectReason, setRejectReason] = useState("");
   const [approvingId, setApprovingId] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
+
+  // ============ Inspection report modal (summary column) ============
+  const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
 
   // ============ Checkout Modal ============
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -987,6 +1005,38 @@ export default function ProductDetail() {
                 sx={LOGIN_PAGE_PRIMARY_BTN_SX}
               >
                 BUY NOW
+              </Button>
+            )}
+
+            {inspectionModalPostId != null && (
+              <Button
+                variant="outlined"
+                fullWidth
+                startIcon={
+                  <SafetyCertificateOutlined style={{ fontSize: 18 }} />
+                }
+                onClick={() => setInspectionModalOpen(true)}
+                sx={{
+                  borderRadius: 999,
+                  minHeight: 48,
+                  py: 1.5,
+                  mb: 2,
+                  borderWidth: 2,
+                  borderColor: "#00ccad",
+                  color: "#0d9488",
+                  fontWeight: 600,
+                  fontSize: 15,
+                  letterSpacing: "0.02em",
+                  textTransform: "none",
+                  bgcolor: "#ffffff",
+                  "&:hover": {
+                    borderColor: "#0d9488",
+                    bgcolor: "rgba(0, 204, 173, 0.08)",
+                    color: "#0f766e",
+                  },
+                }}
+              >
+                Xem kết quả kiểm định
               </Button>
             )}
 
@@ -1573,6 +1623,20 @@ export default function ProductDetail() {
         product={product}
         numericPrice={numericCheckoutPrice}
         onSuccess={() => navigate("/orders")}
+      />
+
+      <AdminInspectionModal
+        key={
+          inspectionModalOpen && inspectionModalPostId != null
+            ? `product-detail-ir-${inspectionModalPostId}`
+            : "product-detail-ir-closed"
+        }
+        postId={inspectionModalPostId}
+        listingTitle={product?.name ?? null}
+        listingMeta={inspectionModalListingMeta}
+        posterHint={product?.seller?.name ?? null}
+        open={inspectionModalOpen && inspectionModalPostId != null}
+        onClose={() => setInspectionModalOpen(false)}
       />
 
       {/* <ProductDetailFooter /> */}
