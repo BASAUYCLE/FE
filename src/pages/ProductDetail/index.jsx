@@ -1063,7 +1063,7 @@ export default function ProductDetail() {
                   },
                 }}
               >
-                Xem kết quả kiểm định
+                View inspection report
               </Button>
             )}
 
@@ -1662,7 +1662,7 @@ export default function ProductDetail() {
         listingTitle={product?.name ?? null}
         listingMeta={inspectionModalListingMeta}
         posterHint={product?.seller?.name ?? null}
-        variant="public"
+        variant="staff"
         prefetchedInspection={inspectionReport}
         open={inspectionModalOpen && inspectionModalPostId != null}
         onClose={() => setInspectionModalOpen(false)}
