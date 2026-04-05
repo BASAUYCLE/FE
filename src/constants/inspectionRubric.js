@@ -49,6 +49,32 @@ export const INSPECTION_SCORE_OPTIONS = Object.freeze([
 ]);
 
 /**
+ * @param {unknown} score
+ * @returns {(typeof INSPECTION_SCORE_OPTIONS)[number] | null}
+ */
+export function getInspectionScoreOption(score) {
+  const n = typeof score === "number" ? score : Number(score);
+  if (!Number.isFinite(n)) return null;
+  for (let i = 0; i < INSPECTION_SCORE_OPTIONS.length; i++) {
+    if (INSPECTION_SCORE_OPTIONS[i].value === n) {
+      return INSPECTION_SCORE_OPTIONS[i];
+    }
+  }
+  return null;
+}
+
+/**
+ * Inspector rubric description (EN) for a saved score — text only, same `hintEn` as the form (no numeric prefix).
+ * @param {unknown} score
+ * @returns {string | null}
+ */
+export function formatInspectorScoreRubricLineEn(score) {
+  const opt = getInspectionScoreOption(score);
+  if (!opt) return null;
+  return opt.hintEn;
+}
+
+/**
  * Thứ tự hiển thị form — trùng key API.
  * Trọng số chỉ để hiển thị; công thức thực tế trong inspectionScoring.INSPECTION_WEIGHTS.
  */

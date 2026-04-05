@@ -324,14 +324,44 @@
 }
 
 .admin-inspection-modal__cert-table td:last-child {
-  text-align: center;
-  font-weight: 800;
-  width: 72px;
+  text-align: left;
+  min-width: 10.5rem;
+  max-width: 14rem;
+  font-weight: 600;
   color: var(--ac-ink);
-  font-variant-numeric: tabular-nums;
 }
 
-.admin-inspection-modal__cert-criterion-vi {
+.admin-inspection-modal__cert-condition {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+}
+
+.admin-inspection-modal__cert-condition-main {
+  font-weight: 700;
+  line-height: 1.35;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.admin-inspection-modal__cert-condition--excellent .admin-inspection-modal__cert-condition-main {
+  color: #047857;
+}
+
+.admin-inspection-modal__cert-condition--good .admin-inspection-modal__cert-condition-main {
+  color: #0d9488;
+}
+
+.admin-inspection-modal__cert-condition--fair .admin-inspection-modal__cert-condition-main {
+  color: #c2410c;
+}
+
+.admin-inspection-modal__cert-condition--poor .admin-inspection-modal__cert-condition-main {
+  color: #b91c1c;
+}
+
+.admin-inspection-modal__cert-criterion-name {
   font-weight: 600;
 }
 

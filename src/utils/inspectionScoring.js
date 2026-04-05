@@ -90,6 +90,22 @@ export function overallConditionFromPercent(percent) {
 }
 
 /**
+ * Một điểm tiêu chí (chỉ 0, 3, 7, 10) → một trong 4 mức tình trạng hiển thị biên bản.
+ * Khớp rubric: 10 như mới · 7 sử dụng nhẹ · 3 thay thế/chỉnh sửa · 0 hư hỏng nặng.
+ * @param {unknown} score
+ * @returns {typeof OVERALL_CONDITION[keyof typeof OVERALL_CONDITION] | null}
+ */
+export function overallConditionKeyFromInspectionScore(score) {
+  const n = typeof score === "number" ? score : Number(score);
+  if (!Number.isFinite(n)) return null;
+  if (n === 10) return OVERALL_CONDITION.EXCELLENT;
+  if (n === 7) return OVERALL_CONDITION.GOOD;
+  if (n === 3) return OVERALL_CONDITION.FAIR;
+  if (n === 0) return OVERALL_CONDITION.POOR;
+  return null;
+}
+
+/**
  * Khung = 0 hoặc phanh = 0 → luôn FAIL (BE).
  * @param {Partial<Record<string, number>>} scores
  */

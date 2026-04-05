@@ -6,33 +6,32 @@ import {
   inspectionResponseHasUsableData,
 } from "../../utils/inspectionReportNormalize";
 import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
-import {
-  OVERALL_CONDITION_LABEL,
-  OVERALL_CONDITION_LABEL_VI,
-} from "../../constants/postingStatus";
+import { OVERALL_CONDITION_LABEL } from "../../constants/postingStatus";
+import { overallConditionKeyFromInspectionScore } from "../../utils/inspectionScoring";
 import {
   INSPECTION_CRITERIA_ROWS,
   INSPECTION_CRITICAL_CRITERIA_KEYS,
+  formatInspectorScoreRubricLineEn,
 } from "../../constants/inspectionRubric";
 import "./index.css";
 
-function formatInspectedAtVi(raw) {
+function formatInspectedAtEn(raw) {
   if (raw == null || raw === "") return null;
   const d = raw instanceof Date ? raw : new Date(raw);
   if (Number.isNaN(d.getTime())) return typeof raw === "string" ? raw : null;
-  return new Intl.DateTimeFormat("vi-VN", {
-    dateStyle: "long",
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
     timeStyle: "short",
   }).format(d);
 }
 
 /**
- * Admin: cùng dữ liệu API với biên bản inspector — bảng STT / tiêu chí (VI) / điểm.
+ * Admin: same API + rubric copy as inspector (per-criterion scores → INSPECTION_SCORE_OPTIONS).
  */
 export default function AdminInspectionModal({
   postId,
   listingTitle,
-  /** Dòng phụ: hãng · loại · năm · size (giống biên bản) */
+  /** Subline: brand · category · year · size */
   listingMeta,
   posterHint,
   open,
@@ -84,28 +83,18 @@ export default function AdminInspectionModal({
       : null;
 
   const condKey = String(inspection?.condition ?? "").toUpperCase();
-  const condLabelVi =
-    condKey && OVERALL_CONDITION_LABEL_VI[condKey]
-      ? OVERALL_CONDITION_LABEL_VI[condKey]
-      : inspection?.condition
-        ? String(inspection.condition)
-        : null;
-  const condLabelEn =
-    condKey && OVERALL_CONDITION_LABEL[condKey]
+  const condLabelSummary =
+    (condKey && OVERALL_CONDITION_LABEL[condKey]
       ? OVERALL_CONDITION_LABEL[condKey]
-      : null;
+      : null) || (inspection?.condition ? String(inspection.condition) : null);
 
   const resultUpper =
     inspection?.result != null && String(inspection.result).trim() !== ""
       ? String(inspection.result).toUpperCase()
       : null;
 
-  const passFailVi =
-    resultUpper === "PASS"
-      ? "ĐẠT"
-      : resultUpper === "FAIL"
-        ? "KHÔNG ĐẠT"
-        : null;
+  const passFailLabel =
+    resultUpper === "PASS" ? "Pass" : resultUpper === "FAIL" ? "Fail" : null;
 
   const refLine = `POST-${postId}`;
   const pctDisplay =
@@ -125,10 +114,10 @@ export default function AdminInspectionModal({
       title={
         <div className="admin-inspection-modal__title">
           <span className="admin-inspection-modal__title-kicker">
-            Báo cáo kiểm định
+            Inspection report
           </span>
           <span className="admin-inspection-modal__title-main">
-            Biên bản (đồng bộ inspector)
+            Record (synced with inspector)
           </span>
           {listingTitle ? (
             <span className="admin-inspection-modal__title-sub">
@@ -148,11 +137,11 @@ export default function AdminInspectionModal({
             <ClipboardList strokeWidth={1.5} />
           </div>
           <p className="admin-inspection-modal__empty-title">
-            Chưa có biên bản trên hệ thống
+            No inspection record on file
           </p>
           <p className="admin-inspection-modal__empty-desc">
-            Dữ liệu hiển thị giống biên bản sau khi inspector gửi đủ 6 tiêu chí
-            và ghi chú. Thử đóng và mở lại sau vài giây nếu vừa submit.
+            Data appears here after the inspector submits all six criteria and
+            notes. Close and reopen in a few seconds if they just submitted.
           </p>
         </div>
       ) : (
@@ -163,9 +152,9 @@ export default function AdminInspectionModal({
                 BIKE INSPECTION
               </span>
               <span className="admin-inspection-modal__cert-brand-meta">
-                Biên bản từ máy chủ (admin view).
+                Server-sourced record (admin view).
                 <br />
-                Mã tham chiếu: <strong>{refLine}</strong>
+                Reference: <strong>{refLine}</strong>
                 {inspection.reportId != null ? (
                   <> · Report #{inspection.reportId}</>
                 ) : null}
@@ -174,10 +163,10 @@ export default function AdminInspectionModal({
 
             <div className="admin-inspection-modal__cert-banner">
               <h2 className="admin-inspection-modal__cert-banner-title">
-                Biên bản kiểm định chất lượng xe đạp đã qua sử dụng
+                Used bicycle technical quality inspection record
               </h2>
               <p className="admin-inspection-modal__cert-banner-sub">
-                Technical quality inspection record (bicycle)
+                Official inspection certificate summary
               </p>
             </div>
 
@@ -185,15 +174,15 @@ export default function AdminInspectionModal({
               <div className="admin-inspection-modal__cert-summary-grid">
                 <div>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Ngày kiểm định
+                    Inspection date
                   </span>
                   <span className="admin-inspection-modal__cert-field-value">
-                    {formatInspectedAtVi(inspection.inspectedAt) || "—"}
+                    {formatInspectedAtEn(inspection.inspectedAt) || "—"}
                   </span>
                 </div>
                 <div>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Mã tin đăng
+                    Listing ID
                   </span>
                   <span className="admin-inspection-modal__cert-field-value">
                     #{postId}
@@ -201,7 +190,7 @@ export default function AdminInspectionModal({
                 </div>
                 <div>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Người đăng tin
+                    Seller / poster
                   </span>
                   <span className="admin-inspection-modal__cert-field-value">
                     {posterDisplay || "—"}
@@ -225,7 +214,7 @@ export default function AdminInspectionModal({
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Sản phẩm
+                    Product
                   </span>
                   <span className="admin-inspection-modal__cert-field-value">
                     {listingTitle?.trim() || "—"}
@@ -241,7 +230,7 @@ export default function AdminInspectionModal({
                 </div>
                 <div>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Điểm tổng hợp (ước tính)
+                    Overall score (estimated)
                   </span>
                   <span className="admin-inspection-modal__cert-field-value">
                     {pctDisplay}
@@ -249,28 +238,22 @@ export default function AdminInspectionModal({
                 </div>
                 <div>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Xếp loại tổng thể
+                    Overall condition
                   </span>
                   <span className="admin-inspection-modal__cert-field-value">
-                    {condLabelVi || "—"}
-                    {condLabelEn && condLabelVi !== condLabelEn ? (
-                      <span className="admin-inspection-modal__cert-field-suben">
-                        {" "}
-                        ({condLabelEn})
-                      </span>
-                    ) : null}
+                    {condLabelSummary || "—"}
                   </span>
                 </div>
                 <div style={{ gridColumn: "1 / -1" }}>
                   <span className="admin-inspection-modal__cert-field-label">
-                    Kết quả kiểm định
+                    Inspection outcome
                   </span>
                   <div>
-                    {passFailVi && resultUpper ? (
+                    {passFailLabel && resultUpper ? (
                       <span
                         className={`admin-inspection-modal__cert-result-pill ${resultUpper === "PASS" ? "admin-inspection-modal__cert-result-pill--pass" : "admin-inspection-modal__cert-result-pill--fail"}`}
                       >
-                        {passFailVi} ({resultUpper})
+                        {passFailLabel} ({resultUpper})
                       </span>
                     ) : (
                       <span className="admin-inspection-modal__cert-field-value">
@@ -284,28 +267,32 @@ export default function AdminInspectionModal({
 
             <div className="admin-inspection-modal__cert-table-section">
               <h3 className="admin-inspection-modal__cert-table-heading">
-                Bảng điểm chi tiết theo tiêu chí
+                Per-criterion scores (inspector rubric)
               </h3>
               <div className="admin-inspection-modal__cert-table-wrap">
                 <table className="admin-inspection-modal__cert-table">
                   <thead>
                     <tr>
-                      <th>STT</th>
-                      <th>Tiêu chí</th>
-                      <th>Điểm</th>
+                      <th>#</th>
+                      <th>Criterion</th>
+                      <th>Score</th>
                     </tr>
                   </thead>
                   <tbody>
                     {INSPECTION_CRITERIA_ROWS.map((row, idx) => {
                       const s = inspection.scores?.[row.key];
-                      const n = Number(s);
-                      const display = s != null && Number.isFinite(n) ? n : "—";
+                      const rowCondKey =
+                        overallConditionKeyFromInspectionScore(s);
+                      const rubricLine = formatInspectorScoreRubricLineEn(s);
+                      const tierClass = rowCondKey
+                        ? `admin-inspection-modal__cert-condition--${rowCondKey.toLowerCase()}`
+                        : "";
                       return (
                         <tr key={row.key}>
                           <td>{idx + 1}</td>
                           <td>
-                            <span className="admin-inspection-modal__cert-criterion-vi">
-                              {row.labelVi}
+                            <span className="admin-inspection-modal__cert-criterion-name">
+                              {row.labelEn}
                             </span>
                             {INSPECTION_CRITICAL_CRITERIA_KEYS.has(row.key) ? (
                               <span className="admin-inspection-modal__cert-critical-tag">
@@ -313,7 +300,19 @@ export default function AdminInspectionModal({
                               </span>
                             ) : null}
                           </td>
-                          <td>{display}</td>
+                          <td>
+                            {rubricLine ? (
+                              <div
+                                className={`admin-inspection-modal__cert-condition ${tierClass}`}
+                              >
+                                <span className="admin-inspection-modal__cert-condition-main">
+                                  {rubricLine}
+                                </span>
+                              </div>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
                         </tr>
                       );
                     })}
@@ -324,7 +323,7 @@ export default function AdminInspectionModal({
 
             <div className="admin-inspection-modal__cert-notes">
               <div className="admin-inspection-modal__cert-notes-label">
-                Ghi chú kiểm định
+                Inspector notes
               </div>
               <div className="admin-inspection-modal__cert-notes-body">
                 {notesText || "—"}
@@ -332,8 +331,9 @@ export default function AdminInspectionModal({
             </div>
 
             <p className="admin-inspection-modal__cert-footnote">
-              Điểm và PASS/FAIL do máy chủ tính theo rubric; bảng trên map trực
-              tiếp từ API báo cáo (cùng nguồn với biên bản inspector).
+              Each row shows the same English rubric text as the inspector form
+              (without the numeric prefix). Overall Pass/Fail is computed on the
+              server.
             </p>
           </div>
         </div>
