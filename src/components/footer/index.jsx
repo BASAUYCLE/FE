@@ -83,6 +83,15 @@ export default function Footer() {
               Bike photo guide
             </Link>
             <Link
+              to="/guide-inspection"
+              aria-label="Inspection and condition scoring guide for members and inspectors"
+              onClick={(e) =>
+                onSameRouteScrollToTop(e, "/guide-inspection", pathname)
+              }
+            >
+              Inspection & scoring guide
+            </Link>
+            <Link
               to="/shipping"
               onClick={(e) => onSameRouteScrollToTop(e, "/shipping", pathname)}
             >

@@ -83,7 +83,7 @@ function BulletList({ itemsVi, itemsEn }) {
 
 /**
  * Hướng dẫn chấm điểm / kiểm định / % — nội dung từ `guideInspectionContent.js`.
- * Bước 5: thêm liên kết Footer / nav tới /guide-inspection.
+ * Liên kết: Footer + sidebar Inspector (Scoring guide).
  */
 export default function GuideInspection() {
   useEffect(() => {
