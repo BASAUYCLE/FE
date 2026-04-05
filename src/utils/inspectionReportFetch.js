@@ -1,12 +1,13 @@
 /**
  * Tải báo cáo kiểm định cho một post:
- * 1) GET theo postId (nếu BE có)
- * 2) GET /inspection/reports (inspector — JWT; danh sách biên bản của chính họ)
- * 3) GET /admin/inspection/reports (admin)
+ * 1) GET theo postId (public / role tùy BE): /inspection/:id/report, …
+ * 2) Chỉ khi user là INSPECTOR: GET /inspection/reports (lọc theo post)
+ * 3) Chỉ khi user là ADMIN: GET /admin/inspection/reports
  */
 
 import axiosInstance from "../services/axiosConfig";
 import { API_ENDPOINTS } from "../config/api";
+import { STORAGE_KEYS } from "../constants/storageKeys";
 import {
   inspectionResponseHasUsableData,
   normalizeInspection,
@@ -19,6 +20,24 @@ function perPostInspectionUrls(postId) {
     `/admin/inspection/${id}`,
     `/inspection/${id}`,
   ];
+}
+
+/**
+ * Tránh gọi GET /inspection/reports và GET /admin/inspection/reports khi user không
+ * có quyền — mỗi lần mở modal/detail sẽ tạo hàng loạt 403 và đầy console/Network.
+ */
+function inspectionListFetchRoles() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEYS.USER);
+    if (!raw) return { isAdmin: false, isInspector: false };
+    const u = JSON.parse(raw);
+    const r = String(
+      u?.role ?? u?.userRole ?? u?.user_role ?? "",
+    ).toUpperCase();
+    return { isAdmin: r === "ADMIN", isInspector: r === "INSPECTOR" };
+  } catch {
+    return { isAdmin: false, isInspector: false };
+  }
 }
 
 /** BE trả list trong result / data / content / reports. */
@@ -153,18 +172,25 @@ export async function fetchInspectionReportForPost(postId) {
     }
   }
 
-  try {
-    const fromInspector = await fetchInspectionFromInspectorReportsList(postId);
-    if (fromInspector) return fromInspector;
-  } catch {
-    /* ignore */
+  const { isAdmin, isInspector } = inspectionListFetchRoles();
+
+  if (isInspector) {
+    try {
+      const fromInspector =
+        await fetchInspectionFromInspectorReportsList(postId);
+      if (fromInspector) return fromInspector;
+    } catch {
+      /* ignore */
+    }
   }
 
-  try {
-    const fromList = await fetchInspectionFromAdminList(postId);
-    if (fromList) return fromList;
-  } catch {
-    /* 403 nếu không phải admin */
+  if (isAdmin) {
+    try {
+      const fromList = await fetchInspectionFromAdminList(postId);
+      if (fromList) return fromList;
+    } catch {
+      /* ignore */
+    }
   }
 
   return null;
