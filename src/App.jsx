@@ -67,6 +67,7 @@ const InspectorDetail = lazy(() => import("./pages/inspector/detail"));
 const InspectorDetailsList = lazy(
   () => import("./pages/inspector/details-list"),
 );
+const InspectorHistory = lazy(() => import("./pages/inspector/history"));
 const InspectorDisputes = lazy(() => import("./pages/inspector/disputes"));
 const InspectorDisputeDetail = lazy(
   () => import("./pages/inspector/disputes/DisputeDetail"),
@@ -332,6 +333,10 @@ function App() {
                           <Route
                             path="/inspector/details"
                             element={<InspectorDetailsList />}
+                          />
+                          <Route
+                            path="/inspector/history"
+                            element={<InspectorHistory />}
                           />
                           <Route
                             path="/inspector/disputes/:disputeId"

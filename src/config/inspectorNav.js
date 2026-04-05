@@ -2,6 +2,7 @@
 export const INSPECTOR_NAV_LINKS = [
   { label: "Dashboard", href: "/inspector" },
   { label: "Inspection Details", href: "/inspector/details" },
+  { label: "Inspection history", href: "/inspector/history" },
   { label: "Dispute Center", href: "/inspector/disputes" },
   { label: "Scoring guide", href: "/guide-inspection" },
 ];
@@ -9,6 +10,7 @@ export const INSPECTOR_NAV_LINKS = [
 const PATH_TO_ACTIVE_LABEL = {
   "/inspector": "Dashboard",
   "/inspector/details": "Inspection Details",
+  "/inspector/history": "Inspection history",
   "/inspector/disputes": "Dispute Center",
   "/guide-inspection": "Scoring guide",
 };
@@ -18,6 +20,7 @@ export function getInspectorActiveLink(pathname) {
   if (!pathname) return "Dashboard";
   if (pathname === "/guide-inspection") return "Scoring guide";
   if (pathname.startsWith("/inspector/disputes")) return "Dispute Center";
+  if (pathname.startsWith("/inspector/history")) return "Inspection history";
   if (pathname.startsWith("/inspector/details")) return "Inspection Details";
   // VD: /inspector/123 (trang chi tiết) → highlight "Inspection Details"
   const isInspectorSubPage = pathname.startsWith("/inspector/");

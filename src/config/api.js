@@ -84,9 +84,14 @@ export const API_ENDPOINTS = {
     HIDE: (postId) => `/admin/posts/${postId}/hide`,
   },
 
-  /** Inspector – BE: GET /inspection/pending, POST /inspection/{postId}/submit */
+  /**
+   * Inspector – BE: GET /inspection/pending, POST /inspection/{postId}/submit.
+   * Lịch sử kiểm định (inspector): BE trả list `InspectionReportResponse` trong `result`;
+   * đổi HISTORY cho khớp route thực tế (vd. /inspection/my-history) nếu team BE đặt khác.
+   */
   INSPECTION: {
     PENDING: "/inspection/pending",
+    HISTORY: "/inspection/history",
     SUBMIT: (postId) => `/inspection/${postId}/submit`,
   },
 

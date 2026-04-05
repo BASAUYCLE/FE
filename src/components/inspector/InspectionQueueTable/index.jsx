@@ -12,14 +12,21 @@ import AdminToolbarFilters from "../../admin/AdminToolbarFilters";
 
 const PAGE_SIZE = 10;
 
-/** Status filters shown in toolbar (queue may not include every value). */
-const STATUS_FILTER_OPTIONS = [
+/** Status filters for the pending queue (not every row type may appear). */
+const QUEUE_STATUS_FILTER_OPTIONS = [
   { value: "ALL", label: "All" },
   { value: INSPECTION_STATUS.PENDING, label: "Pending" },
   { value: INSPECTION_STATUS.IN_PROGRESS, label: "In progress" },
   { value: INSPECTION_STATUS.OVERDUE, label: "Overdue" },
   { value: INSPECTION_STATUS.COMPLETED, label: "Completed" },
   { value: INSPECTION_STATUS.REJECTED, label: "Rejected" },
+];
+
+/** Result filters for inspection history (PASS / FAIL from submit). */
+const HISTORY_RESULT_FILTER_OPTIONS = [
+  { value: "ALL", label: "All" },
+  { value: "PASS", label: "Pass" },
+  { value: "FAIL", label: "Fail" },
 ];
 
 function formatRequestedDate(iso) {
@@ -36,12 +43,18 @@ function formatRequestedDate(iso) {
 
 /**
  * Reusable inspection queue table.
+ * @param {"queue"|"history"} [variant="queue"] — history: inspected date, Pass/Fail filter, view-only actions.
  */
 export default function InspectionQueueTable({
   inspections = [],
   loading = false,
+  variant = "queue",
 }) {
   const navigate = useNavigate();
+  const isHistory = variant === "history";
+  const filterOptions = isHistory
+    ? HISTORY_RESULT_FILTER_OPTIONS
+    : QUEUE_STATUS_FILTER_OPTIONS;
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [page, setPage] = useState(1);
@@ -49,7 +62,13 @@ export default function InspectionQueueTable({
   const filteredInspections = useMemo(() => {
     let list = inspections;
     if (statusFilter !== "ALL") {
-      list = list.filter((i) => (i.status ?? "") === statusFilter);
+      if (isHistory) {
+        list = list.filter(
+          (i) => (i.inspectionResult ?? "").toUpperCase() === statusFilter,
+        );
+      } else {
+        list = list.filter((i) => (i.status ?? "") === statusFilter);
+      }
     }
     const q = search.trim().toLowerCase();
     if (!q) return list;
@@ -63,7 +82,7 @@ export default function InspectionQueueTable({
         i.sellerLocation?.toLowerCase().includes(q)
       );
     });
-  }, [inspections, search, statusFilter]);
+  }, [inspections, search, statusFilter, isHistory]);
 
   const totalPages = Math.ceil(filteredInspections.length / PAGE_SIZE) || 1;
   const start = (page - 1) * PAGE_SIZE;
@@ -83,7 +102,11 @@ export default function InspectionQueueTable({
         <div className="inspector-queue-toolbar">
           <div className="admin-toolbar-page inspector-toolbar-page">
             <AdminToolbarFilters
-              idPrefix="inspector-toolbar-status"
+              idPrefix={
+                isHistory
+                  ? "inspector-toolbar-history"
+                  : "inspector-toolbar-status"
+              }
               searchValue={search}
               onSearchChange={(v) => {
                 setSearch(v);
@@ -95,8 +118,10 @@ export default function InspectionQueueTable({
                 setStatusFilter(v);
                 setPage(1);
               }}
-              filterOptions={STATUS_FILTER_OPTIONS}
-              filterAriaLabel="Filter by status"
+              filterOptions={filterOptions}
+              filterAriaLabel={
+                isHistory ? "Filter by inspection result" : "Filter by status"
+              }
             />
           </div>
         </div>
@@ -105,7 +130,7 @@ export default function InspectionQueueTable({
         <div className="admin-table-row inspector-table-row inspector-table-header">
           <div>BICYCLE DETAILS</div>
           <div>SELLER INFO</div>
-          <div>REQUESTED DATE</div>
+          <div>{isHistory ? "INSPECTED ON" : "REQUESTED DATE"}</div>
           <div>STATUS</div>
           <div>ACTIONS</div>
         </div>
@@ -119,6 +144,21 @@ export default function InspectionQueueTable({
               }}
             >
               Loading…
+            </div>
+          </div>
+        ) : pageItems.length === 0 ? (
+          <div className="admin-table-row inspector-table-row">
+            <div
+              style={{
+                padding: "24px",
+                gridColumn: "1 / -1",
+                textAlign: "center",
+                color: "#64748b",
+              }}
+            >
+              {isHistory
+                ? "No inspection history yet."
+                : "No inspections match your filters."}
             </div>
           </div>
         ) : (
@@ -146,13 +186,39 @@ export default function InspectionQueueTable({
                   {item.sellerLocation}
                 </div>
               </div>
-              <div>{formatRequestedDate(item.requestedDate)}</div>
               <div>
-                <Tag
-                  color={INSPECTION_STATUS_TAG_COLOR[item.status] ?? "default"}
-                >
-                  {INSPECTION_STATUS_LABEL[item.status] ?? item.status}
-                </Tag>
+                {formatRequestedDate(
+                  isHistory
+                    ? item.inspectedAt || item.requestedDate
+                    : item.requestedDate,
+                )}
+              </div>
+              <div>
+                {isHistory ? (
+                  <Tag
+                    color={
+                      item.inspectionResult === "FAIL"
+                        ? "red"
+                        : item.inspectionResult === "PASS"
+                          ? "green"
+                          : "default"
+                    }
+                  >
+                    {item.inspectionResult === "PASS"
+                      ? "Pass"
+                      : item.inspectionResult === "FAIL"
+                        ? "Fail"
+                        : "—"}
+                  </Tag>
+                ) : (
+                  <Tag
+                    color={
+                      INSPECTION_STATUS_TAG_COLOR[item.status] ?? "default"
+                    }
+                  >
+                    {INSPECTION_STATUS_LABEL[item.status] ?? item.status}
+                  </Tag>
+                )}
               </div>
               <div className="inspector-actions-cell">
                 <button
@@ -163,31 +229,32 @@ export default function InspectionQueueTable({
                 >
                   <Eye size={18} />
                 </button>
-                {item.status === "IN_PROGRESS" ? (
-                  <button
-                    type="button"
-                    className="inspector-btn-continue"
-                    onClick={() => navigate(`/inspector/${item.id}`)}
-                  >
-                    <Play
-                      size={12}
-                      style={{ marginRight: 4, verticalAlign: "middle" }}
-                    />
-                    Not Inspected
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    className="inspector-btn-upload"
-                    onClick={() => navigate(`/inspector/${item.id}`)}
-                  >
-                    <Upload
-                      size={12}
-                      style={{ marginRight: 4, verticalAlign: "middle" }}
-                    />
-                    Inspected
-                  </button>
-                )}
+                {!isHistory &&
+                  (item.status === "IN_PROGRESS" ? (
+                    <button
+                      type="button"
+                      className="inspector-btn-continue"
+                      onClick={() => navigate(`/inspector/${item.id}`)}
+                    >
+                      <Play
+                        size={12}
+                        style={{ marginRight: 4, verticalAlign: "middle" }}
+                      />
+                      Not Inspected
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="inspector-btn-upload"
+                      onClick={() => navigate(`/inspector/${item.id}`)}
+                    >
+                      <Upload
+                        size={12}
+                        style={{ marginRight: 4, verticalAlign: "middle" }}
+                      />
+                      Inspected
+                    </button>
+                  ))}
               </div>
             </div>
           ))
@@ -198,7 +265,7 @@ export default function InspectionQueueTable({
         page={page}
         totalPages={totalPages}
         setPage={setPage}
-        nounPhrase="inspections"
+        nounPhrase={isHistory ? "records" : "inspections"}
       />
     </section>
   );

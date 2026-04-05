@@ -27,6 +27,13 @@ const inspectionService = {
     axiosInstance.get(ENDPOINTS.PENDING, { params }),
 
   /**
+   * GET `INSPECTION.HISTORY` — lịch sử báo cáo của inspector đăng nhập.
+   * BE (bike_platform): thường là `List<InspectionReportResponse>` (postId, postTitle, result, createdAt, postStatus, overallCondition, conditionPercent, …).
+   */
+  getMyInspectionHistory: (params = {}) =>
+    axiosInstance.get(ENDPOINTS.HISTORY, { params }),
+
+  /**
    * POST /inspection/{postId}/submit — submit 6-criterion rubric scores.
    *
    * @param {number|string} postId
