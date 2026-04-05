@@ -974,6 +974,19 @@
   margin-bottom: 8px;
 }
 
+.inspection-notes-label--error {
+  color: #dc2626;
+}
+
+/* Inline validation — same spirit as Post page .field-hint, error color */
+.inspection-notes-error-text {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #dc2626;
+  margin-top: 0.35rem;
+}
+
 .inspection-preview-panel {
   margin-top: 24px;
   padding: 16px;

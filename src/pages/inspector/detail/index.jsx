@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { message, Modal, Input, Alert, Select } from "antd";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
@@ -145,6 +145,8 @@ export default function InspectorDetail() {
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
+  const [notesError, setNotesError] = useState(null);
+  const notesBlockRef = useRef(null);
 
   const report = useMemo(
     () => (postFromApi ? mapPostToInspectionReport(postFromApi) : null),
@@ -190,9 +192,14 @@ export default function InspectorDetail() {
       return;
     }
     if (!notes.trim()) {
-      message.error("Please enter inspection notes before submitting.");
+      setNotesError("Please enter inspection notes before submitting.");
+      notesBlockRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       return;
     }
+    setNotesError(null);
     if (!canSubmit) {
       message.warning(
         "This listing is not in admin-approved (pending inspection) status.",
@@ -207,7 +214,12 @@ export default function InspectorDetail() {
     if (!v.valid || !postIdNum) return;
     const trimmed = notes.trim();
     if (!trimmed) {
-      message.error("Inspection notes are required.");
+      setSubmitConfirmOpen(false);
+      setNotesError("Inspection notes are required.");
+      notesBlockRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       return;
     }
     const payload = {
@@ -487,9 +499,12 @@ export default function InspectorDetail() {
                     ))}
                   </div>
 
-                  <div className="inspection-notes-block">
+                  <div
+                    ref={notesBlockRef}
+                    className="inspection-notes-block"
+                  >
                     <label
-                      className="inspection-notes-label"
+                      className={`inspection-notes-label ${notesError ? "inspection-notes-label--error" : ""}`}
                       htmlFor="inspector-notes"
                     >
                       Notes (required)
@@ -498,13 +513,31 @@ export default function InspectorDetail() {
                       id="inspector-notes"
                       required
                       aria-required="true"
+                      aria-invalid={notesError ? "true" : "false"}
+                      aria-describedby={
+                        notesError ? "inspector-notes-error" : undefined
+                      }
+                      status={notesError ? "error" : undefined}
                       placeholder="Describe condition, defects, repairs, or test ride observations (required)."
                       value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setNotes(v);
+                        if (v.trim()) setNotesError(null);
+                      }}
                       rows={4}
                       maxLength={2000}
                       showCount
                     />
+                    {notesError ? (
+                      <span
+                        id="inspector-notes-error"
+                        className="inspection-notes-error-text"
+                        role="alert"
+                      >
+                        {notesError}
+                      </span>
+                    ) : null}
                   </div>
 
                   <div className="inspection-preview-panel">
