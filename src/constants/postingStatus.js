@@ -75,3 +75,11 @@ export const OVERALL_CONDITION_LABEL = {
   [OVERALL_CONDITION.FAIR]: "Fair – Noticeable wear",
   [OVERALL_CONDITION.POOR]: "Poor – Needs repair",
 };
+
+/** Nhãn tiếng Việt cho biên bản / modal kiểm định */
+export const OVERALL_CONDITION_LABEL_VI = {
+  [OVERALL_CONDITION.EXCELLENT]: "Xuất sắc – Gần như mới",
+  [OVERALL_CONDITION.GOOD]: "Tốt – Dấu hiệu sử dụng nhẹ",
+  [OVERALL_CONDITION.FAIR]: "Trung bình – Hao mòn rõ",
+  [OVERALL_CONDITION.POOR]: "Kém – Cần sửa chữa",
+};

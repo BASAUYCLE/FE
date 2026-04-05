@@ -304,7 +304,57 @@
 
 .inspection-report-listing-copy .inspection-report-bike-name {
   font-size: clamp(1.1rem, 2vw, 1.35rem);
-  margin-bottom: 4px;
+}
+
+.inspection-report-post-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 6px;
+}
+
+.inspection-report-post-title-row .inspection-report-bike-name {
+  margin-bottom: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.inspection-post-status-badge {
+  display: inline-flex;
+  align-items: center;
+  max-width: min(100%, 220px);
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+}
+
+.inspection-post-status-badge--positive {
+  color: #047857;
+  background: #d1fae5;
+  border-color: #6ee7b7;
+}
+
+.inspection-post-status-badge--negative {
+  color: #b91c1c;
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.inspection-post-status-badge--warning {
+  color: #b45309;
+  background: #fef3c7;
+  border-color: #fcd34d;
+}
+
+.inspection-post-status-badge--neutral {
+  color: #475569;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
 }
 
 .inspection-report-listing-copy .inspection-report-bike-meta {
@@ -332,37 +382,6 @@
   margin-bottom: 10px;
 }
 
-/* Gallery in strip: use full width of photo column / row */
-.inspection-report-thumbnails--strip {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.inspection-report-thumbnails--strip .inspection-report-thumb {
-  aspect-ratio: 1;
-  min-height: 72px;
-}
-
-@media (min-width: 720px) {
-  .inspection-report-thumbnails--strip {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-  }
-
-  .inspection-report-thumbnails--strip .inspection-report-thumb {
-    min-height: 64px;
-  }
-}
-
-@media (min-width: 1100px) {
-  .inspection-report-thumbnails--strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .inspection-report-thumbnails--strip .inspection-report-thumb {
-    min-height: 88px;
-  }
-}
-
 .inspection-report-workspace {
   display: flex;
   flex-direction: column;
@@ -377,56 +396,6 @@
   box-shadow:
     0 4px 6px -1px rgba(15, 23, 42, 0.06),
     0 2px 4px -2px rgba(15, 23, 42, 0.04);
-}
-
-.inspection-report-workspace .inspection-report-inspect-top .admin-card {
-  border-radius: 12px;
-  border: 1px solid #e8eaed;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-}
-
-.inspection-report-inspect-top {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  align-items: stretch;
-}
-
-@media (max-width: 1099px) {
-  .inspection-report-inspect-top {
-    grid-template-columns: 1fr;
-  }
-}
-
-.inspection-report-status-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.inspection-report-status-card--compact {
-  padding: 14px 16px;
-}
-
-.inspection-confirmation--compact {
-  padding: 14px 16px;
-}
-
-.inspection-confirmation--compact .inspection-confirmation-text {
-  font-size: 12px;
-  line-height: 1.45;
-  margin-bottom: 0;
-}
-
-.inspection-confirmation-icon--sm {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 8px;
-}
-
-.inspection-confirmation-icon--sm svg {
-  width: 20px;
-  height: 20px;
 }
 
 .inspection-report-card {
@@ -556,6 +525,35 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+}
+
+/*
+ * Strip uses both .inspection-report-thumbnails and .inspection-report-thumbnails--strip.
+ * Base rule above is 4 columns — must override after it (higher specificity) for 3×2 layout.
+ */
+.inspection-report-thumbnails.inspection-report-thumbnails--strip {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.inspection-report-thumbnails.inspection-report-thumbnails--strip
+  .inspection-report-thumb {
+  aspect-ratio: 1;
+  min-height: 72px;
+}
+
+@media (min-width: 720px) {
+  .inspection-report-thumbnails.inspection-report-thumbnails--strip
+    .inspection-report-thumb {
+    min-height: 88px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .inspection-report-thumbnails.inspection-report-thumbnails--strip
+    .inspection-report-thumb {
+    min-height: 96px;
+  }
 }
 
 /* Gallery: 2 columns in compact reference column */
@@ -849,36 +847,6 @@
 .inspection-checklist-label-input:focus {
   outline: none;
   border-color: #00ccad;
-}
-
-.inspection-confirmation {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border-color: #a7f3d0;
-}
-
-.inspection-confirmation-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: #10b981;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12px;
-}
-
-.inspection-confirmation-text {
-  font-size: 13px;
-  color: #065f46;
-  line-height: 1.5;
-  margin: 0 0 12px 0;
-}
-
-.inspection-confirmation-signature {
-  font-size: 12px;
-  font-weight: 600;
-  color: #047857;
-  margin: 0;
 }
 
 .inspection-reject-reason-textarea {
@@ -1285,12 +1253,9 @@
     padding: 14px 14px;
   }
 
-  .inspection-report-thumbnails--strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .inspection-report-thumbnails--strip .inspection-report-thumb {
-    min-height: 80px;
+  .inspection-report-thumbnails.inspection-report-thumbnails--strip
+    .inspection-report-thumb {
+    min-height: 76px;
   }
 
   .inspection-report-thumb-more {

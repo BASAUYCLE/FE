@@ -18,8 +18,11 @@ import {
   buildInspectionPreview,
   validateInspectionScores,
 } from "../../../utils/inspectionScoring";
-import { ChevronLeft, ChevronRight, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { useAuth } from "../../../contexts/AuthContext";
+import InspectionCertificateModal from "../../../components/inspector/InspectionCertificateModal";
+import { buildCertificateSnapshot } from "../../../utils/inspectionCertificate";
 import "./index.css";
 
 function firstNonEmpty(...vals) {
@@ -29,6 +32,30 @@ function firstNonEmpty(...vals) {
     if (s !== "") return s;
   }
   return null;
+}
+
+/** Pill color on listing strip from posting status (BE enum). */
+function postingStatusBadgeVariant(status) {
+  const u = String(status ?? "").toUpperCase();
+  if (
+    u === POSTING_STATUS.ADMIN_APPROVED ||
+    u === POSTING_STATUS.VERIFIED ||
+    u === POSTING_STATUS.AVAILABLE ||
+    u === POSTING_STATUS.ACTIVE
+  ) {
+    return "positive";
+  }
+  if (u === POSTING_STATUS.REJECTED) {
+    return "negative";
+  }
+  if (
+    u === POSTING_STATUS.PENDING ||
+    u === POSTING_STATUS.PENDING_REVIEW ||
+    u === POSTING_STATUS.DRAFTED
+  ) {
+    return "warning";
+  }
+  return "neutral";
 }
 
 /** No preset scores — inspector must choose each row (placeholder: "Select rating"). */
@@ -132,6 +159,7 @@ function inspectionMetaLineParts(parts) {
 export default function InspectorDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const postIdNum = useMemo(() => {
     const n = Number(id);
     return Number.isInteger(n) && n > 0 ? n : null;
@@ -146,6 +174,8 @@ export default function InspectorDetail() {
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
   const [notesError, setNotesError] = useState(null);
+  const [certificateModalOpen, setCertificateModalOpen] = useState(false);
+  const [certificateSnapshot, setCertificateSnapshot] = useState(null);
   const notesBlockRef = useRef(null);
 
   const report = useMemo(
@@ -228,12 +258,25 @@ export default function InspectorDetail() {
     };
     try {
       setSubmitLoading(true);
-      await inspectionService.submitInspection(postIdNum, payload);
-      message.success(
-        "Inspection submitted. The server applied the rubric and updated PASS/FAIL and listing status.",
+      const submitRes = await inspectionService.submitInspection(
+        postIdNum,
+        payload,
       );
+      const inspectorDisplayName =
+        user?.fullName ?? user?.name ?? user?.email ?? "—";
+      const snapshot = buildCertificateSnapshot({
+        apiResponse: submitRes,
+        preview,
+        scores,
+        notes: trimmed,
+        report,
+        inspectorDisplayName,
+        inspectorEmail: user?.email ?? null,
+      });
+      setCertificateSnapshot(snapshot);
+      setCertificateModalOpen(true);
       setSubmitConfirmOpen(false);
-      navigate("/inspector");
+      message.success("Đã gửi kiểm định. Xem biên bản bên dưới.");
     } catch (err) {
       message.error(err?.message ?? "Submit failed.");
     } finally {
@@ -242,6 +285,12 @@ export default function InspectorDetail() {
   };
 
   const handleExit = () => {
+    navigate("/inspector");
+  };
+
+  const handleCertificateDone = () => {
+    setCertificateModalOpen(false);
+    setCertificateSnapshot(null);
     navigate("/inspector");
   };
 
@@ -316,9 +365,16 @@ export default function InspectorDetail() {
                     )}
                   </div>
                   <div className="inspection-report-listing-copy">
-                    <h2 className="inspection-report-bike-name">
-                      {report.bicycleName}
-                    </h2>
+                    <div className="inspection-report-post-title-row">
+                      <h2 className="inspection-report-bike-name">
+                        {report.bicycleName}
+                      </h2>
+                      <span
+                        className={`inspection-post-status-badge inspection-post-status-badge--${postingStatusBadgeVariant(report.reportStatus)}`}
+                      >
+                        {statusLabel}
+                      </span>
+                    </div>
                     <p className="inspection-report-bike-meta">
                       {inspectionMetaLineParts([
                         report.brandName,
@@ -413,33 +469,6 @@ export default function InspectorDetail() {
               </div>
 
               <div className="inspection-report-workspace">
-                <div className="inspection-report-inspect-top">
-                  <div className="admin-card inspection-report-card inspection-report-status-card inspection-report-status-card--compact">
-                    <h3 className="inspection-report-card-title">
-                      Current status
-                    </h3>
-                    <p
-                      className={`inspection-report-status inspection-report-status--${report.reportStatus?.toLowerCase()}`}
-                    >
-                      {statusLabel}
-                    </p>
-                  </div>
-
-                  <div className="admin-card inspection-report-card inspection-confirmation inspection-confirmation--compact">
-                    <div className="inspection-confirmation-icon inspection-confirmation-icon--sm">
-                      <Settings size={20} color="#fff" />
-                    </div>
-                    <h3 className="inspection-report-card-title">
-                      Inspection confirmation
-                    </h3>
-                    <p className="inspection-confirmation-text">
-                      I confirm that the inspection was carried out in
-                      accordance with the applicable standards and that the
-                      information above is accurate at the time of inspection.
-                    </p>
-                  </div>
-                </div>
-
                 <div className="admin-card inspection-report-card inspection-scoring-card">
                   <div className="inspection-scoring-card-head">
                     <h3 className="inspection-scoring-card-title">
@@ -671,6 +700,12 @@ export default function InspectorDetail() {
             <p>Scores are incomplete.</p>
           )}
         </Modal>
+
+        <InspectionCertificateModal
+          open={certificateModalOpen}
+          snapshot={certificateSnapshot}
+          onDone={handleCertificateDone}
+        />
 
         <Modal
           open={imageViewerOpen}
