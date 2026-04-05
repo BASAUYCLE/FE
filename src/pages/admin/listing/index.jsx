@@ -24,6 +24,69 @@ import "./index.css";
 
 const PAGE_SIZE = 10;
 
+/** Chuẩn hóa list từ ApiResponse BE (result / data / content / posts). */
+function parsePostList(res) {
+  const raw = res?.result ?? res?.data ?? res?.content ?? res;
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw?.content)) return raw.content;
+  if (Array.isArray(raw?.posts)) return raw.posts;
+  return [];
+}
+
+function isSameLocalCalendarDay(iso, ref = new Date()) {
+  if (iso == null || iso === "") return false;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return false;
+  return (
+    d.getFullYear() === ref.getFullYear() &&
+    d.getMonth() === ref.getMonth() &&
+    d.getDate() === ref.getDate()
+  );
+}
+
+function normalizePostStatus(p) {
+  return String(p?.postStatus ?? p?.status ?? "").toUpperCase();
+}
+
+/**
+ * approvedToday: bài đang ADMIN_APPROVED và updatedAt là hôm nay (proxy “duyệt hôm nay”, chờ kiểm định).
+ * rejectionRatePct: REJECTED / (REJECTED + đã qua duyệt admin) toàn thời gian, % làm tròn.
+ */
+function computeListingStats(posts) {
+  const passedReviewStatuses = new Set([
+    POSTING_STATUS.ADMIN_APPROVED,
+    POSTING_STATUS.AVAILABLE,
+    POSTING_STATUS.PROCESSING,
+    POSTING_STATUS.DEPOSITED,
+    POSTING_STATUS.SOLD,
+    POSTING_STATUS.HIDDEN,
+  ]);
+
+  let approvedToday = 0;
+  let rejected = 0;
+  let passed = 0;
+  const today = new Date();
+
+  for (const p of posts) {
+    const st = normalizePostStatus(p);
+    if (st === POSTING_STATUS.REJECTED) rejected += 1;
+    if (passedReviewStatuses.has(st)) passed += 1;
+    const upd = p?.updatedAt ?? p?.updated_at;
+    if (
+      st === POSTING_STATUS.ADMIN_APPROVED &&
+      isSameLocalCalendarDay(upd, today)
+    ) {
+      approvedToday += 1;
+    }
+  }
+
+  const denom = rejected + passed;
+  const rejectionRatePct =
+    denom > 0 ? Math.round((100 * rejected) / denom) : null;
+
+  return { approvedToday, rejectionRatePct };
+}
+
 function getThumbnailUrl(item) {
   const list = item?.images ?? [];
   const thumb = list.find((i) => i?.isThumbnail);
@@ -41,16 +104,34 @@ export default function ListingApproval() {
   const [rejectPostId, setRejectPostId] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
   const [page, setPage] = useState(1);
+  const [stats, setStats] = useState({
+    approvedToday: null,
+    rejectionRatePct: null,
+  });
+  const [statsOk, setStatsOk] = useState(false);
 
   const fetchPending = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await adminPostService.getPendingPosts();
-      const list = Array.isArray(res?.result) ? res.result : [];
+      const [pendingRes, allRes] = await Promise.all([
+        adminPostService.getPendingPosts(),
+        adminPostService.getAllPosts().catch(() => null),
+      ]);
+      const list = parsePostList(pendingRes);
       setListings(list);
+      if (allRes) {
+        const all = parsePostList(allRes);
+        setStats(computeListingStats(all));
+        setStatsOk(true);
+      } else {
+        setStats({ approvedToday: null, rejectionRatePct: null });
+        setStatsOk(false);
+      }
     } catch (err) {
       message.error(err?.message ?? "Failed to load pending list.");
       setListings([]);
+      setStats({ approvedToday: null, rejectionRatePct: null });
+      setStatsOk(false);
     } finally {
       setLoading(false);
     }
@@ -152,9 +233,7 @@ export default function ListingApproval() {
               <div className="stat-value">
                 {loading ? "…" : String(pendingCount)}
               </div>
-              <div className="stat-note green">
-                From API /admin/posts/pending
-              </div>
+              <div className="stat-note green">Awaiting your review</div>
             </div>
             <div className="admin-listings-stat">
               <div className="stat-header">
@@ -163,8 +242,18 @@ export default function ListingApproval() {
                   <CheckCircle2 />
                 </span>
               </div>
-              <div className="stat-value">—</div>
-              <div className="stat-note green">N/A</div>
+              <div className="stat-value">
+                {loading
+                  ? "…"
+                  : statsOk && stats.approvedToday != null
+                    ? String(stats.approvedToday)
+                    : "—"}
+              </div>
+              <div className="stat-note green">
+                {statsOk
+                  ? "ADMIN_APPROVED updated today"
+                  : "Load all posts for this metric"}
+              </div>
             </div>
             <div className="admin-listings-stat">
               <div className="stat-header">
@@ -173,8 +262,20 @@ export default function ListingApproval() {
                   <AlertTriangle />
                 </span>
               </div>
-              <div className="stat-value">—</div>
-              <div className="stat-note red">N/A</div>
+              <div className="stat-value">
+                {loading
+                  ? "…"
+                  : statsOk && stats.rejectionRatePct != null
+                    ? `${stats.rejectionRatePct}%`
+                    : "—"}
+              </div>
+              <div className="stat-note red">
+                {statsOk && stats.rejectionRatePct != null
+                  ? "Rejected ÷ (rejected + passed admin review)"
+                  : statsOk
+                    ? "No rejections / approvals yet"
+                    : "Load all posts for this metric"}
+              </div>
             </div>
           </div>
 
@@ -258,7 +359,9 @@ export default function ListingApproval() {
                           className={`queue-inspection ${
                             status === POSTING_STATUS.PROCESSING
                               ? "processing"
-                              : (POSTING_STATUS_TAG_COLOR[status] ?? "default").toLowerCase()
+                              : (
+                                  POSTING_STATUS_TAG_COLOR[status] ?? "default"
+                                ).toLowerCase()
                           }`}
                         >
                           <FileCheck2 />
