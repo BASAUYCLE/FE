@@ -119,6 +119,65 @@ export const GUIDE_INSPECTION_PASS_FAIL = Object.freeze({
   ],
 });
 
+/**
+ * Thao tác trên UI inspector — khớp `inspector/detail`, `inspectionService.submitInspection`.
+ */
+export const GUIDE_INSPECTION_INSPECTOR = Object.freeze({
+  titleVi: "Dành cho inspector",
+  titleEn: "For inspectors",
+  introVi:
+    "Bạn nhập đủ 6 điểm theo rubric và có thể thêm ghi chú; hệ thống tính %, PASS/FAIL và cập nhật tin sau khi submit thành công. Không có thao tác “chọn PASS” riêng.",
+  introEn:
+    "You enter all six rubric scores and optional notes; the system computes %, PASS/FAIL, and updates the listing after a successful submit. There is no separate “pick PASS” action.",
+
+  navigation: Object.freeze({
+    titleVi: "Vào tin cần kiểm định",
+    titleEn: "Opening a listing to inspect",
+    bulletsVi: [
+      "Đăng nhập tài khoản vai trò Inspector; mở bảng điều khiển tại đường dẫn /inspector (hoặc danh sách chi tiết /inspector/details).",
+      "Danh sách tin chờ lấy từ API (ví dụ các bài ADMIN_APPROVED); chọn một dòng và mở trang báo cáo kỹ thuật tại /inspector/{postId} (postId là mã bài đăng).",
+      "Nếu tin không còn ở trạng thái cho phép kiểm định, nút gửi có thể bị vô hiệu và có cảnh báo — không cố submit.",
+    ],
+    bulletsEn: [
+      "Sign in with the Inspector role; open the dashboard at /inspector (or the details list at /inspector/details).",
+      "The queue comes from the API (e.g. admin-approved posts); open a row to load the technical report page at /inspector/{postId} (postId = listing id).",
+      "If the post is no longer eligible, submit stays disabled with a warning — do not force a submit.",
+    ],
+  }),
+
+  formAndSubmit: Object.freeze({
+    titleVi: "Form chấm điểm & gửi báo cáo",
+    titleEn: "Scoring form & submit",
+    bulletsVi: [
+      "Với mỗi trong 6 tiêu chí, chọn đúng một mức 0, 3, 7 hoặc 10 (pill / nút trên giao diện).",
+      "Ô Notes (ghi chú) là tùy chọn; dùng để mô tả hư hỏng, sửa chữa, hoặc chi tiết không gói hết trong điểm số.",
+      "Khu vực Live preview hiển thị condition %, nhãn tổng thể (preview), PASS/FAIL (preview) và cảnh báo (khung/phanh 0 điểm, dưới 50%) — chỉ mang tính ước lượng trước khi gửi.",
+      "Bấm Submit inspection → modal xác nhận liệt kê điểm và preview → xác nhận để gọi API submit; thành công thì xem thông báo và quay về danh sách (theo luồng hiện tại của ứng dụng).",
+    ],
+    bulletsEn: [
+      "For each of the six criteria, pick exactly one score: 0, 3, 7, or 10 (pills/buttons on the UI).",
+      "Notes are optional; use them for damage, repairs, or context the scores alone do not capture.",
+      "Live preview shows condition %, overall band (preview), PASS/FAIL (preview), and warnings (frame/brake at 0, below 50%) — it is indicative until you submit.",
+      "Click Submit inspection → confirm modal lists scores and preview → confirm to call the submit API; on success, follow the toast and return to the queue (per current app flow).",
+    ],
+  }),
+
+  errors: Object.freeze({
+    titleVi: "Khi submit báo lỗi (1089 & 1033)",
+    titleEn: "When submit fails (1089 & 1033)",
+    bulletsVi: [
+      "1089 — Điểm không hợp lệ hoặc thiếu tiêu chí: kiểm tra lại cả 6 ô đã chọn đúng một trong bốn mức; không gửi số lẻ hoặc để trống.",
+      "1033 — Trạng thái bài không cho phép submit: bài có thể đã được xử lý, bị hủy hàng đợi, hoặc chưa admin-approved; tải lại trang hoặc quay về danh sách, liên hệ admin nếu cần.",
+      "Thông báo lỗi hiển thị cho người dùng thường đi kèm mã hoặc nội dung từ backend; ưu tiên sửa dữ liệu theo mã trên trước khi thử lại.",
+    ],
+    bulletsEn: [
+      "1089 — Invalid or incomplete scores: ensure all six criteria have exactly one of 0, 3, 7, 10; do not submit fractional values or leave any unset.",
+      "1033 — Post status does not allow submit: the listing may already be processed, removed from the queue, or not admin-approved; refresh or return to the list, contact admin if it looks wrong.",
+      "User-facing errors usually include the backend code or message; fix the underlying issue before retrying.",
+    ],
+  }),
+});
+
 /** Band nhãn tổng thể — khớp overallConditionFromPercent */
 export const GUIDE_INSPECTION_BANDS = Object.freeze({
   titleVi: "Nhãn tình trạng tổng thể (overall condition)",
