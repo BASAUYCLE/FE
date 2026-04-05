@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import { Pagination } from "antd";
@@ -104,7 +104,7 @@ export default function Marketplace() {
   const { user } = useAuth();
   const { postings, publicPostings, loadPublicPostings, loadPostingsBySeller } =
     usePostings();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const [apiPostings, setApiPostings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -186,7 +186,6 @@ export default function Marketplace() {
   }, [searchParams]);
   const [sortBy, setSortBy] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
-  const [page, setPage] = useState(1);
 
   // Chỉ hiển thị bài AVAILABLE / ADMIN_APPROVED; gộp API + publicPostings + postings, bỏ trùng theo id. Không dùng marketplaceBikes.
   const allBikes = useMemo(() => {
@@ -381,20 +380,74 @@ export default function Marketplace() {
   }, [displayedBikes, sortBy]);
 
   const displayedCount = sortedBikes.length;
+  const totalPages = Math.max(1, Math.ceil(displayedCount / PAGE_SIZE));
+  const pageParam = searchParams.get("page");
+  const pageFromUrl = parseInt(pageParam || "1", 10);
+  const pageRaw =
+    Number.isFinite(pageFromUrl) && pageFromUrl >= 1 ? pageFromUrl : 1;
+  const page = Math.min(pageRaw, totalPages);
+
   const paginatedBikes = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
     return sortedBikes.slice(start, start + PAGE_SIZE);
   }, [sortedBikes, page]);
 
-  // Reset về trang 1 khi filter thay đổi đáng kể
+  // Khi kết quả ít lại mà ?page vẫn lớn — chỉnh URL cho khớp (replace để không spam history).
   useEffect(() => {
-    setPage(1);
+    if (displayedCount === 0) return;
+    if (pageRaw <= totalPages) return;
+    setSearchParams(
+      (prev) => {
+        const n = new URLSearchParams(prev);
+        if (totalPages <= 1) n.delete("page");
+        else n.set("page", String(totalPages));
+        return n;
+      },
+      { replace: true },
+    );
+  }, [displayedCount, pageRaw, totalPages, setSearchParams]);
+
+  const prevFiltersRef = useRef(null);
+  // Xóa ?page khi filter / search đổi (giữ trang khi back từ detail nhờ URL).
+  useEffect(() => {
+    const next = {
+      brandFilter,
+      categoryFilter,
+      frameSizeFilter,
+      modelYearFilter,
+      priceRange0: priceRange[0],
+      priceRange1: priceRange[1],
+      searchName,
+    };
+    const prev = prevFiltersRef.current;
+    prevFiltersRef.current = next;
+    if (!prev) return;
+    const changed =
+      prev.brandFilter !== next.brandFilter ||
+      prev.categoryFilter !== next.categoryFilter ||
+      prev.frameSizeFilter !== next.frameSizeFilter ||
+      prev.modelYearFilter !== next.modelYearFilter ||
+      prev.priceRange0 !== next.priceRange0 ||
+      prev.priceRange1 !== next.priceRange1 ||
+      prev.searchName !== next.searchName;
+    if (!changed) return;
+    setSearchParams(
+      (prevParams) => {
+        const n = new URLSearchParams(prevParams);
+        if (!n.has("page")) return n;
+        n.delete("page");
+        return n;
+      },
+      { replace: true },
+    );
   }, [
     brandFilter,
     categoryFilter,
     frameSizeFilter,
     modelYearFilter,
     priceRange,
+    searchName,
+    setSearchParams,
   ]);
 
   const clearFilters = () => {
@@ -503,7 +556,15 @@ export default function Marketplace() {
                 size="small"
                 showSizeChanger={false}
                 onChange={(nextPage) => {
-                  setPage(nextPage);
+                  setSearchParams(
+                    (prev) => {
+                      const n = new URLSearchParams(prev);
+                      if (nextPage <= 1) n.delete("page");
+                      else n.set("page", String(nextPage));
+                      return n;
+                    },
+                    { replace: false },
+                  );
                   requestAnimationFrame(() => {
                     document
                       .getElementById("marketplace-browse")
