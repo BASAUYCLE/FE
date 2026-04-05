@@ -44,6 +44,12 @@ export function normalizeInspection(row) {
       row.inspectionReportId ??
       row.inspection_report_id ??
       null,
+    notes:
+      row.notes ??
+      row.inspectorNotes ??
+      row.inspector_notes ??
+      row.inspectionNotes ??
+      null,
     inspectedAt:
       row.inspectedAt ??
       row.inspected_at ??

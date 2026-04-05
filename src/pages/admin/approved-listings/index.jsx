@@ -4,6 +4,7 @@ import AdminLayout from "../../../components/layout/AdminLayout";
 import {
   Eye,
   EyeOff,
+  FileCheck2,
   Filter,
   ChevronDown,
   Check,
@@ -20,6 +21,7 @@ import adminPostService from "../../../services/adminPostService";
 import { useConfirmCrud } from "../../../utils/confirmCrud";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
+import AdminInspectionModal from "../../../components/AdminInspectionModal";
 import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import AdminToolbarFilters from "../../../components/admin/AdminToolbarFilters";
 import "../dashboard/index.css";
@@ -90,6 +92,10 @@ export default function AdminApprovedListings() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [previewId, setPreviewId] = useState(null);
+  const [inspectionModal, setInspectionModal] = useState({
+    postId: null,
+    title: null,
+  });
   const [page, setPage] = useState(1);
   const [hidingId, setHidingId] = useState(null);
 
@@ -362,9 +368,29 @@ export default function AdminApprovedListings() {
                         <button
                           type="button"
                           className="admin-actions-button"
+                          title="View inspection report"
+                          aria-label="View inspection report"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (row.id != null) {
+                              setInspectionModal({
+                                postId: row.id,
+                                title: row.title ?? null,
+                              });
+                            }
+                          }}
+                        >
+                          <FileCheck2 aria-hidden {...LUCIDE_TABLE_ACTION} />
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-actions-button"
                           title="View details"
-                          aria-label="View"
-                          onClick={() => row.id && setPreviewId(row.id)}
+                          aria-label="View listing"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            row.id && setPreviewId(row.id);
+                          }}
                         >
                           <Eye aria-hidden {...LUCIDE_TABLE_ACTION} />
                         </button>
@@ -407,6 +433,14 @@ export default function AdminApprovedListings() {
         postId={previewId}
         open={!!previewId}
         onClose={() => setPreviewId(null)}
+      />
+      <AdminInspectionModal
+        postId={inspectionModal.postId}
+        listingTitle={inspectionModal.title}
+        open={inspectionModal.postId != null}
+        onClose={() =>
+          setInspectionModal({ postId: null, title: null })
+        }
       />
     </AdminLayout>
   );

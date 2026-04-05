@@ -1,0 +1,194 @@
+.admin-inspection-modal .ant-modal-header {
+  margin-bottom: 0;
+  padding-bottom: 12px;
+}
+
+.admin-inspection-modal .ant-modal-body {
+  padding-top: 8px;
+}
+
+.admin-inspection-modal__title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.admin-inspection-modal__title-main {
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.admin-inspection-modal__title-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.admin-inspection-modal__loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.admin-inspection-modal__empty {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #64748b;
+}
+
+.admin-inspection-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-inspection-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.admin-inspection-modal__report-id {
+  font-weight: 600;
+  color: #475569;
+}
+
+.admin-inspection-modal__result-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.admin-inspection-modal__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.admin-inspection-modal__badge--pass {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+.admin-inspection-modal__badge--fail {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.admin-inspection-modal__badge--neutral {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-inspection-modal__score {
+  font-size: 14px;
+  color: #334155;
+}
+
+.admin-inspection-modal__score strong {
+  color: #0f172a;
+}
+
+.admin-inspection-modal__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.admin-inspection-modal__label {
+  color: #64748b;
+}
+
+.admin-inspection-modal__value {
+  font-weight: 600;
+  color: #0f172a;
+  text-align: right;
+}
+
+.admin-inspection-modal__scores {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.admin-inspection-modal__scores-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.admin-inspection-modal__score-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+}
+
+.admin-inspection-modal__score-line:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.admin-inspection-modal__criterion {
+  color: #334155;
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-inspection-modal__critical-tag {
+  margin-left: 6px;
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.admin-inspection-modal__score-val {
+  font-weight: 600;
+  color: #0d9488;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.admin-inspection-modal__notes-block {
+  margin-top: 4px;
+}
+
+.admin-inspection-modal__notes-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.admin-inspection-modal__notes-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #334155;
+  white-space: pre-wrap;
+}
