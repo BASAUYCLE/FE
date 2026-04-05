@@ -1,8 +1,9 @@
 /**
  * Tải báo cáo kiểm định cho một post:
- * 1) GET theo postId: /inspection/:id/report, /inspection/:id; ADMIN thêm /admin/inspection/:id
- * 2) Chỉ khi user là INSPECTOR: GET /inspection/reports (lọc theo post)
- * 3) Chỉ khi user là ADMIN: GET /admin/inspection/reports
+ * 1) BASAUYCLE BE: GET /reports/inspection (public list) → lọc theo postId (có cache ngắn)
+ * 2) GET theo postId: /inspection/:id/report, /inspection/:id; ADMIN thêm /admin/inspection/:id
+ * 3) INSPECTOR: GET /inspection/reports (lọc theo post)
+ * 4) ADMIN: GET /admin/inspection/reports
  */
 
 import axiosInstance from "../services/axiosConfig";
@@ -24,6 +25,44 @@ function perPostInspectionUrls(postId, { isAdmin } = { isAdmin: false }) {
     ];
   }
   return [`/inspection/${id}/report`, `/inspection/${id}`];
+}
+
+/** Cache GET /reports/inspection — tránh gọi lại mỗi lần mở modal / đổi trang */
+let publicReportsCache = { rows: null, expiresAt: 0 };
+const PUBLIC_REPORTS_TTL_MS = 45000;
+
+async function getPublicInspectionRowsCached() {
+  const now = Date.now();
+  if (
+    Array.isArray(publicReportsCache.rows) &&
+    publicReportsCache.expiresAt > now
+  ) {
+    return publicReportsCache.rows;
+  }
+  const url = API_ENDPOINTS.INSPECTION.PUBLIC_REPORTS;
+  const res = await axiosInstance.get(url);
+  const rows = parseInspectionReportsList(res);
+  const list = Array.isArray(rows) ? rows : [];
+  publicReportsCache = {
+    rows: list,
+    expiresAt: now + PUBLIC_REPORTS_TTL_MS,
+  };
+  return list;
+}
+
+/**
+ * BE: PublicInspectionController — danh sách báo cáo công khai, lọc theo postId.
+ */
+async function fetchInspectionFromPublicReportsList(postId) {
+  try {
+    const rows = await getPublicInspectionRowsCached();
+    const row = pickLatestReportRowForPost(rows, postId);
+    if (!row) return null;
+    const ins = normalizeInspection(row);
+    return inspectionResponseHasUsableData(ins) ? ins : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -176,6 +215,13 @@ export async function fetchInspectionReportForPost(postId) {
     } catch {
       /* thử URL tiếp */
     }
+  }
+
+  try {
+    const fromPublic = await fetchInspectionFromPublicReportsList(postId);
+    if (fromPublic) return fromPublic;
+  } catch {
+    /* ignore */
   }
 
   if (isInspector) {

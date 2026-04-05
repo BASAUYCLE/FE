@@ -93,6 +93,11 @@ export const API_ENDPOINTS = {
     PENDING: "/inspection/pending",
     HISTORY: "/inspection/reports",
     SUBMIT: (postId) => `/inspection/${postId}/submit`,
+    /**
+     * PublicInspectionController @RequestMapping("/reports") — GET /reports/inspection
+     * PASS: mọi người xem được; FAIL: chỉ seller (khi JWT là chủ bài).
+     */
+    PUBLIC_REPORTS: "/reports/inspection",
   },
 
   /** Disputes – BE: DisputeController @ /disputes */

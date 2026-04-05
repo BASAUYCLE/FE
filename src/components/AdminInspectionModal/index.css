@@ -338,6 +338,40 @@
   align-items: flex-start;
 }
 
+.admin-inspection-modal__cert-condition--score-only {
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+}
+
+.admin-inspection-modal__cert-score-num {
+  font-size: 1.2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  color: var(--ac-ink-deep);
+}
+
+.admin-inspection-modal__cert-condition--score-only.admin-inspection-modal__cert-condition--excellent
+  .admin-inspection-modal__cert-score-num {
+  color: #047857;
+}
+
+.admin-inspection-modal__cert-condition--score-only.admin-inspection-modal__cert-condition--good
+  .admin-inspection-modal__cert-score-num {
+  color: #0d9488;
+}
+
+.admin-inspection-modal__cert-condition--score-only.admin-inspection-modal__cert-condition--fair
+  .admin-inspection-modal__cert-score-num {
+  color: #c2410c;
+}
+
+.admin-inspection-modal__cert-condition--score-only.admin-inspection-modal__cert-condition--poor
+  .admin-inspection-modal__cert-score-num {
+  color: #b91c1c;
+}
+
 .admin-inspection-modal__cert-condition-main {
   font-weight: 700;
   line-height: 1.35;

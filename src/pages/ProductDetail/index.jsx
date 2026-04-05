@@ -50,6 +50,7 @@ import {
 } from "../../constants/inspectionRubric";
 import {
   calcScore,
+  extractInspectionFromPostPayload,
   inspectionResponseHasUsableData,
 } from "../../utils/inspectionReportNormalize";
 import { fetchInspectionReportForPost } from "../../utils/inspectionReportFetch";
@@ -309,17 +310,32 @@ export default function ProductDetail() {
     if (!id) return;
     const postId = Number(id) || id;
     if (isNaN(Number(id)) || Number(id) < 1) return;
+    let cancelled = false;
     setLoadingDetail(true);
     setFetchedPosting(null);
     postService
       .getPostById(postId)
       .then((res) => {
+        if (cancelled) return;
         const data = res?.result ?? res?.data ?? res;
         const mapped = mapApiPostToPosting(data);
         setFetchedPosting(mapped ?? null);
+        const embedded = extractInspectionFromPostPayload(data);
+        if (embedded && inspectionResponseHasUsableData(embedded)) {
+          setInspectionReport((prev) =>
+            prev && inspectionResponseHasUsableData(prev) ? prev : embedded,
+          );
+        }
       })
-      .catch(() => setFetchedPosting(null))
-      .finally(() => setLoadingDetail(false));
+      .catch(() => {
+        if (!cancelled) setFetchedPosting(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingDetail(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -357,15 +373,18 @@ export default function ProductDetail() {
         if (!cancelled) setInspectionReport(null);
         return;
       }
+      setInspectionReport(null);
       try {
         const ins = await fetchInspectionReportForPost(postId);
-        if (!cancelled) {
-          setInspectionReport(
-            ins && inspectionResponseHasUsableData(ins) ? ins : null,
-          );
+        if (
+          !cancelled &&
+          ins &&
+          inspectionResponseHasUsableData(ins)
+        ) {
+          setInspectionReport(ins);
         }
       } catch {
-        if (!cancelled) setInspectionReport(null);
+        /* Giữ null hoặc dữ liệu nhúng từ GET /posts/:id (effect khác) */
       }
     })();
     return () => {
@@ -480,6 +499,14 @@ export default function ProductDetail() {
 
   const postingStatus = posting?.status ?? null;
   const postingStatusUpper = String(postingStatus ?? "").toUpperCase();
+  /** Tin đang bán và đã qua kiểm định (badge VERIFIED LISTING) — luôn hiện nút xem biên bản; modal tự tải / báo trống nếu API chưa mở quyền */
+  const badgeUpper = String(product?.badge ?? "").toUpperCase();
+  const showInspectionCertificateCta =
+    inspectionModalPostId != null &&
+    (postingStatusUpper === POSTING_STATUS.AVAILABLE ||
+      postingStatusUpper === POSTING_STATUS.VERIFIED ||
+      postingStatusUpper === POSTING_STATUS.ACTIVE ||
+      badgeUpper.includes("VERIFIED"));
   /** BE: PROCESSING = đã có order (giao hàng / tranh chấp); DEPOSITED = đã cọc; SOLD = đã bán — không cho mua thêm */
   const purchaseBlockedByStatus =
     postingStatusUpper === POSTING_STATUS.PROCESSING ||
@@ -1008,7 +1035,7 @@ export default function ProductDetail() {
               </Button>
             )}
 
-            {inspectionModalPostId != null && (
+            {showInspectionCertificateCta && (
               <Button
                 variant="outlined"
                 fullWidth
@@ -1635,6 +1662,8 @@ export default function ProductDetail() {
         listingTitle={product?.name ?? null}
         listingMeta={inspectionModalListingMeta}
         posterHint={product?.seller?.name ?? null}
+        variant="public"
+        prefetchedInspection={inspectionReport}
         open={inspectionModalOpen && inspectionModalPostId != null}
         onClose={() => setInspectionModalOpen(false)}
       />
