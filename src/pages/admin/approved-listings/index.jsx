@@ -368,8 +368,8 @@ export default function AdminApprovedListings() {
                         <button
                           type="button"
                           className="admin-actions-button"
-                          title="View inspection report"
-                          aria-label="View inspection report"
+                          title="View inspector score rubric"
+                          aria-label="View inspector score rubric"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (row.id != null) {

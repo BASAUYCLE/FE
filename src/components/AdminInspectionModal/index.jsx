@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Modal, Spin } from "antd";
+import { ClipboardList } from "lucide-react";
 import axiosInstance from "../../services/axiosConfig";
+import adminService from "../../services/adminService";
 import {
   calcScore,
   inspectionResponseHasUsableData,
@@ -14,11 +16,19 @@ import {
 } from "../../constants/inspectionRubric";
 import "./index.css";
 
-function inspectionScoreLabelEn(value) {
+function inspectionScoreOption(value) {
   const n = Number(value);
-  if (!Number.isFinite(n)) return "—";
-  const opt = INSPECTION_SCORE_OPTIONS.find((o) => o.value === n);
-  return opt?.labelEn ?? String(n);
+  if (!Number.isFinite(n)) return null;
+  return INSPECTION_SCORE_OPTIONS.find((o) => o.value === n) ?? null;
+}
+
+/** 0 | 3 | 7 | 10 — dùng data-score / BEM modifier */
+function scoreTierClass(n) {
+  if (n === 10) return "admin-inspection-modal__score-pill--10";
+  if (n === 7) return "admin-inspection-modal__score-pill--7";
+  if (n === 3) return "admin-inspection-modal__score-pill--3";
+  if (n === 0) return "admin-inspection-modal__score-pill--0";
+  return "admin-inspection-modal__score-pill--na";
 }
 
 function formatInspectedAt(raw) {
@@ -32,8 +42,45 @@ function formatInspectedAt(raw) {
   });
 }
 
+/** Giống trang admin Inspection history — BE trả list trong result/data/content. */
+function parseInspectionReportsList(res) {
+  const raw = res?.result ?? res?.data ?? res;
+  if (Array.isArray(raw)) return raw;
+  if (Array.isArray(raw?.content)) return raw.content;
+  if (Array.isArray(raw?.reports)) return raw.reports;
+  if (Array.isArray(raw?.data)) return raw.data;
+  return [];
+}
+
+function reportRowPostId(row) {
+  return (
+    row?.postId ??
+    row?.bicyclePostId ??
+    row?.post?.postId ??
+    row?.post?.id ??
+    null
+  );
+}
+
+/** Bản ghi mới nhất cho post (theo createdAt / inspectedAt). */
+function pickLatestReportRowForPost(rows, targetPostId) {
+  const key = String(targetPostId);
+  let best = null;
+  let bestTs = -Infinity;
+  for (const row of rows) {
+    const pid = reportRowPostId(row);
+    if (pid == null || String(pid) !== key) continue;
+    const ts = new Date(row?.createdAt ?? row?.inspectedAt ?? 0).getTime();
+    if (!best || ts >= bestTs) {
+      best = row;
+      bestTs = ts;
+    }
+  }
+  return best;
+}
+
 /**
- * Admin: read-only inspection report for a post (same API paths as ProductPreviewModal).
+ * Admin: xem Score Rubric (6 tiêu chí) inspector đã nộp — cùng API với ProductPreviewModal.
  */
 export default function AdminInspectionModal({
   postId,
@@ -55,6 +102,7 @@ export default function AdminInspectionModal({
       setInspection(null);
     });
     (async () => {
+      let found = null;
       try {
         for (const url of [
           `/inspection/${postId}/report`,
@@ -67,13 +115,28 @@ export default function AdminInspectionModal({
             const raw = res?.result ?? res?.data ?? res;
             const ins = normalizeInspection(raw);
             if (inspectionResponseHasUsableData(ins)) {
-              if (!cancelled) setInspection(ins);
+              found = ins;
               break;
             }
           } catch {
             /* try next */
           }
         }
+        /* BE thường chỉ trả báo cáo admin qua GET /admin/inspection/reports (list). */
+        if (!found && !cancelled) {
+          try {
+            const res = await adminService.getInspectionReports();
+            const rows = parseInspectionReportsList(res);
+            const row = pickLatestReportRowForPost(rows, postId);
+            if (row) {
+              const ins = normalizeInspection(row);
+              if (inspectionResponseHasUsableData(ins)) found = ins;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+        if (!cancelled) setInspection(found);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -94,18 +157,27 @@ export default function AdminInspectionModal({
     inspection &&
     (OVERALL_CONDITION_LABEL[condKey] ?? inspection.condition ?? null);
 
+  const resultUpper =
+    inspection?.result != null && String(inspection.result).trim() !== ""
+      ? String(inspection.result).toUpperCase()
+      : null;
+
   return (
     <Modal
       open={open}
       onCancel={onClose}
       footer={null}
-      width="min(560px, 94vw)"
+      width="min(720px, 94vw)"
+      centered
       destroyOnHidden
       className="admin-inspection-modal"
       title={
         <div className="admin-inspection-modal__title">
-          <span className="admin-inspection-modal__title-main">
+          <span className="admin-inspection-modal__title-kicker">
             Inspection report
+          </span>
+          <span className="admin-inspection-modal__title-main">
+            Score rubric
           </span>
           {listingTitle ? (
             <span className="admin-inspection-modal__title-sub">
@@ -117,96 +189,163 @@ export default function AdminInspectionModal({
     >
       {loading ? (
         <div className="admin-inspection-modal__loading">
-          <Spin />
+          <Spin size="large" />
         </div>
       ) : !inspection || !inspectionResponseHasUsableData(inspection) ? (
-        <p className="admin-inspection-modal__empty">
-          No inspection data for this listing yet. Reports appear after an
-          inspector submits scores (post moves past admin-approved / pending
-          inspection).
-        </p>
+        <div className="admin-inspection-modal__empty-state">
+          <div className="admin-inspection-modal__empty-icon" aria-hidden>
+            <ClipboardList strokeWidth={1.5} />
+          </div>
+          <p className="admin-inspection-modal__empty-title">
+            No rubric submitted yet
+          </p>
+          <p className="admin-inspection-modal__empty-desc">
+            Results appear here after an inspector submits all six criteria
+            (scores 0, 3, 7, or 10) and notes for this listing.
+          </p>
+        </div>
       ) : (
         <div className="admin-inspection-modal__body">
-          <div className="admin-inspection-modal__meta">
-            {inspection.reportId != null ? (
-              <span className="admin-inspection-modal__report-id">
-                Report #{inspection.reportId}
-              </span>
-            ) : (
-              <span className="admin-inspection-modal__report-id">
-                Post #{postId}
-              </span>
-            )}
-            {formatInspectedAt(inspection.inspectedAt) ? (
-              <span className="admin-inspection-modal__date">
-                {formatInspectedAt(inspection.inspectedAt)}
-              </span>
+          <div className="admin-inspection-modal__hero">
+            {resultUpper || typeof scorePct === "number" ? (
+              <div className="admin-inspection-modal__hero-top">
+                {resultUpper ? (
+                  <span
+                    className={`admin-inspection-modal__badge ${(() => {
+                      if (resultUpper === "PASS")
+                        return "admin-inspection-modal__badge--pass";
+                      if (resultUpper === "FAIL")
+                        return "admin-inspection-modal__badge--fail";
+                      return "admin-inspection-modal__badge--neutral";
+                    })()}`}
+                  >
+                    {resultUpper}
+                  </span>
+                ) : null}
+                {typeof scorePct === "number" ? (
+                  <div
+                    className="admin-inspection-modal__hero-gauge"
+                    style={{
+                      "--aim-pct": `${Math.min(100, Math.max(0, scorePct))}`,
+                    }}
+                    aria-label={`Condition score ${scorePct} percent`}
+                  >
+                    <div className="admin-inspection-modal__hero-gauge-inner">
+                      <span className="admin-inspection-modal__hero-gauge-value">
+                        {scorePct}
+                        <span className="admin-inspection-modal__hero-gauge-unit">
+                          %
+                        </span>
+                      </span>
+                      <span className="admin-inspection-modal__hero-gauge-label">
+                        Condition
+                      </span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             ) : null}
-          </div>
-
-          <div className="admin-inspection-modal__result-row">
-            {inspection.result != null && String(inspection.result) !== "" ? (
-              <span
-                className={`admin-inspection-modal__badge ${(() => {
-                  const r = String(inspection.result).toUpperCase();
-                  if (r === "PASS") return "admin-inspection-modal__badge--pass";
-                  if (r === "FAIL") return "admin-inspection-modal__badge--fail";
-                  return "admin-inspection-modal__badge--neutral";
-                })()}`}
-              >
-                {String(inspection.result).toUpperCase()}
+            <div className="admin-inspection-modal__hero-chips">
+              <span className="admin-inspection-modal__chip">
+                {inspection.reportId != null
+                  ? `Report #${inspection.reportId}`
+                  : `Post #${postId}`}
               </span>
-            ) : null}
-            {typeof scorePct === "number" ? (
-              <span className="admin-inspection-modal__score">
-                Condition score: <strong>{scorePct}%</strong>
-              </span>
-            ) : null}
-          </div>
-
-          {condLabel ? (
-            <div className="admin-inspection-modal__row">
-              <span className="admin-inspection-modal__label">
-                Overall band
-              </span>
-              <span className="admin-inspection-modal__value">{condLabel}</span>
+              {formatInspectedAt(inspection.inspectedAt) ? (
+                <span className="admin-inspection-modal__chip admin-inspection-modal__chip--muted">
+                  {formatInspectedAt(inspection.inspectedAt)}
+                </span>
+              ) : null}
+              {condLabel ? (
+                <span className="admin-inspection-modal__chip admin-inspection-modal__chip--accent">
+                  {condLabel}
+                </span>
+              ) : null}
             </div>
-          ) : null}
+          </div>
 
           {inspection.scores ? (
-            <div className="admin-inspection-modal__scores">
-              <div className="admin-inspection-modal__scores-title">
-                Rubric scores
+            <section
+              className="admin-inspection-modal__section"
+              aria-labelledby="admin-inspection-rubric-heading"
+            >
+              <div className="admin-inspection-modal__section-head">
+                <h3
+                  id="admin-inspection-rubric-heading"
+                  className="admin-inspection-modal__section-title"
+                >
+                  Six criteria
+                </h3>
+                <p className="admin-inspection-modal__section-desc">
+                  Same scale as the inspector form. Server derives pass/fail and
+                  overall % from these scores.
+                </p>
               </div>
-              {INSPECTION_CRITERIA_ROWS.map((row) => {
-                const s = inspection.scores[row.key];
-                if (s == null) return null;
-                return (
-                  <div key={row.key} className="admin-inspection-modal__score-line">
-                    <span className="admin-inspection-modal__criterion">
-                      {row.labelEn}
-                      {INSPECTION_CRITICAL_CRITERIA_KEYS.has(row.key) ? (
-                        <span className="admin-inspection-modal__critical-tag">
-                          (critical)
+              <ul className="admin-inspection-modal__rubric-list">
+                {INSPECTION_CRITERIA_ROWS.map((row) => {
+                  const s = inspection.scores[row.key];
+                  if (s == null) return null;
+                  const n = Number(s);
+                  const opt = inspectionScoreOption(s);
+                  const tier =
+                    Number.isFinite(n) && [0, 3, 7, 10].includes(n)
+                      ? n
+                      : "na";
+                  return (
+                    <li
+                      key={row.key}
+                      className="admin-inspection-modal__rubric-card"
+                      data-score={tier}
+                    >
+                      <div className="admin-inspection-modal__rubric-card-top">
+                        <div className="admin-inspection-modal__rubric-card-title-block">
+                          <span className="admin-inspection-modal__criterion-name">
+                            {row.labelEn}
+                          </span>
+                          {INSPECTION_CRITICAL_CRITERIA_KEYS.has(row.key) ? (
+                            <span className="admin-inspection-modal__critical-chip">
+                              Critical
+                            </span>
+                          ) : null}
+                        </div>
+                        <span
+                          className={`admin-inspection-modal__score-pill ${scoreTierClass(n)}`}
+                        >
+                          {Number.isFinite(n) ? n : "—"}
                         </span>
+                      </div>
+                      {opt?.hintEn ? (
+                        <p className="admin-inspection-modal__rubric-rating-desc">
+                          {opt.hintEn}
+                        </p>
                       ) : null}
-                    </span>
-                    <span className="admin-inspection-modal__score-val">
-                      {s} — {inspectionScoreLabelEn(s)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                      {row.hintEn ? (
+                        <p className="admin-inspection-modal__criterion-hint">
+                          {row.hintEn}
+                        </p>
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           ) : null}
 
           {notesText ? (
-            <div className="admin-inspection-modal__notes-block">
-              <div className="admin-inspection-modal__notes-title">
+            <section
+              className="admin-inspection-modal__notes-block"
+              aria-labelledby="admin-inspection-notes-heading"
+            >
+              <h3
+                id="admin-inspection-notes-heading"
+                className="admin-inspection-modal__notes-heading"
+              >
                 Inspector notes
+              </h3>
+              <div className="admin-inspection-modal__notes-panel">
+                <p className="admin-inspection-modal__notes-text">{notesText}</p>
               </div>
-              <p className="admin-inspection-modal__notes-text">{notesText}</p>
-            </div>
+            </section>
           ) : null}
         </div>
       )}
