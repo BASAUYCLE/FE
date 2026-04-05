@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect } from "react";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
 import StatCard from "../../../components/inspector/shared";
 import InspectionQueueTable from "../../../components/inspector/InspectionQueueTable";
@@ -28,34 +28,41 @@ export default function InspectorDashboard() {
   const [loading, setLoading] = useState(true);
   const [disputesCount, setDisputesCount] = useState(0);
 
-  const fetchPending = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await inspectionService.getPendingInspections();
-      const list = Array.isArray(res?.result) ? res.result : [];
-      setPendingList(list.map(mapPendingToInspection));
-    } catch {
-      setPendingList([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const fetchDisputes = useCallback(async () => {
-    try {
-      const res = await disputeService.getInspectorMyDisputes();
-      const raw = res?.result ?? res?.data ?? res;
-      const list = Array.isArray(raw) ? raw : [];
-      setDisputesCount(list.length);
-    } catch {
-      setDisputesCount(0);
-    }
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await inspectionService.getPendingInspections();
+        const list = Array.isArray(res?.result) ? res.result : [];
+        if (!cancelled) setPendingList(list.map(mapPendingToInspection));
+      } catch {
+        if (!cancelled) setPendingList([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
-    fetchPending();
-    fetchDisputes();
-  }, [fetchPending, fetchDisputes]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await disputeService.getInspectorMyDisputes();
+        const raw = res?.result ?? res?.data ?? res;
+        const list = Array.isArray(raw) ? raw : [];
+        if (!cancelled) setDisputesCount(list.length);
+      } catch {
+        if (!cancelled) setDisputesCount(0);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const pendingCount = useMemo(() => pendingList.length, [pendingList]);
   const completedTodayCount = 8;

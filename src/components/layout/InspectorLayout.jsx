@@ -39,7 +39,7 @@ export default function InspectorLayout({ children }) {
         <nav className="app-sidebar-nav">
           {INSPECTOR_NAV_LINKS.map((link) => (
             <NavLink
-              key={link.label}
+              key={link.href}
               to={link.href}
               end
               className={({ isActive }) =>

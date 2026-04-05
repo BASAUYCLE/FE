@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
 import { Typography, Button, message, Empty, Spin } from "antd";
@@ -18,6 +18,14 @@ export default function InspectorDisputes() {
   const [rows, setRows] = useState([]);
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
+  const aliveRef = useRef(true);
+
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
 
   const loadList = useCallback(async () => {
     setListLoading(true);
@@ -25,12 +33,14 @@ export default function InspectorDisputes() {
       const res = await disputeService.getInspectorMyDisputes();
       const raw = res?.result ?? res?.data ?? res;
       const list = Array.isArray(raw) ? raw : [];
-      setRows(list);
+      if (aliveRef.current) setRows(list);
     } catch (e) {
-      setRows([]);
-      message.error(e?.message || "Could not load dispute list.");
+      if (aliveRef.current) {
+        setRows([]);
+        message.error(e?.message || "Could not load dispute list.");
+      }
     } finally {
-      setListLoading(false);
+      if (aliveRef.current) setListLoading(false);
     }
   }, []);
 

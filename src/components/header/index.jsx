@@ -439,7 +439,7 @@ export default function Header({
   const openNotif = Boolean(notifAnchor);
 
   // Typewriter effect for search placeholder
-  const TYPING_TEXT = "Search by car name or brand...";
+  const TYPING_TEXT = "Search by bike name or brand...";
   const [placeholderText, setPlaceholderText] = useState("");
   const [typingIndex, setTypingIndex] = useState(0);
   const [searchValue, setSearchValue] = useState("");
@@ -735,7 +735,9 @@ export default function Header({
                     to="/about"
                     active={pathname === "/about"}
                     variant={navVariant}
-                    onClick={(e) => onSameRouteScrollToTop(e, "/about", pathname)}
+                    onClick={(e) =>
+                      onSameRouteScrollToTop(e, "/about", pathname)
+                    }
                   >
                     About
                   </NavLink>
@@ -743,7 +745,9 @@ export default function Header({
                     to="/post"
                     active={pathname === "/post"}
                     variant={navVariant}
-                    onClick={(e) => onSameRouteScrollToTop(e, "/post", pathname)}
+                    onClick={(e) =>
+                      onSameRouteScrollToTop(e, "/post", pathname)
+                    }
                   >
                     Post
                   </NavLink>
@@ -774,7 +778,12 @@ export default function Header({
         }}
       >
         <Box
-          sx={{ px: 2, py: 1.5, borderBottom: "1px solid #f3f4f6", flexShrink: 0 }}
+          sx={{
+            px: 2,
+            py: 1.5,
+            borderBottom: "1px solid #f3f4f6",
+            flexShrink: 0,
+          }}
         >
           <Typography variant="subtitle1" fontWeight={700} color="#1a1a1a">
             Wishlist ({wishlist.length})
@@ -989,7 +998,8 @@ export default function Header({
                 "&:active": {
                   transform: "translateY(0)",
                 },
-                transition: "background-color 0.2s, box-shadow 0.2s, transform 0.2s",
+                transition:
+                  "background-color 0.2s, box-shadow 0.2s, transform 0.2s",
               }}
               onClick={handleWishlistClose}
             >

@@ -23,7 +23,9 @@ const STATUS_FILTER_OPTIONS = [
 ];
 
 function formatRequestedDate(iso) {
-  return new Date(iso).toLocaleString("en-US", {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-US", {
     day: "2-digit",
     month: "short",
     year: "numeric",
