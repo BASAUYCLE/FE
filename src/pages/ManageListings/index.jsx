@@ -66,7 +66,7 @@ const TAB_ITEMS = [
 
 import { formatDate } from "../../utils/date";
 
-/** Đã qua / có thể có biên bản inspector (không hiện icon khi chưa kiểm định) */
+/** Listing may already have an inspector report (hide icon before inspection exists) */
 const INSPECTION_REPORT_ACTION_STATUSES = new Set([
   POSTING_STATUS.AVAILABLE,
   POSTING_STATUS.VERIFIED,
@@ -413,13 +413,13 @@ export default function ManageListings() {
               title="Edit"
             />
             {showInspectionBtn && (
-              <Tooltip title="Xem biên bản kiểm định">
+              <Tooltip title="View inspection report">
                 <Button
                   type="text"
                   size="small"
                   icon={<FileCheck size={14} />}
                   onClick={() => openInspectionForRecord(record)}
-                  aria-label="Xem biên bản kiểm định"
+                  aria-label="View inspection report"
                 />
               </Tooltip>
             )}
@@ -599,7 +599,7 @@ export default function ManageListings() {
         listingTitle={inspectionModal.title}
         listingMeta={inspectionModal.meta}
         posterHint={posterHintForInspection}
-        variant="public"
+        variant="staff"
         open={inspectionModal.open && inspectionModal.postId != null}
         onClose={() =>
           setInspectionModal({
