@@ -5,6 +5,7 @@ import adminService from "../../../services/adminService";
 import adminPostService from "../../../services/adminPostService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
+import AdminInspectionModal from "../../../components/AdminInspectionModal";
 import AdminPaginationBar from "../../../components/admin/AdminPaginationBar";
 import AdminToolbarFilters from "../../../components/admin/AdminToolbarFilters";
 import "../dashboard/index.css";
@@ -32,6 +33,30 @@ const IR_STATUS_FILTER_OPTIONS = [
   { value: "REJECTED", label: "Rejected (Fail)" },
   { value: "PENDING", label: "Pending" },
 ];
+
+function buildListingMetaLine(post) {
+  if (!post || typeof post !== "object") return null;
+  const brand =
+    post.brandName ??
+    post.brand_name ??
+    (typeof post.brand === "string"
+      ? post.brand
+      : (post.brand?.brandName ?? post.brand?.name));
+  const cat =
+    post.categoryName ??
+    post.category_name ??
+    (typeof post.category === "string"
+      ? post.category
+      : (post.category?.categoryName ?? post.category?.name));
+  const year = post.modelYear ?? post.model_year;
+  const sizeRaw = post.size ?? post.frameSize ?? post.frame_size;
+  const sizePart =
+    sizeRaw != null && String(sizeRaw).trim() !== "" ? `Size ${sizeRaw}` : null;
+  const parts = [brand, cat, year, sizePart].filter(
+    (p) => p != null && String(p).trim() !== "" && String(p) !== "—",
+  );
+  return parts.length ? parts.join(" · ") : null;
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -108,6 +133,7 @@ function normalizeReport(row) {
     overallCondition: row.overallCondition ?? row.condition ?? null,
     notes: row.notes ?? row.inspectorNotes ?? null,
     price: row.price ?? row.salePrice ?? null,
+    metaLine: row.metaLine ?? null,
   };
 }
 
@@ -151,6 +177,7 @@ function normalizeFromPost(post, historyByPostId) {
     result: history?.result ?? null,
     status: postStatus === "ADMIN_APPROVED" ? "PENDING" : "APPROVED",
     postStatus,
+    metaLine: buildListingMetaLine(post),
   });
 }
 
@@ -162,10 +189,29 @@ export default function AdminInspectionReports() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [previewId, setPreviewId] = useState(null);
+  const [inspectionModal, setInspectionModal] = useState({
+    postId: null,
+    title: null,
+    sessionKey: 0,
+    posterHint: null,
+    listingMeta: null,
+  });
   const [page, setPage] = useState(1);
 
   const handleViewPostDetails = useCallback((postId) => {
     if (postId) setPreviewId(postId);
+  }, []);
+
+  const openInspectionRecord = useCallback((row) => {
+    const pid = row?.postId ?? row?.id;
+    if (pid == null) return;
+    setInspectionModal({
+      postId: pid,
+      title: row?.title ?? null,
+      sessionKey: Date.now(),
+      posterHint: row?.seller && row.seller !== "—" ? row.seller : null,
+      listingMeta: row?.metaLine ?? null,
+    });
   }, []);
 
   const fetchAll = useCallback(async () => {
@@ -366,9 +412,13 @@ export default function AdminInspectionReports() {
                           <div
                             className="admin-ir-bike admin-ir-bike-link"
                             onClick={() =>
-                              row.postId && setPreviewId(row.postId)
+                              handleViewPostDetails(row.postId ?? row.id)
                             }
-                            title={row.postId ? "View listing" : undefined}
+                            title={
+                              row.postId ?? row.id
+                                ? "Xem tin đăng & ảnh"
+                                : undefined
+                            }
                           >
                             {row.thumbnail ? (
                               <img
@@ -455,10 +505,11 @@ export default function AdminInspectionReports() {
                             <button
                               type="button"
                               className="admin-ir-expand-btn"
-                              title="View post details"
-                              onClick={() =>
-                                handleViewPostDetails(row.postId ?? row.id)
-                              }
+                              title="Xem biên bản kiểm định"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openInspectionRecord(row);
+                              }}
                             >
                               <Eye size={14} />
                             </button>
@@ -480,6 +531,27 @@ export default function AdminInspectionReports() {
           </div>
         </div>
       </div>
+      <AdminInspectionModal
+        key={
+          inspectionModal.postId != null
+            ? String(inspectionModal.sessionKey)
+            : "admin-ir-inspection-closed"
+        }
+        postId={inspectionModal.postId}
+        listingTitle={inspectionModal.title}
+        posterHint={inspectionModal.posterHint}
+        listingMeta={inspectionModal.listingMeta}
+        open={inspectionModal.postId != null}
+        onClose={() =>
+          setInspectionModal({
+            postId: null,
+            title: null,
+            sessionKey: 0,
+            posterHint: null,
+            listingMeta: null,
+          })
+        }
+      />
       <ProductPreviewModal
         postId={previewId}
         open={!!previewId}
