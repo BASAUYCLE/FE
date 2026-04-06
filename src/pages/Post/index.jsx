@@ -201,6 +201,36 @@ export default function PostBike() {
 
   const filledEditIdRef = useRef(null);
 
+  /** Ant Design fileList[0] → File (nếu có) */
+  const getFileFromAntdFirst = (fileList) => {
+    const first = fileList?.[0];
+    if (!first) return null;
+    return first.originFileObj ?? (first instanceof File ? first : null);
+  };
+
+  /** File để upload cho slot — ưu tiên state `requiredPhotoFiles` */
+  const getRequiredPhotoFileForSlot = (slotKey) =>
+    requiredPhotoFiles[slotKey] instanceof File
+      ? requiredPhotoFiles[slotKey]
+      : getFileFromAntdFirst(requiredPhotos[slotKey]);
+
+  /** Đủ ảnh cho slot: file mới, hoặc ảnh đã có từ server (URL / data URL) */
+  const slotHasRequiredImage = (slotKey) => {
+    if (requiredPhotoFiles[slotKey] instanceof File) return true;
+    const file = getFileFromAntdFirst(requiredPhotos[slotKey]);
+    if (file) return true;
+    if (requiredPhotoDataUrls[slotKey]) return true;
+    const first = requiredPhotos[slotKey]?.[0];
+    if (first?.url && String(first.url).trim()) return true;
+    return false;
+  };
+
+  const scrollToPhotosSection = () => {
+    document
+      .getElementById("photos-videos")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   // Section IDs for scroll detection
   const sectionIds = [
     "basic-info",
@@ -584,8 +614,8 @@ export default function PostBike() {
   }, [editId, getPostingById, brandOptions, categoryOptions, message]);
 
   // Check section completion and update completedSections
-  const allRequiredPhotosFilled = requiredPhotoKeys.every(
-    ({ key }) => requiredPhotos[key]?.length > 0,
+  const allRequiredPhotosFilled = requiredPhotoKeys.every(({ key }) =>
+    slotHasRequiredImage(key),
   );
   useEffect(() => {
     const completed = [];
@@ -757,6 +787,19 @@ export default function PostBike() {
     });
   };
 
+  const beforeUploadDefect = (file) => {
+    if (!file?.type?.startsWith("image/")) {
+      message.error("Only image files are allowed.");
+      return Upload.LIST_IGNORE;
+    }
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error("Image must be smaller than 5MB.");
+      return Upload.LIST_IGNORE;
+    }
+    return false;
+  };
+
   const defectUploadProps = {
     name: "file",
     multiple: true,
@@ -764,6 +807,7 @@ export default function PostBike() {
     listType: "picture-card",
     fileList: defectFiles,
     accept: "image/*",
+    beforeUpload: beforeUploadDefect,
     customRequest({ onSuccess }) {
       setTimeout(() => onSuccess({ url: "" }), 0);
     },
@@ -899,16 +943,10 @@ export default function PostBike() {
       }
 
       // Upload images if any exist (optional for draft)
-      const getFileFromAntdList = (fileList) => {
-        const first = fileList?.[0];
-        if (!first) return null;
-        return first.originFileObj ?? (first instanceof File ? first : null);
-      };
-
       const hasNewFiles = requiredPhotoKeys.some(
         ({ key: slotKey }) =>
           requiredPhotoFiles[slotKey] instanceof File ||
-          getFileFromAntdList(requiredPhotos[slotKey]),
+          getFileFromAntdFirst(requiredPhotos[slotKey]),
       );
 
       if (postId && hasNewFiles) {
@@ -918,7 +956,7 @@ export default function PostBike() {
               const imageFile =
                 requiredPhotoFiles[slotKey] instanceof File
                   ? requiredPhotoFiles[slotKey]
-                  : getFileFromAntdList(requiredPhotos[slotKey]);
+                  : getFileFromAntdFirst(requiredPhotos[slotKey]);
               if (!imageFile) return Promise.resolve();
               const isThumbnail = slotKey === "driveSide";
               return postService.uploadPostImage({
@@ -1013,7 +1051,9 @@ export default function PostBike() {
       );
     }
     if (!allRequiredPhotosFilled) {
-      validationErrors.push("Required photos: All 6 slots");
+      validationErrors.push(
+        "Required photos: all 6 slots (Drive Side, Non-Drive, Cockpit, Drivetrain, Front Brake, Rear Brake).",
+      );
     }
     if (!sellerId) {
       message.error("Could not get account info. Please sign in again.");
@@ -1021,8 +1061,23 @@ export default function PostBike() {
     }
 
     if (validationErrors.length > 0) {
+      if (!allRequiredPhotosFilled) scrollToPhotosSection();
       message.warning(`Please fill in:\n${validationErrors.join("\n")}`);
       return;
+    }
+
+    // Đăng tin mới: cần file thật trên từng ô (không chỉ URL từ server)
+    if (!editId) {
+      const missingFiles = requiredPhotoKeys.filter(
+        ({ key }) => !getRequiredPhotoFileForSlot(key),
+      );
+      if (missingFiles.length > 0) {
+        scrollToPhotosSection();
+        message.warning({
+          content: `Please select an image for: ${missingFiles.map((m) => m.label || m.key).join(", ")}.`,
+        });
+        return;
+      }
     }
 
     const publishTitle = isEditingDraft
@@ -1091,31 +1146,9 @@ export default function PostBike() {
         modelYear: Number(modelYear),
       };
 
-      // Helper to extract file from Antd list (item có thể chứa originFileObj)
-      const getFileFromAntdList = (fileList) => {
-        const first = fileList?.[0];
-        if (!first) return null;
-        return first.originFileObj ?? (first instanceof File ? first : null);
-      };
-      // Lấy File cho slot: ưu tiên requiredPhotoFiles, fallback fileList (đã lưu originFileObj)
+      // Lấy File cho slot (đồng bộ với getRequiredPhotoFileForSlot ở ngoài)
       const getRequiredPhotoFile = (slotKey) =>
-        requiredPhotoFiles[slotKey] instanceof File
-          ? requiredPhotoFiles[slotKey]
-          : getFileFromAntdList(requiredPhotos[slotKey]);
-
-      // Khi đăng bài mới: kiểm tra đủ 6 file trước khi tạo post (tránh tạo xong mới lỗi upload)
-      if (!editId) {
-        const missing = requiredPhotoKeys.filter(
-          ({ key: slotKey }) => !getRequiredPhotoFile(slotKey),
-        );
-        if (missing.length > 0) {
-          message.warning({
-            content: `Photos not ready (${missing.map((m) => m.label || m.key).join(", ")}). Please select images for each slot and try again.`,
-            key,
-          });
-          return;
-        }
-      }
+        getRequiredPhotoFileForSlot(slotKey);
 
       let postId = editId ? Number(editId) : null;
       let imageUploadFailed = false;
@@ -1746,9 +1779,14 @@ export default function PostBike() {
               id="photos-videos"
               className="form-section post-upload-section"
             >
-              <h3 className="post-upload-title">Required bike photos</h3>
+              <h3 className="post-upload-title">
+                Required bike photos{" "}
+                <span className="post-upload-required-mark">(6 required)</span>
+              </h3>
               <p className="post-upload-subtitle">
-                Upload 6 images from the following angles (required)
+                Upload all 6 angles: Drive Side, Non-Drive, Cockpit,
+                Drivetrain, Front Brake, Rear Brake. You cannot post until every
+                slot has a photo.
               </p>
               {!isFormReadOnly && (
                 <Alert
@@ -1792,10 +1830,12 @@ export default function PostBike() {
 
               <div className="defect-section">
                 <h3 className="post-upload-title defect-title">
-                  Describe the issue (optional)
+                  Describe the issue{" "}
+                  <span className="post-upload-optional-mark">(optional)</span>
                 </h3>
                 <p className="post-upload-subtitle">
-                  Up to 5 images – Show any scratches or damage (if any)
+                  Up to 5 images — show any scratches, damage, or defects (if
+                  any).
                 </p>
                 <div className="defect-upload-row">
                   <Upload

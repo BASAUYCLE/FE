@@ -391,6 +391,18 @@
     margin: 0 0 16px;
 }
 
+.post-upload-required-mark {
+    font-weight: 600;
+    color: #b45309;
+    font-size: 14px;
+}
+
+.post-upload-optional-mark {
+    font-weight: 500;
+    color: #64748b;
+    font-size: 14px;
+}
+
 .post-upload-section .defect-title {
     margin-top: 4px;
 }
