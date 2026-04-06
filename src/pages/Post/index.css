@@ -627,7 +627,26 @@
     margin: 0;
 }
 
-/* Ô defect upload cùng style với Register */
+/*
+ * Optional defect photos — khung cố định 140×140, ảnh cắt gọn trong bo góc (AntD mặc định
+ * để thumbnail position:static nên ảnh dễ tràn khỏi viền).
+ */
+.post-upload-section .defect-upload .ant-upload-list-picture-card-container {
+    width: auto;
+    height: auto;
+}
+
+.post-upload-section .defect-upload .ant-upload-list-item-container {
+    width: 140px !important;
+    height: 140px !important;
+    vertical-align: top;
+    overflow: hidden !important;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-sizing: border-box;
+    background: #fff;
+}
+
 .post-upload-section .defect-upload .ant-upload.ant-upload-select-picture-card {
     width: 140px;
     height: 140px;
@@ -635,39 +654,49 @@
     background: white;
     border: 2px dashed #cbd5e1;
     border-radius: 8px;
-    transition: all 0.3s;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
 }
 
 .post-upload-section .defect-upload .ant-upload.ant-upload-select-picture-card:hover {
     border-color: #00ccad;
 }
 
-.post-upload-section .defect-upload .ant-upload-list-picture-card-container {
-    width: 140px;
-    height: 140px;
-}
 .post-upload-section .defect-upload .ant-upload-list-picture-card .ant-upload-list-item {
-    width: 140px !important;
-    height: 140px !important;
-    margin: 0 !important;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-}
-.post-upload-section .defect-upload .ant-upload-list-item-thumbnail {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-.post-upload-section .defect-upload .ant-upload-list-item-thumbnail img,
-.post-upload-section .defect-upload .ant-upload-list-item img {
     width: 100% !important;
     height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0;
+    overflow: hidden !important;
+    position: relative !important;
+    box-sizing: border-box;
+}
+
+.post-upload-section .defect-upload .ant-upload-list-item-thumbnail,
+.post-upload-section .defect-upload a.ant-upload-list-item-thumbnail {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    display: block !important;
+    margin: 0 !important;
+    border-radius: 8px;
+}
+
+.post-upload-section .defect-upload .ant-upload-list-item-thumbnail img,
+.post-upload-section .defect-upload .ant-upload-list-item-image,
+.post-upload-section .defect-upload .ant-upload-list-item img {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
     object-fit: cover !important;
     object-position: center;
-    display: block;
+    display: block !important;
 }
 
 /* Upload Dragger */

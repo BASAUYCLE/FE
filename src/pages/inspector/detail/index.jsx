@@ -663,7 +663,7 @@ export default function InspectorDetail() {
                             key={w}
                             type="warning"
                             showIcon
-                            message={INSPECTION_PREVIEW_WARNING_TEXT_EN[w] ?? w}
+                            title={INSPECTION_PREVIEW_WARNING_TEXT_EN[w] ?? w}
                           />
                         ))}
                       </div>

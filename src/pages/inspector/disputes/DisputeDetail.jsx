@@ -225,7 +225,7 @@ export default function InspectorDisputeDetailPage() {
                 <Spin />
               </div>
             ) : !detail ? (
-              <Alert type="warning" message="Dispute not found." />
+              <Alert type="warning" title="Dispute not found." />
             ) : (
               <div className="dispute-detail-split">
                 <section className="dispute-detail-col">

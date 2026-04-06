@@ -769,7 +769,10 @@ export default function PostBike() {
       .map((f) => f.originFileObj)
       .filter((file) => file?.type?.startsWith("image/"));
     if (imageFiles.length === 0) {
-      setDefectImageDataUrls([]);
+      const remoteUrls = fileList
+        .map((f) => f.url || f.thumbUrl)
+        .filter((u) => typeof u === "string" && u.length > 0);
+      setDefectImageDataUrls(remoteUrls.length ? remoteUrls : []);
       return;
     }
     let loaded = 0;
@@ -812,20 +815,13 @@ export default function PostBike() {
       setTimeout(() => onSuccess({ url: "" }), 0);
     },
     onChange(info) {
-      const { status } = info.file;
-      if (
-        status === "done" ||
-        (status === "uploading" && info.fileList.length > 0)
-      ) {
-        setDefectFiles(info.fileList);
-        readDefectFilesAsDataUrls(info.fileList);
-      } else if (status === "removed") {
-        setDefectFiles(info.fileList);
-        if (info.fileList.length === 0) setDefectImageDataUrls([]);
-        else readDefectFilesAsDataUrls(info.fileList);
-      } else if (status === "error") {
-        message.error(`${info.file.name} upload failed.`);
+      const { file, fileList } = info;
+      setDefectFiles(fileList);
+      if (file.status === "error") {
+        message.error(`${file.name} upload failed.`);
+        return;
       }
+      readDefectFilesAsDataUrls(fileList);
     },
   };
 
