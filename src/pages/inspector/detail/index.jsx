@@ -509,12 +509,6 @@ export default function InspectorDetail() {
                     <h3 className="inspection-scoring-card-title">
                       Scoring rubric
                     </h3>
-                    <p className="inspection-scoring-card-subtitle">
-                      Six criteria — choose <strong>0, 3, 7, or 10</strong> per
-                      row. The server derives overall condition and{" "}
-                      <strong>PASS/FAIL</strong>; you cannot set PASS/FAIL
-                      manually.
-                    </p>
                   </div>
                   {!canSubmit && (
                     <Alert
