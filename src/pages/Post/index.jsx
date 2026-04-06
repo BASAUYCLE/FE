@@ -1789,12 +1789,12 @@ export default function PostBike() {
                   type="info"
                   showIcon
                   className="post-photo-guide-alert"
-                  message="Tiêu chí ảnh"
+                  title="Photo guidelines"
                   description={
                     <span>
-                      Xem{" "}
-                      <Link to="/guide-bike-photos">hướng dẫn chụp ảnh xe</Link>{" "}
-                      để biết các góc ảnh cần có khi đăng tin.
+                      See the{" "}
+                      <Link to="/guide-bike-photos">bike photo guide</Link> for
+                      the required angles when you list a bike.
                     </span>
                   }
                   style={{ marginBottom: 16 }}
