@@ -419,7 +419,7 @@ export default function AdminInspectionModal({
                     <tr>
                       <th>{isPublic ? "STT" : "#"}</th>
                       <th>{isPublic ? "TIÊU CHÍ" : "Criterion"}</th>
-                      <th>{isPublic ? "ĐIỂM" : "Score"}</th>
+                      <th>Score</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -427,21 +427,10 @@ export default function AdminInspectionModal({
                       const s = inspection.scores?.[row.key];
                       const rowCondKey =
                         overallConditionKeyFromInspectionScore(s);
-                      const rubricLine = isPublic
-                        ? null
-                        : formatInspectorScoreRubricLineEn(s);
+                      const rubricLine = formatInspectorScoreRubricLineEn(s);
                       const tierClass = rowCondKey
                         ? `admin-inspection-modal__cert-condition--${rowCondKey.toLowerCase()}`
                         : "";
-                      const numScore =
-                        typeof s === "number"
-                          ? s
-                          : s != null && s !== ""
-                            ? Number(s)
-                            : NaN;
-                      const scoreNumDisplay = Number.isFinite(numScore)
-                        ? numScore
-                        : null;
                       return (
                         <tr key={row.key}>
                           <td>{idx + 1}</td>
@@ -456,19 +445,7 @@ export default function AdminInspectionModal({
                             ) : null}
                           </td>
                           <td>
-                            {isPublic ? (
-                              scoreNumDisplay != null ? (
-                                <div
-                                  className={`admin-inspection-modal__cert-condition admin-inspection-modal__cert-condition--score-only ${tierClass}`}
-                                >
-                                  <span className="admin-inspection-modal__cert-score-num">
-                                    {scoreNumDisplay}
-                                  </span>
-                                </div>
-                              ) : (
-                                "—"
-                              )
-                            ) : rubricLine ? (
+                            {rubricLine ? (
                               <div
                                 className={`admin-inspection-modal__cert-condition ${tierClass}`}
                               >

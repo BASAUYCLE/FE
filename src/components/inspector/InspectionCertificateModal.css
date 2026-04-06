@@ -288,10 +288,34 @@
 }
 
 .inspection-certificate-table td:last-child {
-  text-align: center;
-  font-weight: 800;
-  width: 72px;
-  color: var(--cert-accent-ink);
+  text-align: left;
+  font-weight: 700;
+  min-width: 11rem;
+  max-width: 22rem;
+  vertical-align: top;
+}
+
+/* Rubric line (hintEn) — same tier colors as AdminInspectionModal */
+.inspection-certificate-score-rubric {
+  display: inline-block;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.inspection-certificate-score-rubric--excellent {
+  color: #047857;
+}
+
+.inspection-certificate-score-rubric--good {
+  color: #0d9488;
+}
+
+.inspection-certificate-score-rubric--fair {
+  color: #c2410c;
+}
+
+.inspection-certificate-score-rubric--poor {
+  color: #b91c1c;
 }
 
 .inspection-certificate-notes {

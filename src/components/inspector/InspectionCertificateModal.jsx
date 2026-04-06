@@ -1,4 +1,6 @@
 import { Modal, Progress } from "antd";
+import { formatInspectorScoreRubricLineEn } from "../../constants/inspectionRubric";
+import { overallConditionKeyFromInspectionScore } from "../../utils/inspectionScoring";
 import "./InspectionCertificateModal.css";
 
 export default function InspectionCertificateModal({ open, snapshot, onDone }) {
@@ -218,17 +220,38 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
                 <tr>
                   <th>STT</th>
                   <th>Tiêu chí</th>
-                  <th>Điểm</th>
+                  <th>Score</th>
                 </tr>
               </thead>
               <tbody>
-                {snapshot.scoreRows.map((row, idx) => (
-                  <tr key={row.labelVi}>
-                    <td>{idx + 1}</td>
-                    <td>{row.labelVi}</td>
-                    <td>{row.score ?? "—"}</td>
-                  </tr>
-                ))}
+                {snapshot.scoreRows.map((row, idx) => {
+                  const tierKey = overallConditionKeyFromInspectionScore(
+                    row.score,
+                  );
+                  const tier = tierKey ? String(tierKey).toLowerCase() : "";
+                  const rubricLine = formatInspectorScoreRubricLineEn(row.score);
+                  return (
+                    <tr key={row.labelVi}>
+                      <td>{idx + 1}</td>
+                      <td>{row.labelVi}</td>
+                      <td>
+                        {rubricLine ? (
+                          <span
+                            className={
+                              tier
+                                ? `inspection-certificate-score-rubric inspection-certificate-score-rubric--${tier}`
+                                : "inspection-certificate-score-rubric"
+                            }
+                          >
+                            {rubricLine}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

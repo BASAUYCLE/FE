@@ -408,8 +408,8 @@
 
 .admin-inspection-modal__cert-table td:last-child {
   text-align: left;
-  min-width: 10.5rem;
-  max-width: 14rem;
+  min-width: 12rem;
+  max-width: min(22rem, 42vw);
   font-weight: 600;
   color: var(--ac-ink);
 }
