@@ -26,6 +26,7 @@ import {
 import Header from "../../components/header";
 import Footer from "../../components/footer";
 import AdminInspectionModal from "../../components/AdminInspectionModal";
+import { pickListingThumbnailUrl } from "../../utils/listingThumbnailUrl";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { useNotifications } from "../../contexts/useNotifications";
@@ -78,7 +79,9 @@ const INSPECTION_REPORT_ACTION_STATUSES = new Set([
 ]);
 
 function showInspectionActionForStatus(status) {
-  return INSPECTION_REPORT_ACTION_STATUSES.has(String(status ?? "").toUpperCase());
+  return INSPECTION_REPORT_ACTION_STATUSES.has(
+    String(status ?? "").toUpperCase(),
+  );
 }
 
 function getStatusLabel(status) {
@@ -107,15 +110,12 @@ export default function ManageListings() {
     postId: null,
     title: null,
     meta: null,
+    thumbnailUrl: null,
   });
 
   const sellerId = user?.userId ?? user?.user_id ?? user?.id ?? null;
   const posterHintForInspection =
-    user?.fullName ??
-    user?.full_name ??
-    user?.name ??
-    user?.email ??
-    null;
+    user?.fullName ?? user?.full_name ?? user?.name ?? user?.email ?? null;
 
   const fetchMyPostings = useCallback(async () => {
     let effectiveSellerId = sellerId;
@@ -215,6 +215,7 @@ export default function ManageListings() {
       postId: Number(postId) || postId,
       title: record.bikeName ?? null,
       meta,
+      thumbnailUrl: pickListingThumbnailUrl(record),
     });
   }, []);
 
@@ -600,6 +601,7 @@ export default function ManageListings() {
         listingMeta={inspectionModal.meta}
         posterHint={posterHintForInspection}
         variant="staff"
+        listingThumbnailUrl={inspectionModal.thumbnailUrl}
         open={inspectionModal.open && inspectionModal.postId != null}
         onClose={() =>
           setInspectionModal({
@@ -607,6 +609,7 @@ export default function ManageListings() {
             postId: null,
             title: null,
             meta: null,
+            thumbnailUrl: null,
           })
         }
       />

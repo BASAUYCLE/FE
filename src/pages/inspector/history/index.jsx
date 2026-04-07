@@ -180,6 +180,7 @@ export default function InspectorHistoryPage() {
     sessionKey: 0,
     posterHint: null,
     listingMeta: null,
+    thumbnailUrl: null,
   });
   const [page, setPage] = useState(1);
 
@@ -196,6 +197,7 @@ export default function InspectorHistoryPage() {
       sessionKey: Date.now(),
       posterHint: row?.seller && row.seller !== "—" ? row.seller : null,
       listingMeta: row?.metaLine ?? null,
+      thumbnailUrl: row?.thumbnail ?? null,
     });
   }, []);
 
@@ -525,6 +527,7 @@ export default function InspectorHistoryPage() {
         listingTitle={inspectionModal.title}
         posterHint={inspectionModal.posterHint}
         listingMeta={inspectionModal.listingMeta}
+        listingThumbnailUrl={inspectionModal.thumbnailUrl}
         open={inspectionModal.postId != null}
         onClose={() =>
           setInspectionModal({
@@ -533,6 +536,7 @@ export default function InspectorHistoryPage() {
             sessionKey: 0,
             posterHint: null,
             listingMeta: null,
+            thumbnailUrl: null,
           })
         }
       />

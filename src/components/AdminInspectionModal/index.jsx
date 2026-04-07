@@ -55,6 +55,8 @@ export default function AdminInspectionModal({
   variant = "staff",
   /** Dữ liệu đã tải sẵn (vd. ProductDetail) — hiển thị ngay, vẫn làm mới từ API khi mở */
   prefetchedInspection = null,
+  /** Ảnh thumbnail tin đăng (hero / ảnh đầu) — hiển thị cạnh phần tóm tắt tin */
+  listingThumbnailUrl = null,
   open,
   onClose,
 }) {
@@ -149,6 +151,9 @@ export default function AdminInspectionModal({
     resultUpper === "FAIL"
       ? { "0%": "#f87171", "100%": "#dc2626" }
       : { "0%": "#00ccad", "100%": "#0d9488" };
+
+  const showListingThumb =
+    listingThumbnailUrl != null && String(listingThumbnailUrl).trim() !== "";
 
   return (
     <Modal
@@ -251,64 +256,81 @@ export default function AdminInspectionModal({
             </div>
 
             <div className="admin-inspection-modal__cert-summary">
-              <div className="admin-inspection-modal__cert-summary-grid">
-                <div>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic ? "NGÀY KIỂM ĐỊNH" : "Inspection date"}
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    {(isPublic
-                      ? formatInspectedAtVi(inspection.inspectedAt)
-                      : formatInspectedAtEn(inspection.inspectedAt)) || "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic ? "MÃ TIN ĐĂNG" : "Listing ID"}
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    #{postId}
-                  </span>
-                </div>
-                <div>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic ? "NGƯỜI ĐĂNG TIN" : "Seller / poster"}
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    {posterDisplay || "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    Người kiểm định
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    {inspectorDisplay || "—"}
-                    {inspectorEmailDisplay ? (
-                      <>
-                        <br />
-                        <span className="admin-inspection-modal__cert-field-email">
-                          {inspectorEmailDisplay}
-                        </span>
-                      </>
-                    ) : null}
-                  </span>
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <span className="admin-inspection-modal__cert-field-label">
-                    {isPublic ? "SẢN PHẨM" : "Product"}
-                  </span>
-                  <span className="admin-inspection-modal__cert-field-value">
-                    {listingTitle?.trim() || "—"}
-                    {listingMeta?.trim() ? (
-                      <>
-                        <br />
-                        <span className="admin-inspection-modal__cert-field-email">
-                          {listingMeta.trim()}
-                        </span>
-                      </>
-                    ) : null}
-                  </span>
+              <div className="admin-inspection-modal__cert-summary-layout">
+                {showListingThumb ? (
+                  <div
+                    className="admin-inspection-modal__cert-summary-thumb"
+                    aria-hidden
+                  >
+                    <img
+                      src={listingThumbnailUrl}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </div>
+                ) : null}
+                <div className="admin-inspection-modal__cert-summary-main">
+                  <div className="admin-inspection-modal__cert-summary-grid">
+                    <div>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        {isPublic ? "NGÀY KIỂM ĐỊNH" : "Inspection date"}
+                      </span>
+                      <span className="admin-inspection-modal__cert-field-value">
+                        {(isPublic
+                          ? formatInspectedAtVi(inspection.inspectedAt)
+                          : formatInspectedAtEn(inspection.inspectedAt)) || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        {isPublic ? "MÃ TIN ĐĂNG" : "Listing ID"}
+                      </span>
+                      <span className="admin-inspection-modal__cert-field-value">
+                        #{postId}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        {isPublic ? "NGƯỜI ĐĂNG TIN" : "Seller / poster"}
+                      </span>
+                      <span className="admin-inspection-modal__cert-field-value">
+                        {posterDisplay || "—"}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        Người kiểm định
+                      </span>
+                      <span className="admin-inspection-modal__cert-field-value">
+                        {inspectorDisplay || "—"}
+                        {inspectorEmailDisplay ? (
+                          <>
+                            <br />
+                            <span className="admin-inspection-modal__cert-field-email">
+                              {inspectorEmailDisplay}
+                            </span>
+                          </>
+                        ) : null}
+                      </span>
+                    </div>
+                    <div style={{ gridColumn: "1 / -1" }}>
+                      <span className="admin-inspection-modal__cert-field-label">
+                        {isPublic ? "SẢN PHẨM" : "Product"}
+                      </span>
+                      <span className="admin-inspection-modal__cert-field-value">
+                        {listingTitle?.trim() || "—"}
+                        {listingMeta?.trim() ? (
+                          <>
+                            <br />
+                            <span className="admin-inspection-modal__cert-field-email">
+                              {listingMeta.trim()}
+                            </span>
+                          </>
+                        ) : null}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -419,7 +441,7 @@ export default function AdminInspectionModal({
                     <tr>
                       <th>{isPublic ? "STT" : "#"}</th>
                       <th>{isPublic ? "TIÊU CHÍ" : "Criterion"}</th>
-                      <th>Score</th>
+                      <th>{isPublic ? "TÌNH TRẠNG" : "Condition"}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -438,11 +460,6 @@ export default function AdminInspectionModal({
                             <span className="admin-inspection-modal__cert-criterion-name">
                               {isPublic ? row.labelVi : row.labelEn}
                             </span>
-                            {INSPECTION_CRITICAL_CRITERIA_KEYS.has(row.key) ? (
-                              <span className="admin-inspection-modal__cert-critical-tag">
-                                {isPublic ? "Quan trọng" : "Critical"}
-                              </span>
-                            ) : null}
                           </td>
                           <td>
                             {rubricLine ? (
@@ -478,13 +495,7 @@ export default function AdminInspectionModal({
               <p className="admin-inspection-modal__cert-footnote">
                 Điểm Pass/Fail do hệ thống xác định theo quy tắc trên máy chủ.
               </p>
-            ) : (
-              <p className="admin-inspection-modal__cert-footnote">
-                Each row shows the same English rubric text as the inspector
-                form (without the numeric prefix). Overall Pass/Fail is computed
-                on the server.
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
       )}

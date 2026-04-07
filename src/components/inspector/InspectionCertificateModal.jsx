@@ -220,7 +220,7 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
                 <tr>
                   <th>STT</th>
                   <th>Tiêu chí</th>
-                  <th>Score</th>
+                  <th>Tình trạng</th>
                 </tr>
               </thead>
               <tbody>
@@ -229,7 +229,9 @@ export default function InspectionCertificateModal({ open, snapshot, onDone }) {
                     row.score,
                   );
                   const tier = tierKey ? String(tierKey).toLowerCase() : "";
-                  const rubricLine = formatInspectorScoreRubricLineEn(row.score);
+                  const rubricLine = formatInspectorScoreRubricLineEn(
+                    row.score,
+                  );
                   return (
                     <tr key={row.labelVi}>
                       <td>{idx + 1}</td>

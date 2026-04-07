@@ -1,30 +1,23 @@
 /**
- * Thumbnail URL from listing / post DTOs (aliases aligned with ProductDetail & inspector detail).
- * @param {Record<string, unknown> | null | undefined} entity
- * @returns {string}
+ * Ảnh đại diện tin đăng (thumbnail hoặc ảnh đầu) — dùng modal biên bản, card, v.v.
+ * @param {Record<string, unknown> | null | undefined} row
+ * @returns {string | null}
  */
-export function resolveListingThumbnailUrl(entity) {
-  if (!entity || typeof entity !== "object") return "";
-  const s = (v) =>
-    typeof v === "string" && String(v).trim() !== "" ? String(v).trim() : "";
-  const top = s(
-    entity.thumbnailUrl ??
-      entity.thumbnail_url ??
-      entity.thumbnail ??
-      entity.imageUrl ??
-      entity.image_url ??
-      entity.bicycleImage,
-  );
-  if (top) return top;
-
-  const images =
-    entity.images ??
-    entity.bicycleImages ??
-    entity.imageList ??
-    entity.postImages ??
-    [];
-  if (!Array.isArray(images) || images.length === 0) return "";
-  const urlOf = (i) => s(i?.imageUrl ?? i?.image_url ?? i?.url);
-  const thumb = images.find((i) => i?.isThumbnail);
-  return urlOf(thumb) || urlOf(images[0]) || "";
+export function pickListingThumbnailUrl(row) {
+  if (!row || typeof row !== "object") return null;
+  const images = row.images ?? row.bicycleImages ?? row.imageList ?? [];
+  if (Array.isArray(images) && images.length > 0) {
+    const thumb = images.find((i) => i?.isThumbnail);
+    const urlOf = (i) =>
+      i?.imageUrl ?? i?.image_url ?? i?.url ?? null;
+    return urlOf(thumb) ?? urlOf(images[0]);
+  }
+  const direct =
+    row.thumbnailUrl ??
+    row.thumbnail ??
+    row.imageUrl ??
+    row.image_url ??
+    null;
+  if (typeof direct === "string" && direct.trim()) return direct.trim();
+  return null;
 }

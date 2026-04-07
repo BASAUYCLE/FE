@@ -1373,7 +1373,7 @@ export default function ProductDetail() {
                 >
                   <SyncOutlined style={{ color: "#6b7280", fontSize: 20 }} />
                   <Typography variant="h6" fontWeight={700}>
-                  Description
+                    Description
                   </Typography>
                 </Box>
                 {product.description && (
@@ -1411,7 +1411,6 @@ export default function ProductDetail() {
                     </Typography>
                   )}
               </Box>
-
             </Box>
           </Box>
         </Box>
@@ -1467,6 +1466,7 @@ export default function ProductDetail() {
         posterHint={product?.seller?.name ?? null}
         variant="staff"
         prefetchedInspection={inspectionReport}
+        listingThumbnailUrl={galleryPhotos?.[0]?.url ?? product?.image ?? null}
         open={inspectionModalOpen && inspectionModalPostId != null}
         onClose={() => setInspectionModalOpen(false)}
       />

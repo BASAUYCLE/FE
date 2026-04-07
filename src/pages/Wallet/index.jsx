@@ -629,20 +629,13 @@ const MyWallet = () => {
         destroyOnHidden
         centered
       >
-        <p className="wallet-withdraw-modal-hint">
-          Tối thiểu 50.000 VND. Yêu cầu sẽ được admin xử lý. Tên chủ tài khoản
-          phải trùng với hồ sơ đăng nhập.
-        </p>
         <Form
           form={withdrawForm}
           layout="vertical"
           onFinish={handleWithdraw}
           requiredMark
         >
-          <Form.Item
-            label="Tên chủ tài khoản (theo hồ sơ đăng nhập)"
-            extra="Hệ thống tự điền từ tài khoản của bạn — không thể chỉnh sửa tại đây."
-          >
+          <Form.Item label="Tên chủ tài khoản (theo hồ sơ đăng nhập)">
             <Input
               readOnly
               size="large"

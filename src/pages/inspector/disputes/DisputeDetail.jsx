@@ -25,6 +25,7 @@ import {
 } from "../../../constants/disputeStatus";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDateTime } from "../../../utils/date";
+import { pickListingThumbnailUrl } from "../../../utils/listingThumbnailUrl";
 import "../../MyDisputes/index.css";
 import "../dashboard/index.css";
 
@@ -90,7 +91,8 @@ function normalizeInspectionSummary(detail) {
     root.inspectionReportId ??
     root.inspection_report_id ??
     null;
-  const listingIdRaw = root.postId ?? root.post_id ?? detail.postId ?? detail.post_id;
+  const listingIdRaw =
+    root.postId ?? root.post_id ?? detail.postId ?? detail.post_id;
   const inspectorNameRaw =
     root.inspectorName ??
     root.inspector_name ??
@@ -115,7 +117,9 @@ function normalizeInspectionSummary(detail) {
   const inspectedAt = hasNonEmptyText(inspectedAtRaw)
     ? String(inspectedAtRaw).trim()
     : "";
-  const reportId = hasNonEmptyText(reportIdRaw) ? String(reportIdRaw).trim() : "";
+  const reportId = hasNonEmptyText(reportIdRaw)
+    ? String(reportIdRaw).trim()
+    : "";
   const listingId = hasNonEmptyText(listingIdRaw)
     ? String(listingIdRaw).trim()
     : "";
@@ -184,17 +188,10 @@ function normalizePost(row) {
   if (!row || typeof row !== "object") return null;
   const nested = row.post && typeof row.post === "object" ? row.post : {};
   const r = { ...nested, ...row };
-  const postId =
-    r.postId ??
-    r.post_id ??
-    r.id;
+  const postId = r.postId ?? r.post_id ?? r.id;
   if (postId == null) return null;
   const images =
-    r?.images ??
-    r?.bicycleImages ??
-    r?.imageList ??
-    r?.postImages ??
-    [];
+    r?.images ?? r?.bicycleImages ?? r?.imageList ?? r?.postImages ?? [];
   const thumb = images.find((i) => i?.isThumbnail);
   const imageUrl =
     thumb?.imageUrl ??
@@ -213,10 +210,7 @@ function normalizePost(row) {
     frameSize: r.size ?? r.frameSize ?? r.frame_size ?? "—",
     color: r.bicycleColor ?? r.bicycle_color ?? r.color ?? "—",
     description:
-      r.bicycleDescription ??
-      r.bicycle_description ??
-      r.description ??
-      "",
+      r.bicycleDescription ?? r.bicycle_description ?? r.description ?? "",
     price,
     imageUrl,
     status: r.postStatus ?? r.post_status ?? r.status ?? "—",
@@ -338,10 +332,7 @@ export default function InspectorDisputeDetailPage() {
     }
     try {
       setNoteLoading(true);
-      const res = await disputeService.addInspectorNote(
-        detail.disputeId,
-        note,
-      );
+      const res = await disputeService.addInspectorNote(detail.disputeId, note);
       const d = res?.result ?? res?.data ?? res;
       setDetail(d && typeof d === "object" ? d : detail);
       message.success("Inspector note saved.");
@@ -358,313 +349,322 @@ export default function InspectorDisputeDetailPage() {
         <div className="inspector-page">
           <div className="inspector-dashboard">
             <div className="inspector-content">
-            {loading ? (
-              <div style={{ textAlign: "center", padding: 48 }}>
-                <Spin />
-              </div>
-            ) : !detail ? (
-              <Alert type="warning" title="Dispute not found." />
-            ) : (
-              <div className="dispute-detail-split">
-                <section className="dispute-detail-col">
-                  <Typography.Title
-                    level={4}
-                    className="dispute-detail-col-title"
-                  >
-                    Dispute details
-                  </Typography.Title>
-                  <Card
-                    className="admin-card inspector-dispute-main-card"
-                    title={`Dispute #${detail.disputeId}`}
-                  >
-                    <p>
-                      <Tag color="blue">
-                        {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
-                      </Tag>
-                    </p>
-                    <p>
-                      <strong>Order</strong> #{detail.orderId ?? "—"} —{" "}
-                      {detail.postTitle ?? detail.post?.title ?? "—"}
-                    </p>
-                    <p>
-                      Buyer: {detail.buyerName} · Seller: {detail.sellerName}
-                    </p>
-                    {detail.reason && (
-                      <p>
-                        <strong>Reason:</strong> {detail.reason}
-                      </p>
-                    )}
-                    {inspectionSummary && (
-                      <div className="inspector-dispute-inspection-block">
-                        <div className="inspector-dispute-section-head">
-                          <Typography.Text strong>Inspection result</Typography.Text>
-                        </div>
-                        <div className="inspector-dispute-result-line">
-                          {inspectionSummary.result ? (
-                            <Tag
-                              color={
-                                inspectionSummary.result === "PASS"
-                                  ? "success"
-                                  : inspectionSummary.result === "FAIL"
-                                    ? "error"
-                                    : "default"
-                              }
-                            >
-                              {inspectionSummary.result}
-                            </Tag>
-                          ) : null}
-                          {inspectionSummary.percent != null ? (
-                            <Typography.Text className="inspector-dispute-score-text">
-                              Score: {inspectionSummary.percent}%
-                            </Typography.Text>
-                          ) : null}
-                        </div>
-                        {inspectionSummary.condition ? (
-                          <p className="inspector-dispute-tight-row">
-                            <strong>Condition:</strong> {inspectionSummary.condition}
-                          </p>
-                        ) : null}
-                        {(inspectionSummary.reportId ||
-                          inspectionSummary.listingId ||
-                          inspectionSummary.inspectedAt ||
-                          inspectionSummary.inspectorName ||
-                          inspectionSummary.inspectorEmail) && (
-                          <div className="inspector-dispute-meta-block">
-                            {inspectionSummary.reportId ? (
-                              <p className="inspector-dispute-tight-row">
-                                <strong>Report ID:</strong> {inspectionSummary.reportId}
-                              </p>
-                            ) : null}
-                            {inspectionSummary.listingId ? (
-                              <p className="inspector-dispute-tight-row">
-                                <strong>Listing ID:</strong> #{inspectionSummary.listingId}
-                              </p>
-                            ) : null}
-                            {inspectionSummary.inspectedAt ? (
-                              <p className="inspector-dispute-tight-row">
-                                <strong>Inspection date:</strong>{" "}
-                                {formatDateTime(inspectionSummary.inspectedAt) ||
-                                  inspectionSummary.inspectedAt}
-                              </p>
-                            ) : null}
-                            {inspectionSummary.inspectorName ? (
-                              <p className="inspector-dispute-tight-row">
-                                <strong>Inspector:</strong> {inspectionSummary.inspectorName}
-                                {inspectionSummary.inspectorEmail
-                                  ? ` (${inspectionSummary.inspectorEmail})`
-                                  : ""}
-                              </p>
-                            ) : inspectionSummary.inspectorEmail ? (
-                              <p className="inspector-dispute-tight-row">
-                                <strong>Inspector email:</strong>{" "}
-                                {inspectionSummary.inspectorEmail}
-                              </p>
-                            ) : null}
-                          </div>
-                        )}
-                        {inspectionSummary.notes ? (
-                          <p className="inspector-dispute-tight-row">
-                            <strong>Inspector note:</strong> {inspectionSummary.notes}
-                          </p>
-                        ) : null}
-                      </div>
-                    )}
-
-                    {buyerProofUrls.length > 0 && (
-                      <div className="inspector-dispute-proof-block">
-                        <Typography.Text strong>
-                          Buyer evidence
-                        </Typography.Text>
-                        <div className="my-dispute-proofs">
-                          {buyerProofUrls.map((url, idx) => (
-                            <a
-                              key={`${url}-${idx}`}
-                              href={url}
-                              target="_blank"
-                              rel="noreferrer"
-                            >
-                              <img
-                                src={url}
-                                alt="Buyer dispute evidence"
-                                className="my-dispute-proof-thumb"
-                                referrerPolicy="no-referrer"
-                              />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {detail.status === DISPUTE_STATUS.OPEN && (
-                      <div className="inspector-dispute-note-form-wrap">
-                        <Typography.Text strong>
-                          Inspector note (moves status to Reviewing)
-                        </Typography.Text>
-                        <Form
-                          key={String(disputeId)}
-                          layout="vertical"
-                          style={{ marginTop: 10 }}
-                          onFinish={submitNote}
-                        >
-                          <Form.Item
-                            name="note"
-                            rules={[
-                              {
-                                required: true,
-                                message: "Please enter note content",
-                              },
-                            ]}
-                          >
-                            <Input.TextArea
-                              rows={4}
-                              placeholder="Conclusion / recommendation"
-                            />
-                          </Form.Item>
-                          <Button
-                            type="primary"
-                            htmlType="submit"
-                            loading={noteLoading}
-                            className="inspector-dispute-submit-btn"
-                          >
-                            Submit note
-                          </Button>
-                        </Form>
-                      </div>
-                    )}
-
-                    {detail.status !== DISPUTE_STATUS.OPEN && (
-                      <p className="inspector-dispute-note-disabled-text">
-                        Notes can only be submitted when status is OPEN. Current:{" "}
-                        {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
-                      </p>
-                    )}
-                  </Card>
-                </section>
-
-                <section className="dispute-detail-col">
-                  <Typography.Title
-                    level={4}
-                    className="dispute-detail-col-title"
-                  >
-                    Listing details
-                  </Typography.Title>
-                  {post ? (
-                    <Card
-                      className="dispute-detail-post-card"
-                      variant="outlined"
+              {loading ? (
+                <div style={{ textAlign: "center", padding: 48 }}>
+                  <Spin />
+                </div>
+              ) : !detail ? (
+                <Alert type="warning" title="Dispute not found." />
+              ) : (
+                <div className="dispute-detail-split">
+                  <section className="dispute-detail-col">
+                    <Typography.Title
+                      level={4}
+                      className="dispute-detail-col-title"
                     >
-                      <div className="dispute-detail-post-image-wrap">
-                        {post.imageUrl ? (
-                          <img
-                            src={post.imageUrl}
-                            alt={post.bikeName}
-                            className="dispute-detail-post-image"
-                            referrerPolicy="no-referrer"
-                          />
-                        ) : (
-                          <div className="dispute-detail-post-image-placeholder">
-                            No image
-                          </div>
-                        )}
-                      </div>
-                      <Typography.Title
-                        level={5}
-                        style={{ marginTop: 16, marginBottom: 8 }}
-                      >
-                        {post.bikeName}
-                      </Typography.Title>
-                      {post.price != null && (
-                        <Typography.Text strong style={{ fontSize: 18 }}>
-                          {formatCurrency(post.price)}
-                        </Typography.Text>
+                      Dispute details
+                    </Typography.Title>
+                    <Card
+                      className="admin-card inspector-dispute-main-card"
+                      title={`Dispute #${detail.disputeId}`}
+                    >
+                      <p>
+                        <Tag color="blue">
+                          {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
+                        </Tag>
+                      </p>
+                      <p>
+                        <strong>Order</strong> #{detail.orderId ?? "—"} —{" "}
+                        {detail.postTitle ?? detail.post?.title ?? "—"}
+                      </p>
+                      <p>
+                        Buyer: {detail.buyerName} · Seller: {detail.sellerName}
+                      </p>
+                      {detail.reason && (
+                        <p>
+                          <strong>Reason:</strong> {detail.reason}
+                        </p>
                       )}
-                      <dl className="dispute-detail-dl">
-                        <div>
-                          <dt>Brand</dt>
-                          <dd>{post.brand}</dd>
+                      {inspectionSummary && (
+                        <div className="inspector-dispute-inspection-block">
+                          <div className="inspector-dispute-section-head">
+                            <Typography.Text strong>
+                              Inspection result
+                            </Typography.Text>
+                          </div>
+                          <div className="inspector-dispute-result-line">
+                            {inspectionSummary.result ? (
+                              <Tag
+                                color={
+                                  inspectionSummary.result === "PASS"
+                                    ? "success"
+                                    : inspectionSummary.result === "FAIL"
+                                      ? "error"
+                                      : "default"
+                                }
+                              >
+                                {inspectionSummary.result}
+                              </Tag>
+                            ) : null}
+                            {inspectionSummary.percent != null ? (
+                              <Typography.Text className="inspector-dispute-score-text">
+                                Score: {inspectionSummary.percent}%
+                              </Typography.Text>
+                            ) : null}
+                          </div>
+                          {inspectionSummary.condition ? (
+                            <p className="inspector-dispute-tight-row">
+                              <strong>Condition:</strong>{" "}
+                              {inspectionSummary.condition}
+                            </p>
+                          ) : null}
+                          {(inspectionSummary.reportId ||
+                            inspectionSummary.listingId ||
+                            inspectionSummary.inspectedAt ||
+                            inspectionSummary.inspectorName ||
+                            inspectionSummary.inspectorEmail) && (
+                            <div className="inspector-dispute-meta-block">
+                              {inspectionSummary.reportId ? (
+                                <p className="inspector-dispute-tight-row">
+                                  <strong>Report ID:</strong>{" "}
+                                  {inspectionSummary.reportId}
+                                </p>
+                              ) : null}
+                              {inspectionSummary.listingId ? (
+                                <p className="inspector-dispute-tight-row">
+                                  <strong>Listing ID:</strong> #
+                                  {inspectionSummary.listingId}
+                                </p>
+                              ) : null}
+                              {inspectionSummary.inspectedAt ? (
+                                <p className="inspector-dispute-tight-row">
+                                  <strong>Inspection date:</strong>{" "}
+                                  {formatDateTime(
+                                    inspectionSummary.inspectedAt,
+                                  ) || inspectionSummary.inspectedAt}
+                                </p>
+                              ) : null}
+                              {inspectionSummary.inspectorName ? (
+                                <p className="inspector-dispute-tight-row">
+                                  <strong>Inspector:</strong>{" "}
+                                  {inspectionSummary.inspectorName}
+                                  {inspectionSummary.inspectorEmail
+                                    ? ` (${inspectionSummary.inspectorEmail})`
+                                    : ""}
+                                </p>
+                              ) : inspectionSummary.inspectorEmail ? (
+                                <p className="inspector-dispute-tight-row">
+                                  <strong>Inspector email:</strong>{" "}
+                                  {inspectionSummary.inspectorEmail}
+                                </p>
+                              ) : null}
+                            </div>
+                          )}
+                          {inspectionSummary.notes ? (
+                            <p className="inspector-dispute-tight-row">
+                              <strong>Inspector note:</strong>{" "}
+                              {inspectionSummary.notes}
+                            </p>
+                          ) : null}
                         </div>
-                        <div>
-                          <dt>Category</dt>
-                          <dd>{post.category}</dd>
+                      )}
+
+                      {buyerProofUrls.length > 0 && (
+                        <div className="inspector-dispute-proof-block">
+                          <Typography.Text strong>
+                            Buyer evidence
+                          </Typography.Text>
+                          <div className="my-dispute-proofs">
+                            {buyerProofUrls.map((url, idx) => (
+                              <a
+                                key={`${url}-${idx}`}
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                <img
+                                  src={url}
+                                  alt="Buyer dispute evidence"
+                                  className="my-dispute-proof-thumb"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </a>
+                            ))}
+                          </div>
                         </div>
-                        <div>
-                          <dt>Size</dt>
-                          <dd>{post.frameSize}</dd>
+                      )}
+
+                      {detail.status === DISPUTE_STATUS.OPEN && (
+                        <div className="inspector-dispute-note-form-wrap">
+                          <Typography.Text strong>
+                            Inspector note (moves status to Reviewing)
+                          </Typography.Text>
+                          <Form
+                            key={String(disputeId)}
+                            layout="vertical"
+                            style={{ marginTop: 10 }}
+                            onFinish={submitNote}
+                          >
+                            <Form.Item
+                              name="note"
+                              rules={[
+                                {
+                                  required: true,
+                                  message: "Please enter note content",
+                                },
+                              ]}
+                            >
+                              <Input.TextArea
+                                rows={4}
+                                placeholder="Conclusion / recommendation"
+                              />
+                            </Form.Item>
+                            <Button
+                              type="primary"
+                              htmlType="submit"
+                              loading={noteLoading}
+                              className="inspector-dispute-submit-btn"
+                            >
+                              Submit note
+                            </Button>
+                          </Form>
                         </div>
-                        <div>
-                          <dt>Color</dt>
-                          <dd>{post.color}</dd>
+                      )}
+
+                      {detail.status !== DISPUTE_STATUS.OPEN && (
+                        <p className="inspector-dispute-note-disabled-text">
+                          Notes can only be submitted when status is OPEN.
+                          Current:{" "}
+                          {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
+                        </p>
+                      )}
+                    </Card>
+                  </section>
+
+                  <section className="dispute-detail-col">
+                    <Typography.Title
+                      level={4}
+                      className="dispute-detail-col-title"
+                    >
+                      Listing details
+                    </Typography.Title>
+                    {post ? (
+                      <Card
+                        className="dispute-detail-post-card"
+                        variant="outlined"
+                      >
+                        <div className="dispute-detail-post-image-wrap">
+                          {post.imageUrl ? (
+                            <img
+                              src={post.imageUrl}
+                              alt={post.bikeName}
+                              className="dispute-detail-post-image"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="dispute-detail-post-image-placeholder">
+                              No image
+                            </div>
+                          )}
                         </div>
-                        <div>
-                          <dt>Status</dt>
-                          <dd>{post.status}</dd>
-                        </div>
-                        <div>
-                          <dt>Seller</dt>
-                          <dd>{post.sellerName}</dd>
-                        </div>
-                      </dl>
-                      {post.description ? (
-                        <Typography.Paragraph
-                          type="secondary"
-                          ellipsis={{ rows: 6, expandable: true }}
-                          style={{ marginTop: 12 }}
+                        <Typography.Title
+                          level={5}
+                          style={{ marginTop: 16, marginBottom: 8 }}
                         >
-                          {post.description}
-                        </Typography.Paragraph>
-                      ) : null}
-                      <div className="inspector-dispute-actions-row">
-                        <Button
-                          type="primary"
-                          onClick={() => setPreviewId(post.postId)}
-                          className="inspector-dispute-action-btn"
-                        >
-                          Open full product page
-                        </Button>
-                        {inspectionPostId != null ? (
+                          {post.bikeName}
+                        </Typography.Title>
+                        {post.price != null && (
+                          <Typography.Text strong style={{ fontSize: 18 }}>
+                            {formatCurrency(post.price)}
+                          </Typography.Text>
+                        )}
+                        <dl className="dispute-detail-dl">
+                          <div>
+                            <dt>Brand</dt>
+                            <dd>{post.brand}</dd>
+                          </div>
+                          <div>
+                            <dt>Category</dt>
+                            <dd>{post.category}</dd>
+                          </div>
+                          <div>
+                            <dt>Size</dt>
+                            <dd>{post.frameSize}</dd>
+                          </div>
+                          <div>
+                            <dt>Color</dt>
+                            <dd>{post.color}</dd>
+                          </div>
+                          <div>
+                            <dt>Status</dt>
+                            <dd>{post.status}</dd>
+                          </div>
+                          <div>
+                            <dt>Seller</dt>
+                            <dd>{post.sellerName}</dd>
+                          </div>
+                        </dl>
+                        {post.description ? (
+                          <Typography.Paragraph
+                            type="secondary"
+                            ellipsis={{ rows: 6, expandable: true }}
+                            style={{ marginTop: 12 }}
+                          >
+                            {post.description}
+                          </Typography.Paragraph>
+                        ) : null}
+                        <div className="inspector-dispute-actions-row">
                           <Button
                             type="primary"
-                            icon={<EyeOutlined />}
-                            onClick={() => {
-                              setInspectionModalSession(Date.now());
-                              setInspectionModalOpen(true);
-                            }}
+                            onClick={() => setPreviewId(post.postId)}
                             className="inspector-dispute-action-btn"
                           >
-                            View inspection report
+                            Open full product page
                           </Button>
-                        ) : null}
-                      </div>
-                    </Card>
-                  ) : (
-                    <Card variant="outlined">
-                      <Empty
-                        description="No listing available (removed, hidden, or API returned no data)."
-                        image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      />
-                      <Typography.Paragraph type="secondary">
-                        Order #{detail.orderId ?? "—"} —{" "}
-                        {detail.postTitle ?? "No title"}
-                      </Typography.Paragraph>
-                      {(() => {
-                        const pid =
-                          detail?.postId ??
-                          detail?.post_id ??
-                          detail?.post?.postId ??
-                          detail?.post?.id;
-                        return pid != null ? (
-                          <Link to={`/product/${pid}`}>
-                            <Button type="default" style={{ marginTop: 8 }}>
-                              Try opening product page (post #{pid})
+                          {inspectionPostId != null ? (
+                            <Button
+                              type="primary"
+                              icon={<EyeOutlined />}
+                              onClick={() => {
+                                setInspectionModalSession(Date.now());
+                                setInspectionModalOpen(true);
+                              }}
+                              className="inspector-dispute-action-btn"
+                            >
+                              View inspection report
                             </Button>
-                          </Link>
-                        ) : null;
-                      })()}
-                    </Card>
-                  )}
-                </section>
-              </div>
-            )}
+                          ) : null}
+                        </div>
+                      </Card>
+                    ) : (
+                      <Card variant="outlined">
+                        <Empty
+                          description="No listing available (removed, hidden, or API returned no data)."
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        />
+                        <Typography.Paragraph type="secondary">
+                          Order #{detail.orderId ?? "—"} —{" "}
+                          {detail.postTitle ?? "No title"}
+                        </Typography.Paragraph>
+                        {(() => {
+                          const pid =
+                            detail?.postId ??
+                            detail?.post_id ??
+                            detail?.post?.postId ??
+                            detail?.post?.id;
+                          return pid != null ? (
+                            <Link to={`/product/${pid}`}>
+                              <Button type="default" style={{ marginTop: 8 }}>
+                                Try opening product page (post #{pid})
+                              </Button>
+                            </Link>
+                          ) : null;
+                        })()}
+                      </Card>
+                    )}
+                  </section>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -683,6 +683,7 @@ export default function InspectorDisputeDetailPage() {
             .filter((x) => hasNonEmptyText(x) && x !== "—")
             .join(" · ") || null
         }
+        listingThumbnailUrl={pickListingThumbnailUrl(post)}
         open={inspectionModalOpen && inspectionPostId != null}
         onClose={() => setInspectionModalOpen(false)}
       />

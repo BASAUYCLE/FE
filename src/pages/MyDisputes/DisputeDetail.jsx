@@ -29,6 +29,7 @@ import {
 } from "../../constants/disputeStatus";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDateTime } from "../../utils/date";
+import { pickListingThumbnailUrl } from "../../utils/listingThumbnailUrl";
 import ReturnShippingReceiptFormItem from "../../components/disputes/ReturnShippingReceiptUpload";
 import { resolveShippingReceiptUrl } from "../../utils/returnShippingReceiptUpload";
 import "../Orders/index.css";
@@ -579,8 +580,7 @@ export default function DisputeDetailPage() {
                     {dispute.resolvedAt != null &&
                       dispute.resolvedAt !== "" && (
                         <Typography.Text type="secondary">
-                          Closed at:{" "}
-                          {formatDateTime(dispute.resolvedAt)}
+                          Closed at: {formatDateTime(dispute.resolvedAt)}
                         </Typography.Text>
                       )}
 
@@ -605,7 +605,11 @@ export default function DisputeDetailPage() {
                         </Typography.Text>
                         <Typography.Paragraph
                           type="secondary"
-                          style={{ marginBottom: 8, marginTop: 4, fontSize: 13 }}
+                          style={{
+                            marginBottom: 8,
+                            marginTop: 4,
+                            fontSize: 13,
+                          }}
                         >
                           Images the buyer uploaded with return shipping details
                           (package / bike condition).
@@ -706,6 +710,7 @@ export default function DisputeDetailPage() {
             .filter((x) => hasNonEmptyText(x) && x !== "—")
             .join(" · ") || null
         }
+        listingThumbnailUrl={pickListingThumbnailUrl(post)}
         open={inspectionModalOpen && inspectionPostId != null}
         onClose={() => setInspectionModalOpen(false)}
       />

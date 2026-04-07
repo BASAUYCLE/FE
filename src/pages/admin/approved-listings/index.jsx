@@ -120,6 +120,8 @@ export default function AdminApprovedListings() {
     title: null,
     sessionKey: 0,
     posterHint: null,
+    listingMeta: null,
+    thumbnailUrl: null,
   });
   const [page, setPage] = useState(1);
   const [hidingId, setHidingId] = useState(null);
@@ -408,6 +410,7 @@ export default function AdminApprovedListings() {
                                     ? row.seller
                                     : null,
                                 listingMeta: row.metaLine ?? null,
+                                thumbnailUrl: row.thumbnail ?? null,
                               });
                             }
                           }}
@@ -477,6 +480,7 @@ export default function AdminApprovedListings() {
         open={inspectionModal.postId != null}
         posterHint={inspectionModal.posterHint}
         listingMeta={inspectionModal.listingMeta}
+        listingThumbnailUrl={inspectionModal.thumbnailUrl}
         onClose={() =>
           setInspectionModal({
             postId: null,
@@ -484,6 +488,7 @@ export default function AdminApprovedListings() {
             sessionKey: 0,
             posterHint: null,
             listingMeta: null,
+            thumbnailUrl: null,
           })
         }
       />
