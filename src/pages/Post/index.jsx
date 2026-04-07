@@ -201,6 +201,13 @@ export default function PostBike() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
 
+  const containsPhoneNumber = (text) => {
+    const s = String(text ?? "");
+    if (!s.trim()) return false;
+    // Match VN-style numbers like 09xx..., 03xx..., or +84...
+    return /(?:^|[^\d+])(?:\+84|84|0)(?:[\s.-]?\d){8,10}(?=$|[^\d])/m.test(s);
+  };
+
   const filledEditIdRef = useRef(null);
 
   /** Ant Design fileList[0] → File (nếu có) */
@@ -1100,6 +1107,13 @@ export default function PostBike() {
     if (validationErrors.length > 0) {
       if (!allRequiredPhotosFilled) scrollToPhotosSection();
       message.warning(`Please fill in:\n${validationErrors.join("\n")}`);
+      return;
+    }
+
+    if (containsPhoneNumber(description)) {
+      message.error(
+        "Description must describe the bicycle only. Phone numbers are not allowed.",
+      );
       return;
     }
 
