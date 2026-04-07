@@ -719,6 +719,7 @@ export default function PostBike() {
 
   /* Cách làm giống Register: beforeUpload return false, set fileList thủ công (không customRequest) */
   const beforeUploadRequired = (slotKey, file) => {
+    if (isFormReadOnly) return Upload.LIST_IGNORE;
     if (!file?.type?.startsWith("image/")) {
       message.error("Only image files are allowed.");
       return Upload.LIST_IGNORE;
@@ -759,9 +760,14 @@ export default function PostBike() {
     listType: "picture-card",
     fileList: requiredPhotos[slotKey] || [],
     accept: "image/*",
+    disabled: isFormReadOnly,
+    openFileDialogOnClick: !isFormReadOnly,
     beforeUpload: (file) => beforeUploadRequired(slotKey, file),
     onRemove: () => handleRemoveRequired(slotKey),
-    showUploadList: { showPreviewIcon: true, showRemoveIcon: true },
+    showUploadList: {
+      showPreviewIcon: true,
+      showRemoveIcon: !isFormReadOnly,
+    },
   });
 
   const readDefectFilesAsDataUrls = (fileList) => {
@@ -791,6 +797,7 @@ export default function PostBike() {
   };
 
   const beforeUploadDefect = (file) => {
+    if (isFormReadOnly) return Upload.LIST_IGNORE;
     if (!file?.type?.startsWith("image/")) {
       message.error("Only image files are allowed.");
       return Upload.LIST_IGNORE;
@@ -810,18 +817,26 @@ export default function PostBike() {
     listType: "picture-card",
     fileList: defectFiles,
     accept: "image/*",
+    disabled: isFormReadOnly,
+    openFileDialogOnClick: !isFormReadOnly,
     beforeUpload: beforeUploadDefect,
+    onRemove: () => !isFormReadOnly,
     customRequest({ onSuccess }) {
       setTimeout(() => onSuccess({ url: "" }), 0);
     },
     onChange(info) {
       const { file, fileList } = info;
+      if (isFormReadOnly) return;
       setDefectFiles(fileList);
       if (file.status === "error") {
         message.error(`${file.name} upload failed.`);
         return;
       }
       readDefectFilesAsDataUrls(fileList);
+    },
+    showUploadList: {
+      showPreviewIcon: true,
+      showRemoveIcon: !isFormReadOnly,
     },
   };
 
