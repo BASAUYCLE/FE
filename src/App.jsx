@@ -21,11 +21,8 @@ const Register = lazy(() => import("./pages/Register"));
 const Home = lazy(() => import("./pages/Home"));
 const About = lazy(() => import("./pages/About"));
 const GuideBuy = lazy(() => import("./pages/GuideBuy"));
-const GuidePayment = lazy(() => import("./pages/GuidePayment"));
 const GuidePhotoUpload = lazy(() => import("./pages/GuidePhotoUpload"));
 const GuideInspection = lazy(() => import("./pages/GuideInspection"));
-const Shipping = lazy(() => import("./pages/Shipping"));
-const PaymentPolicy = lazy(() => import("./pages/PaymentPolicy"));
 const Complaint = lazy(() => import("./pages/Complaint"));
 const ReturnPolicyPage = lazy(() => import("./pages/ReturnPolicy"));
 const PrivacyPage = lazy(() => import("./pages/Privacy"));
@@ -116,7 +113,7 @@ function App() {
                           <Route path="/guide-buy" element={<GuideBuy />} />
                           <Route
                             path="/guide-payment"
-                            element={<GuidePayment />}
+                            element={<Navigate to="/guide-buy" replace />}
                           />
                           {/* Hướng dẫn ảnh cho thành viên đăng tin */}
                           <Route
@@ -127,10 +124,13 @@ function App() {
                             path="/guide-inspection"
                             element={<GuideInspection />}
                           />
-                          <Route path="/shipping" element={<Shipping />} />
+                          <Route
+                            path="/shipping"
+                            element={<Navigate to="/guide-buy" replace />}
+                          />
                           <Route
                             path="/payment-policy"
-                            element={<PaymentPolicy />}
+                            element={<Navigate to="/guide-buy" replace />}
                           />
                           <Route path="/complaint" element={<Complaint />} />
                           <Route

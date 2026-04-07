@@ -66,14 +66,6 @@ export default function Footer() {
               Shopping Guide
             </Link>
             <Link
-              to="/guide-payment"
-              onClick={(e) =>
-                onSameRouteScrollToTop(e, "/guide-payment", pathname)
-              }
-            >
-              Payment Guide
-            </Link>
-            <Link
               to="/guide-bike-photos"
               aria-label="Bike photo guide — listing image standards"
               onClick={(e) =>
@@ -90,20 +82,6 @@ export default function Footer() {
               }
             >
               Inspection & scoring guide
-            </Link>
-            <Link
-              to="/shipping"
-              onClick={(e) => onSameRouteScrollToTop(e, "/shipping", pathname)}
-            >
-              Shipping Methods
-            </Link>
-            <Link
-              to="/payment-policy"
-              onClick={(e) =>
-                onSameRouteScrollToTop(e, "/payment-policy", pathname)
-              }
-            >
-              Payment Policy
             </Link>
             <Link
               to="/complaint"
