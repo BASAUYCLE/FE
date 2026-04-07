@@ -44,6 +44,13 @@ const MyWallet = () => {
 
   const userDisplayName =
     user?.fullName ?? user?.name ?? user?.username ?? user?.email ?? "User";
+
+  /** Họ tên trên hồ sơ — dùng cho rút tiền (không lấy email làm tên chủ TK). */
+  const withdrawProfileHolderName = useMemo(() => {
+    const raw = user?.fullName ?? user?.name ?? user?.username ?? "";
+    return typeof raw === "string" ? raw.trim() : "";
+  }, [user]);
+
   const userInitial =
     userDisplayName && typeof userDisplayName === "string"
       ? userDisplayName.trim().charAt(0).toUpperCase()
@@ -121,6 +128,12 @@ const MyWallet = () => {
       message.error("Minimum withdrawal is 50,000 VND");
       return;
     }
+    if (!withdrawProfileHolderName) {
+      message.error(
+        "Vui lòng cập nhật họ tên trong tài khoản trước khi rút tiền.",
+      );
+      return;
+    }
     const ok = await confirmCrud({
       title: "Submit withdrawal request?",
       content: `Request a withdrawal of ${formatCurrency(amount)}? Continue?`,
@@ -133,7 +146,7 @@ const MyWallet = () => {
         amount,
         bankName: values.bankName?.trim(),
         bankAccountNumber: values.bankAccountNumber?.trim(),
-        bankAccountHolder: values.bankAccountHolder?.trim(),
+        bankAccountHolder: withdrawProfileHolderName,
       });
       message.success("Withdrawal request submitted.");
       withdrawForm.resetFields();
@@ -617,7 +630,8 @@ const MyWallet = () => {
         centered
       >
         <p className="wallet-withdraw-modal-hint">
-          Minimum 50,000 VND. Your request will be reviewed by an admin.
+          Tối thiểu 50.000 VND. Yêu cầu sẽ được admin xử lý. Tên chủ tài khoản
+          phải trùng với hồ sơ đăng nhập.
         </p>
         <Form
           form={withdrawForm}
@@ -626,15 +640,40 @@ const MyWallet = () => {
           requiredMark
         >
           <Form.Item
+            label="Tên chủ tài khoản (theo hồ sơ đăng nhập)"
+            extra="Hệ thống tự điền từ tài khoản của bạn — không thể chỉnh sửa tại đây."
+          >
+            <Input
+              readOnly
+              size="large"
+              value={withdrawProfileHolderName || "—"}
+              placeholder="Chưa có họ tên trên hồ sơ"
+            />
+          </Form.Item>
+          <Form.Item
+            name="bankName"
+            label="Tên ngân hàng"
+            rules={[{ required: true, message: "Vui lòng nhập tên ngân hàng" }]}
+          >
+            <Input placeholder="Ví dụ: Vietcombank" size="large" />
+          </Form.Item>
+          <Form.Item
+            name="bankAccountNumber"
+            label="Số tài khoản / số thẻ ngân hàng"
+            rules={[{ required: true, message: "Vui lòng nhập số tài khoản" }]}
+          >
+            <Input placeholder="Số tài khoản nhận tiền" size="large" />
+          </Form.Item>
+          <Form.Item
             name="amount"
-            label="Amount (VND)"
+            label="Số tiền cần rút (VND)"
             rules={[
-              { required: true, message: "Enter amount" },
+              { required: true, message: "Nhập số tiền" },
               {
                 validator: (_, v) => {
                   const n = Number(v);
                   if (!Number.isFinite(n) || n < 50000) {
-                    return Promise.reject(new Error("Minimum is 50,000 VND"));
+                    return Promise.reject(new Error("Tối thiểu 50.000 VND"));
                   }
                   return Promise.resolve();
                 },
@@ -642,27 +681,6 @@ const MyWallet = () => {
             ]}
           >
             <Input type="number" min={50000} step={10000} size="large" />
-          </Form.Item>
-          <Form.Item
-            name="bankName"
-            label="Bank name"
-            rules={[{ required: true, message: "Required" }]}
-          >
-            <Input placeholder="e.g. Vietcombank" size="large" />
-          </Form.Item>
-          <Form.Item
-            name="bankAccountNumber"
-            label="Account number"
-            rules={[{ required: true, message: "Required" }]}
-          >
-            <Input placeholder="Account number" size="large" />
-          </Form.Item>
-          <Form.Item
-            name="bankAccountHolder"
-            label="Account holder (full name)"
-            rules={[{ required: true, message: "Required" }]}
-          >
-            <Input placeholder="As registered at the bank" size="large" />
           </Form.Item>
           <div className="wallet-withdraw-modal-actions">
             <Button
