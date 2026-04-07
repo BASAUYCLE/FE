@@ -95,7 +95,7 @@
 .poc-right {
   flex-shrink: 0;
   text-align: right;
-  min-width: 130px;
+  min-width: 176px;
 }
 
 .poc-amount-label {
@@ -126,15 +126,30 @@
 .poc-actions {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
 }
 
 .poc-actions .ant-btn {
   font-size: 12px;
-  padding: 4px 10px;
-  height: auto;
+  padding: 0 12px;
+  height: 32px;
   line-height: 1.3;
+  width: 100%;
+  min-width: 156px;
+  justify-content: center;
+}
+
+.poc-actions .ant-popconfirm-open,
+.poc-actions > .ant-popconfirm-open,
+.poc-actions > .ant-popconfirm {
+  width: 100%;
+}
+
+.poc-actions > a,
+.poc-actions > a .ant-btn {
+  width: 100%;
 }
 
 /* State variants */
@@ -151,11 +166,16 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
+  gap: 8px;
 }
 
 .poc-delivered-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
+}
+
+.poc-delivered-actions .ant-btn {
+  width: 100%;
 }

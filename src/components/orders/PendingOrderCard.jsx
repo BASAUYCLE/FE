@@ -35,7 +35,8 @@ import {
 import "./PendingOrderCard.css";
 
 export default function PendingOrderCard({ order }) {
-  const { cancelOrder, confirmDelivery, completeOrder, refreshOrders } = useOrders();
+  const { cancelOrder, confirmDelivery, completeOrder, refreshOrders } =
+    useOrders();
   const [payModalOpen, setPayModalOpen] = useState(false);
   const [disputeModalOpen, setDisputeModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -132,12 +133,7 @@ export default function PendingOrderCard({ order }) {
                 cancelText="No"
                 okButtonProps={{ danger: true }}
               >
-                <Button
-                  size="small"
-                  danger
-                  loading={loading}
-                  style={{ marginTop: 4 }}
-                >
+                <Button size="small" danger loading={loading}>
                   <CloseCircleOutlined /> Cancel
                 </Button>
               </Popconfirm>
@@ -209,7 +205,6 @@ export default function PendingOrderCard({ order }) {
                     size="small"
                     danger
                     loading={loading}
-                    style={{ marginTop: 6 }}
                     onClick={() => setDisputeModalOpen(true)}
                   >
                     Open dispute
@@ -250,7 +245,7 @@ export default function PendingOrderCard({ order }) {
                 </Button>
               </Popconfirm>
               {canBuyerOpenDispute(order) &&
-                isLikelyInsideDisputeWindow(order) ? (
+              isLikelyInsideDisputeWindow(order) ? (
                 <Button
                   size="small"
                   danger
@@ -352,10 +347,7 @@ export default function PendingOrderCard({ order }) {
         order={order}
       />
       <FeedbackModal
-        open={
-          feedbackOpen &&
-          status === ORDER_STATUS.COMPLETED
-        }
+        open={feedbackOpen && status === ORDER_STATUS.COMPLETED}
         onClose={() => setFeedbackOpen(false)}
         order={order}
         onSuccess={() => refreshOrders?.()}

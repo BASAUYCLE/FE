@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  Tag,
-  Button,
-  Typography,
-  Popconfirm,
-  App,
-  Tooltip,
-} from "antd";
+import { Card, Tag, Button, Typography, Popconfirm, App, Tooltip } from "antd";
 import ProductPreviewModal from "../ProductPreviewModal";
 import {
   CheckCircleOutlined,
@@ -110,12 +102,7 @@ export default function SaleCard({ order }) {
               cancelText="No"
               okButtonProps={{ danger: true }}
             >
-              <Button
-                size="small"
-                danger
-                loading={loading}
-                style={{ marginTop: 4 }}
-              >
+              <Button size="small" danger loading={loading}>
                 <CloseCircleOutlined /> Cancel
               </Button>
             </Popconfirm>
@@ -173,7 +160,6 @@ export default function SaleCard({ order }) {
             {activeDispute?.status === DISPUTE_STATUS.RETURN_SHIPPED && (
               <Button
                 size="small"
-                style={{ marginTop: 6 }}
                 onClick={async () => {
                   try {
                     await disputeService.confirmReturnReceipt(
