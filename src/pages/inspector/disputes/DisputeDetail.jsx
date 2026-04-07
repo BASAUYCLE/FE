@@ -12,7 +12,7 @@ import {
   Alert,
   Empty,
 } from "antd";
-import { ArrowLeftOutlined, EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
 import AdminInspectionModal from "../../../components/AdminInspectionModal";
 import ProductPreviewModal from "../../../components/ProductPreviewModal";
@@ -358,15 +358,6 @@ export default function InspectorDisputeDetailPage() {
         <div className="inspector-page">
           <div className="inspector-dashboard">
             <div className="inspector-content">
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/inspector/disputes")}
-              style={{ marginBottom: 12 }}
-            >
-              Back to list
-            </Button>
-
             {loading ? (
               <div style={{ textAlign: "center", padding: 48 }}>
                 <Spin />
@@ -383,7 +374,7 @@ export default function InspectorDisputeDetailPage() {
                     Dispute details
                   </Typography.Title>
                   <Card
-                    className="admin-card"
+                    className="admin-card inspector-dispute-main-card"
                     title={`Dispute #${detail.disputeId}`}
                   >
                     <p>
@@ -404,11 +395,11 @@ export default function InspectorDisputeDetailPage() {
                       </p>
                     )}
                     {inspectionSummary && (
-                      <div style={{ marginTop: 12 }}>
-                        <div style={{ marginBottom: 6 }}>
+                      <div className="inspector-dispute-inspection-block">
+                        <div className="inspector-dispute-section-head">
                           <Typography.Text strong>Inspection result</Typography.Text>
                         </div>
-                        <div style={{ marginTop: 6 }}>
+                        <div className="inspector-dispute-result-line">
                           {inspectionSummary.result ? (
                             <Tag
                               color={
@@ -423,13 +414,13 @@ export default function InspectorDisputeDetailPage() {
                             </Tag>
                           ) : null}
                           {inspectionSummary.percent != null ? (
-                            <Typography.Text style={{ marginLeft: 8 }}>
+                            <Typography.Text className="inspector-dispute-score-text">
                               Score: {inspectionSummary.percent}%
                             </Typography.Text>
                           ) : null}
                         </div>
                         {inspectionSummary.condition ? (
-                          <p style={{ marginTop: 6, marginBottom: 0 }}>
+                          <p className="inspector-dispute-tight-row">
                             <strong>Condition:</strong> {inspectionSummary.condition}
                           </p>
                         ) : null}
@@ -438,33 +429,33 @@ export default function InspectorDisputeDetailPage() {
                           inspectionSummary.inspectedAt ||
                           inspectionSummary.inspectorName ||
                           inspectionSummary.inspectorEmail) && (
-                          <div style={{ marginTop: 6, color: "#334155" }}>
+                          <div className="inspector-dispute-meta-block">
                             {inspectionSummary.reportId ? (
-                              <p style={{ marginBottom: 0 }}>
+                              <p className="inspector-dispute-tight-row">
                                 <strong>Report ID:</strong> {inspectionSummary.reportId}
                               </p>
                             ) : null}
                             {inspectionSummary.listingId ? (
-                              <p style={{ marginBottom: 0 }}>
+                              <p className="inspector-dispute-tight-row">
                                 <strong>Listing ID:</strong> #{inspectionSummary.listingId}
                               </p>
                             ) : null}
                             {inspectionSummary.inspectedAt ? (
-                              <p style={{ marginBottom: 0 }}>
+                              <p className="inspector-dispute-tight-row">
                                 <strong>Inspection date:</strong>{" "}
                                 {formatDateTime(inspectionSummary.inspectedAt) ||
                                   inspectionSummary.inspectedAt}
                               </p>
                             ) : null}
                             {inspectionSummary.inspectorName ? (
-                              <p style={{ marginBottom: 0 }}>
+                              <p className="inspector-dispute-tight-row">
                                 <strong>Inspector:</strong> {inspectionSummary.inspectorName}
                                 {inspectionSummary.inspectorEmail
                                   ? ` (${inspectionSummary.inspectorEmail})`
                                   : ""}
                               </p>
                             ) : inspectionSummary.inspectorEmail ? (
-                              <p style={{ marginBottom: 0 }}>
+                              <p className="inspector-dispute-tight-row">
                                 <strong>Inspector email:</strong>{" "}
                                 {inspectionSummary.inspectorEmail}
                               </p>
@@ -472,7 +463,7 @@ export default function InspectorDisputeDetailPage() {
                           </div>
                         )}
                         {inspectionSummary.notes ? (
-                          <p style={{ marginTop: 6, marginBottom: 0 }}>
+                          <p className="inspector-dispute-tight-row">
                             <strong>Inspector note:</strong> {inspectionSummary.notes}
                           </p>
                         ) : null}
@@ -480,9 +471,9 @@ export default function InspectorDisputeDetailPage() {
                     )}
 
                     {buyerProofUrls.length > 0 && (
-                      <div style={{ marginTop: 12 }}>
+                      <div className="inspector-dispute-proof-block">
                         <Typography.Text strong>
-                          Buyer evidencet
+                          Buyer evidence
                         </Typography.Text>
                         <div className="my-dispute-proofs">
                           {buyerProofUrls.map((url, idx) => (
@@ -505,14 +496,14 @@ export default function InspectorDisputeDetailPage() {
                     )}
 
                     {detail.status === DISPUTE_STATUS.OPEN && (
-                      <div style={{ marginTop: 16 }}>
+                      <div className="inspector-dispute-note-form-wrap">
                         <Typography.Text strong>
                           Inspector note (moves status to Reviewing)
                         </Typography.Text>
                         <Form
                           key={String(disputeId)}
                           layout="vertical"
-                          style={{ marginTop: 8 }}
+                          style={{ marginTop: 10 }}
                           onFinish={submitNote}
                         >
                           <Form.Item
@@ -533,6 +524,7 @@ export default function InspectorDisputeDetailPage() {
                             type="primary"
                             htmlType="submit"
                             loading={noteLoading}
+                            className="inspector-dispute-submit-btn"
                           >
                             Submit note
                           </Button>
@@ -541,7 +533,7 @@ export default function InspectorDisputeDetailPage() {
                     )}
 
                     {detail.status !== DISPUTE_STATUS.OPEN && (
-                      <p style={{ marginTop: 12, color: "#64748b" }}>
+                      <p className="inspector-dispute-note-disabled-text">
                         Notes can only be submitted when status is OPEN. Current:{" "}
                         {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
                       </p>
@@ -621,18 +613,11 @@ export default function InspectorDisputeDetailPage() {
                           {post.description}
                         </Typography.Paragraph>
                       ) : null}
-                      <div
-                        style={{
-                          marginTop: 12,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          flexWrap: "wrap",
-                        }}
-                      >
+                      <div className="inspector-dispute-actions-row">
                         <Button
                           type="primary"
                           onClick={() => setPreviewId(post.postId)}
+                          className="inspector-dispute-action-btn"
                         >
                           Open full product page
                         </Button>
@@ -644,6 +629,7 @@ export default function InspectorDisputeDetailPage() {
                               setInspectionModalSession(Date.now());
                               setInspectionModalOpen(true);
                             }}
+                            className="inspector-dispute-action-btn"
                           >
                             View inspection report
                           </Button>

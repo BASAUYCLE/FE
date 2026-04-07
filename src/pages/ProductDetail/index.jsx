@@ -1360,22 +1360,20 @@ export default function ProductDetail() {
               </Box>
             )}
 
-            {/* Ownership + Reviews: 2 cột trên desktop để tận dụng chiều ngang */}
+            {/* Description: full width để cân đối sau khi bỏ reviews */}
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
-                gap: 3,
-                alignItems: "start",
+                gridTemplateColumns: "1fr",
               }}
             >
-              <Box className="product-detail-section">
+              <Box className="product-detail-section product-detail-section--description">
                 <Box
                   sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}
                 >
                   <SyncOutlined style={{ color: "#6b7280", fontSize: 20 }} />
                   <Typography variant="h6" fontWeight={700}>
-                    Ownership History
+                  Description
                   </Typography>
                 </Box>
                 {product.description && (
@@ -1414,71 +1412,6 @@ export default function ProductDetail() {
                   )}
               </Box>
 
-              <Box className="product-detail-section">
-                <Typography variant="h6" fontWeight={700} sx={{ mb: 2 }}>
-                  Reviews for this listing
-                </Typography>
-                {postFeedbacksLoading ? (
-                  <Typography color="#6b7280" variant="body2">
-                    Loading reviews…
-                  </Typography>
-                ) : postFeedbacks.length === 0 ? (
-                  <Typography color="#6b7280" variant="body2">
-                    No reviews linked to this listing yet.
-                  </Typography>
-                ) : (
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-                  >
-                    {postFeedbacks.map((fb, idx) => {
-                      const rating = fb.rating ?? fb.stars ?? fb.score ?? null;
-                      const comment =
-                        fb.comment ?? fb.reviewText ?? fb.content ?? "";
-                      const who =
-                        fb.buyerName ??
-                        fb.buyerFullName ??
-                        fb.reviewerName ??
-                        "Buyer";
-                      return (
-                        <Box
-                          key={fb.feedbackId ?? fb.id ?? idx}
-                          sx={{
-                            p: 2,
-                            borderRadius: 2,
-                            bgcolor: "#f9fafb",
-                            border: "1px solid #e5e7eb",
-                          }}
-                        >
-                          <Typography fontWeight={600} color="#111827">
-                            {who}
-                            {rating != null && (
-                              <Typography
-                                component="span"
-                                variant="body2"
-                                color="#f59e0b"
-                                sx={{ ml: 1 }}
-                              >
-                                {"★".repeat(
-                                  Math.min(5, Math.max(1, Number(rating))),
-                                )}
-                              </Typography>
-                            )}
-                          </Typography>
-                          {comment ? (
-                            <Typography
-                              variant="body2"
-                              color="#4b5563"
-                              sx={{ mt: 0.5 }}
-                            >
-                              {comment}
-                            </Typography>
-                          ) : null}
-                        </Box>
-                      );
-                    })}
-                  </Box>
-                )}
-              </Box>
             </Box>
           </Box>
         </Box>
