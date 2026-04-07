@@ -29,14 +29,6 @@ import "../Orders/index.css";
 /** Mỗi lần hiển thị: 4 cột × 3 hàng = 12 tin */
 const LISTINGS_PAGE_SIZE = 12;
 
-const FEEDBACK_KEYWORD_MAP = [
-  { key: "product-quality", label: "Good product quality", patterns: ["chất lượng", "quality"] },
-  { key: "polite", label: "Polite and friendly communication", patterns: ["lịch sự", "thân thiện", "friendly", "polite"] },
-  { key: "accurate", label: "Product description is accurate", patterns: ["đúng mô tả", "mô tả đúng", "as described"] },
-  { key: "good-price", label: "Good value for money", patterns: ["giá tốt", "good price", "giá hợp lý"] },
-  { key: "on-time", label: "On time", patterns: ["đúng hẹn", "on time"] },
-];
-
 function getFeedbackRole(feedback) {
   const roleRaw = String(
     feedback?.reviewerRole ??
@@ -52,7 +44,6 @@ function getFeedbackRole(feedback) {
 
 function extractFeedbackLabels(feedback) {
   const rawTags = feedback?.tags ?? feedback?.keywords ?? feedback?.criteria ?? [];
-  const text = String(feedback?.comment ?? "").toLowerCase();
   const labels = new Set();
 
   if (Array.isArray(rawTags)) {
@@ -61,10 +52,6 @@ function extractFeedbackLabels(feedback) {
       if (label) labels.add(label);
     });
   }
-
-  FEEDBACK_KEYWORD_MAP.forEach((cfg) => {
-    if (cfg.patterns.some((p) => text.includes(p))) labels.add(cfg.label);
-  });
 
   return [...labels];
 }
@@ -867,9 +854,20 @@ export default function UserFeedbackPage() {
           }}
         >
           <CardContent sx={{ p: { xs: 2, sm: 2.25 } }}>
-            <Typography sx={{ fontSize: 17, fontWeight: 700, color: "#111827", mb: 1.5 }}>
-              Ratings
-            </Typography>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 1.5 }}>
+              <Typography sx={{ fontSize: 17, fontWeight: 700, color: "#111827" }}>
+                Ratings
+              </Typography>
+              <Tooltip
+                title="Filter highlighted seller criteria based on user ratings"
+                placement="topLeft"
+                color="#1f1f1f"
+                overlayInnerStyle={{ borderRadius: 14, fontSize: 14, lineHeight: 1.45, padding: "14px 16px" }}
+                arrow
+              >
+                <InfoCircleOutlined style={{ fontSize: 18, color: "#6b7280", cursor: "pointer" }} />
+              </Tooltip>
+            </Box>
             {/* Summary row like Chợ Tốt */}
             <Box
               sx={{
@@ -907,22 +905,6 @@ export default function UserFeedbackPage() {
               </Box>
 
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
-                  <Typography
-                    sx={{ fontSize: 14, fontWeight: 600, color: "#111827" }}
-                  >
-                    User rating breakdown
-                  </Typography>
-                  <Tooltip
-                    title="Filter highlighted seller criteria based on user ratings"
-                    placement="topLeft"
-                    color="#1f1f1f"
-                    overlayInnerStyle={{ borderRadius: 14, fontSize: 14, lineHeight: 1.45, padding: "14px 16px" }}
-                    arrow
-                  >
-                    <InfoCircleOutlined style={{ fontSize: 18, color: "#6b7280", cursor: "pointer" }} />
-                  </Tooltip>
-                </Box>
                 <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
                   {feedbackTagSummary.length > 0 ? (
                     feedbackTagSummary.map((item) => (
@@ -930,11 +912,7 @@ export default function UserFeedbackPage() {
                         {item.label} ({item.count})
                       </Tag>
                     ))
-                  ) : (
-                    <Typography sx={{ fontSize: 14, color: "#6b7280" }}>
-                      No rating criteria data yet
-                    </Typography>
-                  )}
+                  ) : null}
                 </Box>
               </Box>
             </Box>
