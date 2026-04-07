@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Form, Input, Checkbox, Upload, message } from "antd";
+import { Form, Input, Checkbox, Upload, message, Modal } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import bikeLogo from "../../assets/bike-logo.png";
 import loginHeroImage from "../../assets/xedap_login.png";
@@ -28,6 +28,9 @@ export default function AuthPage() {
   const [cccdBackFile, setCccdBackFile] = useState(null);
   const [cccdFrontFileList, setCccdFrontFileList] = useState([]);
   const [cccdBackFileList, setCccdBackFileList] = useState([]);
+  const [confirmRegisterOpen, setConfirmRegisterOpen] = useState(false);
+  const [pendingRegisterValues, setPendingRegisterValues] = useState(null);
+  const [confirmRegisterLoading, setConfirmRegisterLoading] = useState(false);
 
   const goLogin = useCallback(() => {
     navigate("/login", { replace: true });
@@ -44,6 +47,8 @@ export default function AuthPage() {
       setCccdBackFile(null);
       setCccdFrontFileList([]);
       setCccdBackFileList([]);
+      setConfirmRegisterOpen(false);
+      setPendingRegisterValues(null);
     }
   }, [isSignup, registerForm]);
 
@@ -133,14 +138,28 @@ export default function AuthPage() {
     }
   };
 
-  const onRegisterFinish = async (values) => {
+  const onRegisterFinish = (values) => {
+    if (!cccdFrontFile || !cccdBackFile) {
+      message.error("Please upload both front and back of your ID card!");
+      return;
+    }
+    setPendingRegisterValues(values);
+    setConfirmRegisterOpen(true);
+  };
+
+  const handleCancelConfirmRegister = () => {
+    if (confirmRegisterLoading) return;
+    setConfirmRegisterOpen(false);
+    setPendingRegisterValues(null);
+  };
+
+  const handleConfirmRegister = async () => {
+    if (!pendingRegisterValues) return;
+    const values = pendingRegisterValues;
+
     try {
+      setConfirmRegisterLoading(true);
       setRegisterSubmitting(true);
-      if (!cccdFrontFile || !cccdBackFile) {
-        message.error("Please upload both front and back of your ID card!");
-        setRegisterSubmitting(false);
-        return;
-      }
 
       const formData = new FormData();
       formData.append("fullName", values.username);
@@ -153,6 +172,8 @@ export default function AuthPage() {
       const result = await register(formData);
 
       if (result.success) {
+        setConfirmRegisterOpen(false);
+        setPendingRegisterValues(null);
         message.success(
           "Registration successful! Your account is pending verification.",
           3,
@@ -174,6 +195,7 @@ export default function AuthPage() {
         message.error(errMsg);
       }
     } finally {
+      setConfirmRegisterLoading(false);
       setRegisterSubmitting(false);
     }
   };
@@ -184,6 +206,26 @@ export default function AuthPage() {
     <div
       className={`auth-page auth-page--immersive${isSignup ? " auth-immersive--register" : ""}`}
     >
+      <Modal
+        title="Xác nhận thông tin đăng ký"
+        open={confirmRegisterOpen}
+        onOk={handleConfirmRegister}
+        onCancel={handleCancelConfirmRegister}
+        okText="Xác nhận đăng ký"
+        cancelText="Quay lại chỉnh sửa"
+        confirmLoading={confirmRegisterLoading}
+        maskClosable={!confirmRegisterLoading}
+        closable={!confirmRegisterLoading}
+        centered
+        width={480}
+      >
+        <p style={{ marginBottom: 0, lineHeight: 1.65 }}>
+          Bạn xác nhận thông tin đăng ký là <strong>chính xác</strong> và{" "}
+          <strong>trùng với tên chủ tài khoản nhận tiền</strong> (khi bạn rút
+          tiền từ ví) không? Nếu thông tin sai lệch, bạn{" "}
+          <strong>sẽ không thể</strong> thực hiện rút tiền từ ví.
+        </p>
+      </Modal>
       <div className="auth-immersive__bg" aria-hidden="true">
         <div className="auth-immersive__scrim" />
       </div>
