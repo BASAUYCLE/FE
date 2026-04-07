@@ -171,6 +171,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
+.product-detail-section--description {
+  min-height: 220px;
+  padding: 28px;
+}
+
 .product-detail-spec-card {
   padding: 16px;
   background: #f9fafb;
