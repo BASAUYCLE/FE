@@ -36,7 +36,7 @@ export default function About() {
                 textTransform: "uppercase",
               }}
             >
-              Về BASAUYCLE
+              About BASAUYCLE
             </Typography>
             <Typography
               sx={{
@@ -47,14 +47,14 @@ export default function About() {
                 fontSize: { xs: 14, md: 15 },
               }}
             >
-              BASAUYCLE là sàn xe đạp tại Việt Nam được xây dựng trên nền tảng
-              tin cậy. Chúng tôi giúp người mua và người bán giao dịch với tin
-              đăng minh bạch, kiểm định độc lập và thanh toán an toàn qua ví và
-              ký quỹ.
+              BASAUYCLE is a bicycle marketplace in Vietnam built on trust. We
+              help buyers and sellers trade with transparent listings,
+              independent inspections, and secure payments through wallet and
+              escrow services.
             </Typography>
           </Box>
 
-          {/* MUI v7: dùng `size` thay cho `item` + xs/md */}
+          {/* MUI v7: use `size` instead of `item` + xs/md */}
           <Grid container spacing={4} sx={{ mb: 4 }}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={cardSx}>
@@ -66,17 +66,16 @@ export default function About() {
                     color: "#111827",
                   }}
                 >
-                  Sứ mệnh
+                  Mission
                 </Typography>
                 <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 2 }}>
-                  Mang đến trải nghiệm sàn xe đạp minh bạch, an toàn và thuận
-                  tiện cho cộng đồng đạp xe tại Việt Nam.
+                  Deliver a transparent, safe, and convenient bicycle
+                  marketplace experience for the cycling community in Vietnam.
                 </Typography>
                 <Typography sx={{ color: "#4b5563", fontSize: 14 }}>
-                  BASAUYCLE kết nối người mua và người bán thông qua kiểm duyệt
-                  tin đăng, kiểm định, đặt cọc và quy trình thanh toán an toàn,
-                  để mỗi chiếc xe đều có thể bắt đầu hành trình ý nghĩa tiếp
-                  theo.
+                  BASAUYCLE connects buyers and sellers through listing review,
+                  inspection, deposits, and secure payment workflows, so every
+                  bike can begin its next meaningful journey.
                 </Typography>
               </Box>
             </Grid>
@@ -90,15 +89,15 @@ export default function About() {
                     color: "#111827",
                   }}
                 >
-                  Giá trị cốt lõi
+                  Core Values
                 </Typography>
                 <Typography
                   component="ul"
                   sx={{ pl: 2.5, m: 0, color: "#4b5563", fontSize: 14 }}
                 >
-                  <li>Thông tin xe và lịch sử kiểm định minh bạch.</li>
-                  <li>Thanh toán an toàn qua ví và cơ chế ký quỹ.</li>
-                  <li>Xử lý tranh chấp rõ ràng, bảo vệ cả hai bên.</li>
+                  <li>Transparent bike information and inspection history.</li>
+                  <li>Secure payments via wallet and escrow mechanisms.</li>
+                  <li>Clear dispute resolution that protects both parties.</li>
                 </Typography>
               </Box>
             </Grid>
@@ -113,36 +112,36 @@ export default function About() {
                 color: "#111827",
               }}
             >
-              Cách thức hoạt động
+              How It Works
             </Typography>
             <Grid container spacing={2.5}>
               <Grid size={{ xs: 12, md: 6 }}>
                 <Typography sx={{ color: "#111827", fontSize: 14, mb: 1 }}>
                   <Box component="span" sx={{ fontWeight: 700 }}>
-                    1) Kiểm duyệt tin đăng
+                    1) Listing moderation
                   </Box>{" "}
-                  — Tin mới được xem xét trước khi hiển thị cho người mua.
+                  — New listings are reviewed before being shown to buyers.
                 </Typography>
                 <Typography sx={{ color: "#111827", fontSize: 14, mb: 1 }}>
                   <Box component="span" sx={{ fontWeight: 700 }}>
-                    2) Kiểm định độc lập
+                    2) Independent inspection
                   </Box>{" "}
-                  — Kiểm định viên xác minh tình trạng xe để tăng độ tin cậy.
+                  — Inspectors verify the bike condition to increase trust.
                 </Typography>
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
                 <Typography sx={{ color: "#111827", fontSize: 14, mb: 1 }}>
                   <Box component="span" sx={{ fontWeight: 700 }}>
-                    3) Thanh toán an toàn
+                    3) Secure payment
                   </Box>{" "}
-                  — Đặt cọc và thanh toán được xử lý qua ví và ký quỹ.
+                  — Deposits and payments are handled through wallet and escrow.
                 </Typography>
                 <Typography sx={{ color: "#111827", fontSize: 14 }}>
                   <Box component="span" sx={{ fontWeight: 700 }}>
-                    4) Hỗ trợ &amp; tranh chấp
+                    4) Support &amp; disputes
                   </Box>{" "}
-                  — Khi phát sinh vấn đề, nền tảng có quy trình xử lý tranh chấp
-                  rõ ràng.
+                  — When issues arise, the platform provides a clear dispute
+                  resolution process.
                 </Typography>
               </Grid>
             </Grid>
