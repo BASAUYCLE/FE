@@ -12,8 +12,10 @@ import {
   Alert,
   Empty,
 } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, EyeOutlined } from "@ant-design/icons";
 import InspectorLayout from "../../../components/layout/InspectorLayout";
+import AdminInspectionModal from "../../../components/AdminInspectionModal";
+import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import disputeService from "../../../services/disputeService";
 import orderService from "../../../services/orderService";
 import postService from "../../../services/postService";
@@ -22,8 +24,133 @@ import {
   DISPUTE_STATUS_LABEL,
 } from "../../../constants/disputeStatus";
 import { formatCurrency } from "../../../utils/formatCurrency";
+import { formatDateTime } from "../../../utils/date";
 import "../../MyDisputes/index.css";
 import "../dashboard/index.css";
+
+function hasNonEmptyText(v) {
+  return v != null && String(v).trim() !== "";
+}
+
+function toFiniteNumber(v) {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (!hasNonEmptyText(v)) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeInspectionSummary(detail) {
+  if (!detail || typeof detail !== "object") return null;
+  const nestedCandidates = [
+    detail.inspectionReport,
+    detail.inspection_report,
+    detail.inspection,
+    detail.latestInspection,
+    detail.latest_inspection,
+    detail.lastInspection,
+    detail.last_inspection,
+    detail.post?.inspectionReport,
+    detail.post?.inspection_report,
+    detail.post?.inspection,
+  ].filter((x) => x && typeof x === "object");
+  const root = nestedCandidates[0] ?? detail;
+  const resultRaw =
+    root.result ?? root.inspectionResult ?? root.inspection_result ?? null;
+  const conditionRaw =
+    root.overallCondition ??
+    root.overall_condition ??
+    root.condition ??
+    root.inspectionCondition ??
+    root.inspection_condition ??
+    null;
+  const percent = toFiniteNumber(
+    root.conditionPercent ??
+      root.condition_percent ??
+      root.conditionPct ??
+      root.condition_pct,
+  );
+  const notesRaw =
+    root.notes ??
+    root.inspectorNotes ??
+    root.inspector_notes ??
+    detail.inspectorNote ??
+    detail.inspector_note ??
+    null;
+  const inspectedAtRaw =
+    root.inspectedAt ??
+    root.inspected_at ??
+    root.completedAt ??
+    root.completed_at ??
+    root.updatedAt ??
+    root.updated_at ??
+    null;
+  const reportIdRaw =
+    root.reportId ??
+    root.report_id ??
+    root.inspectionReportId ??
+    root.inspection_report_id ??
+    null;
+  const listingIdRaw = root.postId ?? root.post_id ?? detail.postId ?? detail.post_id;
+  const inspectorNameRaw =
+    root.inspectorName ??
+    root.inspector_name ??
+    root.inspectorFullName ??
+    root.inspector_full_name ??
+    root.inspector?.fullName ??
+    root.inspector?.name ??
+    null;
+  const inspectorEmailRaw =
+    root.inspectorEmail ??
+    root.inspector_email ??
+    root.inspector?.email ??
+    null;
+
+  const result = hasNonEmptyText(resultRaw)
+    ? String(resultRaw).trim().toUpperCase()
+    : "";
+  const condition = hasNonEmptyText(conditionRaw)
+    ? String(conditionRaw).trim().replace(/_/g, " ")
+    : "";
+  const notes = hasNonEmptyText(notesRaw) ? String(notesRaw).trim() : "";
+  const inspectedAt = hasNonEmptyText(inspectedAtRaw)
+    ? String(inspectedAtRaw).trim()
+    : "";
+  const reportId = hasNonEmptyText(reportIdRaw) ? String(reportIdRaw).trim() : "";
+  const listingId = hasNonEmptyText(listingIdRaw)
+    ? String(listingIdRaw).trim()
+    : "";
+  const inspectorName = hasNonEmptyText(inspectorNameRaw)
+    ? String(inspectorNameRaw).trim()
+    : "";
+  const inspectorEmail = hasNonEmptyText(inspectorEmailRaw)
+    ? String(inspectorEmailRaw).trim()
+    : "";
+
+  if (
+    !result &&
+    !condition &&
+    percent == null &&
+    !notes &&
+    !inspectedAt &&
+    !reportId &&
+    !listingId &&
+    !inspectorName &&
+    !inspectorEmail
+  ) {
+    return null;
+  }
+  return {
+    result,
+    condition,
+    percent,
+    notes,
+    inspectedAt,
+    reportId,
+    listingId,
+    inspectorName,
+    inspectorEmail,
+  };
+}
 
 /** Ảnh khiếu nại người mua: BE có thể trả proofImages[], proofImage string, hoặc object có imageUrl */
 function collectDisputeProofUrls(row) {
@@ -105,11 +232,30 @@ export default function InspectorDisputeDetailPage() {
   const [detail, setDetail] = useState(null);
   const [post, setPost] = useState(null);
   const [noteLoading, setNoteLoading] = useState(false);
+  const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
+  const [inspectionModalSession, setInspectionModalSession] = useState(0);
+  const [previewId, setPreviewId] = useState(null);
 
   const buyerProofUrls = useMemo(
     () => collectDisputeProofUrls(detail),
     [detail],
   );
+  const inspectionSummary = useMemo(
+    () => normalizeInspectionSummary(detail),
+    [detail],
+  );
+  const inspectionPostId = useMemo(() => {
+    const fromSummary = inspectionSummary?.listingId;
+    if (hasNonEmptyText(fromSummary)) return fromSummary;
+    return (
+      detail?.postId ??
+      detail?.post_id ??
+      detail?.post?.postId ??
+      detail?.post?.id ??
+      post?.postId ??
+      null
+    );
+  }, [detail, inspectionSummary, post]);
 
   const load = useCallback(async () => {
     if (!disputeId || !/^\d+$/.test(String(disputeId))) {
@@ -207,10 +353,11 @@ export default function InspectorDisputeDetailPage() {
   };
 
   return (
-    <InspectorLayout>
-      <div className="inspector-page">
-        <div className="inspector-dashboard">
-          <div className="inspector-content">
+    <>
+      <InspectorLayout>
+        <div className="inspector-page">
+          <div className="inspector-dashboard">
+            <div className="inspector-content">
             <Button
               type="text"
               icon={<ArrowLeftOutlined />}
@@ -256,11 +403,86 @@ export default function InspectorDisputeDetailPage() {
                         <strong>Reason:</strong> {detail.reason}
                       </p>
                     )}
+                    {inspectionSummary && (
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ marginBottom: 6 }}>
+                          <Typography.Text strong>Inspection result</Typography.Text>
+                        </div>
+                        <div style={{ marginTop: 6 }}>
+                          {inspectionSummary.result ? (
+                            <Tag
+                              color={
+                                inspectionSummary.result === "PASS"
+                                  ? "success"
+                                  : inspectionSummary.result === "FAIL"
+                                    ? "error"
+                                    : "default"
+                              }
+                            >
+                              {inspectionSummary.result}
+                            </Tag>
+                          ) : null}
+                          {inspectionSummary.percent != null ? (
+                            <Typography.Text style={{ marginLeft: 8 }}>
+                              Score: {inspectionSummary.percent}%
+                            </Typography.Text>
+                          ) : null}
+                        </div>
+                        {inspectionSummary.condition ? (
+                          <p style={{ marginTop: 6, marginBottom: 0 }}>
+                            <strong>Condition:</strong> {inspectionSummary.condition}
+                          </p>
+                        ) : null}
+                        {(inspectionSummary.reportId ||
+                          inspectionSummary.listingId ||
+                          inspectionSummary.inspectedAt ||
+                          inspectionSummary.inspectorName ||
+                          inspectionSummary.inspectorEmail) && (
+                          <div style={{ marginTop: 6, color: "#334155" }}>
+                            {inspectionSummary.reportId ? (
+                              <p style={{ marginBottom: 0 }}>
+                                <strong>Report ID:</strong> {inspectionSummary.reportId}
+                              </p>
+                            ) : null}
+                            {inspectionSummary.listingId ? (
+                              <p style={{ marginBottom: 0 }}>
+                                <strong>Listing ID:</strong> #{inspectionSummary.listingId}
+                              </p>
+                            ) : null}
+                            {inspectionSummary.inspectedAt ? (
+                              <p style={{ marginBottom: 0 }}>
+                                <strong>Inspection date:</strong>{" "}
+                                {formatDateTime(inspectionSummary.inspectedAt) ||
+                                  inspectionSummary.inspectedAt}
+                              </p>
+                            ) : null}
+                            {inspectionSummary.inspectorName ? (
+                              <p style={{ marginBottom: 0 }}>
+                                <strong>Inspector:</strong> {inspectionSummary.inspectorName}
+                                {inspectionSummary.inspectorEmail
+                                  ? ` (${inspectionSummary.inspectorEmail})`
+                                  : ""}
+                              </p>
+                            ) : inspectionSummary.inspectorEmail ? (
+                              <p style={{ marginBottom: 0 }}>
+                                <strong>Inspector email:</strong>{" "}
+                                {inspectionSummary.inspectorEmail}
+                              </p>
+                            ) : null}
+                          </div>
+                        )}
+                        {inspectionSummary.notes ? (
+                          <p style={{ marginTop: 6, marginBottom: 0 }}>
+                            <strong>Inspector note:</strong> {inspectionSummary.notes}
+                          </p>
+                        ) : null}
+                      </div>
+                    )}
 
                     {buyerProofUrls.length > 0 && (
                       <div style={{ marginTop: 12 }}>
                         <Typography.Text strong>
-                          Buyer evidence (complaint photos)
+                          Buyer evidencet
                         </Typography.Text>
                         <div className="my-dispute-proofs">
                           {buyerProofUrls.map((url, idx) => (
@@ -399,11 +621,34 @@ export default function InspectorDisputeDetailPage() {
                           {post.description}
                         </Typography.Paragraph>
                       ) : null}
-                      <Link to={`/product/${post.postId}`}>
-                        <Button type="primary" style={{ marginTop: 12 }}>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Button
+                          type="primary"
+                          onClick={() => setPreviewId(post.postId)}
+                        >
                           Open full product page
                         </Button>
-                      </Link>
+                        {inspectionPostId != null ? (
+                          <Button
+                            type="primary"
+                            icon={<EyeOutlined />}
+                            onClick={() => {
+                              setInspectionModalSession(Date.now());
+                              setInspectionModalOpen(true);
+                            }}
+                          >
+                            View inspection report
+                          </Button>
+                        ) : null}
+                      </div>
                     </Card>
                   ) : (
                     <Card variant="outlined">
@@ -434,9 +679,32 @@ export default function InspectorDisputeDetailPage() {
                 </section>
               </div>
             )}
+            </div>
           </div>
         </div>
-      </div>
-    </InspectorLayout>
+      </InspectorLayout>
+      <AdminInspectionModal
+        key={
+          inspectionPostId != null
+            ? `${inspectionPostId}-${inspectionModalSession}`
+            : "inspector-dispute-inspection-closed"
+        }
+        postId={inspectionPostId}
+        listingTitle={post?.bikeName ?? detail?.postTitle ?? null}
+        posterHint={post?.sellerName ?? detail?.sellerName ?? null}
+        listingMeta={
+          [post?.brand, post?.category, post?.frameSize]
+            .filter((x) => hasNonEmptyText(x) && x !== "—")
+            .join(" · ") || null
+        }
+        open={inspectionModalOpen && inspectionPostId != null}
+        onClose={() => setInspectionModalOpen(false)}
+      />
+      <ProductPreviewModal
+        postId={previewId}
+        open={!!previewId}
+        onClose={() => setPreviewId(null)}
+      />
+    </>
   );
 }
