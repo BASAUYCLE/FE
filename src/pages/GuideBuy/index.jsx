@@ -25,12 +25,12 @@ export default function GuideBuy() {
               mb: 4,
             }}
           >
-            Buying Guide at BASAUYCLE
+            Business Policy
           </Typography>
 
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            This page combines shopping instructions, shipping methods, payment
-            guide, and payment policy in one place.
+            This page combines BASAUYCLE shopping guidance, shipping methods,
+            payment guide, and payment policy in one place.
           </Typography>
 
           <Typography

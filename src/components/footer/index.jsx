@@ -63,7 +63,7 @@ export default function Footer() {
               to="/guide-buy"
               onClick={(e) => onSameRouteScrollToTop(e, "/guide-buy", pathname)}
             >
-              Shopping Guide
+              Business Policy
             </Link>
             <Link
               to="/guide-bike-photos"

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import {
   Typography,
   Card,
@@ -14,9 +14,10 @@ import {
   App,
   Divider,
 } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
 import Header from "../../components/header";
 import Footer from "../../components/footer";
+import AdminInspectionModal from "../../components/AdminInspectionModal";
 import { useAuth } from "../../contexts/AuthContext";
 import { useOrders } from "../../contexts/OrderContext";
 import disputeService from "../../services/disputeService";
@@ -174,7 +175,6 @@ function normalizePost(row) {
 export default function DisputeDetailPage() {
   const { message } = App.useApp();
   const { disputeId } = useParams();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { refreshOrders, refreshSales } = useOrders();
 
@@ -187,6 +187,8 @@ export default function DisputeDetailPage() {
 
   const [shipModal, setShipModal] = useState(false);
   const [shipLoading, setShipLoading] = useState(false);
+  const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
+  const [inspectionModalSession, setInspectionModalSession] = useState(0);
   const [form] = Form.useForm();
 
   const buyerProofUrls = useMemo(
@@ -196,6 +198,16 @@ export default function DisputeDetailPage() {
   const returnReceiptUrls = useMemo(
     () => collectReturnShippingReceiptUrls(dispute),
     [dispute],
+  );
+  const inspectionPostId = useMemo(
+    () =>
+      post?.postId ??
+      dispute?.postId ??
+      dispute?.post_id ??
+      dispute?.post?.postId ??
+      dispute?.post?.id ??
+      null,
+    [post, dispute],
   );
 
   const load = useCallback(async () => {
@@ -313,15 +325,6 @@ export default function DisputeDetailPage() {
       <Header />
       <main className="orders-main">
         <div className="orders-container dispute-detail-container">
-          <Button
-            type="text"
-            icon={<ArrowLeftOutlined />}
-            onClick={() => navigate("/my-disputes")}
-            style={{ marginBottom: 8, paddingLeft: 0 }}
-          >
-            Back to disputes
-          </Button>
-
           {loading ? (
             <div style={{ textAlign: "center", padding: 64 }}>
               <Spin size="large" />
@@ -418,11 +421,30 @@ export default function DisputeDetailPage() {
                           {post.description}
                         </Typography.Paragraph>
                       ) : null}
-                      <Link to={`/product/${post.postId}`}>
-                        <Button type="primary" style={{ marginTop: 12 }}>
-                          Open full product page
-                        </Button>
-                      </Link>
+                      <div
+                        style={{
+                          marginTop: 12,
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <Link to={`/product/${post.postId}`}>
+                          <Button type="primary">Open full product page</Button>
+                        </Link>
+                        {inspectionPostId != null ? (
+                          <Button
+                            type="primary"
+                            icon={<EyeOutlined />}
+                            onClick={() => {
+                              setInspectionModalSession(Date.now());
+                              setInspectionModalOpen(true);
+                            }}
+                          >
+                            View inspection report
+                          </Button>
+                        ) : null}
+                      </div>
                     </Card>
                   ) : (
                     <Card>
@@ -670,6 +692,23 @@ export default function DisputeDetailPage() {
           <ReturnShippingReceiptFormItem />
         </Form>
       </Modal>
+      <AdminInspectionModal
+        key={
+          inspectionPostId != null
+            ? `${inspectionPostId}-${inspectionModalSession}`
+            : "my-dispute-inspection-closed"
+        }
+        postId={inspectionPostId}
+        listingTitle={post?.bikeName ?? dispute?.postTitle ?? null}
+        posterHint={post?.sellerName ?? dispute?.sellerName ?? null}
+        listingMeta={
+          [post?.brand, post?.category, post?.frameSize]
+            .filter((x) => hasNonEmptyText(x) && x !== "—")
+            .join(" · ") || null
+        }
+        open={inspectionModalOpen && inspectionPostId != null}
+        onClose={() => setInspectionModalOpen(false)}
+      />
 
       <Footer />
     </div>
