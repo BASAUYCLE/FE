@@ -18,6 +18,18 @@ export const INSPECTION_SCORE_KEYS = Object.freeze([
   "wheelScore",
 ]);
 
+/**
+ * Tiêu chí cơ khí — điểm 0 ⇒ FAIL (BE `InspectionService#determineResult`).
+ * `colorScore` không thuộc nhóm này.
+ */
+export const MECHANICAL_SCORE_KEYS = Object.freeze([
+  "frameScore",
+  "groupsetScore",
+  "brakeScore",
+  "controlScore",
+  "wheelScore",
+]);
+
 /** Trọng số % (tổng 100) — khớp guide */
 export const INSPECTION_WEIGHTS = Object.freeze({
   colorScore: 10,
@@ -58,7 +70,24 @@ export function validateInspectionScores(scores) {
 }
 
 /**
- * conditionPercent = Σ (score/10 × weight), sau đó cap 100 → 99.
+ * Cap % theo điểm thấp nhất — khớp BE `InspectionService#applyMinScoreCeiling`.
+ * @param {number} conditionPercent — đã qua bước ≥100 → 99
+ * @param {Record<string, number>} scores — đủ 6 key
+ */
+export function applyMinScoreCeiling(conditionPercent, scores) {
+  const vals = INSPECTION_SCORE_KEYS.map((k) => scores[k]).filter((v) =>
+    Number.isFinite(v),
+  );
+  if (vals.length < INSPECTION_SCORE_KEYS.length) return conditionPercent;
+  const minScore = Math.min(...vals);
+  if (minScore <= 3) return Math.min(conditionPercent, 69.0);
+  if (minScore === 7) return Math.min(conditionPercent, 89.0);
+  return conditionPercent;
+}
+
+/**
+ * conditionPercent = Σ (score/10 × weight) → ≥100 → 99 → applyMinScoreCeiling → làm tròn 1 chữ số.
+ * Khớp BE `InspectionService` (tính %, xe cũ không 100%, cap theo min tiêu chí).
  * @param {Record<string, number>} scores — đủ 6 key, mỗi giá trị 0–10
  * @returns {number} NaN nếu thiếu key hoặc điểm không hợp lệ
  */
@@ -74,6 +103,7 @@ export function calculateConditionPercent(scores) {
 
   let pct = sum;
   if (pct >= 100) pct = 99;
+  pct = applyMinScoreCeiling(pct, scores);
   return Math.round(pct * 10) / 10;
 }
 
@@ -106,38 +136,68 @@ export function overallConditionKeyFromInspectionScore(score) {
 }
 
 /**
- * Khung = 0 hoặc phanh = 0 → luôn FAIL (BE).
+ * Bất kỳ bộ phận cơ khí nào = 0 → FAIL (BE; `colorScore` = 0 không kích hoạt rule này).
  * @param {Partial<Record<string, number>>} scores
  */
-export function isCriticalFrameOrBrakeFail(scores) {
-  return scores?.frameScore === 0 || scores?.brakeScore === 0;
+export function isMechanicalZeroFail(scores) {
+  if (!scores) return false;
+  return MECHANICAL_SCORE_KEYS.some((k) => scores[k] === 0);
 }
 
 /**
+ * @deprecated Dùng `isMechanicalZeroFail` — BE mở rộng ngoài khung/phanh
+ * @param {Partial<Record<string, number>>} scores
+ */
+export function isCriticalFrameOrBrakeFail(scores) {
+  return isMechanicalZeroFail(scores);
+}
+
+/**
+ * Khớp BE `InspectionService#determineResult`.
  * @param {Record<string, number>} scores
  * @returns {"PASS" | "FAIL"}
  */
 export function predictInspectionResult(scores) {
+  if (!validateInspectionScores(scores).valid) return "FAIL";
   const pct = calculateConditionPercent(scores);
   if (Number.isNaN(pct)) return "FAIL";
-  if (pct < 50) return "FAIL";
-  if (isCriticalFrameOrBrakeFail(scores)) return "FAIL";
+
+  if (isMechanicalZeroFail(scores)) return "FAIL";
+
+  if (scores.frameScore <= 3 && scores.groupsetScore <= 3) return "FAIL";
+
+  const countOfThrees = INSPECTION_SCORE_KEYS.filter(
+    (k) => scores[k] === 3,
+  ).length;
+  if (countOfThrees >= 3 || pct < 50) return "FAIL";
+
   return "PASS";
 }
 
 /**
  * Gợi ý hiển thị cảnh báo trên form (không thay thế validateInspectionScores).
  * @param {Partial<Record<string, number>>} scores
- * @returns {string[]} mã gợi ý: critical_frame_brake | below_50
+ * @returns {string[]} mã: mechanical_zero | franken_frame_groupset | too_many_threes | below_50
  */
 export function inspectionPreviewWarnings(scores) {
   const warnings = [];
-  if (isCriticalFrameOrBrakeFail(scores)) {
-    warnings.push("critical_frame_brake");
+  const complete = validateInspectionScores(scores).valid;
+  if (!complete) return warnings;
+
+  if (isMechanicalZeroFail(scores)) {
+    warnings.push("mechanical_zero");
   }
-  const pct = calculateConditionPercent(
-    validateInspectionScores(scores).valid ? scores : {},
-  );
+  if (scores.frameScore <= 3 && scores.groupsetScore <= 3) {
+    warnings.push("franken_frame_groupset");
+  }
+  const countOfThrees = INSPECTION_SCORE_KEYS.filter(
+    (k) => scores[k] === 3,
+  ).length;
+  if (countOfThrees >= 3) {
+    warnings.push("too_many_threes");
+  }
+
+  const pct = calculateConditionPercent(scores);
   if (!Number.isNaN(pct) && pct < 50) {
     warnings.push("below_50");
   }

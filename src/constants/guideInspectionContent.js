@@ -12,7 +12,7 @@ export { INSPECTION_CRITERIA_ROWS, INSPECTION_SCORE_OPTIONS };
 export const GUIDE_INSPECTION_HERO = Object.freeze({
   title: "Inspection & condition score",
   lead:
-    "BASAUYCLE uses a six-criterion rubric. Each criterion is scored with exactly one of four fixed values (0, 3, 7, 10). From those scores the system derives a condition percentage (conditionPercent) and PASS/FAIL using the same rules on the preview and on the server after the inspector submits.",
+    "BASAUYCLE uses a six-criterion rubric. Each criterion is scored with exactly one of four fixed values (0, 3, 7, 10). The server computes conditionPercent (weighted sum, capped at 99%, then a ceiling by the lowest criterion so the % matches the band label), then PASS/FAIL. The inspector preview uses the same logic as the backend (see `InspectionService` on the server).",
 });
 
 export const GUIDE_INSPECTION_MEMBER = Object.freeze({
@@ -55,10 +55,11 @@ export const GUIDE_INSPECTION_FORMULA = Object.freeze({
     "Each criterion must be scored 0, 3, 7, or 10 only (other values are rejected; error code 1089).",
     "Each criterion has a weight in percent; the six weights sum to 100%.",
     "A criterion’s contribution = (score ÷ 10) × (weight %).",
-    "conditionPercent is the sum of those contributions; if the sum is ≥ 100%, it is capped at 99% (rounded to one decimal place like the UI).",
+    "conditionPercent is the sum of those contributions; if the sum is ≥ 100%, it is capped at 99% (used bikes cannot show 100%).",
+    "Then a ceiling is applied from the lowest score among all six criteria: if the minimum is ≤3, the displayed % cannot exceed 69%; if the minimum is 7, it cannot exceed 89%; if the minimum is 10, no extra cap (matches the overall band label on the report).",
   ],
   formulaLine:
-    "Summary: conditionPercent ≈ Σ (score_i / 10 × weight_i%), then apply the 99 cap when needed.",
+    "Summary: weighted sum → 99% cap if needed → min-score ceiling → one decimal place, same as the Java `InspectionService`.",
 });
 
 export const GUIDE_INSPECTION_PASS_FAIL = Object.freeze({
@@ -90,7 +91,7 @@ export const GUIDE_INSPECTION_INSPECTOR = Object.freeze({
     bullets: [
       "For each of the six criteria, pick exactly one score: 0, 3, 7, or 10 (pills/buttons on the UI).",
       "Notes are optional; use them for damage, repairs, or context the scores alone do not capture.",
-      "Live preview shows condition %, overall band (preview), PASS/FAIL (preview), and warnings (frame/brake at 0, below 50%) — it is indicative until you submit.",
+      "Live preview shows condition %, overall band, PASS/FAIL, and warnings (mechanical 0, frame+drivetrain both ≤3, three or more scores at 3, below 50%) — indicative until you submit.",
       "Click Submit inspection → confirm modal lists scores and preview → confirm to call the submit API; on success, follow the toast and return to the queue (per current app flow).",
     ],
   }),

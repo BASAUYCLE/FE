@@ -7,10 +7,23 @@ import { VALID_INSPECTION_SCORES } from "../utils/inspectionScoring";
 
 export { VALID_INSPECTION_SCORES };
 
-/** Tiêu chí 0 điểm → FAIL bắt buộc (BE); dùng badge (critical) trên UI báo cáo */
-export const INSPECTION_CRITICAL_CRITERIA_KEYS = Object.freeze(
-  new Set(["frameScore", "brakeScore"]),
+/**
+ * Bộ phận cơ khí — điểm 0 ⇒ FAIL (BE `InspectionService`).
+ * `colorScore` không nằm trong nhóm này.
+ */
+export const INSPECTION_MECHANICAL_CRITERIA_KEYS = Object.freeze(
+  new Set([
+    "frameScore",
+    "groupsetScore",
+    "brakeScore",
+    "controlScore",
+    "wheelScore",
+  ]),
 );
+
+/** Alias ngắn cho UI (badge “critical” / 0 → FAIL) */
+export const INSPECTION_CRITICAL_CRITERIA_KEYS =
+  INSPECTION_MECHANICAL_CRITERIA_KEYS;
 
 /** 4 mức điểm cho radio / button group / dropdown */
 export const INSPECTION_SCORE_OPTIONS = Object.freeze([
@@ -76,7 +89,7 @@ export function formatInspectorScoreRubricLineEn(score) {
 
 /**
  * Thứ tự hiển thị form — trùng key API.
- * Trọng số chỉ để hiển thị; công thức thực tế trong inspectionScoring.INSPECTION_WEIGHTS.
+ * Trọng số chỉ để hiển thị; công thức + cap % trong `inspectionScoring.js` (khớp BE).
  */
 export const INSPECTION_CRITERIA_ROWS = Object.freeze([
   {
@@ -131,14 +144,22 @@ export const INSPECTION_CRITERIA_ROWS = Object.freeze([
 
 /** Mã cảnh báo từ inspectionPreviewWarnings → chuỗi hiển thị */
 export const INSPECTION_PREVIEW_WARNING_TEXT_VI = Object.freeze({
-  critical_frame_brake:
-    "Khung hoặc phanh đang 0 điểm — hệ thống sẽ ghi nhận FAIL bất kể tổng điểm.",
+  mechanical_zero:
+    "Một bộ phận cơ khí (khung, truyền động, phanh, ghi đông, bánh) đang 0 điểm — hệ thống sẽ ghi nhận FAIL.",
+  franken_frame_groupset:
+    "Khung và bộ truyền động đều ≤ 3 điểm (xe chắp vá nặng) — FAIL.",
+  too_many_threes:
+    "Có từ 3 tiêu chí trở lên đang 3 điểm — FAIL.",
   below_50:
     "Tổng tình trạng dưới 50% — kết quả dự kiến là FAIL.",
 });
 
 export const INSPECTION_PREVIEW_WARNING_TEXT_EN = Object.freeze({
-  critical_frame_brake:
-    "Frame or brake score is 0 — the system will record FAIL regardless of the total score.",
+  mechanical_zero:
+    "A mechanical score (frame, drivetrain, brakes, cockpit, wheels) is 0 — the system will record FAIL.",
+  franken_frame_groupset:
+    "Frame and drivetrain are both ≤ 3 (heavy Franken-bike pattern) — FAIL.",
+  too_many_threes:
+    "Three or more criteria are scored 3 — FAIL.",
   below_50: "Overall condition is under 50% — expected result is FAIL.",
 });

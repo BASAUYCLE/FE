@@ -13,11 +13,11 @@ const ENDPOINTS = API_ENDPOINTS.INSPECTION;
  *
  * @typedef {Object} InspectionSubmitPayload
  * @property {InspectionScoreValue} colorScore      — weight 10%
- * @property {InspectionScoreValue} frameScore      — weight 30% (0 ⇒ auto FAIL)
- * @property {InspectionScoreValue} groupsetScore  — weight 25%
- * @property {InspectionScoreValue} brakeScore     — weight 15% (0 ⇒ auto FAIL)
- * @property {InspectionScoreValue} controlScore   — weight 10%
- * @property {InspectionScoreValue} wheelScore     — weight 10%
+ * @property {InspectionScoreValue} frameScore      — weight 30% (0 ⇒ FAIL; với groupset ≤3 cả hai ⇒ FAIL)
+ * @property {InspectionScoreValue} groupsetScore  — weight 25% (0 ⇒ FAIL)
+ * @property {InspectionScoreValue} brakeScore     — weight 15% (0 ⇒ FAIL)
+ * @property {InspectionScoreValue} controlScore   — weight 10% (0 ⇒ FAIL)
+ * @property {InspectionScoreValue} wheelScore     — weight 10% (0 ⇒ FAIL)
  * @property {string} [notes]                      — inspector notes (required by FE before submit)
  */
 
