@@ -133,3 +133,128 @@
   height: 128px;
   border-radius: 8px;
 }
+
+/* ─── Inspector dispute detail visual refresh (layout unchanged) ─── */
+.inspector-page .dispute-detail-split {
+  gap: 28px;
+  margin-top: 20px;
+}
+
+.inspector-page .dispute-detail-col-title {
+  margin-bottom: 14px !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+}
+
+.inspector-page .admin-card,
+.inspector-page .dispute-detail-post-card {
+  border: 1px solid #e6edf5;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  overflow: hidden;
+}
+
+.inspector-page .admin-card .ant-card-head,
+.inspector-page .dispute-detail-post-card .ant-card-head {
+  background: linear-gradient(180deg, #f8fbff 0%, #f5f9ff 100%);
+  border-bottom: 1px solid #e8eef6;
+  min-height: 54px;
+}
+
+.inspector-page .admin-card .ant-card-head-title,
+.inspector-page .dispute-detail-post-card .ant-card-head-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.inspector-page .admin-card .ant-card-body,
+.inspector-page .dispute-detail-post-card .ant-card-body {
+  padding: 22px;
+}
+
+.inspector-dispute-inspection-block {
+  margin-top: 14px;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f8ff 100%);
+}
+
+.inspector-dispute-section-head {
+  margin-bottom: 8px;
+}
+
+.inspector-dispute-result-line {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.inspector-dispute-score-text {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.inspector-dispute-meta-block {
+  margin-top: 8px;
+  color: #334155;
+}
+
+.inspector-dispute-tight-row {
+  margin: 6px 0 0;
+}
+
+.inspector-dispute-proof-block {
+  margin-top: 14px;
+}
+
+.inspector-page .my-dispute-proof-thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 10px;
+  border: 1px solid #dbe4ef;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.inspector-page .my-dispute-proof-thumb:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.14);
+}
+
+.inspector-dispute-note-form-wrap {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed #d8e2ee;
+}
+
+.inspector-dispute-submit-btn {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.inspector-dispute-note-disabled-text {
+  margin-top: 14px;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.inspector-dispute-actions-row {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.inspector-dispute-action-btn {
+  border-radius: 10px;
+  height: 36px;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(24, 144, 255, 0.2);
+}
