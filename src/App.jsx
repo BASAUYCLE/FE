@@ -10,6 +10,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { usePostingStatusNotifications } from "./contexts/usePostingStatusNotifications";
+import { useOrderStatusNotifications } from "./contexts/useOrderStatusNotifications";
 import MemberPostingsSync from "./components/MemberPostingsSync";
 import ScrollToTopOnRouteChange from "./components/ScrollToTopOnRouteChange";
 import { fontFamily, antdToken } from "./config/theme";
@@ -89,6 +90,7 @@ function PageFallback() {
 
 function PostingStatusEffect() {
   usePostingStatusNotifications();
+  useOrderStatusNotifications();
   return null;
 }
 

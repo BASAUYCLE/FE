@@ -120,8 +120,7 @@ function buildShippingAddress(row) {
 function extractBuyerPhone(row) {
   if (!row || typeof row !== "object") return null;
 
-  const pick = (v) =>
-    typeof v === "string" && v.trim() ? v.trim() : null;
+  const pick = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 
   const fromUserLike = (u) =>
     u && typeof u === "object"
@@ -243,11 +242,13 @@ function normalizeOrder(row) {
 
 /** Đồng bộ ảnh mới nhất theo postId cho Orders/My Sales. */
 async function enrichImages(orders) {
-  const postIds = [...new Set(
-    orders
-      .map((o) => o?.bikeId)
-      .filter((id) => id != null && String(id).trim() !== ""),
-  )];
+  const postIds = [
+    ...new Set(
+      orders
+        .map((o) => o?.bikeId)
+        .filter((id) => id != null && String(id).trim() !== ""),
+    ),
+  ];
   if (!postIds.length) return orders;
 
   const results = await Promise.allSettled(
@@ -264,9 +265,14 @@ async function enrichImages(orders) {
     const url = t?.imageUrl ?? t?.image_url ?? t?.url ?? null;
     if (url) {
       const updatedAt =
-        t?.updatedAt ?? t?.updated_at ?? t?.createdAt ?? t?.created_at ?? Date.now();
+        t?.updatedAt ??
+        t?.updated_at ??
+        t?.createdAt ??
+        t?.created_at ??
+        Date.now();
       // cache-bust để FE luôn thấy ảnh mới khi user vừa thay đổi ảnh
-      map[String(postIds[i])] = `${url}${String(url).includes("?") ? "&" : "?"}v=${encodeURIComponent(String(updatedAt))}`;
+      map[String(postIds[i])] =
+        `${url}${String(url).includes("?") ? "&" : "?"}v=${encodeURIComponent(String(updatedAt))}`;
     }
   });
 
@@ -337,6 +343,17 @@ export function OrderProvider({ children }) {
     fetchOrders();
     fetchSales();
   }, [fetchOrders, fetchSales]);
+
+  // Keep order/sales in sync so status-change notifications can appear
+  // without requiring a hard refresh.
+  useEffect(() => {
+    if (!hasUser) return;
+    const timer = setInterval(() => {
+      fetchOrders();
+      fetchSales();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [hasUser, fetchOrders, fetchSales]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
 
@@ -414,13 +431,13 @@ export function OrderProvider({ children }) {
       const updated = normalizeOrder(res?.result ?? res?.data ?? res);
       const patch = updated
         ? {
-          status: ORDER_STATUS.SHIPPING,
-          shippingMethod: updated.shippingMethod,
-          shippingTrackingNumber: updated.shippingTrackingNumber,
-          shippingPhone: updated.shippingPhone,
-          proofImage: updated.proofImage,
-          shippedAt: updated.shippedAt,
-        }
+            status: ORDER_STATUS.SHIPPING,
+            shippingMethod: updated.shippingMethod,
+            shippingTrackingNumber: updated.shippingTrackingNumber,
+            shippingPhone: updated.shippingPhone,
+            proofImage: updated.proofImage,
+            shippedAt: updated.shippedAt,
+          }
         : { status: ORDER_STATUS.SHIPPING };
       setSales((prev) =>
         prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
@@ -435,9 +452,9 @@ export function OrderProvider({ children }) {
     const updated = normalizeOrder(res?.result ?? res?.data ?? res);
     const patch = updated
       ? {
-        status: updated.status ?? ORDER_STATUS.DELIVERED,
-        deliveredAt: updated.deliveredAt ?? null,
-      }
+          status: updated.status ?? ORDER_STATUS.DELIVERED,
+          deliveredAt: updated.deliveredAt ?? null,
+        }
       : { status: ORDER_STATUS.DELIVERED };
     setOrders((prev) =>
       prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
@@ -453,8 +470,8 @@ export function OrderProvider({ children }) {
     const updated = normalizeOrder(res?.result ?? res?.data ?? res);
     const patch = updated
       ? {
-        status: updated.status ?? ORDER_STATUS.COMPLETED,
-      }
+          status: updated.status ?? ORDER_STATUS.COMPLETED,
+        }
       : { status: ORDER_STATUS.COMPLETED };
     setOrders((prev) =>
       prev.map((o) => (o.orderId === orderId ? { ...o, ...patch } : o)),
