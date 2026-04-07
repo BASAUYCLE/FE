@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Input, Select, Button, Upload, App, Alert } from "antd";
+import { Input, Select, Button, Upload, App, Alert, Modal } from "antd";
 import {
   InfoCircleOutlined,
   SettingOutlined,
@@ -198,6 +198,8 @@ export default function PostBike() {
   );
   const [defectFiles, setDefectFiles] = useState([]);
   const [defectImageDataUrls, setDefectImageDataUrls] = useState([]);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
 
   const filledEditIdRef = useRef(null);
 
@@ -717,6 +719,28 @@ export default function PostBike() {
     reader.readAsDataURL(file.originFileObj);
   };
 
+  const handleUploadPreview = async (file) => {
+    const directUrl = file?.url || file?.thumbUrl;
+    if (typeof directUrl === "string" && directUrl.trim()) {
+      setPreviewImage(directUrl);
+      setPreviewOpen(true);
+      return;
+    }
+
+    const origin = file?.originFileObj;
+    if (!origin?.type?.startsWith("image/")) return;
+    const dataUrl = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(origin);
+    });
+    if (typeof dataUrl === "string" && dataUrl.length > 0) {
+      setPreviewImage(dataUrl);
+      setPreviewOpen(true);
+    }
+  };
+
   /* Cách làm giống Register: beforeUpload return false, set fileList thủ công (không customRequest) */
   const beforeUploadRequired = (slotKey, file) => {
     if (isFormReadOnly) return Upload.LIST_IGNORE;
@@ -764,6 +788,7 @@ export default function PostBike() {
     openFileDialogOnClick: !isFormReadOnly,
     beforeUpload: (file) => beforeUploadRequired(slotKey, file),
     onRemove: () => handleRemoveRequired(slotKey),
+    onPreview: handleUploadPreview,
     showUploadList: {
       showPreviewIcon: true,
       showRemoveIcon: !isFormReadOnly,
@@ -821,6 +846,7 @@ export default function PostBike() {
     openFileDialogOnClick: !isFormReadOnly,
     beforeUpload: beforeUploadDefect,
     onRemove: () => !isFormReadOnly,
+    onPreview: handleUploadPreview,
     customRequest({ onSuccess }) {
       setTimeout(() => onSuccess({ url: "" }), 0);
     },
@@ -1898,6 +1924,24 @@ export default function PostBike() {
 
       {/* <PostFooter /> */}
       <Footer />
+      <Modal
+        open={previewOpen}
+        footer={null}
+        onCancel={() => {
+          setPreviewOpen(false);
+          setPreviewImage("");
+        }}
+        centered
+        width="min(92vw, 980px)"
+      >
+        {previewImage ? (
+          <img
+            src={previewImage}
+            alt="Preview"
+            style={{ width: "100%", maxHeight: "80vh", objectFit: "contain" }}
+          />
+        ) : null}
+      </Modal>
     </div>
   );
 }
