@@ -6,6 +6,7 @@ import { NotificationContext } from "./NotificationContextBase";
 
 const STORAGE_KEY_PREFIX = "basauycle-order-status-prev";
 const KNOWN_KEY_PREFIX = "basauycle-order-known";
+const INIT_KEY_PREFIX = "basauycle-order-notify-init";
 
 function normalizeUserId(user) {
   return user?.id ?? user?.userId ?? user?.user_id ?? user?.email ?? null;
@@ -17,6 +18,10 @@ function getStorageKey(userId) {
 
 function getKnownKey(userId) {
   return userId ? `${KNOWN_KEY_PREFIX}-${userId}` : KNOWN_KEY_PREFIX;
+}
+
+function getInitKey(userId) {
+  return userId ? `${INIT_KEY_PREFIX}-${userId}` : INIT_KEY_PREFIX;
 }
 
 function orderStatusMessage(status, role, bikeName) {
@@ -82,12 +87,29 @@ function pushNewSaleNotification(addNotification, order) {
   });
 }
 
+function pushNewBuyerOrderNotification(addNotification, order) {
+  const itemName = order?.bikeName?.trim() || "your item";
+  const paymentMethod = getOrderPaymentMethodLabel(order);
+  addNotification({
+    type: "info",
+    title: "Order placed successfully",
+    message: `Your order "${itemName}" was created with ${paymentMethod}.`,
+    meta: {
+      orderId: order?.orderId ?? order?.id ?? null,
+      role: "buyer",
+      kind: "new_order",
+      paymentMethod,
+    },
+  });
+}
+
 export function useOrderStatusNotifications() {
   const auth = useAuthOptional();
   const user = auth?.user ?? null;
   const userId = normalizeUserId(user);
   const storageKey = useMemo(() => getStorageKey(userId), [userId]);
   const knownKey = useMemo(() => getKnownKey(userId), [userId]);
+  const initKey = useMemo(() => getInitKey(userId), [userId]);
   const notifCtx = useContext(NotificationContext) ?? null;
   const addNotification = notifCtx?.addNotification ?? null;
   const { orders, sales } = useOrders();
@@ -97,6 +119,7 @@ export function useOrderStatusNotifications() {
 
     let prevMap = {};
     let knownIds = {};
+    let initialized = false;
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) prevMap = JSON.parse(raw);
@@ -109,20 +132,29 @@ export function useOrderStatusNotifications() {
     } catch {
       knownIds = {};
     }
+    try {
+      initialized = localStorage.getItem(initKey) === "1";
+    } catch {
+      initialized = false;
+    }
 
     const currentMap = {};
     const currentKnownIds = {};
     const buyerOrders = Array.isArray(orders) ? orders : [];
     const sellerOrders = Array.isArray(sales) ? sales : [];
-    const hasKnownSnapshot = Object.keys(knownIds ?? {}).length > 0;
+    const shouldEmit = initialized;
 
     for (const order of buyerOrders) {
       const id = order?.orderId ?? order?.id;
       if (!id) continue;
       const key = `buyer-${id}`;
+      currentKnownIds[key] = true;
       const nextStatus = String(order?.status ?? "").toUpperCase();
       if (nextStatus) currentMap[key] = nextStatus;
       const prevStatus = prevMap[key];
+      if (!prevStatus && shouldEmit && !knownIds[key]) {
+        pushNewBuyerOrderNotification(addNotification, order);
+      }
       if (prevStatus && nextStatus && prevStatus !== nextStatus) {
         pushOrderStatusNotification(addNotification, order, "buyer");
       }
@@ -136,7 +168,7 @@ export function useOrderStatusNotifications() {
       const nextStatus = String(order?.status ?? "").toUpperCase();
       if (nextStatus) currentMap[key] = nextStatus;
       const prevStatus = prevMap[key];
-      if (!prevStatus && hasKnownSnapshot && !knownIds[key]) {
+      if (!prevStatus && shouldEmit && !knownIds[key]) {
         pushNewSaleNotification(addNotification, order);
       }
       if (prevStatus && nextStatus && prevStatus !== nextStatus) {
@@ -147,8 +179,9 @@ export function useOrderStatusNotifications() {
     try {
       localStorage.setItem(storageKey, JSON.stringify(currentMap));
       localStorage.setItem(knownKey, JSON.stringify(currentKnownIds));
+      if (!initialized) localStorage.setItem(initKey, "1");
     } catch {
       // ignore storage errors
     }
-  }, [user, orders, sales, addNotification, storageKey, knownKey]);
+  }, [user, orders, sales, addNotification, storageKey, knownKey, initKey]);
 }

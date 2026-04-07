@@ -6,7 +6,7 @@ import {
   Button,
   Typography,
   Tooltip,
-  message,
+  App,
   Popconfirm,
 } from "antd";
 import ProductPreviewModal from "../ProductPreviewModal";
@@ -35,6 +35,7 @@ import {
 import "./PendingOrderCard.css";
 
 export default function PendingOrderCard({ order }) {
+  const { message } = App.useApp();
   const { cancelOrder, confirmDelivery, completeOrder, refreshOrders } =
     useOrders();
   const [payModalOpen, setPayModalOpen] = useState(false);
