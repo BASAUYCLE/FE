@@ -8,11 +8,22 @@ import { SimpleProductCard } from "../../components/featuredbikes";
 import MarketplaceFilterBar from "../../components/filters/MarketplaceFilterBar";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
-import { POSTING_STATUS } from "../../constants/postingStatus";
+import {
+  POSTING_STATUS,
+  OVERALL_CONDITION,
+  OVERALL_CONDITION_LABEL,
+} from "../../constants/postingStatus";
 import postService from "../../services/postService";
 import { formatCurrency } from "../../utils/formatCurrency";
-import { verificationScorePctFromPostPayload } from "../../utils/inspectionReportNormalize";
-import { fetchPublicInspectionScoresByPostId } from "../../utils/inspectionReportFetch";
+import {
+  verificationScorePctFromPostPayload,
+  extractInspectionFromPostPayload,
+} from "../../utils/inspectionReportNormalize";
+import { overallConditionFromPercent } from "../../utils/inspectionScoring";
+import {
+  fetchPublicInspectionScoresByPostId,
+  fetchPublicInspectionBandsByPostId,
+} from "../../utils/inspectionReportFetch";
 import defaultBikeImage from "../../assets/bike-tarmac-sl7.png";
 import bicyclesWorkshopImage from "../../assets/bicycles_workshop.jpg";
 import "./index.css";
@@ -106,6 +117,56 @@ const PAGE_SIZE = 20;
 
 const MARKETPLACE_BROWSE_HASH = "#marketplace-browse";
 
+/** @param {unknown} v */
+function normalizeOverallBandKey(v) {
+  if (v == null || v === "") return null;
+  const s = String(v).toUpperCase().trim();
+  if (s === "EXCELLENT" || s === "GOOD" || s === "FAIR" || s === "POOR")
+    return s;
+  return null;
+}
+
+/**
+ * Band EXCELLENT…POOR: từ payload tin (nhúng inspection) → public map → % (preview).
+ */
+function resolveInspectionOverallBand(p, publicScores, publicBands) {
+  const id = String(p?.postId ?? p?.id ?? "");
+  const embedded = extractInspectionFromPostPayload(p);
+  if (embedded?.condition) {
+    const k = normalizeOverallBandKey(embedded.condition);
+    if (k) return k;
+  }
+  if (id && publicBands[id]) return publicBands[id];
+  const pctPost = verificationScorePctFromPostPayload(p);
+  if (pctPost != null && Number.isFinite(pctPost)) {
+    return overallConditionFromPercent(pctPost);
+  }
+  if (id && publicScores[id] != null && Number.isFinite(publicScores[id])) {
+    return overallConditionFromPercent(publicScores[id]);
+  }
+  return null;
+}
+
+const INSPECTION_BAND_FILTER_OPTIONS = [
+  { value: "all", label: "All inspection bands" },
+  {
+    value: OVERALL_CONDITION.EXCELLENT,
+    label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.EXCELLENT],
+  },
+  {
+    value: OVERALL_CONDITION.GOOD,
+    label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.GOOD],
+  },
+  {
+    value: OVERALL_CONDITION.FAIR,
+    label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.FAIR],
+  },
+  {
+    value: OVERALL_CONDITION.POOR,
+    label: OVERALL_CONDITION_LABEL[OVERALL_CONDITION.POOR],
+  },
+];
+
 export default function Marketplace() {
   const { user } = useAuth();
   const { postings, publicPostings, loadPublicPostings, loadPostingsBySeller } =
@@ -116,11 +177,19 @@ export default function Marketplace() {
   const [loading, setLoading] = useState(true);
   /** % từ GET public inspection list khi DTO tin không có inspection */
   const [publicInspectionScores, setPublicInspectionScores] = useState({});
+  /** overallCondition band (EXCELLENT…) từ cùng nguồn public reports */
+  const [publicInspectionBands, setPublicInspectionBands] = useState({});
 
   useEffect(() => {
     let cancelled = false;
-    fetchPublicInspectionScoresByPostId().then((scores) => {
-      if (!cancelled) setPublicInspectionScores(scores);
+    Promise.all([
+      fetchPublicInspectionScoresByPostId(),
+      fetchPublicInspectionBandsByPostId(),
+    ]).then(([scores, bands]) => {
+      if (!cancelled) {
+        setPublicInspectionScores(scores);
+        setPublicInspectionBands(bands);
+      }
     });
     return () => {
       cancelled = true;
@@ -182,6 +251,7 @@ export default function Marketplace() {
   );
   const [frameSizeFilter, setFrameSizeFilter] = useState("all");
   const [modelYearFilter, setModelYearFilter] = useState("all");
+  const [inspectionBandFilter, setInspectionBandFilter] = useState("all");
   const [searchName, setSearchName] = useState("");
   const [brandOptions, setBrandOptions] = useState([
     { value: "all", label: "All Brands" },
@@ -232,15 +302,27 @@ export default function Marketplace() {
       });
     return [...byId.values()].map((p) => {
       const bike = postingToBike(p);
-      if (bike.verificationScorePct != null) return bike;
       const id = String(bike.id ?? bike.postId ?? "");
+      const band = resolveInspectionOverallBand(
+        p,
+        publicInspectionScores,
+        publicInspectionBands,
+      );
+      let next = { ...bike, inspectionOverallBand: band };
+      if (next.verificationScorePct != null) return next;
       const s = id ? publicInspectionScores[id] : undefined;
       if (typeof s === "number" && Number.isFinite(s)) {
-        return { ...bike, verificationScorePct: s };
+        next = { ...next, verificationScorePct: s };
       }
-      return bike;
+      return next;
     });
-  }, [apiPostings, postings, publicPostings, publicInspectionScores]);
+  }, [
+    apiPostings,
+    postings,
+    publicPostings,
+    publicInspectionScores,
+    publicInspectionBands,
+  ]);
 
   // Load đầy đủ Brand/Category/FrameSize/ModelYear từ database giống trang Post
   useEffect(() => {
@@ -381,6 +463,14 @@ export default function Marketplace() {
         if (year !== String(modelYearFilter)) return false;
       }
 
+      // Inspection overall band (EXCELLENT / GOOD / FAIR / POOR)
+      if (inspectionBandFilter !== "all") {
+        const band = b.inspectionOverallBand
+          ? String(b.inspectionOverallBand).toUpperCase()
+          : null;
+        if (band !== String(inspectionBandFilter).toUpperCase()) return false;
+      }
+
       return true;
     });
   }, [
@@ -390,6 +480,7 @@ export default function Marketplace() {
     categoryFilter,
     frameSizeFilter,
     modelYearFilter,
+    inspectionBandFilter,
     searchName,
   ]);
 
@@ -442,6 +533,7 @@ export default function Marketplace() {
       categoryFilter,
       frameSizeFilter,
       modelYearFilter,
+      inspectionBandFilter,
       priceRange0: priceRange[0],
       priceRange1: priceRange[1],
       searchName,
@@ -454,6 +546,7 @@ export default function Marketplace() {
       prev.categoryFilter !== next.categoryFilter ||
       prev.frameSizeFilter !== next.frameSizeFilter ||
       prev.modelYearFilter !== next.modelYearFilter ||
+      prev.inspectionBandFilter !== next.inspectionBandFilter ||
       prev.priceRange0 !== next.priceRange0 ||
       prev.priceRange1 !== next.priceRange1 ||
       prev.searchName !== next.searchName;
@@ -472,6 +565,7 @@ export default function Marketplace() {
     categoryFilter,
     frameSizeFilter,
     modelYearFilter,
+    inspectionBandFilter,
     priceRange,
     searchName,
     setSearchParams,
@@ -483,6 +577,7 @@ export default function Marketplace() {
     setCategoryFilter("all");
     setFrameSizeFilter("all");
     setModelYearFilter("all");
+    setInspectionBandFilter("all");
     setSearchName("");
   };
 
@@ -526,6 +621,9 @@ export default function Marketplace() {
               onFrameSizeFilterChange={setFrameSizeFilter}
               modelYearFilter={modelYearFilter}
               onModelYearFilterChange={setModelYearFilter}
+              inspectionBandFilter={inspectionBandFilter}
+              onInspectionBandFilterChange={setInspectionBandFilter}
+              inspectionBandOptions={INSPECTION_BAND_FILTER_OPTIONS}
               priceRange={priceRange}
               onPriceRangeChange={(updater) =>
                 setPriceRange((prev) =>

@@ -14,6 +14,7 @@ import {
   normalizeInspection,
   calcScore,
 } from "./inspectionReportNormalize";
+import { overallConditionFromPercent } from "./inspectionScoring";
 
 /** Không gồm /admin/inspection/:id — endpoint đó chỉ dành cho ADMIN, seller/buyer sẽ luôn 403. */
 function perPostInspectionUrls(postId, { isAdmin } = { isAdmin: false }) {
@@ -163,6 +164,50 @@ export async function fetchPublicInspectionScoresByPostId() {
       if (typeof s === "number" && Number.isFinite(s)) {
         out[id] = s;
       }
+    }
+  } catch {
+    /* ignore */
+  }
+  return out;
+}
+
+/** @param {unknown} v */
+function normalizeOverallBandKey(v) {
+  if (v == null || v === "") return null;
+  const s = String(v).toUpperCase().trim();
+  if (s === "EXCELLENT" || s === "GOOD" || s === "FAIR" || s === "POOR") return s;
+  return null;
+}
+
+/**
+ * Map postId → overall band (EXCELLENT|GOOD|FAIR|POOR) từ GET /reports/inspection (cùng cache với %).
+ * Dùng khi GET /posts không nhúng overallCondition.
+ */
+export async function fetchPublicInspectionBandsByPostId() {
+  /** @type {Record<string, string>} */
+  const out = {};
+  try {
+    const rows = await getPublicInspectionRowsCached();
+    if (!Array.isArray(rows) || rows.length === 0) return out;
+    const idSet = new Set();
+    for (const row of rows) {
+      const pid = reportRowPostId(row);
+      if (pid != null) idSet.add(String(pid));
+    }
+    for (const id of idSet) {
+      const row = pickLatestReportRowForPost(rows, id);
+      if (!row) continue;
+      const ins = normalizeInspection(row);
+      if (!inspectionResponseHasUsableData(ins)) continue;
+      let band = normalizeOverallBandKey(ins.condition);
+      if (
+        !band &&
+        typeof ins.conditionPercent === "number" &&
+        Number.isFinite(ins.conditionPercent)
+      ) {
+        band = overallConditionFromPercent(ins.conditionPercent);
+      }
+      if (band) out[id] = band;
     }
   } catch {
     /* ignore */

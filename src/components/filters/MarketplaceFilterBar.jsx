@@ -2,7 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { AppstoreOutlined, UnorderedListOutlined } from "@ant-design/icons";
 import { Select } from "antd";
-import { ArrowDownWideNarrow, ArrowUpNarrowWide, Filter, Sparkles } from "lucide-react";
+import {
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  Filter,
+  Sparkles,
+} from "lucide-react";
 import "./MarketplaceFilterBar.css";
 
 export default function MarketplaceFilterBar({
@@ -16,6 +21,9 @@ export default function MarketplaceFilterBar({
   onFrameSizeFilterChange,
   modelYearFilter,
   onModelYearFilterChange,
+  inspectionBandFilter = "all",
+  onInspectionBandFilterChange,
+  inspectionBandOptions = [{ value: "all", label: "All inspection bands" }],
   priceRange,
   onPriceRangeChange,
   brandOptions,
@@ -48,7 +56,10 @@ export default function MarketplaceFilterBar({
         categoryFilter,
         frameSizeFilter,
         modelYearFilter,
-        priceRange: Array.isArray(priceRange) ? [...priceRange] : [priceMin, priceMax],
+        inspectionBandFilter,
+        priceRange: Array.isArray(priceRange)
+          ? [...priceRange]
+          : [priceMin, priceMax],
       });
       setIsModalOpen(true);
       return;
@@ -119,6 +130,7 @@ export default function MarketplaceFilterBar({
       categoryFilter: "all",
       frameSizeFilter: "all",
       modelYearFilter: "all",
+      inspectionBandFilter: "all",
       priceRange: [priceMin, priceMax],
     });
     setMinPriceStr("");
@@ -131,6 +143,7 @@ export default function MarketplaceFilterBar({
     onCategoryFilterChange(draft.categoryFilter);
     onFrameSizeFilterChange(draft.frameSizeFilter);
     onModelYearFilterChange(draft.modelYearFilter);
+    onInspectionBandFilterChange?.(draft.inspectionBandFilter ?? "all");
     onPriceRangeChange(draft.priceRange);
     setIsModalOpen(false);
   };
@@ -142,7 +155,7 @@ export default function MarketplaceFilterBar({
       const max = prev.priceRange?.[1] ?? priceMax;
       const num =
         minPriceStr === ""
-          ? prev.priceRange?.[0] ?? priceMin
+          ? (prev.priceRange?.[0] ?? priceMin)
           : parseInt(minPriceStr, 10);
       const clamped = Number.isNaN(num)
         ? priceMin
@@ -158,7 +171,7 @@ export default function MarketplaceFilterBar({
       const min = prev.priceRange?.[0] ?? priceMin;
       const num =
         maxPriceStr === ""
-          ? prev.priceRange?.[1] ?? priceMax
+          ? (prev.priceRange?.[1] ?? priceMax)
           : parseInt(maxPriceStr, 10);
       const clamped = Number.isNaN(num)
         ? priceMax
@@ -270,6 +283,7 @@ export default function MarketplaceFilterBar({
     categoryFilter,
     frameSizeFilter,
     modelYearFilter,
+    inspectionBandFilter,
     priceRange,
     isDraft: false,
   };
@@ -277,13 +291,14 @@ export default function MarketplaceFilterBar({
   const criteriaSourceModal =
     isModalOpen && draft
       ? {
-        brandFilter: draft.brandFilter,
-        categoryFilter: draft.categoryFilter,
-        frameSizeFilter: draft.frameSizeFilter,
-        modelYearFilter: draft.modelYearFilter,
-        priceRange: draft.priceRange,
-        isDraft: true,
-      }
+          brandFilter: draft.brandFilter,
+          categoryFilter: draft.categoryFilter,
+          frameSizeFilter: draft.frameSizeFilter,
+          modelYearFilter: draft.modelYearFilter,
+          inspectionBandFilter: draft.inspectionBandFilter ?? "all",
+          priceRange: draft.priceRange,
+          isDraft: true,
+        }
       : criteriaSourceCommitted;
 
   const buildSelectedCriteria = (src) => {
@@ -293,6 +308,8 @@ export default function MarketplaceFilterBar({
     const hasCategory = src.categoryFilter && src.categoryFilter !== "all";
     const hasFrame = src.frameSizeFilter && src.frameSizeFilter !== "all";
     const hasYear = src.modelYearFilter && src.modelYearFilter !== "all";
+    const hasInspectionBand =
+      src.inspectionBandFilter && src.inspectionBandFilter !== "all";
     const hasPrice =
       Array.isArray(src.priceRange) &&
       src.priceRange.length === 2 &&
@@ -301,78 +318,93 @@ export default function MarketplaceFilterBar({
     return [
       hasPrice
         ? {
-          key: "price",
-          label: `Price: ${formatVnd(src.priceRange[0])} - ${formatVnd(src.priceRange[1])}`,
-          onRemove: () => {
-            if (src.isDraft) {
-              setDraft((prev) =>
-                prev ? { ...prev, priceRange: [priceMin, priceMax] } : prev,
-              );
-            } else {
-              onPriceRangeChange([priceMin, priceMax]);
-            }
-          },
-        }
+            key: "price",
+            label: `Price: ${formatVnd(src.priceRange[0])} - ${formatVnd(src.priceRange[1])}`,
+            onRemove: () => {
+              if (src.isDraft) {
+                setDraft((prev) =>
+                  prev ? { ...prev, priceRange: [priceMin, priceMax] } : prev,
+                );
+              } else {
+                onPriceRangeChange([priceMin, priceMax]);
+              }
+            },
+          }
         : null,
       hasBrand
         ? {
-          key: "brand",
-          label: `Brand: ${getOptionLabel(brandOptions, src.brandFilter)}`,
-          onRemove: () => {
-            if (src.isDraft) {
-              setDraft((prev) =>
-                prev ? { ...prev, brandFilter: "all" } : prev,
-              );
-            } else {
-              onBrandFilterChange("all");
-            }
-          },
-        }
+            key: "brand",
+            label: `Brand: ${getOptionLabel(brandOptions, src.brandFilter)}`,
+            onRemove: () => {
+              if (src.isDraft) {
+                setDraft((prev) =>
+                  prev ? { ...prev, brandFilter: "all" } : prev,
+                );
+              } else {
+                onBrandFilterChange("all");
+              }
+            },
+          }
         : null,
       hasCategory
         ? {
-          key: "category",
-          label: `Category: ${getOptionLabel(categoryOptions, src.categoryFilter)}`,
-          onRemove: () => {
-            if (src.isDraft) {
-              setDraft((prev) =>
-                prev ? { ...prev, categoryFilter: "all" } : prev,
-              );
-            } else {
-              onCategoryFilterChange("all");
-            }
-          },
-        }
+            key: "category",
+            label: `Category: ${getOptionLabel(categoryOptions, src.categoryFilter)}`,
+            onRemove: () => {
+              if (src.isDraft) {
+                setDraft((prev) =>
+                  prev ? { ...prev, categoryFilter: "all" } : prev,
+                );
+              } else {
+                onCategoryFilterChange("all");
+              }
+            },
+          }
         : null,
       hasFrame
         ? {
-          key: "frame",
-          label: `Frame size: ${getOptionLabel(frameSizeOptions, src.frameSizeFilter)}`,
-          onRemove: () => {
-            if (src.isDraft) {
-              setDraft((prev) =>
-                prev ? { ...prev, frameSizeFilter: "all" } : prev,
-              );
-            } else {
-              onFrameSizeFilterChange("all");
-            }
-          },
-        }
+            key: "frame",
+            label: `Frame size: ${getOptionLabel(frameSizeOptions, src.frameSizeFilter)}`,
+            onRemove: () => {
+              if (src.isDraft) {
+                setDraft((prev) =>
+                  prev ? { ...prev, frameSizeFilter: "all" } : prev,
+                );
+              } else {
+                onFrameSizeFilterChange("all");
+              }
+            },
+          }
         : null,
       hasYear
         ? {
-          key: "year",
-          label: `Model year: ${getOptionLabel(modelYearOptions, src.modelYearFilter)}`,
-          onRemove: () => {
-            if (src.isDraft) {
-              setDraft((prev) =>
-                prev ? { ...prev, modelYearFilter: "all" } : prev,
-              );
-            } else {
-              onModelYearFilterChange("all");
-            }
-          },
-        }
+            key: "year",
+            label: `Model year: ${getOptionLabel(modelYearOptions, src.modelYearFilter)}`,
+            onRemove: () => {
+              if (src.isDraft) {
+                setDraft((prev) =>
+                  prev ? { ...prev, modelYearFilter: "all" } : prev,
+                );
+              } else {
+                onModelYearFilterChange("all");
+              }
+            },
+          }
+        : null,
+      hasInspectionBand
+        ? {
+            key: "inspectionBand",
+            label: `Inspection: ${getOptionLabel(inspectionBandOptions, src.inspectionBandFilter)}`,
+            onRemove: () => {
+              if (src.isDraft) {
+                setDraft((prev) =>
+                  prev ? { ...prev, inspectionBandFilter: "all" } : prev,
+                );
+              } else {
+                onInspectionBandFilterChange?.("all");
+              }
+            },
+          }
         : null,
     ].filter(Boolean);
   };
@@ -383,7 +415,9 @@ export default function MarketplaceFilterBar({
   const selectedCriteriaModal = buildSelectedCriteria(criteriaSourceModal);
 
   const isQuickHeaderCategory = (() => {
-    const normalized = String(categoryFilter ?? "").trim().toLowerCase();
+    const normalized = String(categoryFilter ?? "")
+      .trim()
+      .toLowerCase();
     return (
       normalized === "road bike" ||
       normalized === "mountain bike" ||
@@ -498,6 +532,21 @@ export default function MarketplaceFilterBar({
             dropdownClassName="mp-sort-dropdown"
           />
 
+          <Select
+            className="mp-inline-filter-select"
+            value={
+              inspectionBandFilter === "all" ? undefined : inspectionBandFilter
+            }
+            placeholder="Inspection band"
+            allowClear
+            onChange={(value) => onInspectionBandFilterChange?.(value ?? "all")}
+            options={
+              Array.isArray(inspectionBandOptions) ? inspectionBandOptions : []
+            }
+            dropdownClassName="mp-sort-dropdown"
+            dropdownMatchSelectWidth={false}
+          />
+
           <button
             type="button"
             className={`mp-filter-chip mp-filter-chip--select mp-filter-chip-primary ${isModalOpen ? "mp-filter-chip--open" : ""}`}
@@ -530,9 +579,7 @@ export default function MarketplaceFilterBar({
 
       {selectedCriteriaInline.length > 0 && (
         <div className="mp-filter-inline-selected">
-          <span className="mp-filter-inline-selected-label">
-          Filtered by:
-          </span>
+          <span className="mp-filter-inline-selected-label">Filtered by:</span>
           <div className="mp-filter-inline-selected-items">
             {selectedCriteriaInline.map((c) => (
               <span key={c.key} className="mp-filter-inline-selected-chip">
@@ -572,239 +619,282 @@ export default function MarketplaceFilterBar({
             }}
           >
             <div className="mp-filter-modal">
-            <div className="mp-filter-modal-header">
-              <div className="mp-filter-modal-title">Filters</div>
-              <button
-                type="button"
-                className="mp-filter-modal-close"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="mp-filter-selected-bar">
-              <div className="mp-filter-selected-left">
-                <span className="mp-filter-selected-label">Selected criteria:</span>
-                <div className="mp-filter-selected-items">
-                  {selectedCriteriaModal.length === 0 ? (
-                    <span className="mp-filter-selected-empty">None</span>
-                  ) : (
-                    selectedCriteriaModal.map((c) => (
-                      <span key={c.key} className="mp-filter-selected-chip">
-                        <span className="mp-filter-selected-chip-text">{c.label}</span>
-                        <button
-                          type="button"
-                          className="mp-filter-selected-chip-x"
-                          onClick={c.onRemove}
-                          aria-label={`Remove ${c.label}`}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))
-                  )}
-                </div>
+              <div className="mp-filter-modal-header">
+                <div className="mp-filter-modal-title">Filters</div>
+                <button
+                  type="button"
+                  className="mp-filter-modal-close"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Close
+                </button>
               </div>
 
-              <button
-                type="button"
-                className="mp-filter-selected-clear"
-                onClick={resetDraft}
-              >
-                Clear filters
-              </button>
-            </div>
-
-            <div className="mp-filter-modal-body">
-              <div className="mp-filter-modal-grid">
-                <div className="mp-filter-modal-section mp-filter-modal-section--price">
-                  <div className="mp-filter-modal-section-title">Price</div>
-                  <div className="mp-filter-modal-price">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={
-                        minPriceStr !== ""
-                          ? `${minPriceStr}đ`
-                          : formatVnd(draft?.priceRange?.[0] ?? priceRange[0])
-                      }
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/\D/g, "");
-                        setMinPriceStr(raw);
-                        setDraft((prev) => {
-                          if (!prev) return prev;
-                          const max = prev.priceRange?.[1] ?? priceMax;
-                          if (raw === "") return { ...prev, priceRange: [priceMin, max] };
-                          const num = parseInt(raw, 10);
-                          if (Number.isNaN(num)) return prev;
-                          return { ...prev, priceRange: [Math.min(num, max), max] };
-                        });
-                      }}
-                      onFocus={() =>
-                        setMinPriceStr(
-                          String(draft?.priceRange?.[0] ?? priceRange[0]),
-                        )
-                      }
-                      onBlur={commitDraftMin}
-                      placeholder={formatVnd(priceMin)}
-                      className="mp-filter-modal-input"
-                    />
-                    <span className="mp-filter-modal-price-sep">-</span>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      value={
-                        maxPriceStr !== ""
-                          ? `${maxPriceStr}đ`
-                          : formatVnd(draft?.priceRange?.[1] ?? priceRange[1])
-                      }
-                      onChange={(e) => {
-                        const raw = e.target.value.replace(/\D/g, "");
-                        setMaxPriceStr(raw);
-                        setDraft((prev) => {
-                          if (!prev) return prev;
-                          const min = prev.priceRange?.[0] ?? priceMin;
-                          if (raw === "") return { ...prev, priceRange: [min, priceMax] };
-                          const num = parseInt(raw, 10);
-                          if (Number.isNaN(num)) return prev;
-                          return { ...prev, priceRange: [min, Math.max(num, min)] };
-                        });
-                      }}
-                      onFocus={() =>
-                        setMaxPriceStr(
-                          String(draft?.priceRange?.[1] ?? priceRange[1]),
-                        )
-                      }
-                      onBlur={commitDraftMax}
-                      placeholder={formatVnd(priceMax)}
-                      className="mp-filter-modal-input"
-                    />
-                  </div>
-
-                  <div className="mp-range-wrap">
-                    <div className="mp-range-track" />
-                    <div
-                      className="mp-range-fill"
-                      style={{
-                        left: `${(((draft?.priceRange?.[0] ?? priceRange[0]) - priceMin) / (priceMax - priceMin)) * 100}%`,
-                        width: `${(((draft?.priceRange?.[1] ?? priceRange[1]) - (draft?.priceRange?.[0] ?? priceRange[0])) / (priceMax - priceMin)) * 100}%`,
-                      }}
-                    />
-                    <input
-                      type="range"
-                      min={priceMin}
-                      max={priceMax}
-                      value={draft?.priceRange?.[0] ?? priceRange[0]}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        if (Number.isNaN(val)) return;
-                        setDraft((prev) => {
-                          if (!prev) return prev;
-                          const max = prev.priceRange?.[1] ?? priceMax;
-                          return { ...prev, priceRange: [Math.min(val, max), max] };
-                        });
-                      }}
-                      className="mp-range-input mp-range-input-min"
-                    />
-                    <input
-                      type="range"
-                      min={priceMin}
-                      max={priceMax}
-                      value={draft?.priceRange?.[1] ?? priceRange[1]}
-                      onChange={(e) => {
-                        const val = Number(e.target.value);
-                        if (Number.isNaN(val)) return;
-                        setDraft((prev) => {
-                          if (!prev) return prev;
-                          const min = prev.priceRange?.[0] ?? priceMin;
-                          return { ...prev, priceRange: [min, Math.max(val, min)] };
-                        });
-                      }}
-                      className="mp-range-input mp-range-input-max"
-                    />
+              <div className="mp-filter-selected-bar">
+                <div className="mp-filter-selected-left">
+                  <span className="mp-filter-selected-label">
+                    Selected criteria:
+                  </span>
+                  <div className="mp-filter-selected-items">
+                    {selectedCriteriaModal.length === 0 ? (
+                      <span className="mp-filter-selected-empty">None</span>
+                    ) : (
+                      selectedCriteriaModal.map((c) => (
+                        <span key={c.key} className="mp-filter-selected-chip">
+                          <span className="mp-filter-selected-chip-text">
+                            {c.label}
+                          </span>
+                          <button
+                            type="button"
+                            className="mp-filter-selected-chip-x"
+                            onClick={c.onRemove}
+                            aria-label={`Remove ${c.label}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))
+                    )}
                   </div>
                 </div>
 
-                <div className="mp-filter-modal-section mp-filter-modal-section--frame">
-                  <div className="mp-filter-modal-section-title">Frame size</div>
-                  {renderOptionsChips(
-                    frameSizeOptions,
-                    draft?.frameSizeFilter ?? frameSizeFilter,
-                    (next) =>
-                      setDraft((prev) =>
-                        prev ? { ...prev, frameSizeFilter: next } : prev,
-                      ),
-                  )}
-                </div>
+                <button
+                  type="button"
+                  className="mp-filter-selected-clear"
+                  onClick={resetDraft}
+                >
+                  Clear filters
+                </button>
+              </div>
 
-                <div className="mp-filter-modal-section mp-filter-modal-section--category">
-                  <div className="mp-filter-modal-section-title">Category</div>
-                  {renderOptionsChips(
-                    categoryOptions,
-                    draft?.categoryFilter ?? categoryFilter,
-                    (next) =>
-                      setDraft((prev) =>
-                        prev ? { ...prev, categoryFilter: next } : prev,
-                      ),
-                  )}
-                </div>
+              <div className="mp-filter-modal-body">
+                <div className="mp-filter-modal-grid">
+                  <div className="mp-filter-modal-section mp-filter-modal-section--price">
+                    <div className="mp-filter-modal-section-title">Price</div>
+                    <div className="mp-filter-modal-price">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={
+                          minPriceStr !== ""
+                            ? `${minPriceStr}đ`
+                            : formatVnd(draft?.priceRange?.[0] ?? priceRange[0])
+                        }
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, "");
+                          setMinPriceStr(raw);
+                          setDraft((prev) => {
+                            if (!prev) return prev;
+                            const max = prev.priceRange?.[1] ?? priceMax;
+                            if (raw === "")
+                              return { ...prev, priceRange: [priceMin, max] };
+                            const num = parseInt(raw, 10);
+                            if (Number.isNaN(num)) return prev;
+                            return {
+                              ...prev,
+                              priceRange: [Math.min(num, max), max],
+                            };
+                          });
+                        }}
+                        onFocus={() =>
+                          setMinPriceStr(
+                            String(draft?.priceRange?.[0] ?? priceRange[0]),
+                          )
+                        }
+                        onBlur={commitDraftMin}
+                        placeholder={formatVnd(priceMin)}
+                        className="mp-filter-modal-input"
+                      />
+                      <span className="mp-filter-modal-price-sep">-</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={
+                          maxPriceStr !== ""
+                            ? `${maxPriceStr}đ`
+                            : formatVnd(draft?.priceRange?.[1] ?? priceRange[1])
+                        }
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/\D/g, "");
+                          setMaxPriceStr(raw);
+                          setDraft((prev) => {
+                            if (!prev) return prev;
+                            const min = prev.priceRange?.[0] ?? priceMin;
+                            if (raw === "")
+                              return { ...prev, priceRange: [min, priceMax] };
+                            const num = parseInt(raw, 10);
+                            if (Number.isNaN(num)) return prev;
+                            return {
+                              ...prev,
+                              priceRange: [min, Math.max(num, min)],
+                            };
+                          });
+                        }}
+                        onFocus={() =>
+                          setMaxPriceStr(
+                            String(draft?.priceRange?.[1] ?? priceRange[1]),
+                          )
+                        }
+                        onBlur={commitDraftMax}
+                        placeholder={formatVnd(priceMax)}
+                        className="mp-filter-modal-input"
+                      />
+                    </div>
 
-                <div className="mp-filter-modal-section mp-filter-modal-section--brand">
-                  <div className="mp-filter-modal-section-title">Brand</div>
-                  {renderOptionsChips(
-                    brandOptions,
-                    draft?.brandFilter ?? brandFilter,
-                    (next) =>
-                      setDraft((prev) =>
-                        prev ? { ...prev, brandFilter: next } : prev,
-                      ),
-                  )}
-                </div>
+                    <div className="mp-range-wrap">
+                      <div className="mp-range-track" />
+                      <div
+                        className="mp-range-fill"
+                        style={{
+                          left: `${(((draft?.priceRange?.[0] ?? priceRange[0]) - priceMin) / (priceMax - priceMin)) * 100}%`,
+                          width: `${(((draft?.priceRange?.[1] ?? priceRange[1]) - (draft?.priceRange?.[0] ?? priceRange[0])) / (priceMax - priceMin)) * 100}%`,
+                        }}
+                      />
+                      <input
+                        type="range"
+                        min={priceMin}
+                        max={priceMax}
+                        value={draft?.priceRange?.[0] ?? priceRange[0]}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (Number.isNaN(val)) return;
+                          setDraft((prev) => {
+                            if (!prev) return prev;
+                            const max = prev.priceRange?.[1] ?? priceMax;
+                            return {
+                              ...prev,
+                              priceRange: [Math.min(val, max), max],
+                            };
+                          });
+                        }}
+                        className="mp-range-input mp-range-input-min"
+                      />
+                      <input
+                        type="range"
+                        min={priceMin}
+                        max={priceMax}
+                        value={draft?.priceRange?.[1] ?? priceRange[1]}
+                        onChange={(e) => {
+                          const val = Number(e.target.value);
+                          if (Number.isNaN(val)) return;
+                          setDraft((prev) => {
+                            if (!prev) return prev;
+                            const min = prev.priceRange?.[0] ?? priceMin;
+                            return {
+                              ...prev,
+                              priceRange: [min, Math.max(val, min)],
+                            };
+                          });
+                        }}
+                        className="mp-range-input mp-range-input-max"
+                      />
+                    </div>
+                  </div>
 
-                <div className="mp-filter-modal-section mp-filter-modal-section--year">
-                  <div className="mp-filter-modal-section-title">Model year</div>
-                  <Select
-                    className="mp-filter-year-select"
-                    value={
-                      (draft?.modelYearFilter ?? modelYearFilter) === "all"
-                        ? undefined
-                        : (draft?.modelYearFilter ?? modelYearFilter)
-                    }
-                    placeholder="Select year"
-                    allowClear
-                    onChange={(value) =>
-                      setDraft((prev) =>
-                        prev
-                          ? { ...prev, modelYearFilter: value == null ? "all" : value }
-                          : prev,
-                      )
-                    }
-                    options={Array.isArray(modelYearOptions) ? modelYearOptions : []}
-                    dropdownMatchSelectWidth={false}
-                    popupClassName="mp-filter-year-dropdown"
-                    dropdownStyle={{
-                      maxHeight: 220,
-                      overflowY: "auto",
-                      width: 180,
-                      zIndex: 1300,
-                    }}
-                  />
+                  <div className="mp-filter-modal-section mp-filter-modal-section--frame">
+                    <div className="mp-filter-modal-section-title">
+                      Frame size
+                    </div>
+                    {renderOptionsChips(
+                      frameSizeOptions,
+                      draft?.frameSizeFilter ?? frameSizeFilter,
+                      (next) =>
+                        setDraft((prev) =>
+                          prev ? { ...prev, frameSizeFilter: next } : prev,
+                        ),
+                    )}
+                  </div>
+
+                  <div className="mp-filter-modal-section mp-filter-modal-section--category">
+                    <div className="mp-filter-modal-section-title">
+                      Category
+                    </div>
+                    {renderOptionsChips(
+                      categoryOptions,
+                      draft?.categoryFilter ?? categoryFilter,
+                      (next) =>
+                        setDraft((prev) =>
+                          prev ? { ...prev, categoryFilter: next } : prev,
+                        ),
+                    )}
+                  </div>
+
+                  <div className="mp-filter-modal-section mp-filter-modal-section--brand">
+                    <div className="mp-filter-modal-section-title">Brand</div>
+                    {renderOptionsChips(
+                      brandOptions,
+                      draft?.brandFilter ?? brandFilter,
+                      (next) =>
+                        setDraft((prev) =>
+                          prev ? { ...prev, brandFilter: next } : prev,
+                        ),
+                    )}
+                  </div>
+
+                  <div className="mp-filter-modal-section mp-filter-modal-section--year">
+                    <div className="mp-filter-modal-section-title">
+                      Model year
+                    </div>
+                    <Select
+                      className="mp-filter-year-select"
+                      value={
+                        (draft?.modelYearFilter ?? modelYearFilter) === "all"
+                          ? undefined
+                          : (draft?.modelYearFilter ?? modelYearFilter)
+                      }
+                      placeholder="Select year"
+                      allowClear
+                      onChange={(value) =>
+                        setDraft((prev) =>
+                          prev
+                            ? {
+                                ...prev,
+                                modelYearFilter: value == null ? "all" : value,
+                              }
+                            : prev,
+                        )
+                      }
+                      options={
+                        Array.isArray(modelYearOptions) ? modelYearOptions : []
+                      }
+                      dropdownMatchSelectWidth={false}
+                      popupClassName="mp-filter-year-dropdown"
+                      dropdownStyle={{
+                        maxHeight: 220,
+                        overflowY: "auto",
+                        width: 180,
+                        zIndex: 1300,
+                      }}
+                    />
+                  </div>
+
+                  <div className="mp-filter-modal-section mp-filter-modal-section--inspection">
+                    <div className="mp-filter-modal-section-title">
+                      Inspection band
+                    </div>
+                    {renderOptionsChips(
+                      inspectionBandOptions,
+                      draft?.inspectionBandFilter ?? inspectionBandFilter,
+                      (next) =>
+                        setDraft((prev) =>
+                          prev ? { ...prev, inspectionBandFilter: next } : prev,
+                        ),
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="mp-filter-modal-footer">
-              <button
-                type="button"
-                className="mp-filter-modal-apply"
-                onClick={applyDraft}
-              >
-                View results
-              </button>
+              <div className="mp-filter-modal-footer">
+                <button
+                  type="button"
+                  className="mp-filter-modal-apply"
+                  onClick={applyDraft}
+                >
+                  View results
+                </button>
+              </div>
             </div>
-          </div>
-        </div>,
+          </div>,
           document.body,
         )}
 
@@ -872,15 +962,11 @@ export default function MarketplaceFilterBar({
                   />
                 </div>
               </div>
-              <div className="mp-filter-panel-footer">
-
-              </div>
+              <div className="mp-filter-panel-footer"></div>
             </div>
           )}
-
         </div>
       )}
     </div>
   );
 }
-
