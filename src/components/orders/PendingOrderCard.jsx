@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Card,
-  Tag,
-  Button,
-  Typography,
-  Tooltip,
-  App,
-  Popconfirm,
-} from "antd";
+import { Card, Tag, Button, Typography, Tooltip, App, Popconfirm } from "antd";
 import ProductPreviewModal from "../ProductPreviewModal";
 import {
   CheckCircleOutlined,
@@ -74,8 +66,10 @@ export default function PendingOrderCard({ order }) {
         message: `You confirmed delivery for order #${order.orderId}.`,
         type: "success",
       });
-    } catch {
-      message.error("Could not confirm delivery. Please try again.");
+    } catch (err) {
+      message.error(
+        err?.message || "Could not confirm delivery. Please try again.",
+      );
     } finally {
       setLoading(false);
     }

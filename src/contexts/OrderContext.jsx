@@ -6,7 +6,7 @@ import {
   useMemo,
   useEffect,
 } from "react";
-import { ORDER_STATUS } from "../constants/orderStatus";
+import { ORDER_STATUS, ORDER_STATUS_LABEL } from "../constants/orderStatus";
 import orderService from "../services/orderService";
 import postService from "../services/postService";
 import { useAuth } from "./AuthContext";
@@ -184,7 +184,9 @@ function extractBuyerPhone(row) {
 function normalizeOrder(row) {
   if (!row || typeof row !== "object") return null;
 
-  const rawId = row.orderId ?? row.id ?? row.order_id ?? row.bookingId;
+  // BE responses are inconsistent: some payloads include `id` that is not the
+  // order id. Prefer explicit order keys first to avoid calling wrong endpoints.
+  const rawId = row.orderId ?? row.order_id ?? row.bookingId ?? row.id;
   const postId = row.postId ?? row.post_id ?? row.bikeId ?? row.productId;
 
   const totalPrice = Number(row.totalPrice ?? row.total_price ?? 0);
@@ -448,6 +450,23 @@ export function OrderProvider({ children }) {
 
   /** B5: Buyer xác nhận nhận hàng → BE đặt DELIVERED (sau đó scheduler có thể COMPLETED). */
   const confirmDelivery = useCallback(async (orderId) => {
+    const detailRes = await orderService.getById(orderId);
+    const detailRaw = detailRes?.result ?? detailRes?.data ?? detailRes ?? {};
+    const liveStatus = mapStatus(
+      detailRaw.orderStatus ??
+        detailRaw.order_status ??
+        detailRaw.status ??
+        detailRaw.orderState ??
+        detailRaw.order_state,
+    );
+    if (liveStatus !== ORDER_STATUS.SHIPPING) {
+      const statusLabel =
+        ORDER_STATUS_LABEL[liveStatus] ?? liveStatus ?? "Unknown";
+      throw new Error(
+        `Order #${orderId} is currently "${statusLabel}". Confirm received is only available when status is "Shipping".`,
+      );
+    }
+
     const res = await orderService.confirmDelivery(orderId);
     const updated = normalizeOrder(res?.result ?? res?.data ?? res);
     const patch = updated

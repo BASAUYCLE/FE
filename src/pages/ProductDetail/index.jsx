@@ -27,7 +27,6 @@ import Header from "../../components/header";
 import Footer from "../../components/footer";
 import CheckoutModal from "../../components/CheckoutModal";
 import AdminInspectionModal from "../../components/AdminInspectionModal";
-import { getProductById } from "../../data/products";
 import { useWishlist } from "../../contexts/WishlistContext";
 import { usePostings } from "../../contexts/PostingContext";
 import { useAuth } from "../../contexts/AuthContext";
@@ -445,9 +444,7 @@ export default function ProductDetail() {
             ...postingFromState,
           }
         : postingFromContext;
-  const product = posting
-    ? postingToProduct(posting)
-    : getProductById(Number(id) || 0);
+  const product = posting ? postingToProduct(posting) : null;
 
   const numericPostId = Number(id);
   const inspectionModalPostId =
