@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Tag } from "antd";
-import { Link } from "react-router-dom";
 import {
   DISPUTE_STATUS_LABEL,
   disputeStatusTagColor,
@@ -56,17 +55,6 @@ export default function DisputeSummaryRow({ dispute, highlight, actions }) {
   const thumbDirect = d ? thumbnailFromDispute(d) : null;
   /** `undefined` = đang hoặc chưa tải ảnh theo post; `null` = không có ảnh */
   const [thumbFromPost, setThumbFromPost] = useState(undefined);
-  /** postId lấy từ GET /orders/{orderId} khi list dispute không trả postId */
-  const [resolvedFromOrder, setResolvedFromOrder] = useState({
-    orderId: null,
-    postId: null,
-  });
-
-  const listingPostId =
-    postId ||
-    (d?.orderId != null && resolvedFromOrder.orderId === d.orderId
-      ? resolvedFromOrder.postId
-      : null);
 
   useEffect(() => {
     if (!d) return;
@@ -76,12 +64,6 @@ export default function DisputeSummaryRow({ dispute, highlight, actions }) {
       let pid = postId;
       if (!pid && d.orderId != null) {
         pid = await fetchPostIdFromOrderId(d.orderId);
-        if (!cancelled) {
-          setResolvedFromOrder({
-            orderId: d.orderId,
-            postId: pid ?? null,
-          });
-        }
       }
       if (!pid) {
         if (!cancelled) setThumbFromPost(null);
@@ -130,17 +112,6 @@ export default function DisputeSummaryRow({ dispute, highlight, actions }) {
           <div className="my-dispute-row__info">
             <div className="my-dispute-row__order">
               Order #{d.orderId ?? "—"} — {d.postTitle ?? "—"}
-              {listingPostId ? (
-                <>
-                  {" "}
-                  <Link
-                    className="my-dispute-row__post-link"
-                    to={`/product/${listingPostId}`}
-                  >
-                    View listing
-                  </Link>
-                </>
-              ) : null}
             </div>
             <div className="my-dispute-row__parties">
               Buyer: {d.buyerName ?? "—"} · Seller: {d.sellerName ?? "—"}

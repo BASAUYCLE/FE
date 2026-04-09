@@ -50,6 +50,8 @@ export default function AdminConfig() {
   const [disputeWindowDays, setDisputeWindowDays] = useState(3);
   const [autoCloseUnshippedDays, setAutoCloseUnshippedDays] = useState(7);
   const [autoRefundShippedDays, setAutoRefundShippedDays] = useState(10);
+  const [autoCancelUnshippedOrderDays, setAutoCancelUnshippedOrderDays] =
+    useState(3);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,6 +65,7 @@ export default function AdminConfig() {
         disputeRes,
         closeUnshippedRes,
         refundShippedRes,
+        autoCancelUnshippedOrderRes,
       ] = await Promise.allSettled([
         systemConfigService.getByKey("DEPOSIT_RATE"),
         systemConfigService.getByKey("POSTING_FEE"),
@@ -70,6 +73,7 @@ export default function AdminConfig() {
         systemConfigService.getByKey("DISPUTE_WINDOW_DAYS"),
         systemConfigService.getByKey("AUTO_CLOSE_UNSHIPPED_DISPUTE_DAYS"),
         systemConfigService.getByKey("AUTO_REFUND_SHIPPED_DISPUTE_DAYS"),
+        systemConfigService.getByKey("AUTO_CANCEL_UNSHIPPED_ORDER_DAYS"),
       ]);
 
       if (depRes.status === "fulfilled") {
@@ -114,6 +118,14 @@ export default function AdminConfig() {
         const n = parseNumber(strVal);
         if (!isNaN(n) && n >= 0) setAutoRefundShippedDays(Math.round(n));
       }
+
+      if (autoCancelUnshippedOrderRes.status === "fulfilled") {
+        const strVal = toConfigValueString(
+          unwrap(autoCancelUnshippedOrderRes.value),
+        );
+        const n = parseNumber(strVal);
+        if (!isNaN(n) && n >= 0) setAutoCancelUnshippedOrderDays(Math.round(n));
+      }
     } catch (e) {
       setError(e?.message ?? "Load config failed.");
     } finally {
@@ -138,6 +150,10 @@ export default function AdminConfig() {
       0,
       Math.round(Number(autoRefundShippedDays) || 0),
     );
+    const cancelUnshippedOrderDays = Math.max(
+      0,
+      Math.round(Number(autoCancelUnshippedOrderDays) || 0),
+    );
     return {
       depositPercent: rate,
       depositRate: rate / 100,
@@ -146,6 +162,7 @@ export default function AdminConfig() {
       disputeWindowDays: disputeDays,
       autoCloseUnshippedDays: closeUnshippedDays,
       autoRefundShippedDays: refundShippedDays,
+      autoCancelUnshippedOrderDays: cancelUnshippedOrderDays,
     };
   }, [
     depositPercent,
@@ -154,6 +171,7 @@ export default function AdminConfig() {
     disputeWindowDays,
     autoCloseUnshippedDays,
     autoRefundShippedDays,
+    autoCancelUnshippedOrderDays,
   ]);
 
   const saveAll = useCallback(async () => {
@@ -167,6 +185,9 @@ export default function AdminConfig() {
       const disputeValueToSave = String(preview.disputeWindowDays);
       const closeUnshippedValueToSave = String(preview.autoCloseUnshippedDays);
       const refundShippedValueToSave = String(preview.autoRefundShippedDays);
+      const autoCancelUnshippedOrderValueToSave = String(
+        preview.autoCancelUnshippedOrderDays,
+      );
 
       await Promise.all([
         systemConfigService.updateByKey("DEPOSIT_RATE", depValueToSave),
@@ -183,6 +204,10 @@ export default function AdminConfig() {
         systemConfigService.updateByKey(
           "AUTO_REFUND_SHIPPED_DISPUTE_DAYS",
           refundShippedValueToSave,
+        ),
+        systemConfigService.updateByKey(
+          "AUTO_CANCEL_UNSHIPPED_ORDER_DAYS",
+          autoCancelUnshippedOrderValueToSave,
         ),
       ]);
 
@@ -407,6 +432,35 @@ export default function AdminConfig() {
                   <div className="admin-config-help">
                     AUTO_REFUND_SHIPPED_DISPUTE_DAYS ={" "}
                     {preview.autoRefundShippedDays} day(s)
+                  </div>
+                </div>
+              </div>
+
+              <div className="admin-card admin-config-card">
+                <div className="admin-card-header">
+                  <div>
+                    <div className="admin-card-title">
+                      Auto-cancel unshipped order (days)
+                    </div>
+                  </div>
+                </div>
+                <div className="admin-config-body">
+                  <label className="admin-config-field">
+                    <input
+                      type="number"
+                      className="admin-config-input"
+                      value={autoCancelUnshippedOrderDays}
+                      min={0}
+                      step={1}
+                      disabled={loading || saving}
+                      onChange={(e) =>
+                        setAutoCancelUnshippedOrderDays(e.target.value)
+                      }
+                    />
+                  </label>
+                  <div className="admin-config-help">
+                    AUTO_CANCEL_UNSHIPPED_ORDER_DAYS ={" "}
+                    {preview.autoCancelUnshippedOrderDays} day(s)
                   </div>
                 </div>
               </div>

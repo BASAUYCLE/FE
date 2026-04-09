@@ -207,12 +207,12 @@ export default function AuthPage() {
       className={`auth-page auth-page--immersive${isSignup ? " auth-immersive--register" : ""}`}
     >
       <Modal
-        title="Xác nhận thông tin đăng ký"
+        title="Confirm registration details"
         open={confirmRegisterOpen}
         onOk={handleConfirmRegister}
         onCancel={handleCancelConfirmRegister}
-        okText="Xác nhận đăng ký"
-        cancelText="Quay lại chỉnh sửa"
+        okText="Confirm registration"
+        cancelText="Back to edit"
         confirmLoading={confirmRegisterLoading}
         maskClosable={!confirmRegisterLoading}
         closable={!confirmRegisterLoading}
@@ -220,10 +220,11 @@ export default function AuthPage() {
         width={480}
       >
         <p style={{ marginBottom: 0, lineHeight: 1.65 }}>
-          Bạn xác nhận thông tin đăng ký là <strong>chính xác</strong> và{" "}
-          <strong>trùng với tên chủ tài khoản nhận tiền</strong> (khi bạn rút
-          tiền từ ví) không? Nếu thông tin sai lệch, bạn{" "}
-          <strong>sẽ không thể</strong> thực hiện rút tiền từ ví.
+          Do you confirm that your registration information is{" "}
+          <strong>accurate</strong> and <strong>matches the recipient bank account holder name</strong>{" "}
+          (used when withdrawing funds from your wallet)? If the information is
+          incorrect, you <strong>will not be able</strong> to withdraw funds
+          from your wallet.
         </p>
       </Modal>
       <div className="auth-immersive__bg" aria-hidden="true">

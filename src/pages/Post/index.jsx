@@ -704,7 +704,7 @@ export default function PostBike() {
     return () => observer.disconnect();
   }, []);
 
-  // Handle step click navigation
+  // bấm bước trên thanh tiến trình → cuộn mượt tới section tương ứng.
   const handleStepClick = (stepIndex) => {
     const sectionId = sectionIds[stepIndex];
     const element = document.getElementById(sectionId);
@@ -748,7 +748,7 @@ export default function PostBike() {
     }
   };
 
-  /* Cách làm giống Register: beforeUpload return false, set fileList thủ công (không customRequest) */
+  /* kiểm tra ảnh, cập nhật state; return false để không upload tự động lên server ngay */
   const beforeUploadRequired = (slotKey, file) => {
     if (isFormReadOnly) return Upload.LIST_IGNORE;
     if (!file?.type?.startsWith("image/")) {
