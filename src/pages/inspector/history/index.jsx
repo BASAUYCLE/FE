@@ -220,7 +220,9 @@ export default function InspectorHistoryPage() {
           ...new Set(
             rows
               .filter(
-                (r) => r.postId != null && (!r.seller || r.seller === "—"),
+                (r) =>
+                  r.postId != null &&
+                  (!r.seller || r.seller === "—" || !r.thumbnail),
               )
               .map((r) => String(r.postId)),
           ),

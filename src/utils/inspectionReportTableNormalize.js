@@ -137,6 +137,8 @@ export function normalizeInspectionReportRow(row) {
       ? row.post
       : null;
   const images = row.images ?? post?.images ?? [];
+  const pickImageUrl = (img) =>
+    img?.imageUrl ?? img?.image_url ?? img?.url ?? null;
 
   const resultRaw = String(
     row.result ?? row.inspectionResult ?? row.inspection_result ?? "",
@@ -175,14 +177,18 @@ export function normalizeInspectionReportRow(row) {
       post?.postTitle ??
       "—",
     thumbnail:
-      images.find((i) => i?.isThumbnail)?.imageUrl ??
-      images?.[0]?.imageUrl ??
+      pickImageUrl(images.find((i) => i?.isThumbnail)) ??
+      pickImageUrl(images?.[0]) ??
       row.thumbnailUrl ??
+      row.thumbnail_url ??
       post?.thumbnailUrl ??
+      post?.thumbnail_url ??
       row.thumbnail ??
       post?.thumbnail ??
       row.imageUrl ??
+      row.image_url ??
       post?.imageUrl ??
+      post?.image_url ??
       null,
     seller: pickSellerFromReportRow(row),
     inspector:
