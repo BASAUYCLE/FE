@@ -258,3 +258,21 @@
   font-weight: 600;
   box-shadow: 0 6px 14px rgba(24, 144, 255, 0.2);
 }
+
+/* Admin dispute detail — Open product / View inspection (teal, bo góc) */
+.admin-dispute-listing-actions {
+  width: 100%;
+}
+
+.admin-dispute-listing-actions__btn.ant-btn-primary {
+  border-radius: 10px;
+  font-weight: 600;
+  padding-inline: 20px;
+  min-height: 42px;
+  height: auto;
+  box-shadow: 0 6px 16px rgba(13, 148, 136, 0.25);
+}
+
+.admin-dispute-listing-actions__btn.ant-btn-primary:hover {
+  box-shadow: 0 8px 20px rgba(13, 148, 136, 0.32);
+}

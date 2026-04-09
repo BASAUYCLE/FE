@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import AdminLayout from "../../../components/layout/AdminLayout";
 import {
   Button,
@@ -14,7 +14,7 @@ import {
   Divider,
   Empty,
 } from "antd";
-import { ArrowLeftOutlined } from "@ant-design/icons";
+import { ArrowLeftOutlined, EyeOutlined } from "@ant-design/icons";
 import { useAuth } from "../../../contexts/AuthContext";
 import disputeService from "../../../services/disputeService";
 import orderService from "../../../services/orderService";
@@ -30,6 +30,9 @@ import {
 } from "../../../constants/orderStatus";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDateTime } from "../../../utils/date";
+import { pickListingThumbnailUrl } from "../../../utils/listingThumbnailUrl";
+import AdminInspectionModal from "../../../components/AdminInspectionModal";
+import ProductPreviewModal from "../../../components/ProductPreviewModal";
 import "../../MyDisputes/index.css";
 import "../dashboard/index.css";
 
@@ -131,6 +134,9 @@ export default function AdminDisputeDetailPage() {
   const [post, setPost] = useState(null);
   const [order, setOrder] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [previewPostId, setPreviewPostId] = useState(null);
+  const [inspectionModalOpen, setInspectionModalOpen] = useState(false);
+  const [inspectionModalSession, setInspectionModalSession] = useState(0);
 
   const load = useCallback(async () => {
     if (!disputeId || !/^\d+$/.test(String(disputeId))) {
@@ -161,7 +167,14 @@ export default function AdminDisputeDetailPage() {
       }
       setOrder(orderRow);
 
-      const postId = orderRow?.postId;
+      const postId =
+        orderRow?.postId ??
+        orderRow?.post_id ??
+        d?.postId ??
+        d?.post_id ??
+        d?.post?.postId ??
+        d?.post?.id ??
+        null;
       if (postId != null) {
         try {
           const pRes = await postService.getPostById(postId);
@@ -186,6 +199,18 @@ export default function AdminDisputeDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const inspectionPostId = useMemo(() => {
+    return (
+      post?.postId ??
+      order?.postId ??
+      detail?.postId ??
+      detail?.post_id ??
+      detail?.post?.postId ??
+      detail?.post?.id ??
+      null
+    );
+  }, [post, order, detail]);
 
   const runApprove = async () => {
     if (!detail?.disputeId) return;
@@ -215,16 +240,6 @@ export default function AdminDisputeDetailPage() {
     }
   };
 
-  if (!isAdmin) {
-    return (
-      <AdminLayout>
-        <div className="admin-page-shell">
-          <Alert type="error" message="Admin only" />
-        </div>
-      </AdminLayout>
-    );
-  }
-
   const inspectorNoteRaw =
     detail?.inspectorNote ?? detail?.inspector_note ?? "";
   const hasInspectorNote = hasNonEmptyText(inspectorNoteRaw);
@@ -241,415 +256,481 @@ export default function AdminDisputeDetailPage() {
       ? (ORDER_STATUS_TAG_COLOR[order.orderStatus] ?? "default")
       : "default";
 
+  if (!isAdmin) {
+    return (
+      <AdminLayout>
+        <div className="admin-page-shell">
+          <Alert type="error" message="Admin only" />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
-    <AdminLayout>
-      <div className="admin-page-shell dispute-detail-container">
-        <Button
-          type="text"
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/admin-disputes")}
-          style={{ marginBottom: 12 }}
-        >
-          Back to list
-        </Button>
+    <>
+      <AdminLayout>
+        <div className="admin-page-shell dispute-detail-container">
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={() => navigate("/admin-disputes")}
+            style={{ marginBottom: 12 }}
+          >
+            Back to list
+          </Button>
 
-        {loading ? (
-          <div style={{ textAlign: "center", padding: 48 }}>
-            <Spin />
-          </div>
-        ) : !detail ? (
-          <Alert type="warning" message="Dispute not found." />
-        ) : (
-          <>
-            <Typography.Title level={3} style={{ marginTop: 0 }}>
-              Dispute #{detail.disputeId}
-            </Typography.Title>
-            <Typography.Text
-              type="secondary"
-              style={{ display: "block", marginBottom: 16 }}
-            >
-              Listing · Order · Case — review everything before approving or
-              rejecting.
-            </Typography.Text>
+          {loading ? (
+            <div style={{ textAlign: "center", padding: 48 }}>
+              <Spin />
+            </div>
+          ) : !detail ? (
+            <Alert type="warning" message="Dispute not found." />
+          ) : (
+            <>
+              <Typography.Title level={3} style={{ marginTop: 0 }}>
+                Dispute #{detail.disputeId}
+              </Typography.Title>
+              <Typography.Text
+                type="secondary"
+                style={{ display: "block", marginBottom: 16 }}
+              >
+                Listing · Order · Case — review everything before approving or
+                rejecting.
+              </Typography.Text>
 
-            <div className="dispute-detail-split dispute-detail-split--three">
-              {/* ─── Post ─── */}
-              <section className="dispute-detail-col">
-                <Typography.Title
-                  level={4}
-                  className="dispute-detail-col-title"
-                >
-                  Listing detail
-                </Typography.Title>
-                {post ? (
-                  <Card className="dispute-detail-post-card" bordered>
-                    <div className="dispute-detail-post-image-wrap">
-                      {post.imageUrl ? (
-                        <img
-                          src={post.imageUrl}
-                          alt={post.bikeName}
-                          className="dispute-detail-post-image"
-                          referrerPolicy="no-referrer"
-                        />
-                      ) : (
-                        <div className="dispute-detail-post-image-placeholder">
-                          No image
-                        </div>
+              <div className="dispute-detail-split dispute-detail-split--three">
+                {/* ─── Post ─── */}
+                <section className="dispute-detail-col">
+                  <Typography.Title
+                    level={4}
+                    className="dispute-detail-col-title"
+                  >
+                    Listing detail
+                  </Typography.Title>
+                  {post ? (
+                    <Card className="dispute-detail-post-card" bordered>
+                      <div className="dispute-detail-post-image-wrap">
+                        {post.imageUrl ? (
+                          <img
+                            src={post.imageUrl}
+                            alt={post.bikeName}
+                            className="dispute-detail-post-image"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="dispute-detail-post-image-placeholder">
+                            No image
+                          </div>
+                        )}
+                      </div>
+                      <Typography.Title
+                        level={5}
+                        style={{ marginTop: 16, marginBottom: 8 }}
+                      >
+                        {post.bikeName}
+                      </Typography.Title>
+                      {post.price != null && (
+                        <Typography.Text strong style={{ fontSize: 18 }}>
+                          {formatCurrency(post.price)}
+                        </Typography.Text>
                       )}
-                    </div>
-                    <Typography.Title
-                      level={5}
-                      style={{ marginTop: 16, marginBottom: 8 }}
-                    >
-                      {post.bikeName}
-                    </Typography.Title>
-                    {post.price != null && (
-                      <Typography.Text strong style={{ fontSize: 18 }}>
-                        {formatCurrency(post.price)}
-                      </Typography.Text>
-                    )}
-                    <dl className="dispute-detail-dl">
-                      <div>
-                        <dt>Brand</dt>
-                        <dd>{post.brand}</dd>
-                      </div>
-                      <div>
-                        <dt>Category</dt>
-                        <dd>{post.category}</dd>
-                      </div>
-                      <div>
-                        <dt>Size</dt>
-                        <dd>{post.frameSize}</dd>
-                      </div>
-                      <div>
-                        <dt>Color</dt>
-                        <dd>{post.color}</dd>
-                      </div>
-                      <div>
-                        <dt>Status</dt>
-                        <dd>{post.status}</dd>
-                      </div>
-                      <div>
-                        <dt>Seller</dt>
-                        <dd>{post.sellerName}</dd>
-                      </div>
-                    </dl>
-                    {post.description ? (
-                      <Typography.Paragraph
-                        type="secondary"
-                        ellipsis={{ rows: 6, expandable: true }}
+                      <dl className="dispute-detail-dl">
+                        <div>
+                          <dt>Brand</dt>
+                          <dd>{post.brand}</dd>
+                        </div>
+                        <div>
+                          <dt>Category</dt>
+                          <dd>{post.category}</dd>
+                        </div>
+                        <div>
+                          <dt>Size</dt>
+                          <dd>{post.frameSize}</dd>
+                        </div>
+                        <div>
+                          <dt>Color</dt>
+                          <dd>{post.color}</dd>
+                        </div>
+                        <div>
+                          <dt>Status</dt>
+                          <dd>{post.status}</dd>
+                        </div>
+                        <div>
+                          <dt>Seller</dt>
+                          <dd>{post.sellerName}</dd>
+                        </div>
+                      </dl>
+                      {post.description ? (
+                        <Typography.Paragraph
+                          type="secondary"
+                          ellipsis={{ rows: 6, expandable: true }}
+                          style={{ marginTop: 12 }}
+                        >
+                          {post.description}
+                        </Typography.Paragraph>
+                      ) : null}
+                      <Space
+                        wrap
+                        size="middle"
+                        className="admin-dispute-listing-actions"
+                        style={{ marginTop: 16 }}
+                      >
+                        <Button
+                          type="primary"
+                          size="large"
+                          className="admin-dispute-listing-actions__btn"
+                          onClick={() => setPreviewPostId(post.postId)}
+                        >
+                          Open full product page
+                        </Button>
+                        {inspectionPostId != null ? (
+                          <Button
+                            type="primary"
+                            size="large"
+                            icon={<EyeOutlined />}
+                            className="admin-dispute-listing-actions__btn"
+                            onClick={() => {
+                              setInspectionModalSession(Date.now());
+                              setInspectionModalOpen(true);
+                            }}
+                          >
+                            View inspection report
+                          </Button>
+                        ) : null}
+                      </Space>
+                    </Card>
+                  ) : (
+                    <Card>
+                      <Empty
+                        description="Could not load listing."
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      />
+                      <Typography.Paragraph type="secondary">
+                        Order #{detail.orderId} — {detail.postTitle}
+                      </Typography.Paragraph>
+                    </Card>
+                  )}
+                </section>
+
+                {/* ─── Order ─── */}
+                <section className="dispute-detail-col">
+                  <Typography.Title
+                    level={4}
+                    className="dispute-detail-col-title"
+                  >
+                    Order detail
+                  </Typography.Title>
+                  {order ? (
+                    <Card bordered>
+                      <Space wrap style={{ marginBottom: 0 }}>
+                        <Typography.Text strong>
+                          Order #{order.orderId}
+                        </Typography.Text>
+                        <Tag color={orderTagColor}>{orderStatusLabel}</Tag>
+                      </Space>
+                      <dl
+                        className="dispute-detail-dl"
                         style={{ marginTop: 12 }}
                       >
-                        {post.description}
+                        <div>
+                          <dt>Listing</dt>
+                          <dd>{order.postTitle ?? detail.postTitle ?? "—"}</dd>
+                        </div>
+                        <div>
+                          <dt>Buyer</dt>
+                          <dd>{order.buyerName ?? detail.buyerName ?? "—"}</dd>
+                        </div>
+                        <div>
+                          <dt>Seller</dt>
+                          <dd>
+                            {order.sellerName ?? detail.sellerName ?? "—"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Total</dt>
+                          <dd>
+                            {order.totalPrice != null
+                              ? formatCurrency(order.totalPrice)
+                              : "—"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Deposit</dt>
+                          <dd>
+                            {order.depositAmount != null
+                              ? formatCurrency(order.depositAmount)
+                              : "—"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Address</dt>
+                          <dd>{order.fullAddress ?? "—"}</dd>
+                        </div>
+                        <div>
+                          <dt>Shipping</dt>
+                          <dd>
+                            {order.shippingMethod ?? "—"}
+                            {order.shippingTrackingNumber
+                              ? ` · ${order.shippingTrackingNumber}`
+                              : ""}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Created</dt>
+                          <dd>
+                            {order.createdAt
+                              ? formatDateTime(order.createdAt)
+                              : "—"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Shipped</dt>
+                          <dd>
+                            {order.shippedAt
+                              ? formatDateTime(order.shippedAt)
+                              : "—"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Delivered</dt>
+                          <dd>
+                            {order.deliveredAt
+                              ? formatDateTime(order.deliveredAt)
+                              : "—"}
+                          </dd>
+                        </div>
+                      </dl>
+                      {order.proofImage ? (
+                        <div style={{ marginTop: 12 }}>
+                          <Typography.Text strong>
+                            Shipping proof
+                          </Typography.Text>
+                          <div className="my-dispute-proofs">
+                            <a
+                              href={order.proofImage}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                src={order.proofImage}
+                                alt="shipping proof"
+                                className="my-dispute-proof-thumb"
+                              />
+                            </a>
+                          </div>
+                        </div>
+                      ) : null}
+                    </Card>
+                  ) : (
+                    <Card>
+                      <Empty
+                        description="Could not load order."
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      />
+                      <Typography.Paragraph type="secondary">
+                        Order #{detail.orderId}
+                      </Typography.Paragraph>
+                    </Card>
+                  )}
+                </section>
+
+                {/* ─── Dispute ─── */}
+                <section className="dispute-detail-col dispute-detail-col--case">
+                  <Typography.Title
+                    level={4}
+                    className="dispute-detail-col-title"
+                  >
+                    Dispute case
+                  </Typography.Title>
+                  <Card
+                    className="my-dispute-card my-dispute-card--highlight dispute-detail-case-card"
+                    title={
+                      <Space wrap>
+                        <span>Dispute #{detail.disputeId}</span>
+                        <Tag color={disputeStatusTagColor(detail.status)}>
+                          {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
+                        </Tag>
+                      </Space>
+                    }
+                  >
+                    <p>
+                      <strong>Order</strong> #{detail.orderId} —{" "}
+                      {detail.postTitle}
+                    </p>
+                    <p className="my-dispute-meta">
+                      Buyer: {detail.buyerName} · Seller: {detail.sellerName}
+                    </p>
+                    {detail.reason && (
+                      <p>
+                        <strong>Reason:</strong> {detail.reason}
+                      </p>
+                    )}
+                    {Array.isArray(detail.proofImages) &&
+                      detail.proofImages.length > 0 && (
+                        <div className="my-dispute-proofs">
+                          {detail.proofImages.map((url) => (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <img
+                                src={url}
+                                alt="proof"
+                                className="my-dispute-proof-thumb"
+                              />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
+                    <Divider style={{ margin: "16px 0 12px" }} />
+                    <Typography.Title
+                      level={5}
+                      style={{
+                        marginTop: 0,
+                        marginBottom: 8,
+                        fontSize: 14,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Inspector note
+                    </Typography.Title>
+                    {hasInspectorNote ? (
+                      <Typography.Paragraph
+                        style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}
+                      >
+                        {inspectorNoteRaw}
+                      </Typography.Paragraph>
+                    ) : (
+                      <Typography.Text type="secondary">
+                        None yet — inspector must submit a note before admin can
+                        decide.
+                      </Typography.Text>
+                    )}
+
+                    <Divider style={{ margin: "16px 0 12px" }} />
+                    <Typography.Title
+                      level={5}
+                      style={{
+                        marginTop: 0,
+                        marginBottom: 8,
+                        fontSize: 14,
+                        fontWeight: 600,
+                      }}
+                    >
+                      Admin outcome
+                    </Typography.Title>
+                    <Typography.Paragraph strong style={{ marginBottom: 8 }}>
+                      {adminOutcomeSummary(detail.status)}
+                    </Typography.Paragraph>
+                    {hasNonEmptyText(detail.adminNote) ? (
+                      <Typography.Paragraph style={{ whiteSpace: "pre-wrap" }}>
+                        <Typography.Text strong>Note: </Typography.Text>
+                        {detail.adminNote}
                       </Typography.Paragraph>
                     ) : null}
-                    <Link to={`/product/${post.postId}`}>
-                      <Button type="primary" style={{ marginTop: 12 }}>
-                        Open full product page
-                      </Button>
-                    </Link>
-                  </Card>
-                ) : (
-                  <Card>
-                    <Empty
-                      description="Could not load listing."
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    />
-                    <Typography.Paragraph type="secondary">
-                      Order #{detail.orderId} — {detail.postTitle}
-                    </Typography.Paragraph>
-                  </Card>
-                )}
-              </section>
-
-              {/* ─── Order ─── */}
-              <section className="dispute-detail-col">
-                <Typography.Title
-                  level={4}
-                  className="dispute-detail-col-title"
-                >
-                  Order detail
-                </Typography.Title>
-                {order ? (
-                  <Card bordered>
-                    <Space wrap style={{ marginBottom: 0 }}>
-                      <Typography.Text strong>
-                        Order #{order.orderId}
+                    {detail.resolvedAt != null && detail.resolvedAt !== "" && (
+                      <Typography.Text
+                        type="secondary"
+                        style={{ display: "block" }}
+                      >
+                        Resolved at: {formatDateTime(detail.resolvedAt)}
                       </Typography.Text>
-                      <Tag color={orderTagColor}>{orderStatusLabel}</Tag>
-                    </Space>
-                    <dl className="dispute-detail-dl" style={{ marginTop: 12 }}>
-                      <div>
-                        <dt>Listing</dt>
-                        <dd>{order.postTitle ?? detail.postTitle ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Buyer</dt>
-                        <dd>{order.buyerName ?? detail.buyerName ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Seller</dt>
-                        <dd>{order.sellerName ?? detail.sellerName ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Total</dt>
-                        <dd>
-                          {order.totalPrice != null
-                            ? formatCurrency(order.totalPrice)
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Deposit</dt>
-                        <dd>
-                          {order.depositAmount != null
-                            ? formatCurrency(order.depositAmount)
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Address</dt>
-                        <dd>{order.fullAddress ?? "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Shipping</dt>
-                        <dd>
-                          {order.shippingMethod ?? "—"}
-                          {order.shippingTrackingNumber
-                            ? ` · ${order.shippingTrackingNumber}`
-                            : ""}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Created</dt>
-                        <dd>
-                          {order.createdAt
-                            ? formatDateTime(order.createdAt)
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Shipped</dt>
-                        <dd>
-                          {order.shippedAt
-                            ? formatDateTime(order.shippedAt)
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Delivered</dt>
-                        <dd>
-                          {order.deliveredAt
-                            ? formatDateTime(order.deliveredAt)
-                            : "—"}
-                        </dd>
-                      </div>
-                    </dl>
-                    {order.proofImage ? (
-                      <div style={{ marginTop: 12 }}>
-                        <Typography.Text strong>Shipping proof</Typography.Text>
-                        <div className="my-dispute-proofs">
-                          <a
-                            href={order.proofImage}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <img
-                              src={order.proofImage}
-                              alt="shipping proof"
-                              className="my-dispute-proof-thumb"
-                            />
-                          </a>
-                        </div>
-                      </div>
-                    ) : null}
-                  </Card>
-                ) : (
-                  <Card>
-                    <Empty
-                      description="Could not load order."
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    />
-                    <Typography.Paragraph type="secondary">
-                      Order #{detail.orderId}
-                    </Typography.Paragraph>
-                  </Card>
-                )}
-              </section>
-
-              {/* ─── Dispute ─── */}
-              <section className="dispute-detail-col dispute-detail-col--case">
-                <Typography.Title
-                  level={4}
-                  className="dispute-detail-col-title"
-                >
-                  Dispute case
-                </Typography.Title>
-                <Card
-                  className="my-dispute-card my-dispute-card--highlight dispute-detail-case-card"
-                  title={
-                    <Space wrap>
-                      <span>Dispute #{detail.disputeId}</span>
-                      <Tag color={disputeStatusTagColor(detail.status)}>
-                        {DISPUTE_STATUS_LABEL[detail.status] ?? detail.status}
-                      </Tag>
-                    </Space>
-                  }
-                >
-                  <p>
-                    <strong>Order</strong> #{detail.orderId} —{" "}
-                    {detail.postTitle}
-                  </p>
-                  <p className="my-dispute-meta">
-                    Buyer: {detail.buyerName} · Seller: {detail.sellerName}
-                  </p>
-                  {detail.reason && (
-                    <p>
-                      <strong>Reason:</strong> {detail.reason}
-                    </p>
-                  )}
-                  {Array.isArray(detail.proofImages) &&
-                    detail.proofImages.length > 0 && (
-                      <div className="my-dispute-proofs">
-                        {detail.proofImages.map((url) => (
-                          <a
-                            key={url}
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            <img
-                              src={url}
-                              alt="proof"
-                              className="my-dispute-proof-thumb"
-                            />
-                          </a>
-                        ))}
-                      </div>
+                    )}
+                    {(detail.shippingProvider || detail.trackingCode) && (
+                      <p style={{ marginTop: 8 }}>
+                        <strong>Return ship:</strong> {detail.shippingProvider}{" "}
+                        / {detail.trackingCode}
+                      </p>
                     )}
 
-                  <Divider style={{ margin: "16px 0 12px" }} />
-                  <Typography.Title
-                    level={5}
-                    style={{
-                      marginTop: 0,
-                      marginBottom: 8,
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Inspector note
-                  </Typography.Title>
-                  {hasInspectorNote ? (
-                    <Typography.Paragraph
-                      style={{ marginBottom: 0, whiteSpace: "pre-wrap" }}
-                    >
-                      {inspectorNoteRaw}
-                    </Typography.Paragraph>
-                  ) : (
-                    <Typography.Text type="secondary">
-                      None yet — inspector must submit a note before admin can
-                      decide.
-                    </Typography.Text>
-                  )}
-
-                  <Divider style={{ margin: "16px 0 12px" }} />
-                  <Typography.Title
-                    level={5}
-                    style={{
-                      marginTop: 0,
-                      marginBottom: 8,
-                      fontSize: 14,
-                      fontWeight: 600,
-                    }}
-                  >
-                    Admin outcome
-                  </Typography.Title>
-                  <Typography.Paragraph strong style={{ marginBottom: 8 }}>
-                    {adminOutcomeSummary(detail.status)}
-                  </Typography.Paragraph>
-                  {hasNonEmptyText(detail.adminNote) ? (
-                    <Typography.Paragraph style={{ whiteSpace: "pre-wrap" }}>
-                      <Typography.Text strong>Note: </Typography.Text>
-                      {detail.adminNote}
-                    </Typography.Paragraph>
-                  ) : null}
-                  {detail.resolvedAt != null && detail.resolvedAt !== "" && (
-                    <Typography.Text
-                      type="secondary"
-                      style={{ display: "block" }}
-                    >
-                      Resolved at: {formatDateTime(detail.resolvedAt)}
-                    </Typography.Text>
-                  )}
-                  {(detail.shippingProvider || detail.trackingCode) && (
-                    <p style={{ marginTop: 8 }}>
-                      <strong>Return ship:</strong> {detail.shippingProvider} /{" "}
-                      {detail.trackingCode}
-                    </p>
-                  )}
-
-                  {detail.status === DISPUTE_STATUS.OPEN && (
-                    <Alert
-                      type="info"
-                      showIcon
-                      style={{ marginTop: 16 }}
-                      message="Waiting for inspector"
-                      description="This dispute is still OPEN. The inspector must write a note first; then it moves to Reviewing and you can approve or reject."
-                    />
-                  )}
-                  {detail.status === DISPUTE_STATUS.REVIEWING &&
-                    !hasInspectorNote && (
+                    {detail.status === DISPUTE_STATUS.OPEN && (
                       <Alert
-                        type="warning"
+                        type="info"
                         showIcon
                         style={{ marginTop: 16 }}
-                        message="Inspector note required"
-                        description="Status is Reviewing but no inspector note is stored. Approve and Reject stay disabled until a note is present."
+                        message="Waiting for inspector"
+                        description="This dispute is still OPEN. The inspector must write a note first; then it moves to Reviewing and you can approve or reject."
                       />
                     )}
+                    {detail.status === DISPUTE_STATUS.REVIEWING &&
+                      !hasInspectorNote && (
+                        <Alert
+                          type="warning"
+                          showIcon
+                          style={{ marginTop: 16 }}
+                          message="Inspector note required"
+                          description="Status is Reviewing but no inspector note is stored. Approve and Reject stay disabled until a note is present."
+                        />
+                      )}
 
-                  <Space style={{ marginTop: 20 }} wrap>
-                    <Popconfirm
-                      title="Approve this dispute?"
-                      description="Buyer will be allowed to return the item per platform rules."
-                      onConfirm={runApprove}
-                      okText="Approve"
-                      cancelText="Cancel"
-                      disabled={!canModerate || actionLoading}
-                    >
-                      <Button
-                        type="primary"
-                        disabled={!canModerate}
-                        loading={actionLoading}
+                    <Space style={{ marginTop: 20 }} wrap>
+                      <Popconfirm
+                        title="Approve this dispute?"
+                        description="Buyer will be allowed to return the item per platform rules."
+                        onConfirm={runApprove}
+                        okText="Approve"
+                        cancelText="Cancel"
+                        disabled={!canModerate || actionLoading}
                       >
-                        Approve
-                      </Button>
-                    </Popconfirm>
-                    <Popconfirm
-                      title="Reject this dispute?"
-                      description="The case will be closed; buyer claim will not proceed."
-                      onConfirm={runReject}
-                      okText="Reject"
-                      okButtonProps={{ danger: true }}
-                      cancelText="Cancel"
-                      disabled={!canModerate || actionLoading}
-                    >
-                      <Button
-                        danger
-                        disabled={!canModerate}
-                        loading={actionLoading}
+                        <Button
+                          type="primary"
+                          disabled={!canModerate}
+                          loading={actionLoading}
+                        >
+                          Approve
+                        </Button>
+                      </Popconfirm>
+                      <Popconfirm
+                        title="Reject this dispute?"
+                        description="The case will be closed; buyer claim will not proceed."
+                        onConfirm={runReject}
+                        okText="Reject"
+                        okButtonProps={{ danger: true }}
+                        cancelText="Cancel"
+                        disabled={!canModerate || actionLoading}
                       >
-                        Reject
-                      </Button>
-                    </Popconfirm>
-                  </Space>
-                </Card>
-              </section>
-            </div>
-          </>
-        )}
-      </div>
-    </AdminLayout>
+                        <Button
+                          danger
+                          disabled={!canModerate}
+                          loading={actionLoading}
+                        >
+                          Reject
+                        </Button>
+                      </Popconfirm>
+                    </Space>
+                  </Card>
+                </section>
+              </div>
+            </>
+          )}
+        </div>
+      </AdminLayout>
+      <AdminInspectionModal
+        key={
+          inspectionPostId != null
+            ? `${inspectionPostId}-${inspectionModalSession}`
+            : "admin-dispute-inspection-closed"
+        }
+        postId={inspectionPostId}
+        listingTitle={post?.bikeName ?? detail?.postTitle ?? null}
+        posterHint={post?.sellerName ?? detail?.sellerName ?? null}
+        listingMeta={
+          [post?.brand, post?.category, post?.frameSize]
+            .filter((x) => hasNonEmptyText(x) && x !== "—")
+            .join(" · ") || null
+        }
+        listingThumbnailUrl={pickListingThumbnailUrl(post)}
+        open={inspectionModalOpen && inspectionPostId != null}
+        onClose={() => setInspectionModalOpen(false)}
+      />
+      <ProductPreviewModal
+        postId={previewPostId}
+        open={!!previewPostId}
+        onClose={() => setPreviewPostId(null)}
+      />
+    </>
   );
 }

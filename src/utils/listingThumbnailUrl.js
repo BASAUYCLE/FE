@@ -17,7 +17,14 @@ export function pickListingThumbnailUrl(row) {
     row.thumbnail ??
     row.imageUrl ??
     row.image_url ??
+    row.postImageUrl ??
+    row.post_image_url ??
+    row.listingImageUrl ??
+    row.listing_image_url ??
     null;
   if (typeof direct === "string" && direct.trim()) return direct.trim();
   return null;
 }
+
+/** Alias cũ / tên khác — cùng logic với {@link pickListingThumbnailUrl} */
+export const resolveListingThumbnailUrl = pickListingThumbnailUrl;
