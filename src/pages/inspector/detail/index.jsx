@@ -694,8 +694,8 @@ export default function InspectorDetail() {
           open={submitConfirmOpen}
           onCancel={() => setSubmitConfirmOpen(false)}
           onOk={handleConfirmSubmit}
-          okText="Submit to server"
-          cancelText="Back"
+          okText="Submit"
+          cancelText="Cancel"
           okButtonProps={{ loading: submitLoading }}
           destroyOnHidden
           width={520}

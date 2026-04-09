@@ -217,13 +217,13 @@ export default function PostBike() {
     return first.originFileObj ?? (first instanceof File ? first : null);
   };
 
-  /** File để upload cho slot — ưu tiên state `requiredPhotoFiles` */
+  /** lấy ra file ảnh hợp lệ (kiểu File) cho một “slot” ảnh cụ thể */
   const getRequiredPhotoFileForSlot = (slotKey) =>
     requiredPhotoFiles[slotKey] instanceof File
       ? requiredPhotoFiles[slotKey]
       : getFileFromAntdFirst(requiredPhotos[slotKey]);
 
-  /** Đủ ảnh cho slot: file mới, hoặc ảnh đã có từ server (URL / data URL) */
+  /** Tự động tải danh sách hãng xe để người dùng chọn*/
   const slotHasRequiredImage = (slotKey) => {
     if (requiredPhotoFiles[slotKey] instanceof File) return true;
     const file = getFileFromAntdFirst(requiredPhotos[slotKey]);
@@ -233,14 +233,14 @@ export default function PostBike() {
     if (first?.url && String(first.url).trim()) return true;
     return false;
   };
-
+  /**tự động cuộn xuống đúng phần chứa ảnh */
   const scrollToPhotosSection = () => {
     document
       .getElementById("photos-videos")
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  // Section IDs for scroll detection
+  // map tổng các section trong form/page để thao tác dễ hơn
   const sectionIds = [
     "basic-info",
     "pricing",
@@ -388,7 +388,7 @@ export default function PostBike() {
   }, [user?.userId, user?.id]);
 
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);//kt user đã đăng nhập chưa
     if (!token) return;
     if (sellerId) return;
 
