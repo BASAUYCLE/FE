@@ -130,7 +130,7 @@ const MyWallet = () => {
     }
     if (!withdrawProfileHolderName) {
       message.error(
-        "Vui lòng cập nhật họ tên trong tài khoản trước khi rút tiền.",
+        "Please update your profile full name before requesting a withdrawal.",
       );
       return;
     }
@@ -635,38 +635,38 @@ const MyWallet = () => {
           onFinish={handleWithdraw}
           requiredMark
         >
-          <Form.Item label="Tên chủ tài khoản (theo hồ sơ đăng nhập)">
+          <Form.Item label="Account holder name (from profile)">
             <Input
               readOnly
               size="large"
               value={withdrawProfileHolderName || "—"}
-              placeholder="Chưa có họ tên trên hồ sơ"
+              placeholder="No full name found in your profile"
             />
           </Form.Item>
           <Form.Item
             name="bankName"
-            label="Tên ngân hàng"
-            rules={[{ required: true, message: "Vui lòng nhập tên ngân hàng" }]}
+            label="Bank name"
+            rules={[{ required: true, message: "Please enter bank name" }]}
           >
-            <Input placeholder="Ví dụ: Vietcombank" size="large" />
+            <Input placeholder="Example: Vietcombank" size="large" />
           </Form.Item>
           <Form.Item
             name="bankAccountNumber"
-            label="Số tài khoản / số thẻ ngân hàng"
-            rules={[{ required: true, message: "Vui lòng nhập số tài khoản" }]}
+            label="Bank account / card number"
+            rules={[{ required: true, message: "Please enter account number" }]}
           >
-            <Input placeholder="Số tài khoản nhận tiền" size="large" />
+            <Input placeholder="Receiving account number" size="large" />
           </Form.Item>
           <Form.Item
             name="amount"
-            label="Số tiền cần rút (VND)"
+            label="Withdrawal amount (VND)"
             rules={[
-              { required: true, message: "Nhập số tiền" },
+              { required: true, message: "Please enter amount" },
               {
                 validator: (_, v) => {
                   const n = Number(v);
                   if (!Number.isFinite(n) || n < 50000) {
-                    return Promise.reject(new Error("Tối thiểu 50.000 VND"));
+                    return Promise.reject(new Error("Minimum is 50,000 VND"));
                   }
                   return Promise.resolve();
                 },

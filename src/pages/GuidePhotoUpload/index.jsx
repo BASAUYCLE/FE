@@ -33,42 +33,56 @@ import defectsExample from "../../assets/defects.jpg";
 const GUIDE_EXAMPLE_PHOTOS = {
   OVERALL_DRIVE_SIDE: {
     src: drivesideExample,
-    altThumb: "Ví dụ ảnh toàn xe phía đùi đạp (drive side)",
-    altLarge:
-      "Ví dụ ảnh toàn xe phía đùi đạp (drive side), xem phóng to",
+    altThumb: "Example photo: full bike, drive side",
+    altLarge: "Example photo: full bike, drive side (zoomed)",
   },
   OVERALL_NON_DRIVE_SIDE: {
     src: nonDrivesideExample,
-    altThumb: "Ví dụ ảnh toàn xe phía không đùi đạp (non-drive side)",
-    altLarge:
-      "Ví dụ ảnh toàn xe phía không đùi đạp (non-drive side), xem phóng to",
+    altThumb: "Example photo: full bike, non-drive side",
+    altLarge: "Example photo: full bike, non-drive side (zoomed)",
   },
   COCKPIT_AREA: {
     src: cockpitExample,
-    altThumb: "Ví dụ ảnh khu vực cockpit",
-    altLarge: "Ví dụ ảnh khu vực cockpit, xem phóng to",
+    altThumb: "Example photo: cockpit area",
+    altLarge: "Example photo: cockpit area (zoomed)",
   },
   DRIVETRAIN_CLOSEUP: {
     src: drivetrainExample,
-    altThumb: "Ví dụ ảnh cận groupset / truyền động",
-    altLarge:
-      "Ví dụ ảnh cận groupset / truyền động, xem phóng to",
+    altThumb: "Example photo: drivetrain close-up",
+    altLarge: "Example photo: drivetrain close-up (zoomed)",
   },
   FRONT_BRAKE: {
     src: frontBrakeExample,
-    altThumb: "Ví dụ ảnh phanh trước",
-    altLarge: "Ví dụ ảnh phanh trước, xem phóng to",
+    altThumb: "Example photo: front brake",
+    altLarge: "Example photo: front brake (zoomed)",
   },
   REAR_BRAKE: {
     src: rearBrakeExample,
-    altThumb: "Ví dụ ảnh phanh sau",
-    altLarge: "Ví dụ ảnh phanh sau, xem phóng to",
+    altThumb: "Example photo: rear brake",
+    altLarge: "Example photo: rear brake (zoomed)",
   },
   DEFECT_POINT: {
     src: defectsExample,
-    altThumb: "Ví dụ ảnh điểm lỗi / trầy xước",
-    altLarge: "Ví dụ ảnh điểm lỗi / trầy xước, xem phóng to",
+    altThumb: "Example photo: defect / scratch point",
+    altLarge: "Example photo: defect / scratch point (zoomed)",
   },
+};
+
+const GUIDE_HINTS_EN = {
+  OVERALL_DRIVE_SIDE:
+    "Take a side or slight diagonal shot showing frame, wheels, and drivetrain on the drive side. This is usually the best cover thumbnail.",
+  OVERALL_NON_DRIVE_SIDE:
+    "Use a similar angle from the opposite side to help buyers and inspectors compare the bike overall.",
+  COCKPIT_AREA:
+    "Capture handlebar, stem, controls, and display (if any) clearly so steering/control condition is visible.",
+  DRIVETRAIN_CLOSEUP:
+    "Close-up chainring, cassette, derailleur, and chain. Use good lighting so wear and grease condition can be seen.",
+  FRONT_BRAKE:
+    "Show front brake caliper/disc (or pads for rim brakes), model details, and visible wear condition.",
+  REAR_BRAKE:
+    "Same as front brake: keep exposure balanced and ensure brake and tire wear condition are clearly visible.",
+  DEFECT_POINT:
+    "One photo per defect area (paint scratch, dent, carbon crack, etc.). Upload multiple photos for multiple defects.",
 };
 
 export default function GuidePhotoUpload() {
@@ -77,7 +91,7 @@ export default function GuidePhotoUpload() {
 
   useEffect(() => {
     const prev = document.title;
-    document.title = "Hướng dẫn ảnh xe | BASAUYCLE";
+    document.title = "Bike Photo Guide | BASAUYCLE";
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     return () => {
       document.title = prev;
@@ -101,43 +115,42 @@ export default function GuidePhotoUpload() {
               mb: 1,
             }}
           >
-            Hướng dẫn ảnh xe đăng trên BASAUYCLE
+            BASAUYCLE Bike Photo Guide
           </Typography>
           <Typography
             sx={{ textAlign: "center", color: "#64748b", fontSize: 15, mb: 4 }}
           >
-            Giúp người mua và bộ phận kiểm duyệt nhìn rõ tình trạng xe. Vui lòng
-            chuẩn bị đủ các góc ảnh theo bảng bên dưới trước khi đăng tin.
+            Help buyers and moderators review bike condition clearly. Please
+            prepare all required photo angles in the table below before posting.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            1. Vì sao cần đủ góc ảnh?
+            1. Why are full photo angles required?
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 1 }}>
-            BASAUYCLE là sàn giao dịch có quy trình duyệt bài và (khi cần) kiểm
-            định. Ảnh đúng chuẩn giúp <strong>minh bạch tình trạng xe</strong>,
-            giảm tranh chấp sau này và rút ngắn thời gian xử lý tin đăng của
-            bạn.
+            BASAUYCLE uses moderation and, when needed, inspection workflows.
+            Standardized photos improve <strong>condition transparency</strong>,
+            reduce dispute risk, and help your listing get processed faster.
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Ảnh tải lên cần là <strong>file hình</strong> (ví dụ JPG, PNG), rõ
-            nét; mỗi ô bắt buộc trên form phải có ít nhất một ảnh. Một ảnh toàn
-            cảnh bên đùi đạp thường được dùng làm ảnh đại diện hiển thị trên
-            chợ.
+            Uploaded files should be clear <strong>image files</strong> (such as
+            JPG/PNG). Each required slot on the posting form should include at
+            least one image. A full drive-side shot is typically used as the
+            marketplace thumbnail.
           </Typography>
 
           <Typography
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            2. Các góc ảnh cần có
+            2. Required photo angles
           </Typography>
           <Typography sx={{ color: "#64748b", fontSize: 13, mb: 1.5 }}>
-            Sáu góc đầu là bắt buộc; phần mô tả lỗi / trầy xước là tùy chọn
-            nhưng nên có nếu xe có vết hư hỏng.
+            The first six angles are required; the defects/scratches section is
+            optional but strongly recommended when damage exists.
           </Typography>
           <TableContainer
             component={Paper}
@@ -148,27 +161,16 @@ export default function GuidePhotoUpload() {
               <TableHead>
                 <TableRow sx={{ bgcolor: "#f1f5f9" }}>
                   <TableCell sx={{ fontWeight: 700, minWidth: 160 }}>
-                    Góc ảnh
+                    Photo angle
                   </TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>Gợi ý chụp</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>How to shoot</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {BICYCLE_PHOTO_CRITERIA.map((row) => (
                   <TableRow key={row.code}>
                     <TableCell sx={{ fontSize: 14, verticalAlign: "top" }}>
-                      <strong>{row.titleVi}</strong>
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "block",
-                          color: "#64748b",
-                          fontSize: 13,
-                          mt: 0.25,
-                        }}
-                      >
-                        {row.titleEn}
-                      </Box>
+                      <strong>{row.titleEn}</strong>
                       {GUIDE_EXAMPLE_PHOTOS[row.code] && (
                         <Box
                           sx={{
@@ -197,7 +199,7 @@ export default function GuidePhotoUpload() {
                           <IconButton
                             type="button"
                             size="small"
-                            aria-label="Phóng to ảnh mẫu"
+                            aria-label="Zoom example image"
                             onClick={() => {
                               lightboxExampleRef.current =
                                 GUIDE_EXAMPLE_PHOTOS[row.code];
@@ -227,7 +229,7 @@ export default function GuidePhotoUpload() {
                         verticalAlign: "top",
                       }}
                     >
-                      {row.hintVi}
+                      {GUIDE_HINTS_EN[row.code] ?? row.hintVi}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -264,7 +266,7 @@ export default function GuidePhotoUpload() {
           >
             <IconButton
               type="button"
-              aria-label="Đóng"
+              aria-label="Close"
               onClick={() => setExampleLightboxCode(null)}
               sx={{
                 position: "absolute",
@@ -331,23 +333,26 @@ export default function GuidePhotoUpload() {
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            3. Chất lượng ảnh (khuyến nghị)
+            3. Photo quality recommendations
           </Typography>
           <Typography
             component="ul"
             sx={{ color: "#4b5563", fontSize: 14, pl: 2.5, mb: 3 }}
           >
             <li>
-              Ánh sáng đều, tránh ngược sáng mạnh làm “cháy” khung hoặc tối
-              groupset.
+              Use even lighting; avoid strong backlight that blows out the frame
+              or darkens drivetrain details.
             </li>
             <li>
-              Ảnh nét, không mờ; có thể chụp nhiều lần và chọn bản rõ nhất.
+              Keep photos sharp and in focus; take multiple shots and keep the
+              clearest one.
             </li>
-            <li>Giữ nguyên tỷ lệ xe — tránh méo do filter quá mức.</li>
             <li>
-              Với ảnh <strong>trầy xước / lỗi</strong>: chụp cận từng vị trí, có
-              thể ghi thêm trong phần mô tả bài đăng.
+              Keep natural proportions; avoid heavy filters and distortion.
+            </li>
+            <li>
+              For <strong>defect/scratch photos</strong>, take close-ups per
+              area and explain details in the listing description.
             </li>
           </Typography>
 
@@ -355,22 +360,22 @@ export default function GuidePhotoUpload() {
             component="h2"
             sx={{ fontSize: 20, fontWeight: 700, mb: 1.5 }}
           >
-            4. Khi đăng tin trên website
+            4. When creating your listing
           </Typography>
           <Typography sx={{ color: "#4b5563", fontSize: 14, mb: 3 }}>
-            Vào mục{" "}
+            Open{" "}
             <Link to="/post" style={{ color: "#0d9488", fontWeight: 600 }}>
-              Đăng bán xe
+              Post your bike
             </Link>
-            , bạn sẽ thấy từng ô upload tương ứng với các góc ảnh ở bảng trên —
-            chỉ cần chọn đúng ảnh cho đúng ô. Ô ảnh lỗi là tùy chọn nhưng nên
-            điền nếu có hư hỏng cần công khai.
+            . You will see upload slots matching each angle above. Upload each
+            photo to the correct slot. Defect photos are optional but
+            recommended when there is visible damage.
           </Typography>
 
           <Box sx={{ textAlign: "center", mt: 2 }}>
             <Link
               to="/post"
-              aria-label="Mở trang đăng tin xe"
+              aria-label="Open bike posting page"
               style={{
                 display: "inline-block",
                 padding: "12px 24px",
@@ -381,7 +386,7 @@ export default function GuidePhotoUpload() {
                 textDecoration: "none",
               }}
             >
-              Đến trang đăng tin
+              Go to posting page
             </Link>
           </Box>
         </Container>
