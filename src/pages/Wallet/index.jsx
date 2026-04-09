@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Button,
   Form,
@@ -42,6 +42,13 @@ const MyWallet = () => {
   const [quickAmount, setQuickAmount] = useState(5000000);
   const [showBalance, setShowBalance] = useState(false);
 
+  const getWalletBalanceValue = (w) => {
+    const raw =
+      w?.currentBalance ?? w?.availableBalance ?? w?.balance ?? w?.amount ?? 0;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const userDisplayName =
     user?.fullName ?? user?.name ?? user?.username ?? user?.email ?? "User";
 
@@ -58,7 +65,7 @@ const MyWallet = () => {
   const userAvatarUrl = getAvatarSrc(user) || null;
 
   // Load wallet balance and transaction history
-  const fetchWalletData = async () => {
+  const fetchWalletData = useCallback(async () => {
     if (!user?.id && !user?.userId && !user?.email) {
       message.error("Please sign in to view your wallet");
       return;
@@ -69,7 +76,10 @@ const MyWallet = () => {
       // Wallet balance
       const walletRes = await walletService.getWallet();
       const walletData = walletRes?.result ?? walletRes?.data ?? walletRes;
-      setWallet(walletData);
+      setWallet({
+        ...(walletData && typeof walletData === "object" ? walletData : {}),
+        balance: getWalletBalanceValue(walletData),
+      });
 
       // Transactions
       const txRes = await transactionService.getHistory({ limit: 20 });
@@ -80,11 +90,11 @@ const MyWallet = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchWalletData();
-  }, [user]);
+  }, [fetchWalletData]);
 
   // Top-up — redirect to VNPay
   const handleTopUp = async (values) => {
@@ -175,72 +185,61 @@ const MyWallet = () => {
   };
 
   /** transactionType (camelCase) or transaction_type (snake_case). */
-  const getTxType = (record) =>
-    record.transactionType ?? record.transaction_type ?? record.type ?? null;
+  const getTxType = useCallback(
+    (record) =>
+      record.transactionType ?? record.transaction_type ?? record.type ?? null,
+    [],
+  );
 
-  const getTransactionDescription = (record) =>
-    String(
-      record?.description ??
-        record?.transactionDescription ??
-        record?.note ??
-        "",
-    ).trim();
+  const getTransactionDescription = useCallback(
+    (record) =>
+      String(
+        record?.description ??
+          record?.transactionDescription ??
+          record?.note ??
+          "",
+      ).trim(),
+    [],
+  );
 
-  const inferMoneyInFromDescription = (record) => {
-    const desc = getTransactionDescription(record).toLowerCase();
-    if (!desc) return null;
+  /**
+   * Parse signed amount from human-readable description, e.g.:
+   * "+10.000 VND - Refund fee" or "-10.000 VND - Posting fee"
+   */
+  const getSignedAmountFromDescription = useCallback(
+    (record) => {
+      const desc = getTransactionDescription(record);
+      if (!desc) return null;
+      const m = desc.match(/([+-])\s*([\d.,\s]+)/);
+      if (!m) return null;
+      const sign = m[1] === "-" ? -1 : 1;
+      const digits = String(m[2]).replace(/[^\d]/g, "");
+      const n = Number(digits);
+      if (!Number.isFinite(n) || n <= 0) return null;
+      return sign * n;
+    },
+    [getTransactionDescription],
+  );
 
-    const moneyOutHints =
-      /trừ|thanh toán|mua|purchase|payment|phí|fee|withdraw|rút|đặt cọc|deposit cho đơn|order|deduct|paid|booking/i;
-    const moneyInHints =
-      /nạp|top[\s-]?up|refund|hoàn tiền|cộng|bonus|nhận tiền|credit|received|topup|added|bonus/i;
+  const inferMoneyInFromDescription = useCallback(
+    (record) => {
+      const desc = getTransactionDescription(record).toLowerCase();
+      if (!desc) return null;
 
-    const isOut = moneyOutHints.test(desc);
-    const isIn = moneyInHints.test(desc);
+      const moneyOutHints =
+        /trừ|thanh toán|mua|purchase|payment|phí|fee|withdraw|rút|đặt cọc|deposit cho đơn|order|deduct|paid|booking/i;
+      const moneyInHints =
+        /nạp|top[\s-]?up|refund|hoàn tiền|cộng|bonus|nhận tiền|credit|received|topup|added|bonus/i;
 
-    if (isOut && !isIn) return false;
-    if (isIn && !isOut) return true;
-    return null;
-  };
+      const isOut = moneyOutHints.test(desc);
+      const isIn = moneyInHints.test(desc);
 
-  // Signed delta for running balance (positive = in, negative = out)
-  const getSignedAmount = (record) => {
-    const status = record.status ?? record.transactionStatus;
-    const statusKey = status ? String(status).toUpperCase() : null;
-    const txTypeKey = (() => {
-      const t = getTxType(record);
-      return t ? String(t).toUpperCase() : null;
-    })();
-
-    /** Pending WITHDRAW: treat as balance deducted for running column until settled. */
-    if (txTypeKey === "WITHDRAW" && statusKey === "PENDING") {
-      const raw = Number(record.amount ?? 0);
-      return raw ? -Math.abs(raw) : 0;
-    }
-
-    // Other types: count only when SUCCESS.
-    if (statusKey !== "SUCCESS") return 0;
-    const raw = Number(record.amount ?? 0);
-    if (!raw) return 0;
-
-    // Prefer direction hints from description text when present
-    const moneyInByDescription = inferMoneyInFromDescription(record);
-    if (moneyInByDescription != null) {
-      return moneyInByDescription ? Math.abs(raw) : -Math.abs(raw);
-    }
-
-    const moneyInTypes = ["TOP_UP", "REFUND"];
-    const moneyOutTypes = ["DEPOSIT", "PURCHASE", "POSTING_FEE", "WITHDRAW"];
-
-    const moneyIn =
-      txTypeKey && moneyInTypes.includes(txTypeKey)
-        ? true
-        : txTypeKey && moneyOutTypes.includes(txTypeKey)
-          ? false
-          : raw > 0;
-
-    return moneyIn ? Math.abs(raw) : -Math.abs(raw);
-  };
+      if (isOut && !isIn) return false;
+      if (isIn && !isOut) return true;
+      return null;
+    },
+    [getTransactionDescription],
+  );
 
   const TX_STATUS_MAP = {
     SUCCESS: { color: "#22c55e", text: "Success" },
@@ -283,19 +282,74 @@ const MyWallet = () => {
       return db - da;
     });
 
+    // Signed delta for running balance (positive = in, negative = out)
+    const getSignedAmount = (record) => {
+      // Highest priority: explicit signed amount in description text.
+      const byDescriptionAmount = getSignedAmountFromDescription(record);
+      if (byDescriptionAmount != null) return byDescriptionAmount;
+
+      const status = record.status ?? record.transactionStatus;
+      const statusKey = status ? String(status).toUpperCase() : null;
+      const txTypeKey = (() => {
+        const t = getTxType(record);
+        return t ? String(t).toUpperCase() : null;
+      })();
+
+      // Only settled transactions should change running balance in fallback mode.
+      if (statusKey !== "SUCCESS") return 0;
+      const raw = Number(record.amount ?? 0);
+      if (!raw) return 0;
+
+      // Prefer direction hints from description text when present
+      const moneyInByDescription = inferMoneyInFromDescription(record);
+      if (moneyInByDescription != null) {
+        return moneyInByDescription ? Math.abs(raw) : -Math.abs(raw);
+      }
+
+      const moneyInTypes = ["TOP_UP", "REFUND"];
+      const moneyOutTypes = ["DEPOSIT", "PURCHASE", "POSTING_FEE", "WITHDRAW"];
+
+      const moneyIn =
+        txTypeKey && moneyInTypes.includes(txTypeKey)
+          ? true
+          : txTypeKey && moneyOutTypes.includes(txTypeKey)
+            ? false
+            : raw > 0;
+
+      return moneyIn ? Math.abs(raw) : -Math.abs(raw);
+    };
+
     let running = Number(wallet.balance ?? 0);
 
     return sorted.map((tx, idx) => {
+      // Prefer backend-provided balance per transaction when available.
+      const txBalanceRaw =
+        tx.currentBalance ??
+        tx.current_balance ??
+        tx.balanceAfter ??
+        tx.balance_after ??
+        tx.availableBalance ??
+        tx.available_balance;
+      const txBalance =
+        txBalanceRaw != null && Number.isFinite(Number(txBalanceRaw))
+          ? Number(txBalanceRaw)
+          : null;
       const row = {
         ...tx,
-        currentBalance: running,
+        currentBalance: txBalance ?? running,
         key: tx.transactionId ?? tx.id ?? idx,
       };
       const delta = getSignedAmount(tx);
-      running -= delta;
+      running = txBalance ?? running - delta;
       return row;
     });
-  }, [transactions, wallet]);
+  }, [
+    transactions,
+    wallet,
+    getSignedAmountFromDescription,
+    inferMoneyInFromDescription,
+    getTxType,
+  ]);
 
   const transactionColumns = [
     {
